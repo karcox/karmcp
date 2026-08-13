@@ -1813,7 +1813,9 @@ class KarMCP_Admin {
 			'manage_options',
 			self::PAGE_SLUG,
 			array( $this, 'render_page' ),
-			KARMCP_URL . 'assets/img/icon-xs.png',
+			// A core dashicon rather than a bundled mark: the upstream icon was
+			// EMCP branding and this fork ships no logo of its own yet.
+			'dashicons-networking',
 			58
 		);
 
@@ -3094,7 +3096,6 @@ class KarMCP_Admin {
 			<!-- App bar -->
 			<div class="karmcp-appbar">
 				<div class="karmcp-appbar-brand">
-					<img class="karmcp-appbar-logo" src="<?php echo esc_url( KARMCP_URL . 'assets/img/icon-sm.png' ); ?>" alt="" />
 					<span class="karmcp-appbar-title karmcp-appbar-title--full"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
 					<span class="karmcp-appbar-title karmcp-appbar-title--short"><?php esc_html_e( 'MCP Tools', 'karmcp' ); ?></span>
 					<span class="karmcp-appbar-version">v<?php echo esc_html( KARMCP_VERSION ); ?></span>

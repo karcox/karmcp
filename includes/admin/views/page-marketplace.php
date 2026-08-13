@@ -220,7 +220,7 @@ $karmcp_per_page = 24;
 									<span class="karmcp-mk-card__aname"><?php echo esc_html( $karmcp_a_name ); ?></span>
 								<?php endif; ?>
 								<?php if ( $karmcp_a_ver ) : ?>
-									<img class="karmcp-mk-card__ver" src="<?php echo esc_url( KARMCP_URL . 'assets/img/pro.svg' ); ?>" alt="<?php esc_attr_e( 'Verified', 'karmcp' ); ?>" title="<?php esc_attr_e( 'Verified KarMCP Pro member', 'karmcp' ); ?>" width="15" height="15" />
+									<span class="karmcp-mk-card__ver dashicons dashicons-yes-alt" title="<?php esc_attr_e( 'Verified author', 'karmcp' ); ?>"></span>
 								<?php endif; ?>
 							</div>
 						<?php endif; ?>

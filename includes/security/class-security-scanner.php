@@ -5,7 +5,7 @@
  * resolve_checks(), summarize(), group_by_category() are pure (unit-tested).
  * scan() wires the four audits together (verified live). Read-only.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Security_Scanner {
+class KarMCP_Security_Scanner {
 
 	const CRITICAL_WEIGHT   = 20;
 	const WARNING_WEIGHT    = 5;
@@ -25,13 +25,13 @@ class EMCP_Tools_Security_Scanner {
 
 	const ALL_CHECKS = array( 'malware', 'integrity', 'hardening', 'software' );
 
-	/** @var EMCP_Tools_Security_Malware_Audit|null Built on first use. */
+	/** @var KarMCP_Security_Malware_Audit|null Built on first use. */
 	private $malware;
-	/** @var EMCP_Tools_Security_Integrity_Audit|null Built on first use. */
+	/** @var KarMCP_Security_Integrity_Audit|null Built on first use. */
 	private $integrity;
-	/** @var EMCP_Tools_Security_Hardening_Audit|null Built on first use. */
+	/** @var KarMCP_Security_Hardening_Audit|null Built on first use. */
 	private $hardening;
-	/** @var EMCP_Tools_Security_Software_Audit|null Built on first use. */
+	/** @var KarMCP_Security_Software_Audit|null Built on first use. */
 	private $software;
 
 	/**
@@ -47,10 +47,10 @@ class EMCP_Tools_Security_Scanner {
 	 * Passing instances still works and is what the tests inject.
 	 */
 	public function __construct(
-		?EMCP_Tools_Security_Malware_Audit $malware = null,
-		?EMCP_Tools_Security_Integrity_Audit $integrity = null,
-		?EMCP_Tools_Security_Hardening_Audit $hardening = null,
-		?EMCP_Tools_Security_Software_Audit $software = null
+		?KarMCP_Security_Malware_Audit $malware = null,
+		?KarMCP_Security_Integrity_Audit $integrity = null,
+		?KarMCP_Security_Hardening_Audit $hardening = null,
+		?KarMCP_Security_Software_Audit $software = null
 	) {
 		$this->malware   = $malware;
 		$this->integrity = $integrity;
@@ -58,30 +58,30 @@ class EMCP_Tools_Security_Scanner {
 		$this->software  = $software;
 	}
 
-	private function malware(): EMCP_Tools_Security_Malware_Audit {
+	private function malware(): KarMCP_Security_Malware_Audit {
 		if ( null === $this->malware ) {
-			$this->malware = new EMCP_Tools_Security_Malware_Audit();
+			$this->malware = new KarMCP_Security_Malware_Audit();
 		}
 		return $this->malware;
 	}
 
-	private function integrity(): EMCP_Tools_Security_Integrity_Audit {
+	private function integrity(): KarMCP_Security_Integrity_Audit {
 		if ( null === $this->integrity ) {
-			$this->integrity = new EMCP_Tools_Security_Integrity_Audit();
+			$this->integrity = new KarMCP_Security_Integrity_Audit();
 		}
 		return $this->integrity;
 	}
 
-	private function hardening(): EMCP_Tools_Security_Hardening_Audit {
+	private function hardening(): KarMCP_Security_Hardening_Audit {
 		if ( null === $this->hardening ) {
-			$this->hardening = new EMCP_Tools_Security_Hardening_Audit();
+			$this->hardening = new KarMCP_Security_Hardening_Audit();
 		}
 		return $this->hardening;
 	}
 
-	private function software(): EMCP_Tools_Security_Software_Audit {
+	private function software(): KarMCP_Security_Software_Audit {
 		if ( null === $this->software ) {
-			$this->software = new EMCP_Tools_Security_Software_Audit();
+			$this->software = new KarMCP_Security_Software_Audit();
 		}
 		return $this->software;
 	}
@@ -115,8 +115,8 @@ class EMCP_Tools_Security_Scanner {
 		$checks = $this->resolve_checks( isset( $input['checks'] ) && is_array( $input['checks'] ) ? $input['checks'] : null );
 		$deep   = ! empty( $input['deep'] );
 
-		$max_files   = $this->clamp( (int) ( $input['max_files'] ?? EMCP_Tools_Security_Malware_Audit::MAX_FILES ), 1, EMCP_Tools_Security_Malware_Audit::MAX_FILES_CEILING );
-		$max_seconds = $this->clamp( (int) ( $input['max_seconds'] ?? EMCP_Tools_Security_Malware_Audit::TIME_BUDGET ), 1, EMCP_Tools_Security_Malware_Audit::TIME_BUDGET_CEILING );
+		$max_files   = $this->clamp( (int) ( $input['max_files'] ?? KarMCP_Security_Malware_Audit::MAX_FILES ), 1, KarMCP_Security_Malware_Audit::MAX_FILES_CEILING );
+		$max_seconds = $this->clamp( (int) ( $input['max_seconds'] ?? KarMCP_Security_Malware_Audit::TIME_BUDGET ), 1, KarMCP_Security_Malware_Audit::TIME_BUDGET_CEILING );
 
 		$started   = microtime( true );
 		$findings  = array();

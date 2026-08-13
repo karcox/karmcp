@@ -1,19 +1,19 @@
 /**
- * EMCP Themer — step-wise cascading condition builder.
+ * KarMCP Themer — step-wise cascading condition builder.
  *
  * Renders rows of [Relation] [Group] [Sub-type] [Object (Pro)] [×] into the metabox
  * mount and serialises them to the hidden JSON field. The available groups follow
  * the selected template type (type-aware); Include/broad leaves are free, while the
  * Exclude relation + per-object search come from the Pro-extended schema.
  *
- * Config: window.emcpThemerCond = { schemasByType, isPro, ajax:{url,action,nonce}, i18n }.
+ * Config: window.karmcpThemerCond = { schemasByType, isPro, ajax:{url,action,nonce}, i18n }.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 ( function ( $ ) {
 	'use strict';
 
-	var cfg = window.emcpThemerCond || {};
+	var cfg = window.karmcpThemerCond || {};
 	var i18n = cfg.i18n || {};
 	var $app, $json, $type;
 	var state = { type: '', priority: 0, rows: [] };
@@ -121,32 +121,32 @@
 
 	function renderRow( row, idx ) {
 		var sc = schema();
-		var $row = $( '<div class="emcp-cond-row" data-idx="' + idx + '"></div>' );
+		var $row = $( '<div class="karmcp-cond-row" data-idx="' + idx + '"></div>' );
 
 		// Relation (Include / [Pro] Exclude)
-		var $rel = $( '<select class="emcp-cond-relation"></select>' );
+		var $rel = $( '<select class="karmcp-cond-relation"></select>' );
 		( sc.relations || [] ).forEach( function ( r ) { $rel.append( opt( r.value, r.label, r.value === row.relation ) ); } );
-		$row.append( $( '<span class="emcp-cond-cell emcp-cond-cell--rel"></span>' ).append( $rel ) );
+		$row.append( $( '<span class="karmcp-cond-cell karmcp-cond-cell--rel"></span>' ).append( $rel ) );
 
 		// Group
-		var $grp = $( '<select class="emcp-cond-group"></select>' );
+		var $grp = $( '<select class="karmcp-cond-group"></select>' );
 		sc.groups.forEach( function ( g ) { $grp.append( opt( g.value, g.label, g.value === row.group ) ); } );
-		$row.append( $( '<span class="emcp-cond-cell"></span>' ).append( $grp ) );
+		$row.append( $( '<span class="karmcp-cond-cell"></span>' ).append( $grp ) );
 
 		// Sub-type
-		var $sub = $( '<select class="emcp-cond-sub"></select>' );
+		var $sub = $( '<select class="karmcp-cond-sub"></select>' );
 		var group = sc.groups.filter( function ( g ) { return g.value === row.group; } )[ 0 ];
 		( group ? group.subs : [] ).forEach( function ( s ) { $sub.append( opt( s.value, s.label, s.value === row.sub ) ); } );
-		$row.append( $( '<span class="emcp-cond-cell"></span>' ).append( $sub ) );
+		$row.append( $( '<span class="karmcp-cond-cell"></span>' ).append( $sub ) );
 
 		// Object (Pro): only when the chosen node carries an "object" descriptor.
 		var node = subNode( row.group, row.sub );
 		if ( node && node.object ) {
-			$row.append( $( '<span class="emcp-cond-cell emcp-cond-cell--obj"></span>' ).append( buildObjectControl( node, row ) ) );
+			$row.append( $( '<span class="karmcp-cond-cell karmcp-cond-cell--obj"></span>' ).append( buildObjectControl( node, row ) ) );
 		}
 
 		// Remove
-		var $rm = $( '<button type="button" class="button-link emcp-cond-remove" title="' + ( i18n.remove || 'Remove' ) + '">&times;</button>' );
+		var $rm = $( '<button type="button" class="button-link karmcp-cond-remove" title="' + ( i18n.remove || 'Remove' ) + '">&times;</button>' );
 		$row.append( $rm );
 
 		return $row;
@@ -154,8 +154,8 @@
 
 	/** A broad "All …" default + an async search box that appends specific results. */
 	function buildObjectControl( node, row ) {
-		var $wrap = $( '<span class="emcp-cond-object"></span>' );
-		var $sel = $( '<select class="emcp-cond-object-select"></select>' );
+		var $wrap = $( '<span class="karmcp-cond-object"></span>' );
+		var $sel = $( '<select class="karmcp-cond-object-select"></select>' );
 		// Offer a broad "All …" only when the node has a broad selector; nodes that
 		// exist only as specific targets (e.g. Author archive) require a pick.
 		if ( node.selector ) {
@@ -164,8 +164,8 @@
 			$sel.append( opt( '', '— ' + node.label + ' —', ! row.objectValue ).prop( 'disabled', true ) );
 		}
 		if ( row.objectValue ) { $sel.append( opt( row.objectValue, row.objectLabel || row.objectValue, true ) ); }
-		var $search = $( '<input type="text" class="emcp-cond-object-search" placeholder="' + ( i18n.searchType || '' ) + '">' );
-		var $results = $( '<div class="emcp-cond-object-results"></div>' );
+		var $search = $( '<input type="text" class="karmcp-cond-object-search" placeholder="' + ( i18n.searchType || '' ) + '">' );
+		var $results = $( '<div class="karmcp-cond-object-results"></div>' );
 		$wrap.append( $sel ).append( $search ).append( $results );
 
 		var timer = null;
@@ -180,7 +180,7 @@
 
 	function doSearch( node, q, $results, $sel, row ) {
 		if ( ! cfg.ajax ) { return; }
-		$results.html( '<span class="emcp-cond-searching">…</span>' );
+		$results.html( '<span class="karmcp-cond-searching">…</span>' );
 		$.post( cfg.ajax.url, {
 			action: cfg.ajax.action,
 			nonce: cfg.ajax.nonce,
@@ -190,7 +190,7 @@
 			$results.empty();
 			var items = ( resp && resp.data && resp.data.items ) || [];
 			items.forEach( function ( it ) {
-				$( '<a href="#" class="emcp-cond-result"></a>' ).text( it.label ).on( 'click', function ( e ) {
+				$( '<a href="#" class="karmcp-cond-result"></a>' ).text( it.label ).on( 'click', function ( e ) {
 					e.preventDefault();
 					var selector = node.object.specificSelector.replace( '%d', it.id );
 					row.objectValue = selector;
@@ -200,7 +200,7 @@
 					serialize();
 				} ).appendTo( $results );
 			} );
-			if ( ! items.length ) { $results.html( '<span class="emcp-cond-searching">—</span>' ); }
+			if ( ! items.length ) { $results.html( '<span class="karmcp-cond-searching">—</span>' ); }
 		} );
 	}
 
@@ -213,28 +213,28 @@
 			return;
 		}
 
-		var $rows = $( '<div class="emcp-cond-rows"></div>' );
+		var $rows = $( '<div class="karmcp-cond-rows"></div>' );
 		state.rows.forEach( function ( row, idx ) { $rows.append( renderRow( row, idx ) ); } );
 		$app.append( $rows );
 
-		var $add = $( '<button type="button" class="button emcp-cond-add"></button>' ).text( '+ ' + ( i18n.addCondition || 'Add condition' ) );
+		var $add = $( '<button type="button" class="button karmcp-cond-add"></button>' ).text( '+ ' + ( i18n.addCondition || 'Add condition' ) );
 		$app.append( $( '<p></p>' ).append( $add ) );
 
 		// Priority (Pro only).
 		if ( cfg.isPro ) {
-			var $pr = $( '<span class="emcp-cond-priority"></span>' );
+			var $pr = $( '<span class="karmcp-cond-priority"></span>' );
 			$pr.append( '<label>Priority </label>' );
-			$pr.append( $( '<input type="number" class="small-text emcp-cond-priority-input">' ).val( state.priority ) );
+			$pr.append( $( '<input type="number" class="small-text karmcp-cond-priority-input">' ).val( state.priority ) );
 			$app.append( $( '<p class="description"></p>' ).append( $pr ) );
 		}
 	}
 
 	function bind() {
-		$app.on( 'change', '.emcp-cond-relation', function () {
+		$app.on( 'change', '.karmcp-cond-relation', function () {
 			state.rows[ rowIdx( this ) ].relation = $( this ).val();
 			serialize();
 		} );
-		$app.on( 'change', '.emcp-cond-group', function () {
+		$app.on( 'change', '.karmcp-cond-group', function () {
 			var r = state.rows[ rowIdx( this ) ];
 			r.group = $( this ).val();
 			var group = schema().groups.filter( function ( g ) { return g.value === r.group; } )[ 0 ];
@@ -242,41 +242,41 @@
 			r.objectValue = ''; r.objectLabel = '';
 			render(); serialize();
 		} );
-		$app.on( 'change', '.emcp-cond-sub', function () {
+		$app.on( 'change', '.karmcp-cond-sub', function () {
 			var r = state.rows[ rowIdx( this ) ];
 			r.sub = $( this ).val();
 			r.objectValue = ''; r.objectLabel = '';
 			render(); serialize();
 		} );
-		$app.on( 'change', '.emcp-cond-object-select', function () {
+		$app.on( 'change', '.karmcp-cond-object-select', function () {
 			var r = state.rows[ rowIdx( this ) ];
 			r.objectValue = $( this ).val();
 			r.objectLabel = $( this ).find( 'option:selected' ).text();
 			serialize();
 		} );
-		$app.on( 'click', '.emcp-cond-remove', function () {
+		$app.on( 'click', '.karmcp-cond-remove', function () {
 			state.rows.splice( rowIdx( this ), 1 );
 			if ( ! state.rows.length ) { state.rows.push( blankRow() ); }
 			render(); serialize();
 		} );
-		$app.on( 'click', '.emcp-cond-add', function () {
+		$app.on( 'click', '.karmcp-cond-add', function () {
 			state.rows.push( blankRow() );
 			render(); serialize();
 		} );
-		$app.on( 'input', '.emcp-cond-priority-input', function () {
+		$app.on( 'input', '.karmcp-cond-priority-input', function () {
 			state.priority = parseInt( $( this ).val(), 10 ) || 0;
 			serialize();
 		} );
 	}
 
 	function rowIdx( el ) {
-		return parseInt( $( el ).closest( '.emcp-cond-row' ).data( 'idx' ), 10 ) || 0;
+		return parseInt( $( el ).closest( '.karmcp-cond-row' ).data( 'idx' ), 10 ) || 0;
 	}
 
 	function init() {
-		$app = $( '#emcp-themer-conditions-app' );
-		$json = $( '#emcp-themer-conditions-json' );
-		$type = $( '#emcp-themer-type' );
+		$app = $( '#karmcp-themer-conditions-app' );
+		$json = $( '#karmcp-themer-conditions-json' );
+		$type = $( '#karmcp-themer-type' );
 		if ( ! $app.length || ! $json.length ) { return; }
 		state.type = $type.val();
 		loadFromJson();

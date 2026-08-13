@@ -2,7 +2,7 @@
 /**
  * WP-CLI background jobs — dispatch a command as a detached process and poll it.
  *
- * A job is a directory under `uploads/emcp-wpcli-jobs/<id>/` holding:
+ * A job is a directory under `uploads/karmcp-wpcli-jobs/<id>/` holding:
  *   meta.json  — command + argv + status + timestamps
  *   run.sh|bat — the generated launcher (argv passed via escapeshellarg — no
  *                interpolation of untrusted values)
@@ -14,7 +14,7 @@
  * require the shell path (a configured `wp` base command + proc_open) — an
  * in-process command can't be detached.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.0
  */
-class EMCP_Tools_WPCLI_Jobs {
+class KarMCP_WPCLI_Jobs {
 
 	/** Keep at most this many job directories; older ones are pruned. */
 	const KEEP = 50;
@@ -35,7 +35,7 @@ class EMCP_Tools_WPCLI_Jobs {
 	/** Absolute path to the jobs base directory (created + web-protected on demand). */
 	public function dir(): string {
 		$uploads = wp_upload_dir();
-		$dir     = trailingslashit( $uploads['basedir'] ) . 'emcp-wpcli-jobs';
+		$dir     = trailingslashit( $uploads['basedir'] ) . 'karmcp-wpcli-jobs';
 		if ( ! is_dir( $dir ) ) {
 			wp_mkdir_p( $dir );
 			// Block web access to job logs.
@@ -53,11 +53,11 @@ class EMCP_Tools_WPCLI_Jobs {
 	 * @return array|\WP_Error { job_id, status } or WP_Error.
 	 */
 	public function dispatch( string $command, int $timeout = 900 ) {
-		$runner = new EMCP_Tools_WPCLI_Runner();
+		$runner = new KarMCP_WPCLI_Runner();
 		if ( ! $runner->shell_available() ) {
-			return new \WP_Error( 'wpcli_bg_unavailable', __( 'Background jobs require a configured wp base command and PHP proc_open. Set it on EMCP Tools → Connection or via EMCP_TOOLS_WPCLI_COMMAND.', 'emcp-tools' ) );
+			return new \WP_Error( 'wpcli_bg_unavailable', __( 'Background jobs require a configured wp base command and PHP proc_open. Set it on KarMCP → Connection or via KARMCP_WPCLI_COMMAND.', 'karmcp' ) );
 		}
-		$tokens = EMCP_Tools_WPCLI_Validator::validate( $command );
+		$tokens = KarMCP_WPCLI_Validator::validate( $command );
 		if ( is_wp_error( $tokens ) ) {
 			return $tokens;
 		}
@@ -88,7 +88,7 @@ class EMCP_Tools_WPCLI_Jobs {
 			$meta['status'] = 'failed';
 			$meta['finished'] = time();
 			file_put_contents( $dir . '/meta.json', wp_json_encode( $meta ) ); // phpcs:ignore
-			return new \WP_Error( 'wpcli_spawn_failed', __( 'Could not start the background job.', 'emcp-tools' ) );
+			return new \WP_Error( 'wpcli_spawn_failed', __( 'Could not start the background job.', 'karmcp' ) );
 		}
 		$meta['status']  = 'running';
 		$meta['started'] = time();
@@ -107,7 +107,7 @@ class EMCP_Tools_WPCLI_Jobs {
 		$id  = preg_replace( '/[^a-z0-9\-]/i', '', $id );
 		$dir = $this->dir() . '/' . $id;
 		if ( '' === $id || ! is_file( $dir . '/meta.json' ) ) {
-			return new \WP_Error( 'wpcli_job_not_found', __( 'Job not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'wpcli_job_not_found', __( 'Job not found.', 'karmcp' ) );
 		}
 		$meta = json_decode( (string) file_get_contents( $dir . '/meta.json' ), true ); // phpcs:ignore
 		$meta = is_array( $meta ) ? $meta : array();
@@ -209,9 +209,9 @@ class EMCP_Tools_WPCLI_Jobs {
 			return '';
 		}
 		$data = (string) file_get_contents( $file ); // phpcs:ignore
-		if ( strlen( $data ) <= EMCP_Tools_WPCLI_Runner::OUTPUT_CAP ) {
+		if ( strlen( $data ) <= KarMCP_WPCLI_Runner::OUTPUT_CAP ) {
 			return $data;
 		}
-		return "…[output truncated]\n" . substr( $data, -EMCP_Tools_WPCLI_Runner::OUTPUT_CAP );
+		return "…[output truncated]\n" . substr( $data, -KarMCP_WPCLI_Runner::OUTPUT_CAP );
 	}
 }

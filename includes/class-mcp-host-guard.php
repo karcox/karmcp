@@ -2,7 +2,7 @@
 /**
  * MCP host-mismatch guard.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * See bug report Issue 2 (a connector kept a stale hostname after a site URL
  * change; tool listing still worked but every execution failed opaquely).
  */
-class EMCP_Tools_MCP_Host_Guard {
+class KarMCP_MCP_Host_Guard {
 
 	/**
 	 * Normalise a host for comparison: lowercase, strip trailing port and a
@@ -49,14 +49,14 @@ class EMCP_Tools_MCP_Host_Guard {
 		return $req === self::norm( $home_host );
 	}
 
-	/** Whether a REST route is (under) the EMCP MCP server route. */
+	/** Whether a REST route is (under) the KarMCP MCP server route. */
 	public static function is_mcp_route( string $route ): bool {
-		return 0 === strpos( $route, '/mcp/emcp-tools-server' );
+		return 0 === strpos( $route, '/mcp/karmcp-server' );
 	}
 
-	/** Whether a REST route is (under) the EMCP OAuth namespace. */
+	/** Whether a REST route is (under) the KarMCP OAuth namespace. */
 	public static function is_oauth_route( string $route ): bool {
-		return 0 === strpos( $route, '/emcp-tools/oauth/' );
+		return 0 === strpos( $route, '/karmcp/oauth/' );
 	}
 
 	/**
@@ -122,7 +122,7 @@ class EMCP_Tools_MCP_Host_Guard {
 		 *
 		 * @param bool $enabled Default true.
 		 */
-		if ( ! apply_filters( 'emcp_tools_mcp_host_guard_enabled', true ) ) {
+		if ( ! apply_filters( 'karmcp_mcp_host_guard_enabled', true ) ) {
 			return $result;
 		}
 
@@ -134,11 +134,11 @@ class EMCP_Tools_MCP_Host_Guard {
 		}
 
 		return new WP_Error(
-			'emcp_host_mismatch',
+			'karmcp_host_mismatch',
 			sprintf(
 				/* translators: %s: the correct MCP endpoint URL. */
-				__( 'Site URL mismatch: this connector is pointed at an old domain. The MCP endpoint now lives at %s — reconnect using that URL.', 'emcp-tools' ),
-				esc_url_raw( home_url( '/wp-json/mcp/emcp-tools-server' ) )
+				__( 'Site URL mismatch: this connector is pointed at an old domain. The MCP endpoint now lives at %s — reconnect using that URL.', 'karmcp' ),
+				esc_url_raw( home_url( '/wp-json/mcp/karmcp-server' ) )
 			),
 			array( 'status' => 421 ) // 421 Misdirected Request.
 		);

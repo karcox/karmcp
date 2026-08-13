@@ -6,7 +6,7 @@
  * internals, and a target page (default frontpage) and returns a scored report.
  * manage_options; enabled by default.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Performance_Abilities {
+class KarMCP_Performance_Abilities {
 
 	/** @var string[] */
 	private $ability_names = array();
@@ -35,22 +35,22 @@ class EMCP_Tools_Performance_Abilities {
 	}
 
 	private function register_analyze_performance(): void {
-		$this->ability_names[] = 'emcp-tools/analyze-performance';
-		emcp_tools_register_ability(
-			'emcp-tools/analyze-performance',
+		$this->ability_names[] = 'karmcp/analyze-performance';
+		karmcp_register_ability(
+			'karmcp/analyze-performance',
 			array(
-				'label'               => __( 'Analyze Performance', 'emcp-tools' ),
-				'description'         => __( 'Scans server configuration, WordPress internals (database size, autoloaded options, cron backlog, object cache, OPcache, plugin count), and a target page (defaults to the frontpage; pass "url" or "post_id" for a specific page) for performance issues and bottlenecks. Returns a scored report with severities and ranked, actionable recommendations. Read-only; analyzes this site only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Analyze Performance', 'karmcp' ),
+				'description'         => __( 'Scans server configuration, WordPress internals (database size, autoloaded options, cron backlog, object cache, OPcache, plugin count), and a target page (defaults to the frontpage; pass "url" or "post_id" for a specific page) for performance issues and bottlenecks. Returns a scored report with severities and ranked, actionable recommendations. Read-only; analyzes this site only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_analyze_performance' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'url'                => array( 'type' => 'string', 'format' => 'uri', 'description' => __( 'A page on THIS site to analyze. External hosts are rejected. Defaults to the frontpage.', 'emcp-tools' ) ),
-						'post_id'            => array( 'type' => 'integer', 'description' => __( 'Analyze the permalink of this post/page. Ignored when url is set.', 'emcp-tools' ) ),
-						'include_page_fetch' => array( 'type' => 'boolean', 'description' => __( 'Set false to skip the loopback page fetch and run the server/database audit only. Default true.', 'emcp-tools' ) ),
-						'deep_assets'        => array( 'type' => 'boolean', 'description' => __( 'Reserved: when true, sample same-host asset sizes for an estimated page weight. Default false.', 'emcp-tools' ) ),
+						'url'                => array( 'type' => 'string', 'format' => 'uri', 'description' => __( 'A page on THIS site to analyze. External hosts are rejected. Defaults to the frontpage.', 'karmcp' ) ),
+						'post_id'            => array( 'type' => 'integer', 'description' => __( 'Analyze the permalink of this post/page. Ignored when url is set.', 'karmcp' ) ),
+						'include_page_fetch' => array( 'type' => 'boolean', 'description' => __( 'Set false to skip the loopback page fetch and run the server/database audit only. Default true.', 'karmcp' ) ),
+						'deep_assets'        => array( 'type' => 'boolean', 'description' => __( 'Reserved: when true, sample same-host asset sizes for an estimated page weight. Default false.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array(
@@ -79,7 +79,7 @@ class EMCP_Tools_Performance_Abilities {
 		if ( ! is_array( $input ) ) {
 			$input = array();
 		}
-		$analyzer = new EMCP_Tools_Performance_Analyzer();
+		$analyzer = new KarMCP_Performance_Analyzer();
 		return $analyzer->analyze( $input );
 	}
 }

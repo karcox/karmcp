@@ -76,9 +76,8 @@ skills/*
 .mcp.json
 
 #Meta
-# Local-only working docs (superpowers specs/plans, design notes). Never ship
-# to GitHub or the release zip.
-docs/
+# Upstream kept docs/ untracked (local-only working notes). KarMCP tracks it:
+# the roadmap and design decisions belong in the repo, not on one machine.
 .commandcode/
 
 # Pro overlay lives in the private pro/ submodule (see pro-manifest.txt).

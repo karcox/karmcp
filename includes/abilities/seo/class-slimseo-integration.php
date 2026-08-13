@@ -7,7 +7,7 @@
  * (keys: title, description, canonical, noindex, nofollow, facebook_image,
  * twitter_image); site settings live in the `slim_seo` option. Verified live.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.5.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.5.0
  */
-class EMCP_Tools_SlimSEO_Integration extends EMCP_Tools_SEO_Integration {
+class KarMCP_SlimSEO_Integration extends KarMCP_SEO_Integration {
 
 	const META_KEY = 'slim_seo';
 
@@ -219,7 +219,7 @@ class EMCP_Tools_SlimSEO_Integration extends EMCP_Tools_SEO_Integration {
 				'missing_argument',
 				sprintf(
 					/* translators: %s: argument name */
-					__( 'Missing required argument: %s.', 'emcp-tools' ),
+					__( 'Missing required argument: %s.', 'karmcp' ),
 					$field
 				),
 				array( 'status' => 400 )
@@ -229,7 +229,7 @@ class EMCP_Tools_SlimSEO_Integration extends EMCP_Tools_SEO_Integration {
 			'not_found',
 			sprintf(
 				/* translators: 1: object type, 2: id */
-				__( 'No %1$s with id %2$d.', 'emcp-tools' ),
+				__( 'No %1$s with id %2$d.', 'karmcp' ),
 				$what,
 				$id
 			),

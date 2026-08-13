@@ -18,7 +18,7 @@
  *
  * CF7 stores no submissions, so there are no entry operations.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.5.0
  */
 
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.5.0
  */
-class EMCP_Tools_CF7_Integration extends EMCP_Tools_Form_Integration {
+class KarMCP_CF7_Integration extends KarMCP_Form_Integration {
 
 	/**
 	 * @return string
@@ -118,7 +118,7 @@ class EMCP_Tools_CF7_Integration extends EMCP_Tools_Form_Integration {
 	private function form( array $args ) {
 		$id = isset( $args['form_id'] ) ? absint( $args['form_id'] ) : 0;
 		if ( ! $id ) {
-			return new WP_Error( 'missing_argument', __( 'Missing required argument: form_id.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_argument', __( 'Missing required argument: form_id.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$form = \WPCF7_ContactForm::get_instance( $id );
 		if ( ! $form ) {
@@ -126,7 +126,7 @@ class EMCP_Tools_CF7_Integration extends EMCP_Tools_Form_Integration {
 				'form_not_found',
 				sprintf(
 					/* translators: %d: form id */
-					__( 'No Contact Form 7 form with id %d.', 'emcp-tools' ),
+					__( 'No Contact Form 7 form with id %d.', 'karmcp' ),
 					$id
 				),
 				array( 'status' => 404 )
@@ -216,11 +216,11 @@ class EMCP_Tools_CF7_Integration extends EMCP_Tools_Form_Integration {
 		}
 		$which = isset( $args['notification'] ) ? (string) $args['notification'] : 'mail';
 		if ( ! in_array( $which, array( 'mail', 'mail_2' ), true ) ) {
-			return new WP_Error( 'invalid_argument', __( 'notification must be "mail" or "mail_2".', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'invalid_argument', __( 'notification must be "mail" or "mail_2".', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$patch = ( isset( $args['mail'] ) && is_array( $args['mail'] ) ) ? $args['mail'] : array();
 		if ( ! $patch ) {
-			return new WP_Error( 'missing_argument', __( 'Missing required argument: mail (object of fields to change).', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_argument', __( 'Missing required argument: mail (object of fields to change).', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$current = $form->prop( $which );
 		$current = is_array( $current ) ? $current : array();
@@ -241,7 +241,7 @@ class EMCP_Tools_CF7_Integration extends EMCP_Tools_Form_Integration {
 		}
 		$patch = ( isset( $args['messages'] ) && is_array( $args['messages'] ) ) ? $args['messages'] : array();
 		if ( ! $patch ) {
-			return new WP_Error( 'missing_argument', __( 'Missing required argument: messages (object of message keys to change).', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_argument', __( 'Missing required argument: messages (object of message keys to change).', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$current = $form->prop( 'messages' );
 		$current = is_array( $current ) ? $current : array();
@@ -261,7 +261,7 @@ class EMCP_Tools_CF7_Integration extends EMCP_Tools_Form_Integration {
 			return $form;
 		}
 		if ( ! isset( $args['additional_settings'] ) || ! is_string( $args['additional_settings'] ) ) {
-			return new WP_Error( 'missing_argument', __( 'Missing required argument: additional_settings (string).', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_argument', __( 'Missing required argument: additional_settings (string).', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$form->set_properties( array( 'additional_settings' => (string) $args['additional_settings'] ) );
 		$form->save();

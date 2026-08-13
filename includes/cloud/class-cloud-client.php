@@ -1,15 +1,15 @@
 <?php
 /**
- * Authenticated EMCP Cloud REST client (bearer + auto-refresh).
+ * Authenticated KarMCP Cloud REST client (bearer + auto-refresh).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Cloud_Client {
+class KarMCP_Cloud_Client {
 	const LEEWAY = 60; // refresh this many seconds before expiry.
 
 	/**
@@ -18,15 +18,15 @@ class EMCP_Tools_Cloud_Client {
 	 * @return string
 	 */
 	public static function valid_access_token(): string {
-		$c = EMCP_Tools_Cloud::get_connection();
+		$c = KarMCP_Cloud::get_connection();
 		if ( empty( $c['access_token'] ) ) {
 			return '';
 		}
 		if ( (int) ( $c['access_expires_at'] ?? 0 ) - self::LEEWAY <= time() ) {
-			if ( ! EMCP_Tools_Cloud_Connect::refresh() ) {
+			if ( ! KarMCP_Cloud_Connect::refresh() ) {
 				return '';
 			}
-			$c = EMCP_Tools_Cloud::get_connection();
+			$c = KarMCP_Cloud::get_connection();
 		}
 		return (string) ( $c['access_token'] ?? '' );
 	}
@@ -44,14 +44,14 @@ class EMCP_Tools_Cloud_Client {
 	private static function authed( string $method, string $path, ?array $body ) {
 		$token = self::valid_access_token();
 		if ( '' === $token ) {
-			return new \WP_Error( 'not_connected', __( 'This site is not connected to EMCP Cloud.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_connected', __( 'This site is not connected to KarMCP Cloud.', 'karmcp' ) );
 		}
 		$args = array( 'headers' => array( 'Authorization' => 'Bearer ' . $token, 'Accept' => 'application/json' ) );
 		if ( null !== $body ) {
 			$args['headers']['Content-Type'] = 'application/json';
 			$args['body']                    = wp_json_encode( $body );
 		}
-		$res = EMCP_Tools_Cloud_Http::request( $method, EMCP_Tools_Cloud::base_url() . $path, $args );
+		$res = KarMCP_Cloud_Http::request( $method, KarMCP_Cloud::base_url() . $path, $args );
 		if ( is_wp_error( $res ) ) {
 			return $res;
 		}
@@ -87,11 +87,11 @@ class EMCP_Tools_Cloud_Client {
 	}
 
 	/**
-	 * Upload the site's gateway credential to EMCP Cloud so the hosted gateway
+	 * Upload the site's gateway credential to KarMCP Cloud so the hosted gateway
 	 * can redeem it. The Cloud-side route is a Phase 2 concern; this is purely
 	 * the plugin-side client call.
 	 *
-	 * @param string $client_id     The gateway OAuth client id (from EMCP_Tools_Gateway_Credential).
+	 * @param string $client_id     The gateway OAuth client id (from KarMCP_Gateway_Credential).
 	 * @param string $refresh_token The gateway-scoped refresh token (plaintext; sent once).
 	 * @return bool True on success.
 	 */
@@ -99,20 +99,20 @@ class EMCP_Tools_Cloud_Client {
 		$body = array(
 			'client_id'      => $client_id,
 			'refresh_token'  => $refresh_token,
-			'site_uuid'      => EMCP_Tools_Cloud::site_uuid(),
-			'token_endpoint' => (string) ( EMCP_Tools_OAuth_Metadata::authorization_server_document()['token_endpoint'] ?? '' ),
+			'site_uuid'      => KarMCP_Cloud::site_uuid(),
+			'token_endpoint' => (string) ( KarMCP_OAuth_Metadata::authorization_server_document()['token_endpoint'] ?? '' ),
 		);
 		$res = self::put( '/api/cloud/v1/gateway/credential', $body );
 		return ! is_wp_error( $res );
 	}
 
 	/**
-	 * Delete the site's gateway credential from EMCP Cloud.
+	 * Delete the site's gateway credential from KarMCP Cloud.
 	 *
 	 * @return bool True on success.
 	 */
 	public static function delete_gateway_credential(): bool {
-		$res = self::delete( '/api/cloud/v1/gateway/credential?site_uuid=' . rawurlencode( EMCP_Tools_Cloud::site_uuid() ) );
+		$res = self::delete( '/api/cloud/v1/gateway/credential?site_uuid=' . rawurlencode( KarMCP_Cloud::site_uuid() ) );
 		return ! is_wp_error( $res );
 	}
 

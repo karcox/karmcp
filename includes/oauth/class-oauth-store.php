@@ -4,7 +4,7 @@
  * tables; short-lived authorization codes live in transients. Tokens and codes
  * are stored SHA-256-hashed (never in the clear).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.1
  */
 
@@ -17,17 +17,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.1
  */
-class EMCP_Tools_OAuth_Store {
+class KarMCP_OAuth_Store {
 
 	const DB_VERSION        = 2; // v2: BIGINT timestamps (2038-safe) + refresh_of index.
-	const DB_VERSION_OPTION = 'emcp_tools_oauth_db_version';
+	const DB_VERSION_OPTION = 'karmcp_oauth_db_version';
 	// A freshly-registered client legitimately has no tokens until the user
 	// finishes authorizing, so orphan-client pruning only touches rows older
 	// than this grace window.
 	const ORPHAN_CLIENT_GRACE = DAY_IN_SECONDS;
 	// Throttle for gc_throttled(): the shortest gap between sweeps when gc is
 	// driven from a hot path (bearer validation on every MCP request).
-	const GC_THROTTLE_OPTION   = 'emcp_tools_oauth_gc_throttle';
+	const GC_THROTTLE_OPTION   = 'karmcp_oauth_gc_throttle';
 	const GC_THROTTLE_INTERVAL = 900; // 15 min
 	// Authorization-code lifetime. Kept short per the OAuth spec (RFC 6749
 	// §4.1.2 recommends a maximum of ~10 min), but generous enough for CLI MCP
@@ -35,7 +35,7 @@ class EMCP_Tools_OAuth_Store {
 	// (e.g. OpenClaw), where 60s was easy to miss. The code stays single-use and
 	// PKCE-bound; only the window widened.
 	const CODE_TTL          = 300;              // seconds (5 minutes)
-	const CODE_PREFIX       = 'emcp_oauth_code_';
+	const CODE_PREFIX       = 'karmcp_oauth_code_';
 
 	/**
 	 * Registered-clients table name.
@@ -44,7 +44,7 @@ class EMCP_Tools_OAuth_Store {
 	 */
 	public static function clients_table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'emcp_oauth_clients';
+		return $wpdb->prefix . 'karmcp_oauth_clients';
 	}
 
 	/**
@@ -54,7 +54,7 @@ class EMCP_Tools_OAuth_Store {
 	 */
 	public static function tokens_table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'emcp_oauth_tokens';
+		return $wpdb->prefix . 'karmcp_oauth_tokens';
 	}
 
 	/**
@@ -146,7 +146,7 @@ class EMCP_Tools_OAuth_Store {
 			return $existing;
 		}
 
-		$client_id = EMCP_Tools_OAuth_Util::generate_client_id();
+		$client_id = KarMCP_OAuth_Util::generate_client_id();
 
 		$wpdb->insert(
 			self::clients_table(),
@@ -222,8 +222,8 @@ class EMCP_Tools_OAuth_Store {
 	 * @return string The raw authorization code to hand to the client.
 	 */
 	public static function issue_code( array $payload ): string {
-		$code = EMCP_Tools_OAuth_Util::generate_token();
-		set_transient( self::CODE_PREFIX . EMCP_Tools_OAuth_Util::hash_token( $code ), $payload, self::CODE_TTL );
+		$code = KarMCP_OAuth_Util::generate_token();
+		set_transient( self::CODE_PREFIX . KarMCP_OAuth_Util::hash_token( $code ), $payload, self::CODE_TTL );
 		return $code;
 	}
 
@@ -235,7 +235,7 @@ class EMCP_Tools_OAuth_Store {
 	 * @return array|null
 	 */
 	public static function consume_code( string $code ) {
-		$key     = self::CODE_PREFIX . EMCP_Tools_OAuth_Util::hash_token( $code );
+		$key     = self::CODE_PREFIX . KarMCP_OAuth_Util::hash_token( $code );
 		$payload = get_transient( $key );
 		if ( false === $payload || ! is_array( $payload ) ) {
 			return null;
@@ -261,9 +261,9 @@ class EMCP_Tools_OAuth_Store {
 	 */
 	public static function issue_token( string $type, string $client_id, int $user_id, string $scopes, int $ttl, ?int $refresh_of = null ): array {
 		global $wpdb;
-		$token   = EMCP_Tools_OAuth_Util::generate_token();
+		$token   = KarMCP_OAuth_Util::generate_token();
 		$data    = array(
-			'token_hash' => EMCP_Tools_OAuth_Util::hash_token( $token ),
+			'token_hash' => KarMCP_OAuth_Util::hash_token( $token ),
 			'token_type' => $type,
 			'client_id'  => $client_id,
 			'user_id'    => $user_id,
@@ -286,7 +286,7 @@ class EMCP_Tools_OAuth_Store {
 			// OAuth error instead of a 200 with an unusable token. Log the DB error so
 			// the real cause is visible.
 			if ( function_exists( 'error_log' ) ) {
-				error_log( '[EMCP Tools] OAuth token was not persisted: ' . $wpdb->last_error ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				error_log( '[KarMCP] OAuth token was not persisted: ' . $wpdb->last_error ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			}
 			return array( 'token' => '', 'id' => 0 );
 		}
@@ -305,7 +305,7 @@ class EMCP_Tools_OAuth_Store {
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				'SELECT * FROM ' . self::tokens_table() . ' WHERE token_hash = %s AND token_type = %s AND expires_at > %d',
-				EMCP_Tools_OAuth_Util::hash_token( $token ),
+				KarMCP_OAuth_Util::hash_token( $token ),
 				$type,
 				time()
 			),

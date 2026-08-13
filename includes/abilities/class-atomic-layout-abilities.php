@@ -5,7 +5,7 @@
  * Registers tools for creating flexbox and div-block containers.
  * Only registers when Elementor >= 4.0 is active.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.5.0
  */
 
@@ -18,22 +18,22 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.5.0
  */
-class EMCP_Tools_Atomic_Layout_Abilities {
+class KarMCP_Atomic_Layout_Abilities {
 
-	/** @var EMCP_Tools_Data */
+	/** @var KarMCP_Data */
 	private $data;
 
-	/** @var EMCP_Tools_Element_Factory */
+	/** @var KarMCP_Element_Factory */
 	private $factory;
 
 	/** @var string[] */
 	private $ability_names = array();
 
 	/**
-	 * @param EMCP_Tools_Data            $data    The data access layer.
-	 * @param EMCP_Tools_Element_Factory $factory The element factory.
+	 * @param KarMCP_Data            $data    The data access layer.
+	 * @param KarMCP_Element_Factory $factory The element factory.
 	 */
-	public function __construct( EMCP_Tools_Data $data, EMCP_Tools_Element_Factory $factory ) {
+	public function __construct( KarMCP_Data $data, KarMCP_Element_Factory $factory ) {
 		$this->data    = $data;
 		$this->factory = $factory;
 	}
@@ -49,7 +49,7 @@ class EMCP_Tools_Atomic_Layout_Abilities {
 	 * Skips registration if Elementor < 4.0.
 	 */
 	public function register(): void {
-		if ( ! EMCP_Tools_Atomic_Props::is_atomic_supported() ) {
+		if ( ! KarMCP_Atomic_Props::is_atomic_supported() ) {
 			return;
 		}
 
@@ -64,12 +64,12 @@ class EMCP_Tools_Atomic_Layout_Abilities {
 	 */
 	public function check_edit_permission( $input ) {
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			return new \WP_Error( 'forbidden', __( 'You do not have permission to edit posts.', 'emcp-tools' ) );
+			return new \WP_Error( 'forbidden', __( 'You do not have permission to edit posts.', 'karmcp' ) );
 		}
 
 		$post_id = $input['post_id'] ?? 0;
 		if ( $post_id && ! current_user_can( 'edit_post', $post_id ) ) {
-			return new \WP_Error( 'forbidden', __( 'You do not have permission to edit this post.', 'emcp-tools' ) );
+			return new \WP_Error( 'forbidden', __( 'You do not have permission to edit this post.', 'karmcp' ) );
 		}
 
 		return true;
@@ -80,34 +80,34 @@ class EMCP_Tools_Atomic_Layout_Abilities {
 	// =========================================================================
 
 	private function register_add_flexbox(): void {
-		$name                  = 'emcp-tools/add-flexbox';
+		$name                  = 'karmcp/add-flexbox';
 		$this->ability_names[] = $name;
 
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$name,
 			array(
-				'label'               => __( 'Add Flexbox', 'emcp-tools' ),
-				'description'         => __( 'Adds an Elementor 4.0 flexbox container. Layout properties (direction, justify, align, gap) are applied as local styles automatically. Use this instead of add-container for Elementor 4.0+ sites.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Flexbox', 'karmcp' ),
+				'description'         => __( 'Adds an Elementor 4.0 flexbox container. Layout properties (direction, justify, align, gap) are applied as local styles automatically. Use this instead of add-container for Elementor 4.0+ sites.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_flexbox' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id'         => array( 'type' => 'integer', 'description' => __( 'The post/page ID.', 'emcp-tools' ) ),
-						'parent_id'       => array( 'type' => 'string', 'description' => __( 'Parent element ID. Empty for top-level.', 'emcp-tools' ) ),
-						'position'        => array( 'type' => 'integer', 'description' => __( 'Insert position. -1 = append.', 'emcp-tools' ) ),
-						'tag'             => array( 'type' => 'string', 'enum' => array( 'div', 'header', 'section', 'article', 'aside', 'footer' ), 'description' => __( 'HTML tag. Default: div.', 'emcp-tools' ) ),
-						'direction'       => array( 'type' => 'string', 'enum' => array( 'row', 'column', 'row-reverse', 'column-reverse' ), 'description' => __( 'Flex direction. Default: column.', 'emcp-tools' ) ),
-						'justify'         => array( 'type' => 'string', 'enum' => array( 'flex-start', 'center', 'flex-end', 'space-between', 'space-around', 'space-evenly' ), 'description' => __( 'Justify content.', 'emcp-tools' ) ),
-						'align'           => array( 'type' => 'string', 'enum' => array( 'flex-start', 'center', 'flex-end', 'stretch', 'baseline' ), 'description' => __( 'Align items.', 'emcp-tools' ) ),
-						'gap'             => array( 'type' => 'number', 'description' => __( 'Gap between children (px by default).', 'emcp-tools' ) ),
-						'gap_unit'        => array( 'type' => 'string', 'enum' => array( 'px', 'em', 'rem', '%', 'vw' ), 'description' => __( 'Gap unit. Default: px.', 'emcp-tools' ) ),
-						'wrap'            => array( 'type' => 'string', 'enum' => array( 'nowrap', 'wrap', 'wrap-reverse' ), 'description' => __( 'Flex wrap.', 'emcp-tools' ) ),
-						'css_id'          => array( 'type' => 'string', 'description' => __( 'Optional CSS ID.', 'emcp-tools' ) ),
-						'padding'         => array( 'type' => 'number', 'description' => __( 'Padding on all sides (px by default).', 'emcp-tools' ) ),
-						'background_color' => array( 'type' => 'string', 'description' => __( 'Background color (hex/rgba).', 'emcp-tools' ) ),
-						'min_height'      => array( 'type' => 'number', 'description' => __( 'Minimum height (px by default).', 'emcp-tools' ) ),
+						'post_id'         => array( 'type' => 'integer', 'description' => __( 'The post/page ID.', 'karmcp' ) ),
+						'parent_id'       => array( 'type' => 'string', 'description' => __( 'Parent element ID. Empty for top-level.', 'karmcp' ) ),
+						'position'        => array( 'type' => 'integer', 'description' => __( 'Insert position. -1 = append.', 'karmcp' ) ),
+						'tag'             => array( 'type' => 'string', 'enum' => array( 'div', 'header', 'section', 'article', 'aside', 'footer' ), 'description' => __( 'HTML tag. Default: div.', 'karmcp' ) ),
+						'direction'       => array( 'type' => 'string', 'enum' => array( 'row', 'column', 'row-reverse', 'column-reverse' ), 'description' => __( 'Flex direction. Default: column.', 'karmcp' ) ),
+						'justify'         => array( 'type' => 'string', 'enum' => array( 'flex-start', 'center', 'flex-end', 'space-between', 'space-around', 'space-evenly' ), 'description' => __( 'Justify content.', 'karmcp' ) ),
+						'align'           => array( 'type' => 'string', 'enum' => array( 'flex-start', 'center', 'flex-end', 'stretch', 'baseline' ), 'description' => __( 'Align items.', 'karmcp' ) ),
+						'gap'             => array( 'type' => 'number', 'description' => __( 'Gap between children (px by default).', 'karmcp' ) ),
+						'gap_unit'        => array( 'type' => 'string', 'enum' => array( 'px', 'em', 'rem', '%', 'vw' ), 'description' => __( 'Gap unit. Default: px.', 'karmcp' ) ),
+						'wrap'            => array( 'type' => 'string', 'enum' => array( 'nowrap', 'wrap', 'wrap-reverse' ), 'description' => __( 'Flex wrap.', 'karmcp' ) ),
+						'css_id'          => array( 'type' => 'string', 'description' => __( 'Optional CSS ID.', 'karmcp' ) ),
+						'padding'         => array( 'type' => 'number', 'description' => __( 'Padding on all sides (px by default).', 'karmcp' ) ),
+						'background_color' => array( 'type' => 'string', 'description' => __( 'Background color (hex/rgba).', 'karmcp' ) ),
+						'min_height'      => array( 'type' => 'number', 'description' => __( 'Minimum height (px by default).', 'karmcp' ) ),
 					),
 					'required'   => array( 'post_id' ),
 				),
@@ -138,10 +138,10 @@ class EMCP_Tools_Atomic_Layout_Abilities {
 		$settings = array();
 
 		if ( ! empty( $input['tag'] ) ) {
-			$settings['tag'] = EMCP_Tools_Atomic_Props::string( sanitize_text_field( $input['tag'] ) );
+			$settings['tag'] = KarMCP_Atomic_Props::string( sanitize_text_field( $input['tag'] ) );
 		}
 		if ( ! empty( $input['css_id'] ) ) {
-			$settings['_cssid'] = EMCP_Tools_Atomic_Props::string( sanitize_text_field( $input['css_id'] ) );
+			$settings['_cssid'] = KarMCP_Atomic_Props::string( sanitize_text_field( $input['css_id'] ) );
 		}
 
 		// Style props extracted from input.
@@ -191,27 +191,27 @@ class EMCP_Tools_Atomic_Layout_Abilities {
 	// =========================================================================
 
 	private function register_add_div_block(): void {
-		$name                  = 'emcp-tools/add-div-block';
+		$name                  = 'karmcp/add-div-block';
 		$this->ability_names[] = $name;
 
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$name,
 			array(
-				'label'               => __( 'Add Div Block', 'emcp-tools' ),
-				'description'         => __( 'Adds an Elementor 4.0 div-block container (block flow layout). Use for non-flex containers.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Div Block', 'karmcp' ),
+				'description'         => __( 'Adds an Elementor 4.0 div-block container (block flow layout). Use for non-flex containers.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_div_block' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id'          => array( 'type' => 'integer', 'description' => __( 'The post/page ID.', 'emcp-tools' ) ),
-						'parent_id'        => array( 'type' => 'string', 'description' => __( 'Parent element ID. Empty for top-level.', 'emcp-tools' ) ),
-						'position'         => array( 'type' => 'integer', 'description' => __( 'Insert position. -1 = append.', 'emcp-tools' ) ),
-						'tag'              => array( 'type' => 'string', 'enum' => array( 'div', 'header', 'section', 'article', 'aside', 'footer' ), 'description' => __( 'HTML tag. Default: div.', 'emcp-tools' ) ),
-						'css_id'           => array( 'type' => 'string', 'description' => __( 'Optional CSS ID.', 'emcp-tools' ) ),
-						'padding'          => array( 'type' => 'number', 'description' => __( 'Padding on all sides (px by default).', 'emcp-tools' ) ),
-						'background_color' => array( 'type' => 'string', 'description' => __( 'Background color (hex/rgba).', 'emcp-tools' ) ),
+						'post_id'          => array( 'type' => 'integer', 'description' => __( 'The post/page ID.', 'karmcp' ) ),
+						'parent_id'        => array( 'type' => 'string', 'description' => __( 'Parent element ID. Empty for top-level.', 'karmcp' ) ),
+						'position'         => array( 'type' => 'integer', 'description' => __( 'Insert position. -1 = append.', 'karmcp' ) ),
+						'tag'              => array( 'type' => 'string', 'enum' => array( 'div', 'header', 'section', 'article', 'aside', 'footer' ), 'description' => __( 'HTML tag. Default: div.', 'karmcp' ) ),
+						'css_id'           => array( 'type' => 'string', 'description' => __( 'Optional CSS ID.', 'karmcp' ) ),
+						'padding'          => array( 'type' => 'number', 'description' => __( 'Padding on all sides (px by default).', 'karmcp' ) ),
+						'background_color' => array( 'type' => 'string', 'description' => __( 'Background color (hex/rgba).', 'karmcp' ) ),
 					),
 					'required'   => array( 'post_id' ),
 				),
@@ -242,10 +242,10 @@ class EMCP_Tools_Atomic_Layout_Abilities {
 		$settings = array();
 
 		if ( ! empty( $input['tag'] ) ) {
-			$settings['tag'] = EMCP_Tools_Atomic_Props::string( sanitize_text_field( $input['tag'] ) );
+			$settings['tag'] = KarMCP_Atomic_Props::string( sanitize_text_field( $input['tag'] ) );
 		}
 		if ( ! empty( $input['css_id'] ) ) {
-			$settings['_cssid'] = EMCP_Tools_Atomic_Props::string( sanitize_text_field( $input['css_id'] ) );
+			$settings['_cssid'] = KarMCP_Atomic_Props::string( sanitize_text_field( $input['css_id'] ) );
 		}
 
 		$style_params = array();
@@ -293,21 +293,21 @@ class EMCP_Tools_Atomic_Layout_Abilities {
 	// =========================================================================
 
 	private function register_detect_elementor_version(): void {
-		$name                  = 'emcp-tools/detect-elementor-version';
+		$name                  = 'karmcp/detect-elementor-version';
 		$this->ability_names[] = $name;
 
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$name,
 			array(
-				'label'               => __( 'Detect Elementor Version', 'emcp-tools' ),
-				'description'         => __( 'Returns the Elementor version and whether atomic elements (v4.0+) are supported. Call this first to decide whether to use legacy tools (add-free-widget, add-container) or atomic tools (add-atomic-heading, add-flexbox).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Detect Elementor Version', 'karmcp' ),
+				'description'         => __( 'Returns the Elementor version and whether atomic elements (v4.0+) are supported. Call this first to decide whether to use legacy tools (add-free-widget, add-container) or atomic tools (add-atomic-heading, add-flexbox).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => function () {
 					$core_version = defined( 'ELEMENTOR_VERSION' ) ? ELEMENTOR_VERSION : 'unknown';
 					$pro_version  = defined( 'ELEMENTOR_PRO_VERSION' ) ? ELEMENTOR_PRO_VERSION : null;
 
-					$supports_atomic    = EMCP_Tools_Atomic_Props::is_atomic_supported();
-					$supports_container = EMCP_Tools_Atomic_Props::is_container_supported();
+					$supports_atomic    = KarMCP_Atomic_Props::is_atomic_supported();
+					$supports_container = KarMCP_Atomic_Props::is_container_supported();
 
 					if ( $supports_atomic ) {
 						$mode = 'atomic';
@@ -326,13 +326,13 @@ class EMCP_Tools_Atomic_Layout_Abilities {
 					);
 
 					if ( 'unsupported' === $mode ) {
-						$out['warning'] = __( 'Both the Flexbox Container and Atomic Elements experiments are disabled on this site, so pages built with add-container / build-page / the atomic tools will store data but render empty. Enable Elementor -> Settings -> Features -> "Flexbox Container" (or Atomic Elements) before creating pages via MCP.', 'emcp-tools' );
+						$out['warning'] = __( 'Both the Flexbox Container and Atomic Elements experiments are disabled on this site, so pages built with add-container / build-page / the atomic tools will store data but render empty. Enable Elementor -> Settings -> Features -> "Flexbox Container" (or Atomic Elements) before creating pages via MCP.', 'karmcp' );
 					}
 
 					return $out;
 				},
 				'permission_callback' => function () {
-					return current_user_can( 'edit_posts' ) ? true : new \WP_Error( 'forbidden', __( 'Insufficient permissions.', 'emcp-tools' ) );
+					return current_user_can( 'edit_posts' ) ? true : new \WP_Error( 'forbidden', __( 'Insufficient permissions.', 'karmcp' ) );
 				},
 				'input_schema'        => array(
 					'type'       => 'object',

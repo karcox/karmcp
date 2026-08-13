@@ -6,7 +6,7 @@
  * This is the security boundary for the filesystem tools. resolve_path() is the
  * one chokepoint that makes "inside the WordPress install only" true.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -17,11 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Filesystem_Guard {
+class KarMCP_Filesystem_Guard {
 
 	const MAX_READ_BYTES  = 5242880; // 5 MB
 	const MAX_WRITE_BYTES = 5242880; // 5 MB
-	const BACKUP_DIR      = 'emcp-fs-backups';
+	const BACKUP_DIR      = 'karmcp-fs-backups';
 
 	/**
 	 * Confine a path to $root (defaults to ABSPATH). Returns the canonical
@@ -35,7 +35,7 @@ class EMCP_Tools_Filesystem_Guard {
 		$root = ( null === $root ) ? ABSPATH : $root;
 
 		if ( '' === $path || false !== strpos( $path, "\0" ) ) {
-			return new \WP_Error( 'invalid_path', __( 'Invalid file path.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_path', __( 'Invalid file path.', 'karmcp' ) );
 		}
 
 		$is_abs = ( '/' === $path[0] ) || ( '\\' === $path[0] ) || 1 === preg_match( '#^[A-Za-z]:[\\\\/]#', $path );
@@ -45,20 +45,20 @@ class EMCP_Tools_Filesystem_Guard {
 		if ( false === $real ) {
 			$parent = realpath( dirname( $candidate ) );
 			if ( false === $parent ) {
-				return new \WP_Error( 'parent_missing', __( 'The target directory does not exist.', 'emcp-tools' ) );
+				return new \WP_Error( 'parent_missing', __( 'The target directory does not exist.', 'karmcp' ) );
 			}
 			$real = $parent . DIRECTORY_SEPARATOR . basename( $candidate );
 		}
 
 		$root_real = realpath( $root );
 		if ( false === $root_real ) {
-			return new \WP_Error( 'bad_root', __( 'Filesystem root is unavailable.', 'emcp-tools' ) );
+			return new \WP_Error( 'bad_root', __( 'Filesystem root is unavailable.', 'karmcp' ) );
 		}
 
 		$real_n = rtrim( $real, '/\\' );
 		$root_n = rtrim( $root_real, '/\\' );
 		if ( $real_n !== $root_n && 0 !== strpos( $real_n, $root_n . DIRECTORY_SEPARATOR ) ) {
-			return new \WP_Error( 'outside_root', __( 'Path is outside the WordPress installation.', 'emcp-tools' ) );
+			return new \WP_Error( 'outside_root', __( 'Path is outside the WordPress installation.', 'karmcp' ) );
 		}
 		return $real;
 	}
@@ -73,7 +73,7 @@ class EMCP_Tools_Filesystem_Guard {
 		$base      = strtolower( basename( $abs ) );
 		$protected = array( 'wp-config.php', '.htaccess' );
 		/** Filter the write/delete-protected basenames. */
-		$protected = (array) apply_filters( 'emcp_tools_fs_protected_paths', $protected, $abs );
+		$protected = (array) apply_filters( 'karmcp_fs_protected_paths', $protected, $abs );
 		return in_array( $base, array_map( 'strtolower', $protected ), true );
 	}
 
@@ -90,7 +90,7 @@ class EMCP_Tools_Filesystem_Guard {
 		$base      = strtolower( basename( $abs ) );
 		$protected = array( 'wp-config.php' );
 		/** Filter the read-protected basenames. */
-		$protected = (array) apply_filters( 'emcp_tools_fs_read_protected_paths', $protected, $abs );
+		$protected = (array) apply_filters( 'karmcp_fs_read_protected_paths', $protected, $abs );
 		return in_array( $base, array_map( 'strtolower', $protected ), true );
 	}
 
@@ -132,10 +132,10 @@ class EMCP_Tools_Filesystem_Guard {
 	 */
 	public static function check_writes( bool $can_edit_files, bool $disallow_file_edit ) {
 		if ( $disallow_file_edit ) {
-			return new \WP_Error( 'file_edit_disabled', __( 'File editing is disabled on this site (DISALLOW_FILE_EDIT).', 'emcp-tools' ) );
+			return new \WP_Error( 'file_edit_disabled', __( 'File editing is disabled on this site (DISALLOW_FILE_EDIT).', 'karmcp' ) );
 		}
 		if ( ! $can_edit_files ) {
-			return new \WP_Error( 'file_edit_disabled', __( 'You do not have permission to edit files.', 'emcp-tools' ) );
+			return new \WP_Error( 'file_edit_disabled', __( 'You do not have permission to edit files.', 'karmcp' ) );
 		}
 		return true;
 	}
@@ -168,7 +168,7 @@ class EMCP_Tools_Filesystem_Guard {
 	}
 
 	/**
-	 * Copy a file to a timestamped backup under uploads/emcp-fs-backups/.
+	 * Copy a file to a timestamped backup under uploads/karmcp-fs-backups/.
 	 * Returns the backup absolute path, '' if the source doesn't exist yet
 	 * (a create, not an overwrite), or WP_Error on failure.
 	 *
@@ -181,11 +181,11 @@ class EMCP_Tools_Filesystem_Guard {
 		}
 		$uploads = wp_upload_dir();
 		if ( ! empty( $uploads['error'] ) ) {
-			return new \WP_Error( 'no_uploads', __( 'Uploads directory is unavailable for backups.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_uploads', __( 'Uploads directory is unavailable for backups.', 'karmcp' ) );
 		}
 		$dir = trailingslashit( $uploads['basedir'] ) . self::BACKUP_DIR;
 		if ( ! wp_mkdir_p( $dir ) ) {
-			return new \WP_Error( 'backup_dir', __( 'Could not create the backup directory.', 'emcp-tools' ) );
+			return new \WP_Error( 'backup_dir', __( 'Could not create the backup directory.', 'karmcp' ) );
 		}
 		// Block direct web access to backups.
 		if ( ! is_file( $dir . '/.htaccess' ) ) {
@@ -195,14 +195,14 @@ class EMCP_Tools_Filesystem_Guard {
 		$name = self::backup_name( self::to_relative( $abs ), gmdate( 'Ymd-His' ) );
 		$dest = $dir . '/' . $name;
 		if ( ! copy( $abs, $dest ) ) {
-			return new \WP_Error( 'backup_failed', __( 'Could not back up the file before writing.', 'emcp-tools' ) );
+			return new \WP_Error( 'backup_failed', __( 'Could not back up the file before writing.', 'karmcp' ) );
 		}
 		return $dest;
 	}
 
 	/**
 	 * Deprecated: filesystem writes are now recorded in the unified change ledger
-	 * (EMCP_Tools_Change_Log) via EMCP_Tools_Change_Recorder, the single audit +
+	 * (KarMCP_Change_Log) via KarMCP_Change_Recorder, the single audit +
 	 * rollback source. Kept as a no-op for backward compatibility.
 	 *
 	 * @deprecated 3.10.0

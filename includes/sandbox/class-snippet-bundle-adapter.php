@@ -1,26 +1,26 @@
 <?php
 /**
  * Snippet Bundle Adapter — presents the existing PHP Snippet store
- * (`EMCP_Tools_PHP_Snippet_Store`) as a portable, cloud-ready
- * `EMCP_Tools_Sandbox_Artifact`, without changing the store's internals.
+ * (`KarMCP_PHP_Snippet_Store`) as a portable, cloud-ready
+ * `KarMCP_Sandbox_Artifact`, without changing the store's internals.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.7.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * Thin adapter: reads/writes go through `EMCP_Tools_PHP_Snippet_Store`'s
+ * Thin adapter: reads/writes go through `KarMCP_PHP_Snippet_Store`'s
  * existing static API; this class only shapes the result into (and out of)
- * the `EMCP_Tools_Sandbox_Bundle` envelope. `apply_bundle()` always imports as
+ * the `KarMCP_Sandbox_Bundle` envelope. `apply_bundle()` always imports as
  * an inactive DRAFT — the human-approval activation gate is unchanged.
  *
  * @since 3.7.0
  */
-class EMCP_Tools_Snippet_Bundle_Adapter implements EMCP_Tools_Sandbox_Artifact {
+class KarMCP_Snippet_Bundle_Adapter implements KarMCP_Sandbox_Artifact {
 
-	const META_UUID = '_emcp_uuid';
+	const META_UUID = '_karmcp_uuid';
 
 	/**
 	 * @since 3.7.0
@@ -56,11 +56,11 @@ class EMCP_Tools_Snippet_Bundle_Adapter implements EMCP_Tools_Sandbox_Artifact {
 	public function sync_meta( int $id ): array {
 		return array(
 			'uuid'       => $this->uuid( $id ),
-			'origin'     => (string) get_post_meta( $id, '_emcp_origin', true ) ?: 'local',
-			'remote_id'  => (string) get_post_meta( $id, '_emcp_remote_id', true ),
-			'sync_state' => (string) get_post_meta( $id, '_emcp_sync_state', true ) ?: 'dirty',
-			'version'    => (int) get_post_meta( $id, '_emcp_version', true ),
-			'updated_at' => (string) get_post_meta( $id, '_emcp_updated_at', true ),
+			'origin'     => (string) get_post_meta( $id, '_karmcp_origin', true ) ?: 'local',
+			'remote_id'  => (string) get_post_meta( $id, '_karmcp_remote_id', true ),
+			'sync_state' => (string) get_post_meta( $id, '_karmcp_sync_state', true ) ?: 'dirty',
+			'version'    => (int) get_post_meta( $id, '_karmcp_version', true ),
+			'updated_at' => (string) get_post_meta( $id, '_karmcp_updated_at', true ),
 		);
 	}
 
@@ -71,7 +71,7 @@ class EMCP_Tools_Snippet_Bundle_Adapter implements EMCP_Tools_Sandbox_Artifact {
 	 * @return string
 	 */
 	public function checksum( int $id ): string {
-		return EMCP_Tools_Sandbox_Bundle::checksum( $this->assets( $id ) );
+		return KarMCP_Sandbox_Bundle::checksum( $this->assets( $id ) );
 	}
 
 	/**
@@ -85,7 +85,7 @@ class EMCP_Tools_Snippet_Bundle_Adapter implements EMCP_Tools_Sandbox_Artifact {
 	 * @return array<string,string>
 	 */
 	private function assets( int $id ): array {
-		$rec  = EMCP_Tools_PHP_Snippet_Store::get( $id );
+		$rec  = KarMCP_PHP_Snippet_Store::get( $id );
 		$code = is_wp_error( $rec ) ? '' : (string) ( $rec['code'] ?? '' );
 		return array( 'code.php' => $code );
 	}
@@ -97,7 +97,7 @@ class EMCP_Tools_Snippet_Bundle_Adapter implements EMCP_Tools_Sandbox_Artifact {
 	 * @return array|WP_Error
 	 */
 	public function to_bundle( int $id ) {
-		$rec = EMCP_Tools_PHP_Snippet_Store::get( $id );
+		$rec = KarMCP_PHP_Snippet_Store::get( $id );
 		if ( is_wp_error( $rec ) ) {
 			return $rec;
 		}
@@ -109,7 +109,7 @@ class EMCP_Tools_Snippet_Bundle_Adapter implements EMCP_Tools_Sandbox_Artifact {
 			'priority' => (int) ( $rec['priority'] ?? 10 ),
 			'title'    => (string) ( $rec['title'] ?? '' ),
 		);
-		return EMCP_Tools_Sandbox_Bundle::build(
+		return KarMCP_Sandbox_Bundle::build(
 			'snippet',
 			$sm['uuid'],
 			array(
@@ -136,15 +136,15 @@ class EMCP_Tools_Snippet_Bundle_Adapter implements EMCP_Tools_Sandbox_Artifact {
 	 * @return int|WP_Error New local snippet post ID.
 	 */
 	public function apply_bundle( array $bundle ) {
-		$valid = EMCP_Tools_Sandbox_Bundle::validate( $bundle );
+		$valid = KarMCP_Sandbox_Bundle::validate( $bundle );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
 		}
 		if ( 'snippet' !== $bundle['kind'] ) {
-			return new WP_Error( 'kind_mismatch', __( 'Bundle is not a snippet.', 'emcp-tools' ) );
+			return new WP_Error( 'kind_mismatch', __( 'Bundle is not a snippet.', 'karmcp' ) );
 		}
 		$spec = is_array( $bundle['spec'] ) ? $bundle['spec'] : array();
-		$res  = EMCP_Tools_PHP_Snippet_Store::create_draft(
+		$res  = KarMCP_PHP_Snippet_Store::create_draft(
 			array(
 				'title'    => (string) ( $spec['title'] ?? ( $bundle['meta']['title'] ?? '' ) ),
 				'code'     => (string) ( $spec['code'] ?? '' ),
@@ -158,7 +158,7 @@ class EMCP_Tools_Snippet_Bundle_Adapter implements EMCP_Tools_Sandbox_Artifact {
 		}
 		$new_id = (int) $res['snippet_id'];
 		update_post_meta( $new_id, self::META_UUID, sanitize_text_field( (string) $bundle['uuid'] ) );
-		update_post_meta( $new_id, '_emcp_origin', 'imported' );
+		update_post_meta( $new_id, '_karmcp_origin', 'imported' );
 		return $new_id;
 	}
 }

@@ -8,7 +8,7 @@
  *  - **shell** (`proc_open` with an argv *array*, no shell interpolation): used
  *    over HTTP/proxy, only when an admin has configured a `wp` base command.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.0
  */
-class EMCP_Tools_WPCLI_Runner {
+class KarMCP_WPCLI_Runner {
 
 	/** Cap captured output per stream (bytes) so a chatty command can't blow up the response. */
 	const OUTPUT_CAP = 262144; // 256 KB
@@ -34,12 +34,12 @@ class EMCP_Tools_WPCLI_Runner {
 	/** The configured `wp` base command (constant > option > filter). Empty when unset. */
 	public function base_command(): string {
 		$cmd = '';
-		if ( defined( 'EMCP_TOOLS_WPCLI_COMMAND' ) && EMCP_TOOLS_WPCLI_COMMAND ) {
-			$cmd = (string) EMCP_TOOLS_WPCLI_COMMAND;
+		if ( defined( 'KARMCP_WPCLI_COMMAND' ) && KARMCP_WPCLI_COMMAND ) {
+			$cmd = (string) KARMCP_WPCLI_COMMAND;
 		} else {
-			$cmd = trim( (string) get_option( 'emcp_tools_wpcli_command', '' ) );
+			$cmd = trim( (string) get_option( 'karmcp_wpcli_command', '' ) );
 		}
-		return (string) apply_filters( 'emcp_tools_wpcli_command', $cmd );
+		return (string) apply_filters( 'karmcp_wpcli_command', $cmd );
 	}
 
 	/** Whether the shell path (proc_open + configured binary) is usable. */
@@ -54,7 +54,7 @@ class EMCP_Tools_WPCLI_Runner {
 
 	/** The base command tokenized into an argv array (e.g. "php wp-cli.phar" → [php, wp-cli.phar]). */
 	public function base_argv(): array {
-		$tokens = EMCP_Tools_WPCLI_Validator::tokenize( $this->base_command() );
+		$tokens = KarMCP_WPCLI_Validator::tokenize( $this->base_command() );
 		return is_wp_error( $tokens ) ? array() : $tokens;
 	}
 
@@ -66,7 +66,7 @@ class EMCP_Tools_WPCLI_Runner {
 	 * @return array|\WP_Error { stdout, stderr, exit_code, mode, timed_out }.
 	 */
 	public function run( string $command, int $timeout = 60 ) {
-		$tokens = EMCP_Tools_WPCLI_Validator::validate( $command );
+		$tokens = KarMCP_WPCLI_Validator::validate( $command );
 		if ( is_wp_error( $tokens ) ) {
 			return $tokens;
 		}
@@ -78,7 +78,7 @@ class EMCP_Tools_WPCLI_Runner {
 		}
 		return new \WP_Error(
 			'wpcli_unavailable',
-			__( 'WP-CLI can only run in-process over the WP-CLI stdio transport. To enable it over HTTP, set a wp base command (EMCP Tools → Connection, or the EMCP_TOOLS_WPCLI_COMMAND constant) and ensure PHP proc_open is available.', 'emcp-tools' )
+			__( 'WP-CLI can only run in-process over the WP-CLI stdio transport. To enable it over HTTP, set a wp base command (KarMCP → Connection, or the KARMCP_WPCLI_COMMAND constant) and ensure PHP proc_open is available.', 'karmcp' )
 		);
 	}
 
@@ -105,7 +105,7 @@ class EMCP_Tools_WPCLI_Runner {
 		// passed verbatim, so no metacharacter can be interpreted.
 		$proc = proc_open( $argv, $desc, $pipes, ABSPATH );
 		if ( ! is_resource( $proc ) ) {
-			return new \WP_Error( 'wpcli_spawn_failed', __( 'Could not start the wp process.', 'emcp-tools' ) );
+			return new \WP_Error( 'wpcli_spawn_failed', __( 'Could not start the wp process.', 'karmcp' ) );
 		}
 		stream_set_blocking( $pipes[1], false );
 		stream_set_blocking( $pipes[2], false );

@@ -2,8 +2,8 @@
 /**
  * Themer dynamic Gutenberg blocks.
  *
- * Registers server-rendered blocks (`emcp/post-title`, `emcp/archive-loop`, …)
- * that output dynamic content via EMCP_Tools_Themer_Dynamic against the current
+ * Registers server-rendered blocks (`karmcp/post-title`, `karmcp/archive-loop`, …)
+ * that output dynamic content via KarMCP_Themer_Dynamic against the current
  * main query. Blocks carry native `supports` (align/color/typography/spacing/
  * border) so the editor's own controls handle styling; each block's own
  * attributes (tag, columns, which meta items, …) get an inline InspectorControls
@@ -14,7 +14,7 @@
  * client-side registerBlockType (edit/save); attributes + supports + per-block
  * controls are localized from PHP so nothing is hand-duplicated.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -25,11 +25,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Blocks {
+class KarMCP_Themer_Blocks {
 
-	const CATEGORY = 'emcp-themer';
-	const SCRIPT   = 'emcp-themer-blocks';
-	const STYLE    = 'emcp-themer-blocks';
+	const CATEGORY = 'karmcp-themer';
+	const SCRIPT   = 'karmcp-themer-blocks';
+	const STYLE    = 'karmcp-themer-blocks';
 
 	/** Register blocks, the block category, and editor assets. */
 	public function init(): void {
@@ -44,7 +44,7 @@ class EMCP_Tools_Themer_Blocks {
 	}
 
 	/**
-	 * Add an "EMCP Themer" block category.
+	 * Add an "KarMCP Themer" block category.
 	 *
 	 * @param array $categories Existing categories.
 	 * @return array
@@ -59,7 +59,7 @@ class EMCP_Tools_Themer_Blocks {
 			$categories,
 			array(
 				'slug'  => self::CATEGORY,
-				'title' => __( 'EMCP Themer', 'emcp-tools' ),
+				'title' => __( 'KarMCP Themer', 'karmcp' ),
 				'icon'  => null,
 			)
 		);
@@ -99,35 +99,35 @@ class EMCP_Tools_Themer_Blocks {
 			'__experimentalBorder' => array( 'color' => true, 'radius' => true, 'style' => true, 'width' => true ),
 		);
 
-		$tag_ctrl = array( 'key' => 'tag', 'type' => 'select', 'label' => __( 'HTML tag', 'emcp-tools' ), 'options' => $tags );
+		$tag_ctrl = array( 'key' => 'tag', 'type' => 'select', 'label' => __( 'HTML tag', 'karmcp' ), 'options' => $tags );
 
 		return array(
 			'post-title'    => array(
-				'title'      => __( 'Post/Page Title', 'emcp-tools' ),
+				'title'      => __( 'Post/Page Title', 'karmcp' ),
 				'icon'       => 'heading',
 				'supports'   => $text_supports,
 				'attributes' => array( 'tag' => array( 'type' => 'string', 'default' => 'h1' ), 'link' => array( 'type' => 'boolean', 'default' => false ) ),
-				'controls'   => array( $tag_ctrl, array( 'key' => 'link', 'type' => 'toggle', 'label' => __( 'Link to post', 'emcp-tools' ) ) ),
+				'controls'   => array( $tag_ctrl, array( 'key' => 'link', 'type' => 'toggle', 'label' => __( 'Link to post', 'karmcp' ) ) ),
 			),
 			'archive-title' => array(
-				'title'      => __( 'Archive Title', 'emcp-tools' ),
+				'title'      => __( 'Archive Title', 'karmcp' ),
 				'icon'       => 'archive',
 				'supports'   => $text_supports,
 				'attributes' => array( 'tag' => array( 'type' => 'string', 'default' => 'h1' ), 'showPrefix' => array( 'type' => 'boolean', 'default' => false ) ),
-				'controls'   => array( $tag_ctrl, array( 'key' => 'showPrefix', 'type' => 'toggle', 'label' => __( 'Show "Category:" prefix', 'emcp-tools' ) ) ),
+				'controls'   => array( $tag_ctrl, array( 'key' => 'showPrefix', 'type' => 'toggle', 'label' => __( 'Show "Category:" prefix', 'karmcp' ) ) ),
 			),
 			'breadcrumbs'   => array(
-				'title'      => __( 'Breadcrumbs', 'emcp-tools' ),
+				'title'      => __( 'Breadcrumbs', 'karmcp' ),
 				'icon'       => 'admin-links',
 				'supports'   => $text_supports,
 				'attributes' => array( 'separator' => array( 'type' => 'string', 'default' => '/' ), 'homeLabel' => array( 'type' => 'string', 'default' => '' ) ),
 				'controls'   => array(
-					array( 'key' => 'separator', 'type' => 'text', 'label' => __( 'Separator', 'emcp-tools' ) ),
-					array( 'key' => 'homeLabel', 'type' => 'text', 'label' => __( 'Home label', 'emcp-tools' ) ),
+					array( 'key' => 'separator', 'type' => 'text', 'label' => __( 'Separator', 'karmcp' ) ),
+					array( 'key' => 'homeLabel', 'type' => 'text', 'label' => __( 'Home label', 'karmcp' ) ),
 				),
 			),
 			'post-meta'     => array(
-				'title'      => __( 'Post Meta', 'emcp-tools' ),
+				'title'      => __( 'Post Meta', 'karmcp' ),
 				'icon'       => 'list-view',
 				'supports'   => $text_supports,
 				'attributes' => array(
@@ -138,50 +138,50 @@ class EMCP_Tools_Themer_Blocks {
 					'showComments'   => array( 'type' => 'boolean', 'default' => false ),
 				),
 				'controls'   => array(
-					array( 'key' => 'showDate', 'type' => 'toggle', 'label' => __( 'Date', 'emcp-tools' ) ),
-					array( 'key' => 'showAuthor', 'type' => 'toggle', 'label' => __( 'Author', 'emcp-tools' ) ),
-					array( 'key' => 'showCategories', 'type' => 'toggle', 'label' => __( 'Categories', 'emcp-tools' ) ),
-					array( 'key' => 'showTags', 'type' => 'toggle', 'label' => __( 'Tags', 'emcp-tools' ) ),
-					array( 'key' => 'showComments', 'type' => 'toggle', 'label' => __( 'Comments', 'emcp-tools' ) ),
+					array( 'key' => 'showDate', 'type' => 'toggle', 'label' => __( 'Date', 'karmcp' ) ),
+					array( 'key' => 'showAuthor', 'type' => 'toggle', 'label' => __( 'Author', 'karmcp' ) ),
+					array( 'key' => 'showCategories', 'type' => 'toggle', 'label' => __( 'Categories', 'karmcp' ) ),
+					array( 'key' => 'showTags', 'type' => 'toggle', 'label' => __( 'Tags', 'karmcp' ) ),
+					array( 'key' => 'showComments', 'type' => 'toggle', 'label' => __( 'Comments', 'karmcp' ) ),
 				),
 			),
 			'site-logo'     => array(
-				'title'      => __( 'Site Logo', 'emcp-tools' ),
+				'title'      => __( 'Site Logo', 'karmcp' ),
 				'icon'       => 'format-image',
 				'supports'   => array( 'align' => array( 'left', 'center', 'right' ), 'spacing' => array( 'margin' => true, 'padding' => true ) ),
 				'attributes' => array( 'maxWidth' => array( 'type' => 'number', 'default' => 160 ) ),
-				'controls'   => array( array( 'key' => 'maxWidth', 'type' => 'number', 'label' => __( 'Max width (px)', 'emcp-tools' ) ) ),
+				'controls'   => array( array( 'key' => 'maxWidth', 'type' => 'number', 'label' => __( 'Max width (px)', 'karmcp' ) ) ),
 			),
 			'site-title'    => array(
-				'title'      => __( 'Site Title', 'emcp-tools' ),
+				'title'      => __( 'Site Title', 'karmcp' ),
 				'icon'       => 'admin-home',
 				'supports'   => $text_supports,
 				'attributes' => array( 'tag' => array( 'type' => 'string', 'default' => 'span' ), 'showTagline' => array( 'type' => 'boolean', 'default' => false ) ),
-				'controls'   => array( $tag_ctrl, array( 'key' => 'showTagline', 'type' => 'toggle', 'label' => __( 'Show tagline', 'emcp-tools' ) ) ),
+				'controls'   => array( $tag_ctrl, array( 'key' => 'showTagline', 'type' => 'toggle', 'label' => __( 'Show tagline', 'karmcp' ) ) ),
 			),
 			'nav-menu'      => array(
-				'title'      => __( 'Menu', 'emcp-tools' ),
+				'title'      => __( 'Menu', 'karmcp' ),
 				'icon'       => 'menu',
 				'supports'   => $box_supports,
 				'attributes' => array( 'menuId' => array( 'type' => 'number', 'default' => 0 ) ),
-				'controls'   => array( array( 'key' => 'menuId', 'type' => 'menu', 'label' => __( 'Menu', 'emcp-tools' ) ) ),
+				'controls'   => array( array( 'key' => 'menuId', 'type' => 'menu', 'label' => __( 'Menu', 'karmcp' ) ) ),
 			),
 			'description'   => array(
-				'title'      => __( 'Description', 'emcp-tools' ),
+				'title'      => __( 'Description', 'karmcp' ),
 				'icon'       => 'text',
 				'supports'   => $text_supports,
 				'attributes' => array( 'length' => array( 'type' => 'number', 'default' => 0 ) ),
-				'controls'   => array( array( 'key' => 'length', 'type' => 'number', 'label' => __( 'Max words (0 = full)', 'emcp-tools' ) ) ),
+				'controls'   => array( array( 'key' => 'length', 'type' => 'number', 'label' => __( 'Max words (0 = full)', 'karmcp' ) ) ),
 			),
 			'post-content'  => array(
-				'title'      => __( 'Post Content', 'emcp-tools' ),
+				'title'      => __( 'Post Content', 'karmcp' ),
 				'icon'       => 'media-document',
 				'supports'   => $box_supports,
 				'attributes' => array(),
 				'controls'   => array(),
 			),
 			'archive-loop'  => array(
-				'title'      => __( 'Archive Posts', 'emcp-tools' ),
+				'title'      => __( 'Archive Posts', 'karmcp' ),
 				'icon'       => 'grid-view',
 				'supports'   => $box_supports,
 				'attributes' => array(
@@ -196,15 +196,15 @@ class EMCP_Tools_Themer_Blocks {
 					'pagination'  => array( 'type' => 'boolean', 'default' => true ),
 				),
 				'controls'   => array(
-					array( 'key' => 'layout', 'type' => 'select', 'label' => __( 'Layout', 'emcp-tools' ), 'options' => array( 'grid', 'list' ) ),
-					array( 'key' => 'columns', 'type' => 'number', 'label' => __( 'Columns (grid)', 'emcp-tools' ) ),
-					array( 'key' => 'showImage', 'type' => 'toggle', 'label' => __( 'Featured image', 'emcp-tools' ) ),
-					array( 'key' => 'showTitle', 'type' => 'toggle', 'label' => __( 'Title', 'emcp-tools' ) ),
-					array( 'key' => 'showExcerpt', 'type' => 'toggle', 'label' => __( 'Excerpt', 'emcp-tools' ) ),
-					array( 'key' => 'showMeta', 'type' => 'toggle', 'label' => __( 'Meta (date)', 'emcp-tools' ) ),
-					array( 'key' => 'showMore', 'type' => 'toggle', 'label' => __( 'Read-more link', 'emcp-tools' ) ),
-					array( 'key' => 'moreText', 'type' => 'text', 'label' => __( 'Read-more text', 'emcp-tools' ) ),
-					array( 'key' => 'pagination', 'type' => 'toggle', 'label' => __( 'Pagination', 'emcp-tools' ) ),
+					array( 'key' => 'layout', 'type' => 'select', 'label' => __( 'Layout', 'karmcp' ), 'options' => array( 'grid', 'list' ) ),
+					array( 'key' => 'columns', 'type' => 'number', 'label' => __( 'Columns (grid)', 'karmcp' ) ),
+					array( 'key' => 'showImage', 'type' => 'toggle', 'label' => __( 'Featured image', 'karmcp' ) ),
+					array( 'key' => 'showTitle', 'type' => 'toggle', 'label' => __( 'Title', 'karmcp' ) ),
+					array( 'key' => 'showExcerpt', 'type' => 'toggle', 'label' => __( 'Excerpt', 'karmcp' ) ),
+					array( 'key' => 'showMeta', 'type' => 'toggle', 'label' => __( 'Meta (date)', 'karmcp' ) ),
+					array( 'key' => 'showMore', 'type' => 'toggle', 'label' => __( 'Read-more link', 'karmcp' ) ),
+					array( 'key' => 'moreText', 'type' => 'text', 'label' => __( 'Read-more text', 'karmcp' ) ),
+					array( 'key' => 'pagination', 'type' => 'toggle', 'label' => __( 'Pagination', 'karmcp' ) ),
 				),
 			),
 		);
@@ -216,23 +216,23 @@ class EMCP_Tools_Themer_Blocks {
 			return;
 		}
 
-		$js  = EMCP_TOOLS_DIR . 'assets/js/themer-blocks.js';
-		$css = EMCP_TOOLS_DIR . 'assets/css/themer-blocks.css';
-		$jsv = ( defined( 'WP_DEBUG' ) && WP_DEBUG && file_exists( $js ) ) ? (string) filemtime( $js ) : EMCP_TOOLS_VERSION;
-		$csv = ( defined( 'WP_DEBUG' ) && WP_DEBUG && file_exists( $css ) ) ? (string) filemtime( $css ) : EMCP_TOOLS_VERSION;
+		$js  = KARMCP_DIR . 'assets/js/themer-blocks.js';
+		$css = KARMCP_DIR . 'assets/css/themer-blocks.css';
+		$jsv = ( defined( 'WP_DEBUG' ) && WP_DEBUG && file_exists( $js ) ) ? (string) filemtime( $js ) : KARMCP_VERSION;
+		$csv = ( defined( 'WP_DEBUG' ) && WP_DEBUG && file_exists( $css ) ) ? (string) filemtime( $css ) : KARMCP_VERSION;
 
 		wp_register_script(
 			self::SCRIPT,
-			EMCP_TOOLS_URL . 'assets/js/themer-blocks.js',
+			KARMCP_URL . 'assets/js/themer-blocks.js',
 			array( 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-server-side-render' ),
 			$jsv,
 			true
 		);
-		wp_register_style( self::STYLE, EMCP_TOOLS_URL . 'assets/css/themer-blocks.css', array(), $csv );
+		wp_register_style( self::STYLE, KARMCP_URL . 'assets/css/themer-blocks.css', array(), $csv );
 
 		wp_localize_script(
 			self::SCRIPT,
-			'emcpThemerBlocks',
+			'karmcpThemerBlocks',
 			array(
 				'category' => self::CATEGORY,
 				'blocks'   => self::editor_payload(),
@@ -241,11 +241,11 @@ class EMCP_Tools_Themer_Blocks {
 		);
 
 		foreach ( self::blocks() as $key => $def ) {
-			if ( \WP_Block_Type_Registry::get_instance()->is_registered( 'emcp/' . $key ) ) {
+			if ( \WP_Block_Type_Registry::get_instance()->is_registered( 'karmcp/' . $key ) ) {
 				continue;
 			}
 			register_block_type(
-				'emcp/' . $key,
+				'karmcp/' . $key,
 				array(
 					'api_version'     => 2,
 					'title'           => $def['title'],
@@ -257,7 +257,7 @@ class EMCP_Tools_Themer_Blocks {
 					'editor_style'    => self::STYLE,
 					'style'           => self::STYLE,
 					'render_callback' => static function ( $attributes ) use ( $key ) {
-						return EMCP_Tools_Themer_Blocks::render_block( $key, is_array( $attributes ) ? $attributes : array() );
+						return KarMCP_Themer_Blocks::render_block( $key, is_array( $attributes ) ? $attributes : array() );
 					},
 				)
 			);
@@ -293,14 +293,14 @@ class EMCP_Tools_Themer_Blocks {
 	 * @return string
 	 */
 	public static function render_block( string $key, array $attributes ): string {
-		$args  = EMCP_Tools_Themer_Dynamic::args_from( $key, $attributes );
-		$inner = EMCP_Tools_Themer_Dynamic::render( $key, $args );
+		$args  = KarMCP_Themer_Dynamic::args_from( $key, $attributes );
+		$inner = KarMCP_Themer_Dynamic::render( $key, $args );
 		if ( '' === $inner ) {
 			// In the editor preview, show the block name so it isn't invisible;
 			// on the front end, render nothing.
 			if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
 				$titles = self::blocks();
-				$inner  = '<span class="emcp-dyn-placeholder">' . esc_html( $titles[ $key ]['title'] ?? $key ) . '</span>';
+				$inner  = '<span class="karmcp-dyn-placeholder">' . esc_html( $titles[ $key ]['title'] ?? $key ) . '</span>';
 			} else {
 				return '';
 			}
@@ -315,7 +315,7 @@ class EMCP_Tools_Themer_Blocks {
 	 * @return array<int,array{value:int,label:string}>
 	 */
 	private static function menu_choices(): array {
-		$out   = array( array( 'value' => 0, 'label' => __( ', Auto (first menu) , ', 'emcp-tools' ) ) );
+		$out   = array( array( 'value' => 0, 'label' => __( ', Auto (first menu) , ', 'karmcp' ) ) );
 		$menus = function_exists( 'wp_get_nav_menus' ) ? wp_get_nav_menus() : array();
 		foreach ( $menus as $menu ) {
 			$out[] = array( 'value' => (int) $menu->term_id, 'label' => $menu->name );

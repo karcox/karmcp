@@ -8,7 +8,7 @@
  * in *values* are inert; this validator blocks the *command surface* that would
  * let an operator run arbitrary PHP, raw SQL, or arbitrary shell.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.0
  */
-class EMCP_Tools_WPCLI_Validator {
+class KarMCP_WPCLI_Validator {
 
 	/** Whole commands that are never allowed (arbitrary code / shell / servers). */
 	const BLOCKED_COMMANDS = array( 'eval', 'eval-file', 'shell', 'server' );
@@ -50,10 +50,10 @@ class EMCP_Tools_WPCLI_Validator {
 	public static function validate( string $command ) {
 		$command = trim( $command );
 		if ( '' === $command ) {
-			return new \WP_Error( 'wpcli_empty', __( 'No command given.', 'emcp-tools' ) );
+			return new \WP_Error( 'wpcli_empty', __( 'No command given.', 'karmcp' ) );
 		}
 		if ( preg_match( '/[\r\n]/', $command ) ) {
-			return new \WP_Error( 'wpcli_newline', __( 'A command may not contain line breaks.', 'emcp-tools' ) );
+			return new \WP_Error( 'wpcli_newline', __( 'A command may not contain line breaks.', 'karmcp' ) );
 		}
 		// A leading "wp" is tolerated and stripped ("wp plugin list" == "plugin list").
 		$command = preg_replace( '/^wp\s+/i', '', $command );
@@ -63,7 +63,7 @@ class EMCP_Tools_WPCLI_Validator {
 			return $tokens;
 		}
 		if ( empty( $tokens ) ) {
-			return new \WP_Error( 'wpcli_empty', __( 'No command given.', 'emcp-tools' ) );
+			return new \WP_Error( 'wpcli_empty', __( 'No command given.', 'karmcp' ) );
 		}
 
 		// Injection / retargeting flags anywhere in the args.
@@ -71,7 +71,7 @@ class EMCP_Tools_WPCLI_Validator {
 			foreach ( self::blocked_flag_prefixes() as $flag ) {
 				if ( 0 === stripos( $tok, $flag ) ) {
 					/* translators: %s: the refused flag */
-					return new \WP_Error( 'wpcli_blocked_flag', sprintf( __( 'The flag "%s" is not allowed.', 'emcp-tools' ), $flag ) );
+					return new \WP_Error( 'wpcli_blocked_flag', sprintf( __( 'The flag "%s" is not allowed.', 'karmcp' ), $flag ) );
 				}
 			}
 		}
@@ -83,11 +83,11 @@ class EMCP_Tools_WPCLI_Validator {
 
 		if ( in_array( $cmd, self::blocked_commands(), true ) ) {
 			/* translators: %s: the refused command */
-			return new \WP_Error( 'wpcli_blocked', sprintf( __( 'The command "wp %s" is not allowed for security reasons.', 'emcp-tools' ), $cmd ) );
+			return new \WP_Error( 'wpcli_blocked', sprintf( __( 'The command "wp %s" is not allowed for security reasons.', 'karmcp' ), $cmd ) );
 		}
 		if ( '' !== $sub && in_array( $cmd . ' ' . $sub, self::blocked_subcommands(), true ) ) {
 			/* translators: %s: the refused command + subcommand */
-			return new \WP_Error( 'wpcli_blocked', sprintf( __( 'The command "wp %s" is not allowed for security reasons.', 'emcp-tools' ), $cmd . ' ' . $sub ) );
+			return new \WP_Error( 'wpcli_blocked', sprintf( __( 'The command "wp %s" is not allowed for security reasons.', 'karmcp' ), $cmd . ' ' . $sub ) );
 		}
 
 		return $tokens;
@@ -95,17 +95,17 @@ class EMCP_Tools_WPCLI_Validator {
 
 	/** Blocked commands, filterable. @return string[] */
 	public static function blocked_commands(): array {
-		return array_map( 'strtolower', (array) apply_filters( 'emcp_tools_wpcli_blocked_commands', self::BLOCKED_COMMANDS ) );
+		return array_map( 'strtolower', (array) apply_filters( 'karmcp_wpcli_blocked_commands', self::BLOCKED_COMMANDS ) );
 	}
 
 	/** Blocked `command subcommand` pairs, filterable. @return string[] */
 	public static function blocked_subcommands(): array {
-		return array_map( 'strtolower', (array) apply_filters( 'emcp_tools_wpcli_blocked_subcommands', self::BLOCKED_SUBCOMMANDS ) );
+		return array_map( 'strtolower', (array) apply_filters( 'karmcp_wpcli_blocked_subcommands', self::BLOCKED_SUBCOMMANDS ) );
 	}
 
 	/** Blocked flag prefixes, filterable. @return string[] */
 	public static function blocked_flag_prefixes(): array {
-		return (array) apply_filters( 'emcp_tools_wpcli_blocked_flags', self::BLOCKED_FLAG_PREFIXES );
+		return (array) apply_filters( 'karmcp_wpcli_blocked_flags', self::BLOCKED_FLAG_PREFIXES );
 	}
 
 	/**
@@ -158,7 +158,7 @@ class EMCP_Tools_WPCLI_Validator {
 		}
 
 		if ( '' !== $quote ) {
-			return new \WP_Error( 'wpcli_unterminated_quote', __( 'The command has an unterminated quote.', 'emcp-tools' ) );
+			return new \WP_Error( 'wpcli_unterminated_quote', __( 'The command has an unterminated quote.', 'karmcp' ) );
 		}
 		if ( $has ) {
 			$tokens[] = $current;

@@ -10,7 +10,7 @@
  * (e.g. buttons -> buttons-child) and which are dynamic (server-rendered), which
  * cannot be read from attributes; that is structural, not attribute-guessing.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Spectra block catalog (list + real attributes).
  */
-class EMCP_Tools_Spectra_Catalog {
+class KarMCP_Spectra_Catalog {
 
 	const PLUGIN_FILE = 'ultimate-addons-for-gutenberg/ultimate-addons-for-gutenberg.php';
 	const PLUGIN_SLUG = 'ultimate-addons-for-gutenberg';

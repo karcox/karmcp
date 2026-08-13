@@ -5,7 +5,7 @@
  * Registers 2 tools for updating global colors and typography
  * in the Elementor kit (site-wide settings).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -18,10 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Global_Abilities {
+class KarMCP_Global_Abilities {
 
 	/**
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
@@ -30,9 +30,9 @@ class EMCP_Tools_Global_Abilities {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param EMCP_Tools_Data $data The data access layer.
+	 * @param KarMCP_Data $data The data access layer.
 	 */
-	public function __construct( EMCP_Tools_Data $data ) {
+	public function __construct( KarMCP_Data $data ) {
 		$this->data = $data;
 	}
 
@@ -45,8 +45,8 @@ class EMCP_Tools_Global_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/update-global-colors',
-			'emcp-tools/update-global-typography',
+			'karmcp/update-global-colors',
+			'karmcp/update-global-typography',
 		);
 	}
 
@@ -76,12 +76,12 @@ class EMCP_Tools_Global_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_update_global_colors(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/update-global-colors',
+		karmcp_register_ability(
+			'karmcp/update-global-colors',
 			array(
-				'label'               => __( 'Update Global Colors', 'emcp-tools' ),
-				'description'         => __( 'Updates the site-wide color palette in the Elementor kit. Provide an array of color objects with id, title, and color (hex).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Global Colors', 'karmcp' ),
+				'description'         => __( 'Updates the site-wide color palette in the Elementor kit. Provide an array of color objects with id, title, and color (hex).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_global_colors' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
@@ -89,21 +89,21 @@ class EMCP_Tools_Global_Abilities {
 					'properties' => array(
 						'colors' => array(
 							'type'        => 'array',
-							'description' => __( 'Array of color definitions.', 'emcp-tools' ),
+							'description' => __( 'Array of color definitions.', 'karmcp' ),
 							'items'       => array(
 								'type'       => 'object',
 								'properties' => array(
 									'_id'   => array(
 										'type'        => 'string',
-										'description' => __( 'Unique color ID (e.g. "primary").', 'emcp-tools' ),
+										'description' => __( 'Unique color ID (e.g. "primary").', 'karmcp' ),
 									),
 									'title' => array(
 										'type'        => 'string',
-										'description' => __( 'Human-readable title.', 'emcp-tools' ),
+										'description' => __( 'Human-readable title.', 'karmcp' ),
 									),
 									'color' => array(
 										'type'        => 'string',
-										'description' => __( 'Color value in hex format (e.g. "#FF5733").', 'emcp-tools' ),
+										'description' => __( 'Color value in hex format (e.g. "#FF5733").', 'karmcp' ),
 									),
 								),
 								'required' => array( '_id', 'title', 'color' ),
@@ -156,8 +156,8 @@ class EMCP_Tools_Global_Abilities {
 	 * @param string $summary Human summary.
 	 */
 	private function record_kit_change( array $snap, string $summary ): void {
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) && (int) $snap['id'] > 0 ) {
-			EMCP_Tools_Change_Recorder::record_meta(
+		if ( class_exists( 'KarMCP_Change_Recorder' ) && (int) $snap['id'] > 0 ) {
+			KarMCP_Change_Recorder::record_meta(
 				'post',
 				(int) $snap['id'],
 				array( '_elementor_page_settings' => $snap['before'] ),
@@ -173,13 +173,13 @@ class EMCP_Tools_Global_Abilities {
 		$colors = $input['colors'] ?? array();
 
 		if ( empty( $colors ) || ! is_array( $colors ) ) {
-			return new \WP_Error( 'missing_colors', __( 'The colors parameter is required and must be an array.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_colors', __( 'The colors parameter is required and must be an array.', 'karmcp' ) );
 		}
 
 		$kit = \Elementor\Plugin::$instance->kits_manager->get_active_kit();
 
 		if ( ! $kit || ! $kit->get_id() ) {
-			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'karmcp' ) );
 		}
 
 		// Get current kit settings.
@@ -214,9 +214,9 @@ class EMCP_Tools_Global_Abilities {
 			}
 		}
 
-		$emcp_kit_snap = $this->snapshot_kit_settings( $kit );
+		$karmcp_kit_snap = $this->snapshot_kit_settings( $kit );
 		$kit->update_settings( array( 'custom_colors' => $existing_colors ) );
-		$this->record_kit_change( $emcp_kit_snap, 'Updated global colors' );
+		$this->record_kit_change( $karmcp_kit_snap, 'Updated global colors' );
 
 		return array( 'success' => true );
 	}
@@ -226,12 +226,12 @@ class EMCP_Tools_Global_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_update_global_typography(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/update-global-typography',
+		karmcp_register_ability(
+			'karmcp/update-global-typography',
 			array(
-				'label'               => __( 'Update Global Typography', 'emcp-tools' ),
-				'description'         => __( 'Updates the site-wide typography settings in the Elementor kit.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Global Typography', 'karmcp' ),
+				'description'         => __( 'Updates the site-wide typography settings in the Elementor kit.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_global_typography' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
@@ -239,37 +239,37 @@ class EMCP_Tools_Global_Abilities {
 					'properties' => array(
 						'typography' => array(
 							'type'        => 'array',
-							'description' => __( 'Array of typography definitions.', 'emcp-tools' ),
+							'description' => __( 'Array of typography definitions.', 'karmcp' ),
 							'items'       => array(
 								'type'       => 'object',
 								'properties' => array(
 									'_id'                      => array(
 										'type'        => 'string',
-										'description' => __( 'Unique typography ID (e.g. "primary").', 'emcp-tools' ),
+										'description' => __( 'Unique typography ID (e.g. "primary").', 'karmcp' ),
 									),
 									'title'                    => array(
 										'type'        => 'string',
-										'description' => __( 'Human-readable title.', 'emcp-tools' ),
+										'description' => __( 'Human-readable title.', 'karmcp' ),
 									),
 									'typography_font_family'   => array(
 										'type'        => 'string',
-										'description' => __( 'Font family name.', 'emcp-tools' ),
+										'description' => __( 'Font family name.', 'karmcp' ),
 									),
 									'typography_font_size'     => array(
 										'type'        => 'object',
-										'description' => __( 'Font size with size and unit.', 'emcp-tools' ),
+										'description' => __( 'Font size with size and unit.', 'karmcp' ),
 									),
 									'typography_font_weight'   => array(
 										'type'        => 'string',
-										'description' => __( 'Font weight (100-900, normal, bold).', 'emcp-tools' ),
+										'description' => __( 'Font weight (100-900, normal, bold).', 'karmcp' ),
 									),
 									'typography_line_height'   => array(
 										'type'        => 'object',
-										'description' => __( 'Line height with size and unit.', 'emcp-tools' ),
+										'description' => __( 'Line height with size and unit.', 'karmcp' ),
 									),
 									'typography_letter_spacing' => array(
 										'type'        => 'object',
-										'description' => __( 'Letter spacing with size and unit.', 'emcp-tools' ),
+										'description' => __( 'Letter spacing with size and unit.', 'karmcp' ),
 									),
 								),
 								'required' => array( '_id', 'title' ),
@@ -308,13 +308,13 @@ class EMCP_Tools_Global_Abilities {
 		$typography = $input['typography'] ?? array();
 
 		if ( empty( $typography ) || ! is_array( $typography ) ) {
-			return new \WP_Error( 'missing_typography', __( 'The typography parameter is required and must be an array.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_typography', __( 'The typography parameter is required and must be an array.', 'karmcp' ) );
 		}
 
 		$kit = \Elementor\Plugin::$instance->kits_manager->get_active_kit();
 
 		if ( ! $kit || ! $kit->get_id() ) {
-			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'karmcp' ) );
 		}
 
 		$kit_settings      = $kit->get_settings();
@@ -363,9 +363,9 @@ class EMCP_Tools_Global_Abilities {
 			}
 		}
 
-		$emcp_kit_snap = $this->snapshot_kit_settings( $kit );
+		$karmcp_kit_snap = $this->snapshot_kit_settings( $kit );
 		$kit->update_settings( array( 'custom_typography' => $existing_typo ) );
-		$this->record_kit_change( $emcp_kit_snap, 'Updated global typography' );
+		$this->record_kit_change( $karmcp_kit_snap, 'Updated global typography' );
 
 		return array( 'success' => true );
 	}

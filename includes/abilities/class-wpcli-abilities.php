@@ -14,7 +14,7 @@
  * > eval-file, shell, raw db query, config writes, package install, or arbitrary
  * > PHP flags), ships disabled-by-default, is admin-gated, and audit-logs runs.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.0
  */
-class EMCP_Tools_WPCLI_Abilities {
+class KarMCP_WPCLI_Abilities {
 
 	/** @var string[] */
 	private $ability_names = array();
@@ -40,18 +40,18 @@ class EMCP_Tools_WPCLI_Abilities {
 	/** The four WP-CLI tool slugs (for the disabled-by-default defaults step). */
 	public static function slugs(): array {
 		return array(
-			'emcp-tools/run-wp-cli',
-			'emcp-tools/dispatch-wp-cli',
-			'emcp-tools/get-wp-cli-job',
-			'emcp-tools/list-wp-cli-jobs',
+			'karmcp/run-wp-cli',
+			'karmcp/dispatch-wp-cli',
+			'karmcp/get-wp-cli-job',
+			'karmcp/list-wp-cli-jobs',
 		);
 	}
 
 	public function register(): void {
 		$this->ability(
-			'emcp-tools/run-wp-cli',
-			__( 'Run WP-CLI Command', 'emcp-tools' ),
-			__( 'Run a wp-cli command and return stdout, stderr, and the exit code. Runs in-process over the WP-CLI stdio transport, or via a configured wp binary over HTTP. Dangerous commands (eval, shell, raw db query, config writes, package install) are refused. Disabled by default; manage_options.', 'emcp-tools' ),
+			'karmcp/run-wp-cli',
+			__( 'Run WP-CLI Command', 'karmcp' ),
+			__( 'Run a wp-cli command and return stdout, stderr, and the exit code. Runs in-process over the WP-CLI stdio transport, or via a configured wp binary over HTTP. Dangerous commands (eval, shell, raw db query, config writes, package install) are refused. Disabled by default; manage_options.', 'karmcp' ),
 			'execute_run',
 			array(
 				'command' => array( 'type' => 'string', 'description' => 'The wp-cli command, without the leading "wp" (e.g. "plugin list --format=json").' ),
@@ -61,9 +61,9 @@ class EMCP_Tools_WPCLI_Abilities {
 			false
 		);
 		$this->ability(
-			'emcp-tools/dispatch-wp-cli',
-			__( 'Dispatch WP-CLI Job', 'emcp-tools' ),
-			__( 'Run a wp-cli command as a detached background job (for long migrations / bulk tasks) and return a job id. Requires a configured wp base command. Poll it with get-wp-cli-job. Disabled by default; manage_options.', 'emcp-tools' ),
+			'karmcp/dispatch-wp-cli',
+			__( 'Dispatch WP-CLI Job', 'karmcp' ),
+			__( 'Run a wp-cli command as a detached background job (for long migrations / bulk tasks) and return a job id. Requires a configured wp base command. Poll it with get-wp-cli-job. Disabled by default; manage_options.', 'karmcp' ),
 			'execute_dispatch',
 			array(
 				'command' => array( 'type' => 'string', 'description' => 'The wp-cli command, without the leading "wp".' ),
@@ -73,18 +73,18 @@ class EMCP_Tools_WPCLI_Abilities {
 			false
 		);
 		$this->ability(
-			'emcp-tools/get-wp-cli-job',
-			__( 'Get WP-CLI Job', 'emcp-tools' ),
-			__( 'Return a background job\'s status (running/completed/failed), exit code, and captured stdout/stderr. Read-only; manage_options.', 'emcp-tools' ),
+			'karmcp/get-wp-cli-job',
+			__( 'Get WP-CLI Job', 'karmcp' ),
+			__( 'Return a background job\'s status (running/completed/failed), exit code, and captured stdout/stderr. Read-only; manage_options.', 'karmcp' ),
 			'execute_get_job',
 			array( 'job_id' => array( 'type' => 'string' ) ),
 			array( 'job_id' ),
 			true
 		);
 		$this->ability(
-			'emcp-tools/list-wp-cli-jobs',
-			__( 'List WP-CLI Jobs', 'emcp-tools' ),
-			__( 'List recent WP-CLI background jobs with their status and timestamps. Read-only; manage_options.', 'emcp-tools' ),
+			'karmcp/list-wp-cli-jobs',
+			__( 'List WP-CLI Jobs', 'karmcp' ),
+			__( 'List recent WP-CLI background jobs with their status and timestamps. Read-only; manage_options.', 'karmcp' ),
 			'execute_list_jobs',
 			array(),
 			array(),
@@ -99,12 +99,12 @@ class EMCP_Tools_WPCLI_Abilities {
 
 	private function ability( string $name, string $label, string $description, string $exec, array $props, array $required, bool $readonly ): void {
 		$this->ability_names[] = $name;
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$name,
 			array(
 				'label'               => $label,
 				'description'         => $description,
-				'category'            => 'emcp-tools',
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, $exec ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array( 'type' => 'object', 'properties' => $props, 'required' => $required ),
@@ -117,7 +117,7 @@ class EMCP_Tools_WPCLI_Abilities {
 	public function execute_run( $input ) {
 		$command = trim( (string) ( $input['command'] ?? '' ) );
 		$timeout = min( 300, max( 1, (int) ( $input['timeout'] ?? 60 ) ) );
-		$result  = ( new EMCP_Tools_WPCLI_Runner() )->run( $command, $timeout );
+		$result  = ( new KarMCP_WPCLI_Runner() )->run( $command, $timeout );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
@@ -129,7 +129,7 @@ class EMCP_Tools_WPCLI_Abilities {
 	public function execute_dispatch( $input ) {
 		$command = trim( (string) ( $input['command'] ?? '' ) );
 		$timeout = min( 86400, max( 1, (int) ( $input['timeout'] ?? 900 ) ) );
-		$result  = ( new EMCP_Tools_WPCLI_Jobs() )->dispatch( $command, $timeout );
+		$result  = ( new KarMCP_WPCLI_Jobs() )->dispatch( $command, $timeout );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
@@ -138,19 +138,19 @@ class EMCP_Tools_WPCLI_Abilities {
 	}
 
 	public function execute_get_job( $input ) {
-		return ( new EMCP_Tools_WPCLI_Jobs() )->get( (string) ( $input['job_id'] ?? '' ) );
+		return ( new KarMCP_WPCLI_Jobs() )->get( (string) ( $input['job_id'] ?? '' ) );
 	}
 
 	public function execute_list_jobs( $input ) {
-		return array( 'jobs' => ( new EMCP_Tools_WPCLI_Jobs() )->all() );
+		return array( 'jobs' => ( new KarMCP_WPCLI_Jobs() )->all() );
 	}
 
 	/** Record a run to the change ledger (not reversible — commands have no before-image). */
 	private function log( string $action, string $command, $exit_code ): void {
-		if ( ! class_exists( 'EMCP_Tools_Change_Log' ) ) {
+		if ( ! class_exists( 'KarMCP_Change_Log' ) ) {
 			return;
 		}
-		EMCP_Tools_Change_Log::record(
+		KarMCP_Change_Log::record(
 			array(
 				'domain'  => 'wpcli',
 				'action'  => $action,

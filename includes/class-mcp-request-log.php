@@ -8,16 +8,16 @@
  * no status code or step name. This records each MCP request's result and, when
  * WP_DEBUG is on, the underlying error, surfaced on the "MCP Log" admin tab.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_MCP_Request_Log {
+class KarMCP_MCP_Request_Log {
 
-	const OPTION    = 'emcp_tools_mcp_request_log';
+	const OPTION    = 'karmcp_mcp_request_log';
 	const MAX_COUNT = 100;
 
 	/** Test seam: when non-null, overrides the WP_DEBUG check. */

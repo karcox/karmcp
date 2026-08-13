@@ -3,9 +3,9 @@
  * Free + core Elementor widget catalog data.
  *
  * Harvested from the convenience-tool registrations in class-widget-abilities.php.
- * Plain data — see EMCP_Tools_Widget_Catalog for the read API.
+ * Plain data — see KarMCP_Widget_Catalog for the read API.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 

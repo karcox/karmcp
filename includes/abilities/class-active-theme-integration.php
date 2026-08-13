@@ -9,7 +9,7 @@
  * tools; this integration supplies the context the agent reasons over. File
  * edits happen via the Filesystem tools after create-child-theme.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * The framework-agnostic active-theme integration.
  */
-class EMCP_Tools_Active_Theme_Integration extends EMCP_Tools_Theme_Integration {
+class KarMCP_Active_Theme_Integration extends KarMCP_Theme_Integration {
 
 	/**
 	 * Known theme-framework template slugs (for the `framework` context hint).
@@ -48,7 +48,7 @@ class EMCP_Tools_Active_Theme_Integration extends EMCP_Tools_Theme_Integration {
 	}
 
 	public function label(): string {
-		return __( 'Active Theme', 'emcp-tools' );
+		return __( 'Active Theme', 'karmcp' );
 	}
 
 	public function is_available(): bool {
@@ -61,25 +61,25 @@ class EMCP_Tools_Active_Theme_Integration extends EMCP_Tools_Theme_Integration {
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_get_context' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'Active theme identity + capabilities: parent/child, detected framework, is_block_theme, template dir, theme supports, registered menu locations, and whether a child theme exists. Call this first.', 'emcp-tools' ),
+				'desc' => __( 'Active theme identity + capabilities: parent/child, detected framework, is_block_theme, template dir, theme supports, registered menu locations, and whether a child theme exists. Call this first.', 'karmcp' ),
 			),
 			'get-mods'           => array(
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_get_mods' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'All theme_mod values for the active theme (customizer-backed state).', 'emcp-tools' ),
+				'desc' => __( 'All theme_mod values for the active theme (customizer-backed state).', 'karmcp' ),
 			),
 			'set-mods'           => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'execute_set_mods' ),
 				'perm' => array( $this, 'can_write' ),
-				'desc' => __( 'Set theme_mod values ({ values: { key: value } }). Structural mods (menu locations, widgets) are refused.', 'emcp-tools' ),
+				'desc' => __( 'Set theme_mod values ({ values: { key: value } }). Structural mods (menu locations, widgets) are refused.', 'karmcp' ),
 			),
 			'create-child-theme' => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'execute_create_child_theme' ),
 				'perm' => array( $this, 'can_manage_theme' ),
-				'desc' => __( 'Create + activate a child theme of the active parent so the agent can safely edit theme files (requires { confirm: true }).', 'emcp-tools' ),
+				'desc' => __( 'Create + activate a child theme of the active parent so the agent can safely edit theme files (requires { confirm: true }).', 'karmcp' ),
 			),
 		);
 	}
@@ -118,7 +118,7 @@ class EMCP_Tools_Active_Theme_Integration extends EMCP_Tools_Theme_Integration {
 			'template_dir'   => (string) get_stylesheet_directory(),
 			'supports'       => $supports,
 			'menu_locations' => function_exists( 'get_registered_nav_menus' ) ? (array) get_registered_nav_menus() : array(),
-			'has_child'      => EMCP_Tools_Child_Theme_Builder::child_exists(),
+			'has_child'      => KarMCP_Child_Theme_Builder::child_exists(),
 		);
 	}
 
@@ -138,7 +138,7 @@ class EMCP_Tools_Active_Theme_Integration extends EMCP_Tools_Theme_Integration {
 	public function execute_set_mods( $input ) {
 		$values = ( isset( $input['values'] ) && is_array( $input['values'] ) ) ? $input['values'] : array();
 		if ( empty( $values ) ) {
-			return new WP_Error( 'missing_values', __( 'Provide a "values" object of theme_mod key => value pairs.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_values', __( 'Provide a "values" object of theme_mod key => value pairs.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 
 		$updated = array();
@@ -167,10 +167,10 @@ class EMCP_Tools_Active_Theme_Integration extends EMCP_Tools_Theme_Integration {
 		if ( true !== ( $input['confirm'] ?? null ) ) {
 			return new WP_Error(
 				'confirm_required',
-				__( 'Creating and activating a child theme changes the active theme and enables file writes; pass { confirm: true } to proceed.', 'emcp-tools' ),
+				__( 'Creating and activating a child theme changes the active theme and enables file writes; pass { confirm: true } to proceed.', 'karmcp' ),
 				array( 'status' => 400 )
 			);
 		}
-		return EMCP_Tools_Child_Theme_Builder::create();
+		return KarMCP_Child_Theme_Builder::create();
 	}
 }

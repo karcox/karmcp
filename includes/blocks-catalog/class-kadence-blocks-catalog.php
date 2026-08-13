@@ -13,7 +13,7 @@
  * blocks + their container relationships were live-verified on Kadence Blocks
  * 3.7.9 (see docs/superpowers/specs/2026-08-07-kadence-integration-design.md).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.9.0
  */
 
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Kadence Blocks catalog (list + real attributes + curation).
  */
-class EMCP_Tools_Kadence_Blocks_Catalog {
+class KarMCP_Kadence_Blocks_Catalog {
 
 	const PLUGIN_FILE = 'kadence-blocks/kadence-blocks.php';
 	const DEFAULT_CAP = 30;

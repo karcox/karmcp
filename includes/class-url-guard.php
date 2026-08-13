@@ -6,7 +6,7 @@
  * private, reserved, or loopback addresses — preventing Server-Side Request
  * Forgery via the image/SVG sideload tools.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.9.1
  */
 
@@ -15,9 +15,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class EMCP_Tools_Url_Guard
+ * Class KarMCP_Url_Guard
  */
-class EMCP_Tools_Url_Guard {
+class KarMCP_Url_Guard {
 
 	/**
 	 * Whether a URL is a safe http(s) target that does not resolve to a
@@ -80,7 +80,7 @@ class EMCP_Tools_Url_Guard {
 		if ( ! self::is_safe_remote_url( $url ) ) {
 			return new \WP_Error(
 				'unsafe_url',
-				__( 'The URL is not allowed (must be a public http or https address).', 'emcp-tools' )
+				__( 'The URL is not allowed (must be a public http or https address).', 'karmcp' )
 			);
 		}
 
@@ -170,20 +170,20 @@ class EMCP_Tools_Url_Guard {
 		$parts = wp_parse_url( $url );
 
 		if ( ! is_array( $parts ) || empty( $parts['host'] ) ) {
-			return new \WP_Error( 'blocked_scheme', __( 'Only absolute http:// or https:// URLs can be fetched.', 'emcp-tools' ) );
+			return new \WP_Error( 'blocked_scheme', __( 'Only absolute http:// or https:// URLs can be fetched.', 'karmcp' ) );
 		}
 
 		$scheme = isset( $parts['scheme'] ) ? strtolower( (string) $parts['scheme'] ) : '';
 		if ( 'http' !== $scheme && 'https' !== $scheme ) {
-			return new \WP_Error( 'blocked_scheme', __( 'Only absolute http:// or https:// URLs can be fetched.', 'emcp-tools' ) );
+			return new \WP_Error( 'blocked_scheme', __( 'Only absolute http:// or https:// URLs can be fetched.', 'karmcp' ) );
 		}
 
 		if ( isset( $parts['user'] ) || isset( $parts['pass'] ) ) {
-			return new \WP_Error( 'blocked_credentials', __( 'URLs containing credentials cannot be fetched.', 'emcp-tools' ) );
+			return new \WP_Error( 'blocked_credentials', __( 'URLs containing credentials cannot be fetched.', 'karmcp' ) );
 		}
 
 		if ( isset( $parts['port'] ) && ! in_array( (int) $parts['port'], self::ALLOWED_PORTS, true ) ) {
-			return new \WP_Error( 'blocked_port', __( 'Only ports 80 and 443 can be fetched.', 'emcp-tools' ) );
+			return new \WP_Error( 'blocked_port', __( 'Only ports 80 and 443 can be fetched.', 'karmcp' ) );
 		}
 
 		$host = self::normalize_host( (string) $parts['host'] );
@@ -191,7 +191,7 @@ class EMCP_Tools_Url_Guard {
 		// An IP literal needs no DNS — check it directly.
 		if ( false !== filter_var( $host, FILTER_VALIDATE_IP ) ) {
 			return self::ip_is_blocked( $host )
-				? new \WP_Error( 'blocked_host', __( 'That address is on a private, loopback, or link-local network and cannot be fetched.', 'emcp-tools' ) )
+				? new \WP_Error( 'blocked_host', __( 'That address is on a private, loopback, or link-local network and cannot be fetched.', 'karmcp' ) )
 				: $url;
 		}
 
@@ -199,14 +199,14 @@ class EMCP_Tools_Url_Guard {
 		$ips      = (array) call_user_func( $resolver, $host );
 
 		if ( empty( $ips ) ) {
-			return new \WP_Error( 'blocked_host', __( 'That host could not be resolved.', 'emcp-tools' ) );
+			return new \WP_Error( 'blocked_host', __( 'That host could not be resolved.', 'karmcp' ) );
 		}
 
 		// EVERY resolved address must be public: a host publishing one public
 		// and one internal record must not slip through.
 		foreach ( $ips as $ip ) {
 			if ( self::ip_is_blocked( (string) $ip ) ) {
-				return new \WP_Error( 'blocked_host', __( 'That host resolves to a private, loopback, or link-local address and cannot be fetched.', 'emcp-tools' ) );
+				return new \WP_Error( 'blocked_host', __( 'That host resolves to a private, loopback, or link-local address and cannot be fetched.', 'karmcp' ) );
 			}
 		}
 

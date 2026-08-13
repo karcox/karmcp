@@ -1,6 +1,6 @@
 <?php
 /**
- * Builds a Claude Desktop .mcpb bundle that installs the EMCP MCP server.
+ * Builds a Claude Desktop .mcpb bundle that installs the KarMCP MCP server.
  *
  * The bundle contains two files:
  *   manifest.json      — MCPB 0.3 manifest
@@ -11,7 +11,7 @@
  * it to the WordPress REST endpoint, and writes responses to stdout. Running
  * it requires nothing beyond the Node.js binary Claude Desktop already has.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Mcpb_Builder {
+class KarMCP_Mcpb_Builder {
 
 	const MANIFEST_VERSION = '0.3';
 
@@ -40,15 +40,15 @@ class EMCP_Tools_Mcpb_Builder {
 	public static function build_manifest( string $site_url, string $username, string $app_password ): array {
 		$host    = (string) wp_parse_url( $site_url, PHP_URL_HOST );
 		$slug    = self::host_slug( $host );
-		$version = defined( 'EMCP_TOOLS_VERSION' ) ? EMCP_TOOLS_VERSION : '0.0.0';
+		$version = defined( 'KARMCP_VERSION' ) ? KARMCP_VERSION : '0.0.0';
 
 		return array(
 			'manifest_version' => self::MANIFEST_VERSION,
 			// Unique per site: Claude Desktop identifies extensions by the
 			// manifest `name`, so a fixed name makes each install silently
 			// overwrite the previous site's bundle. See #86.
-			'name'             => '' !== $slug ? 'emcp-tools-' . $slug : 'emcp-tools',
-			'display_name'     => sprintf( 'EMCP Tools - %s', $host ),
+			'name'             => '' !== $slug ? 'karmcp-' . $slug : 'karmcp',
+			'display_name'     => sprintf( 'KarMCP - %s', $host ),
 			'version'          => $version,
 			'description'      => sprintf( 'Connect Claude Desktop to %s for Elementor and WordPress management via MCP.', $host ),
 			'author'           => array( 'name' => 'MSR Builds' ),
@@ -100,14 +100,14 @@ class EMCP_Tools_Mcpb_Builder {
 	 */
 	public static function build_zip( array $manifest ) {
 		if ( ! class_exists( 'ZipArchive' ) ) {
-			return new \WP_Error( 'no_zip', __( 'The ZipArchive PHP extension is required to build the bundle.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_zip', __( 'The ZipArchive PHP extension is required to build the bundle.', 'karmcp' ) );
 		}
 
 		// Convert the ESM proxy source to a self-contained CJS server file.
-		$proxy_source_path = EMCP_TOOLS_DIR . 'bin/mcp-proxy.mjs';
+		$proxy_source_path = KARMCP_DIR . 'bin/mcp-proxy.mjs';
 		$proxy_source      = @file_get_contents( $proxy_source_path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors, WordPress.WP.AlternativeFunctions
 		if ( false === $proxy_source ) {
-			return new \WP_Error( 'no_proxy', __( 'Could not read the bundled proxy file (bin/mcp-proxy.mjs). Please reinstall the plugin.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_proxy', __( 'Could not read the bundled proxy file (bin/mcp-proxy.mjs). Please reinstall the plugin.', 'karmcp' ) );
 		}
 
 		$env           = $manifest['server']['mcp_config']['env'] ?? array();
@@ -117,15 +117,15 @@ class EMCP_Tools_Mcpb_Builder {
 			return new \WP_Error( 'bad_server_js', $server_js_err );
 		}
 
-		$tmp = wp_tempnam( 'emcp-tools.mcpb' );
+		$tmp = wp_tempnam( 'karmcp.mcpb' );
 		if ( ! $tmp ) {
-			return new \WP_Error( 'no_tmp', __( 'Could not create a temporary file for the bundle.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_tmp', __( 'Could not create a temporary file for the bundle.', 'karmcp' ) );
 		}
 
 		$zip = new \ZipArchive();
 		if ( true !== $zip->open( $tmp, \ZipArchive::OVERWRITE | \ZipArchive::CREATE ) ) {
 			@unlink( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
-			return new \WP_Error( 'no_open', __( 'Could not open the bundle archive for writing.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_open', __( 'Could not open the bundle archive for writing.', 'karmcp' ) );
 		}
 
 		$zip->addFromString( 'manifest.json', (string) wp_json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
@@ -182,7 +182,7 @@ class EMCP_Tools_Mcpb_Builder {
 		//    injects the mcp_config.env values.
 		$lines = array(
 			"'use strict';",
-			'// EMCP Tools, self-contained MCP proxy (credentials embedded).',
+			'// KarMCP, self-contained MCP proxy (credentials embedded).',
 			'// Credentials are set here so this works even when the host does',
 			'// not inject mcp_config.env into the process environment.',
 		);

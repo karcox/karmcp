@@ -9,11 +9,11 @@
  *
  * Pro tier, on by default. Metadata only — the gating is read statically:
  *   - the ability registrar checks is_enabled() before registering the tools,
- *   - EMCP_Tools_Skill_Catalog::discovery_catalog() checks it before injecting.
+ *   - KarMCP_Skill_Catalog::discovery_catalog() checks it before injecting.
  * So this class carries no Pro logic and lives safely in the free tree, like
- * EMCP_Tools_Templates_Module.
+ * KarMCP_Templates_Module.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.2.0
  */
 
@@ -26,18 +26,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.2.0
  */
-class EMCP_Tools_Agent_Skills_Module extends EMCP_Tools_Module {
+class KarMCP_Agent_Skills_Module extends KarMCP_Module {
 
 	public function id(): string {
 		return 'agent-skills';
 	}
 
 	public function title(): string {
-		return __( 'Agent Skills', 'emcp-tools' );
+		return __( 'Agent Skills', 'karmcp' );
 	}
 
 	public function description(): string {
-		return __( 'Expose the bundled skills to connected AI agents at runtime, the list-skills / get-skill tools plus a Skills catalog in the discovery context. Turn off to remove that injection (the Skills download on the Skills tab is unaffected).', 'emcp-tools' );
+		return __( 'Expose the bundled skills to connected AI agents at runtime, the list-skills / get-skill tools plus a Skills catalog in the discovery context. Turn off to remove that injection (the Skills download on the Skills tab is unaffected).', 'karmcp' );
 	}
 
 	public function tier(): string {
@@ -48,14 +48,14 @@ class EMCP_Tools_Agent_Skills_Module extends EMCP_Tools_Module {
 		return true;
 	}
 
-	/** Requires an active Pro license (the skills are Pro content). */
+	/** The skill catalog + abilities shipped in the upstream Pro overlay and are absent here. */
 	public function is_available(): bool {
-		return function_exists( 'emcp_tools_fs' ) && emcp_tools_fs()->can_use_premium_code();
+		return false;
 	}
 
 	/** The Skills tab is where the skills live (download + guides). */
 	public function settings_url(): string {
-		return admin_url( 'admin.php?page=' . EMCP_Tools_Admin::PAGE_SLUG . '-skills' );
+		return admin_url( 'admin.php?page=' . KarMCP_Admin::PAGE_SLUG . '-skills' );
 	}
 
 	/** No overlay knobs — the on/off toggle is the whole control. */
@@ -72,7 +72,7 @@ class EMCP_Tools_Agent_Skills_Module extends EMCP_Tools_Module {
 	 * @return bool
 	 */
 	public static function is_enabled(): bool {
-		$active = (array) get_option( EMCP_Tools_Module::OPTION_ACTIVE, array() );
+		$active = (array) get_option( KarMCP_Module::OPTION_ACTIVE, array() );
 		return in_array( 'agent-skills', $active, true );
 	}
 }

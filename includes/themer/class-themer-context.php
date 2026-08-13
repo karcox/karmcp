@@ -6,7 +6,7 @@
  * object into a plain array; from_parts() is the pure normalizer (defaults every
  * key) so matchers/tests never worry about missing keys.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Context {
+class KarMCP_Themer_Context {
 
 	/**
 	 * Normalize a partial context into the full shape (pure).

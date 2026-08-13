@@ -10,7 +10,7 @@
  * active. Building reuses the Gutenberg block tree; this pack is the Spectra-aware
  * discover -> inspect -> act layer, mirroring the Elementor widget catalog.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Spectra block catalog + insertion integration.
  */
-class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
+class KarMCP_Spectra_Integration extends KarMCP_Theme_Integration {
 
 	protected function capabilities(): array {
 		return array( 'supports_patterns' => false, 'supports_preview' => false, 'styles_model' => 'attributes' );
@@ -33,11 +33,11 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 	}
 
 	public function label(): string {
-		return __( 'Spectra Blocks', 'emcp-tools' );
+		return __( 'Spectra Blocks', 'karmcp' );
 	}
 
 	public function is_available(): bool {
-		return EMCP_Tools_Spectra_Catalog::is_active();
+		return KarMCP_Spectra_Catalog::is_active();
 	}
 
 	// Building content, not theme options.
@@ -54,19 +54,19 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_list_blocks' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'Compact catalog of the Spectra blocks available on this site (name, title, description, category, doc). Optional { category, search }. Step 1 of discover -> inspect -> act.', 'emcp-tools' ),
+				'desc' => __( 'Compact catalog of the Spectra blocks available on this site (name, title, description, category, doc). Optional { category, search }. Step 1 of discover -> inspect -> act.', 'karmcp' ),
 			),
 			'get-block-schema' => array(
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_get_block_schema' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'A Spectra block\'s key attributes (real names + defaults from Spectra) + a ready-to-use example ({ name } or { names: [...] }). { full: true } returns the block\'s full attribute set.', 'emcp-tools' ),
+				'desc' => __( 'A Spectra block\'s key attributes (real names + defaults from Spectra) + a ready-to-use example ({ name } or { names: [...] }). { full: true } returns the block\'s full attribute set.', 'karmcp' ),
 			),
 			'add-block'        => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'execute_add_block' ),
 				'perm' => array( $this, 'can_write' ),
-				'desc' => __( 'Insert a Spectra block into a post ({ post_id, block, attributes?, position? }); Spectra applies its own defaults, a block_id is generated. position: { mode: append|prepend|before|after|inside, path?: [..] }.', 'emcp-tools' ),
+				'desc' => __( 'Insert a Spectra block into a post ({ post_id, block, attributes?, position? }); Spectra applies its own defaults, a block_id is generated. position: { mode: append|prepend|before|after|inside, path?: [..] }.', 'karmcp' ),
 			),
 		);
 	}
@@ -78,7 +78,7 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 	public function execute_list_blocks( $input ): array {
 		$category = isset( $input['category'] ) ? (string) $input['category'] : '';
 		$search   = isset( $input['search'] ) ? (string) $input['search'] : '';
-		$blocks   = EMCP_Tools_Spectra_Catalog::blocks_index( $category, $search );
+		$blocks   = KarMCP_Spectra_Catalog::blocks_index( $category, $search );
 		return array(
 			'count'  => count( $blocks ),
 			'blocks' => $blocks,
@@ -97,7 +97,7 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 			$names = array( (string) $input['name'] );
 		}
 		if ( empty( $names ) ) {
-			return new WP_Error( 'missing_name', __( 'Provide a block "name" or "names" array.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_name', __( 'Provide a block "name" or "names" array.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$full = ! empty( $input['full'] );
 
@@ -118,18 +118,18 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 
 		$post = $post_id ? get_post( $post_id ) : null;
 		if ( ! $post ) {
-			return new WP_Error( 'not_found', __( 'Post not found.', 'emcp-tools' ), array( 'status' => 404 ) );
+			return new WP_Error( 'not_found', __( 'Post not found.', 'karmcp' ), array( 'status' => 404 ) );
 		}
-		if ( null === EMCP_Tools_Spectra_Catalog::block_meta( $name ) ) {
-			return new WP_Error( 'unknown_block', sprintf( __( 'Unknown Spectra block: %s', 'emcp-tools' ), $name ), array( 'status' => 404 ) );
+		if ( null === KarMCP_Spectra_Catalog::block_meta( $name ) ) {
+			return new WP_Error( 'unknown_block', sprintf( __( 'Unknown Spectra block: %s', 'karmcp' ), $name ), array( 'status' => 404 ) );
 		}
 		$attrs    = ( isset( $input['attributes'] ) && is_array( $input['attributes'] ) ) ? $input['attributes'] : array();
 		$position = ( isset( $input['position'] ) && is_array( $input['position'] ) ) ? $input['position'] : array( 'mode' => 'append' );
 
 		$block = $this->build_block( $name, $attrs );
-		$tree  = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		$tree  = EMCP_Tools_Block_Tree::insert( $tree, array( $block ), $position );
-		$markup = EMCP_Tools_Block_Tree::to_markup( $tree );
+		$tree  = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		$tree  = KarMCP_Block_Tree::insert( $tree, array( $block ), $position );
+		$markup = KarMCP_Block_Tree::to_markup( $tree );
 
 		$result = wp_update_post( array( 'ID' => $post_id, 'post_content' => wp_slash( $markup ) ), true );
 		if ( is_wp_error( $result ) ) {
@@ -156,7 +156,7 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 	 * @return array
 	 */
 	private function schema_for( string $name, bool $full ): array {
-		$meta = EMCP_Tools_Spectra_Catalog::block_meta( $name );
+		$meta = KarMCP_Spectra_Catalog::block_meta( $name );
 		if ( null === $meta ) {
 			return array( 'name' => $name, 'error' => 'unknown_block' );
 		}
@@ -166,16 +166,16 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 			'title'       => (string) ( $meta['title'] ?? $name ),
 			'description' => (string) ( $meta['description'] ?? '' ),
 			'category'    => $cats[0] ?? '',
-			'doc'         => EMCP_Tools_Spectra_Catalog::doc_url( $name ),
+			'doc'         => KarMCP_Spectra_Catalog::doc_url( $name ),
 		);
 
-		$real = EMCP_Tools_Spectra_Catalog::real_attributes( $name );
+		$real = KarMCP_Spectra_Catalog::real_attributes( $name );
 		if ( ! empty( $real ) ) {
 			// Real attributes from Spectra's own attributes.php (names + defaults).
-			$highlight = EMCP_Tools_Spectra_Catalog::highlight( $name );
+			$highlight = KarMCP_Spectra_Catalog::highlight( $name );
 			$keys      = ! empty( $highlight )
 				? array_values( array_intersect( $highlight, array_keys( $real ) ) )
-				: array_slice( array_keys( $real ), 0, EMCP_Tools_Spectra_Catalog::DEFAULT_CAP );
+				: array_slice( array_keys( $real ), 0, KarMCP_Spectra_Catalog::DEFAULT_CAP );
 			$params = array();
 			foreach ( $keys as $k ) {
 				$params[] = array( 'name' => $k, 'default' => $real[ $k ] );
@@ -185,30 +185,30 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 			if ( empty( $highlight ) && count( $real ) > count( $keys ) ) {
 				$entry['note'] = sprintf(
 					/* translators: 1: shown count, 2: total count. */
-					__( 'Showing the first %1$d of %2$d attributes; pass full:true for all. The heading/body text of static blocks is RichText content, not an attribute.', 'emcp-tools' ),
+					__( 'Showing the first %1$d of %2$d attributes; pass full:true for all. The heading/body text of static blocks is RichText content, not an attribute.', 'karmcp' ),
 					count( $keys ),
 					count( $real )
 				);
 			}
 			$entry['example'] = $this->example_markup( $name );
-			$entry['dynamic'] = ! empty( EMCP_Tools_Spectra_Catalog::structure( $name )['dynamic'] ) || ! empty( $meta['dynamic_assets'] );
+			$entry['dynamic'] = ! empty( KarMCP_Spectra_Catalog::structure( $name )['dynamic'] ) || ! empty( $meta['dynamic_assets'] );
 		} else {
 			$reg = $this->registered_block( $name );
 			if ( $reg && ! empty( $reg->attributes ) ) {
 				$entry['registered_attributes'] = array_keys( (array) $reg->attributes );
-				$entry['note']                  = __( 'Attributes read from the block registry. Use full:true for the raw schema, or see the doc link.', 'emcp-tools' );
+				$entry['note']                  = __( 'Attributes read from the block registry. Use full:true for the raw schema, or see the doc link.', 'karmcp' );
 			} else {
-				$entry['note'] = __( 'Attributes are not available server-side for this block. See the doc link for its settings.', 'emcp-tools' );
+				$entry['note'] = __( 'Attributes are not available server-side for this block. See the doc link for its settings.', 'karmcp' );
 			}
 		}
 
 		// Native attributes registered via a shared helper (background image/video,
 		// border radius, box shadow) are NOT in attributes.php, so surface them here
 		// so agents use them instead of a core/html workaround.
-		$shared = EMCP_Tools_Spectra_Catalog::shared_attributes( $name );
+		$shared = KarMCP_Spectra_Catalog::shared_attributes( $name );
 		if ( ! empty( $shared ) ) {
 			$entry['shared_attributes'] = $shared;
-			$entry['schema_note']       = __( 'Some native attributes (background image/video, border radius, box shadow) are registered via a shared helper and are NOT in the attribute list above, see shared_attributes. Prefer these native container attributes over a core/html workaround; they are editable in Spectra and survive editor saves.', 'emcp-tools' );
+			$entry['schema_note']       = __( 'Some native attributes (background image/video, border radius, box shadow) are registered via a shared helper and are NOT in the attribute list above, see shared_attributes. Prefer these native container attributes over a core/html workaround; they are editable in Spectra and survive editor saves.', 'karmcp' );
 		}
 
 		if ( $full ) {
@@ -240,10 +240,10 @@ class EMCP_Tools_Spectra_Integration extends EMCP_Tools_Theme_Integration {
 		// Caller attributes + a generated block_id. Spectra applies its own
 		// defaults from the block's attributes.php, so the stored block stays
 		// minimal (only the caller's overrides + block_id).
-		$merged = array_merge( $attrs, array( 'block_id' => EMCP_Tools_Id_Generator::generate() ) );
+		$merged = array_merge( $attrs, array( 'block_id' => KarMCP_Id_Generator::generate() ) );
 
 		$inner_blocks = array();
-		$structure    = EMCP_Tools_Spectra_Catalog::structure( $name );
+		$structure    = KarMCP_Spectra_Catalog::structure( $name );
 		if ( ! empty( $structure['inner'] ) ) {
 			foreach ( $structure['inner'] as $child ) {
 				$inner_blocks[] = $this->build_block( (string) $child['name'], isset( $child['attrs'] ) ? (array) $child['attrs'] : array() );

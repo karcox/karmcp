@@ -6,7 +6,7 @@
  * Public clients only: there is no client secret; the authorization code is
  * bound to a PKCE challenge at `/authorize` and verified here.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.1
  */
 
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.1
  */
-class EMCP_Tools_OAuth_Token {
+class KarMCP_OAuth_Token {
 
 	const ACCESS_TTL    = 3600;    // 1 hour (default; see access_ttl()).
 	const REFRESH_TTL   = 2592000; // 30 days
@@ -28,30 +28,30 @@ class EMCP_Tools_OAuth_Token {
 	/**
 	 * Grace window during which a just-rotated refresh token remains usable, so a
 	 * lost-response retry re-rotates instead of 401'ing mid-chat. Overridable via
-	 * the `EMCP_TOOLS_OAUTH_REFRESH_GRACE` constant or the
-	 * `emcp_tools_oauth_refresh_grace` filter. Floored at 0 (0 = immediate delete).
+	 * the `KARMCP_OAUTH_REFRESH_GRACE` constant or the
+	 * `karmcp_oauth_refresh_grace` filter. Floored at 0 (0 = immediate delete).
 	 *
 	 * @return int
 	 */
 	public static function refresh_grace(): int {
-		$g = defined( 'EMCP_TOOLS_OAUTH_REFRESH_GRACE' ) ? (int) EMCP_TOOLS_OAUTH_REFRESH_GRACE : self::REFRESH_GRACE;
-		$g = (int) apply_filters( 'emcp_tools_oauth_refresh_grace', $g );
+		$g = defined( 'KARMCP_OAUTH_REFRESH_GRACE' ) ? (int) KARMCP_OAUTH_REFRESH_GRACE : self::REFRESH_GRACE;
+		$g = (int) apply_filters( 'karmcp_oauth_refresh_grace', $g );
 		return max( 0, $g );
 	}
 
 	/**
 	 * Effective access-token lifetime, in seconds.
 	 *
-	 * Overridable via the `EMCP_TOOLS_OAUTH_ACCESS_TTL` constant or the
-	 * `emcp_tools_oauth_access_ttl` filter, so a short TTL can be used to
+	 * Overridable via the `KARMCP_OAUTH_ACCESS_TTL` constant or the
+	 * `karmcp_oauth_access_ttl` filter, so a short TTL can be used to
 	 * exercise the token-refresh path in minutes instead of an hour (e.g. to
 	 * verify a client survives a mid-chat refresh). Floored at 60s.
 	 *
 	 * @return int
 	 */
 	public static function access_ttl(): int {
-		$ttl = defined( 'EMCP_TOOLS_OAUTH_ACCESS_TTL' ) ? (int) EMCP_TOOLS_OAUTH_ACCESS_TTL : self::ACCESS_TTL;
-		$ttl = (int) apply_filters( 'emcp_tools_oauth_access_ttl', $ttl );
+		$ttl = defined( 'KARMCP_OAUTH_ACCESS_TTL' ) ? (int) KARMCP_OAUTH_ACCESS_TTL : self::ACCESS_TTL;
+		$ttl = (int) apply_filters( 'karmcp_oauth_access_ttl', $ttl );
 		return max( 60, $ttl );
 	}
 
@@ -60,7 +60,7 @@ class EMCP_Tools_OAuth_Token {
 	 */
 	public static function register_routes(): void {
 		register_rest_route(
-			EMCP_Tools_OAuth_Server::REST_NAMESPACE,
+			KarMCP_OAuth_Server::REST_NAMESPACE,
 			'/token',
 			array(
 				'methods'             => 'POST',
@@ -69,7 +69,7 @@ class EMCP_Tools_OAuth_Token {
 			)
 		);
 		register_rest_route(
-			EMCP_Tools_OAuth_Server::REST_NAMESPACE,
+			KarMCP_OAuth_Server::REST_NAMESPACE,
 			'/revoke',
 			array(
 				'methods'             => 'POST',
@@ -110,7 +110,7 @@ class EMCP_Tools_OAuth_Token {
 		$redirect_uri = (string) ( $p['redirect_uri'] ?? '' );
 		$verifier     = (string) ( $p['code_verifier'] ?? '' );
 
-		$payload = ( '' === $code ) ? null : EMCP_Tools_OAuth_Store::consume_code( $code );
+		$payload = ( '' === $code ) ? null : KarMCP_OAuth_Store::consume_code( $code );
 		$check   = self::validate_code_exchange( $payload, $client_id, $redirect_uri, $verifier );
 		if ( is_wp_error( $check ) ) {
 			return self::error( $check->get_error_code(), $check->get_error_message() );
@@ -137,7 +137,7 @@ class EMCP_Tools_OAuth_Token {
 		$refresh_token = (string) ( $p['refresh_token'] ?? '' );
 		$client_id     = (string) ( $p['client_id'] ?? '' );
 
-		$row = ( '' === $refresh_token ) ? null : EMCP_Tools_OAuth_Store::find_token( $refresh_token, 'refresh' );
+		$row = ( '' === $refresh_token ) ? null : KarMCP_OAuth_Store::find_token( $refresh_token, 'refresh' );
 		if ( null === $row || ! hash_equals( (string) $row['client_id'], $client_id ) ) {
 			return self::error( 'invalid_grant', 'Refresh token is invalid or expired.' );
 		}
@@ -146,7 +146,7 @@ class EMCP_Tools_OAuth_Token {
 		// token to expire on its own TTL so in-flight requests aren't 401'd
 		// mid-chat, and (b) keep the retired refresh token usable for a short
 		// grace window so a lost-response retry re-rotates instead of 401'ing.
-		EMCP_Tools_OAuth_Store::rotate_out_refresh( (int) $row['id'], self::refresh_grace() );
+		KarMCP_OAuth_Store::rotate_out_refresh( (int) $row['id'], self::refresh_grace() );
 		$pair = self::issue_pair( $client_id, (int) $row['user_id'], (string) $row['scopes'] );
 		if ( '' === $pair['access'] || '' === $pair['refresh'] ) {
 			return self::error( 'server_error', 'The authorization server could not persist the rotated token. Please try again; if it persists, check the database and the site error log.', 500 );
@@ -168,9 +168,9 @@ class EMCP_Tools_OAuth_Token {
 		$token = (string) ( $request->get_body_params()['token'] ?? '' );
 		if ( '' !== $token ) {
 			foreach ( array( 'access', 'refresh' ) as $type ) {
-				$row = EMCP_Tools_OAuth_Store::find_token( $token, $type );
+				$row = KarMCP_OAuth_Store::find_token( $token, $type );
 				if ( null !== $row ) {
-					EMCP_Tools_OAuth_Store::revoke_token( (int) $row['id'] );
+					KarMCP_OAuth_Store::revoke_token( (int) $row['id'] );
 					break;
 				}
 			}
@@ -201,7 +201,7 @@ class EMCP_Tools_OAuth_Token {
 		if ( ! hash_equals( (string) ( $payload['redirect_uri'] ?? '' ), $redirect_uri ) ) {
 			return new WP_Error( 'invalid_grant', 'redirect_uri does not match the authorization request.' );
 		}
-		if ( ! EMCP_Tools_OAuth_Util::verify_pkce( $verifier, (string) ( $payload['code_challenge'] ?? '' ), 'S256' ) ) {
+		if ( ! KarMCP_OAuth_Util::verify_pkce( $verifier, (string) ( $payload['code_challenge'] ?? '' ), 'S256' ) ) {
 			return new WP_Error( 'invalid_grant', 'PKCE verification failed.' );
 		}
 		return true;
@@ -239,11 +239,11 @@ class EMCP_Tools_OAuth_Token {
 	 * @return array{access:string,refresh:string}
 	 */
 	private static function issue_pair( string $client_id, int $user_id, string $scope ): array {
-		$refresh = EMCP_Tools_OAuth_Store::issue_token( 'refresh', $client_id, $user_id, $scope, self::REFRESH_TTL );
+		$refresh = KarMCP_OAuth_Store::issue_token( 'refresh', $client_id, $user_id, $scope, self::REFRESH_TTL );
 		if ( '' === $refresh['token'] ) {
 			return array( 'access' => '', 'refresh' => '' );
 		}
-		$access  = EMCP_Tools_OAuth_Store::issue_token( 'access', $client_id, $user_id, $scope, self::access_ttl(), (int) $refresh['id'] );
+		$access  = KarMCP_OAuth_Store::issue_token( 'access', $client_id, $user_id, $scope, self::access_ttl(), (int) $refresh['id'] );
 		if ( '' === $access['token'] ) {
 			return array( 'access' => '', 'refresh' => '' );
 		}

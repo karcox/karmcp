@@ -7,7 +7,7 @@
  * block (after stripping whitespace separators), [2,1] = innerBlocks[1] of
  * top-level block 2. All mutation methods return a NEW tree; none mutate in place.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Block_Tree {
+class KarMCP_Block_Tree {
 
 	/**
 	 * Parse post content into a clean top-level block tree.

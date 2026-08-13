@@ -5,7 +5,7 @@
  * A sibling is `name-800x600.jpg.webp` next to `name-800x600.jpg`, so the
  * original extension is preserved and the rewriter can find it deterministically.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Webp_Generator {
+class KarMCP_Webp_Generator {
 
 	/** @var int JPEG/WebP quality, already clamped by the caller. */
 	private $quality;
@@ -54,7 +54,7 @@ class EMCP_Tools_Webp_Generator {
 	 */
 	public function generate( string $file ) {
 		if ( ! $this->is_available() ) {
-			return new \WP_Error( 'webp_unsupported', __( 'This server cannot generate WebP images.', 'emcp-tools' ) );
+			return new \WP_Error( 'webp_unsupported', __( 'This server cannot generate WebP images.', 'karmcp' ) );
 		}
 		$sibling = self::sibling_path( $file );
 		if ( file_exists( $sibling ) ) {

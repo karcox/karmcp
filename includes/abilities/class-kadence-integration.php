@@ -12,7 +12,7 @@
  * allowlist entry carries a `shape` hint so an agent knows what to send. Kadence
  * renders dynamic CSS inline per request, so there is no cache to invalidate.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.9.0
  */
 
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Kadence theme settings integration.
  */
-class EMCP_Tools_Kadence_Integration extends EMCP_Tools_Theme_Integration {
+class KarMCP_Kadence_Integration extends KarMCP_Theme_Integration {
 
 	/**
 	 * Curated allowlist: key => { type, label, group, shape }. Verified against
@@ -63,7 +63,7 @@ class EMCP_Tools_Kadence_Integration extends EMCP_Tools_Theme_Integration {
 	}
 
 	public function label(): string {
-		return __( 'Kadence', 'emcp-tools' );
+		return __( 'Kadence', 'karmcp' );
 	}
 
 	public function is_available(): bool {
@@ -76,13 +76,13 @@ class EMCP_Tools_Kadence_Integration extends EMCP_Tools_Theme_Integration {
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_get_settings' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'Read curated Kadence settings with value + type/label/group/shape metadata. Optional { group } (palette|colors|typography|layout|buttons|header-footer) or { keys: [...] }; no arg returns all. Colors reference the global palette slugs palette1..9.', 'emcp-tools' ),
+				'desc' => __( 'Read curated Kadence settings with value + type/label/group/shape metadata. Optional { group } (palette|colors|typography|layout|buttons|header-footer) or { keys: [...] }; no arg returns all. Colors reference the global palette slugs palette1..9.', 'karmcp' ),
 			),
 			'update-settings' => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'execute_update_settings' ),
 				'perm' => array( $this, 'can_write' ),
-				'desc' => __( 'Write curated Kadence settings ({ values: { key: value } }) as theme_mods. Non-allowlisted keys are reported in skipped[]. Values are structured objects — read the shape from get-settings first.', 'emcp-tools' ),
+				'desc' => __( 'Write curated Kadence settings ({ values: { key: value } }) as theme_mods. Non-allowlisted keys are reported in skipped[]. Values are structured objects — read the shape from get-settings first.', 'karmcp' ),
 			),
 		);
 	}
@@ -135,7 +135,7 @@ class EMCP_Tools_Kadence_Integration extends EMCP_Tools_Theme_Integration {
 	public function execute_update_settings( $input ) {
 		$values = ( isset( $input['values'] ) && is_array( $input['values'] ) ) ? $input['values'] : array();
 		if ( empty( $values ) ) {
-			return new WP_Error( 'missing_values', __( 'Provide a "values" object of Kadence setting key => value pairs.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_values', __( 'Provide a "values" object of Kadence setting key => value pairs.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 
 		$updated = array();

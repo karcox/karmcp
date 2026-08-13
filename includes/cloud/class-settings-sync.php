@@ -1,19 +1,19 @@
 <?php
 /**
- * Turnkey EMCP settings sync.
+ * Turnkey KarMCP settings sync.
  *
- * Collect a curated allowlist of EMCP's own settings, push them to EMCP Cloud,
+ * Collect a curated allowlist of KarMCP's own settings, push them to KarMCP Cloud,
  * and pull + apply them on another connected site. Paid-Cloud gated
  * (`syncSettings` entitlement). Never touches secrets or site-specific keys.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Settings_Sync {
+class KarMCP_Settings_Sync {
 
 	/**
 	 * Curated, filterable allowlist of syncable settings. NEVER secrets, tokens,
@@ -23,18 +23,18 @@ class EMCP_Tools_Settings_Sync {
 	 */
 	public static function sync_keys() {
 		$keys = array(
-			'emcp_tools_disabled_tools',            // per-tool toggle grid
+			'karmcp_disabled_tools',            // per-tool toggle grid
 			'elementor_mcp_disabled_tools',         // legacy grid key
-			'emcp_tools_active_modules',            // module on/off
-			'emcp_tools_dispatcher_mode',           // compact tool mode
-			'emcp_tools_strict_schemas',            // behavior pref
-			'emcp_tools_content_mirror_enabled',    // content mirror opt-in
-			'emcp_tools_context_settings',          // discovery context prefs
-			'emcp_tools_module_themer_force_render', // themer render pref
-			'emcp_tools_memory_require_approval',   // memory prefs
-			'emcp_tools_memory_auto_summarize',
+			'karmcp_active_modules',            // module on/off
+			'karmcp_dispatcher_mode',           // compact tool mode
+			'karmcp_strict_schemas',            // behavior pref
+			'karmcp_content_mirror_enabled',    // content mirror opt-in
+			'karmcp_context_settings',          // discovery context prefs
+			'karmcp_module_themer_force_render', // themer render pref
+			'karmcp_memory_require_approval',   // memory prefs
+			'karmcp_memory_auto_summarize',
 		);
-		return array_values( array_unique( (array) apply_filters( 'emcp_tools_settings_sync_keys', $keys ) ) );
+		return array_values( array_unique( (array) apply_filters( 'karmcp_settings_sync_keys', $keys ) ) );
 	}
 
 	/**
@@ -44,7 +44,7 @@ class EMCP_Tools_Settings_Sync {
 	 */
 	public static function collect() {
 		$out      = array();
-		$sentinel = '__emcp_absent__';
+		$sentinel = '__karmcp_absent__';
 		foreach ( self::sync_keys() as $key ) {
 			$val = get_option( $key, $sentinel );
 			if ( $sentinel !== $val ) {
@@ -82,10 +82,10 @@ class EMCP_Tools_Settings_Sync {
 		if ( null !== $cache ) {
 			return $cache;
 		}
-		if ( ! class_exists( 'EMCP_Tools_Cloud_Sync' ) ) {
+		if ( ! class_exists( 'KarMCP_Cloud_Sync' ) ) {
 			return $cache = false;
 		}
-		$status = EMCP_Tools_Cloud_Sync::status();
+		$status = KarMCP_Cloud_Sync::status();
 		$cache  = is_array( $status ) && ! empty( $status['limits']['syncSettings'] );
 		return $cache;
 	}
@@ -100,7 +100,7 @@ class EMCP_Tools_Settings_Sync {
 		if ( is_wp_error( $gate ) ) {
 			return $gate;
 		}
-		return EMCP_Tools_Cloud_Sync::push_config( 'settings', self::collect() );
+		return KarMCP_Cloud_Sync::push_config( 'settings', self::collect() );
 	}
 
 	/**
@@ -113,7 +113,7 @@ class EMCP_Tools_Settings_Sync {
 		if ( is_wp_error( $gate ) ) {
 			return $gate;
 		}
-		$res = EMCP_Tools_Cloud_Sync::pull_config( 'settings' );
+		$res = KarMCP_Cloud_Sync::pull_config( 'settings' );
 		if ( is_wp_error( $res ) ) {
 			return $res;
 		}
@@ -128,11 +128,11 @@ class EMCP_Tools_Settings_Sync {
 	 * @return true|\WP_Error
 	 */
 	private static function gate() {
-		if ( ! class_exists( 'EMCP_Tools_Cloud' ) || ! EMCP_Tools_Cloud::is_connected() ) {
-			return new \WP_Error( 'not_connected', __( 'Connect to EMCP Cloud first.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_Cloud' ) || ! KarMCP_Cloud::is_connected() ) {
+			return new \WP_Error( 'not_connected', __( 'Connect to KarMCP Cloud first.', 'karmcp' ) );
 		}
 		if ( ! self::entitled() ) {
-			return new \WP_Error( 'not_entitled', __( 'Settings sync requires a paid EMCP Cloud plan.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_entitled', __( 'Settings sync requires a paid KarMCP Cloud plan.', 'karmcp' ) );
 		}
 		return true;
 	}

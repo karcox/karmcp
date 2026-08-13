@@ -4,11 +4,11 @@
  *
  * Maps a selector key (text before the first ":" in a rule's `object`, or the
  * whole string) to a specificity score and a matcher callable. Free selectors are
- * preloaded; the `emcp_themer_matchers` filter lets the Pro overlay add granular
+ * preloaded; the `karmcp_themer_matchers` filter lets the Pro overlay add granular
  * selectors (per-ID/per-term/per-author/exclude/date) without any Pro code in the
  * free tree. Matchers are pure: callback( array $rule, array $ctx ): bool.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Matcher_Registry {
+class KarMCP_Themer_Matcher_Registry {
 
 	/** @var array<string,array{specificity:int,callback:callable}> */
 	private $matchers = array();
@@ -37,7 +37,7 @@ class EMCP_Tools_Themer_Matcher_Registry {
 		 *
 		 * @param array<string,array{specificity:int,callback:callable}> $matchers Selector key => spec + matcher.
 		 */
-		$filtered = apply_filters( 'emcp_themer_matchers', $self->matchers );
+		$filtered = apply_filters( 'karmcp_themer_matchers', $self->matchers );
 		if ( is_array( $filtered ) ) {
 			$self->matchers = $filtered;
 		}

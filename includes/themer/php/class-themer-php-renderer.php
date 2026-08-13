@@ -1,6 +1,6 @@
 <?php
 /**
- * EMCP Themer PHP Template Renderer — runs one compiled template to a string.
+ * KarMCP Themer PHP Template Renderer — runs one compiled template to a string.
  *
  * Manifest-only, hash-verified include (never a directory scan): the file must live
  * inside the sandbox and match its recorded sha256 before it is loaded. Defining the
@@ -11,7 +11,7 @@
  * The main query is left intact, so the loop + template tags resolve to the viewed
  * post/archive — the same guarantee the builder-content renderer gives.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_PHP_Renderer {
+class KarMCP_Themer_PHP_Renderer {
 
 	/** @var int|null Template currently including/executing, for fatal attribution. */
 	private static $active = null;
@@ -41,7 +41,7 @@ class EMCP_Tools_Themer_PHP_Renderer {
 	 * @return string
 	 */
 	public static function render( int $id ): string {
-		if ( ! class_exists( 'EMCP_Tools_Themer_PHP_Store' ) ) {
+		if ( ! class_exists( 'KarMCP_Themer_PHP_Store' ) ) {
 			return '';
 		}
 		$entry = self::manifest_entry( $id );
@@ -63,7 +63,7 @@ class EMCP_Tools_Themer_PHP_Renderer {
 		} catch ( \Throwable $e ) {
 			ob_end_clean();
 			self::$active = null;
-			EMCP_Tools_Themer_PHP_Store::mark_error( $id, $e->getMessage() );
+			KarMCP_Themer_PHP_Store::mark_error( $id, $e->getMessage() );
 			return '';
 		}
 		$out          = (string) ob_get_clean();
@@ -82,7 +82,7 @@ class EMCP_Tools_Themer_PHP_Renderer {
 	 * @return array|null
 	 */
 	private static function manifest_entry( int $id ) {
-		foreach ( EMCP_Tools_Themer_PHP_Store::read_manifest() as $entry ) {
+		foreach ( KarMCP_Themer_PHP_Store::read_manifest() as $entry ) {
 			if ( isset( $entry['post_id'] ) && (int) $entry['post_id'] === $id ) {
 				return $entry;
 			}
@@ -108,7 +108,7 @@ class EMCP_Tools_Themer_PHP_Renderer {
 			return '';
 		}
 
-		$sandbox = EMCP_Tools_PHP_Snippet_Store::sandbox_dir() . '/';
+		$sandbox = KarMCP_PHP_Snippet_Store::sandbox_dir() . '/';
 		$path    = $sandbox . $rel;
 		// Path must stay inside the sandbox (defends a poisoned manifest).
 		if ( 0 !== strpos( wp_normalize_path( $path ), wp_normalize_path( $sandbox ) ) || ! is_file( $path ) ) {
@@ -126,7 +126,7 @@ class EMCP_Tools_Themer_PHP_Renderer {
 			include_once $path;
 		} catch ( \Throwable $e ) {
 			self::$active = null;
-			EMCP_Tools_Themer_PHP_Store::mark_error( $id, $e->getMessage() );
+			KarMCP_Themer_PHP_Store::mark_error( $id, $e->getMessage() );
 			return '';
 		}
 		self::$active = null;
@@ -155,8 +155,8 @@ class EMCP_Tools_Themer_PHP_Renderer {
 		}
 		$err   = error_get_last();
 		$fatal = array( E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR );
-		if ( is_array( $err ) && in_array( $err['type'], $fatal, true ) && class_exists( 'EMCP_Tools_Themer_PHP_Store' ) ) {
-			EMCP_Tools_Themer_PHP_Store::mark_error(
+		if ( is_array( $err ) && in_array( $err['type'], $fatal, true ) && class_exists( 'KarMCP_Themer_PHP_Store' ) ) {
+			KarMCP_Themer_PHP_Store::mark_error(
 				self::$active,
 				isset( $err['message'] ) ? (string) $err['message'] : 'Fatal error while rendering PHP template.'
 			);

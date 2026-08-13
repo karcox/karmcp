@@ -1,15 +1,15 @@
-/* global emcpToolsModules */
+/* global karmcpToolsModules */
 ( function () {
 	'use strict';
 
 	// Live value bubble + colored fill for the Image Optimization quality slider.
-	document.querySelectorAll( '.emcp-io-range' ).forEach( function ( range ) {
-		var out = document.querySelector( '.emcp-io-range-out[for="' + range.id + '"]' );
+	document.querySelectorAll( '.karmcp-io-range' ).forEach( function ( range ) {
+		var out = document.querySelector( '.karmcp-io-range-out[for="' + range.id + '"]' );
 		function sync() {
 			var min = parseFloat( range.min ) || 0;
 			var max = parseFloat( range.max ) || 100;
 			var pct = max > min ? ( ( parseFloat( range.value ) - min ) / ( max - min ) ) * 100 : 0;
-			range.style.setProperty( '--emcp-fill', pct + '%' );
+			range.style.setProperty( '--karmcp-fill', pct + '%' );
 			if ( out ) { out.textContent = range.value; }
 		}
 		range.addEventListener( 'input', sync );
@@ -19,18 +19,18 @@
 	// Module settings overlays: open on "Show Settings", close on backdrop /
 	// close button / Escape.
 	function closeModals() {
-		document.querySelectorAll( '.emcp-modal' ).forEach( function ( m ) { m.hidden = true; } );
-		document.body.classList.remove( 'emcp-modal-open' );
+		document.querySelectorAll( '.karmcp-modal' ).forEach( function ( m ) { m.hidden = true; } );
+		document.body.classList.remove( 'karmcp-modal-open' );
 	}
 	document.querySelectorAll( '[data-modal]' ).forEach( function ( btn ) {
 		btn.addEventListener( 'click', function () {
 			var modal = document.getElementById( btn.getAttribute( 'data-modal' ) );
 			if ( ! modal ) { return; }
 			modal.hidden = false;
-			document.body.classList.add( 'emcp-modal-open' );
+			document.body.classList.add( 'karmcp-modal-open' );
 		} );
 	} );
-	document.querySelectorAll( '.emcp-modal [data-close]' ).forEach( function ( el ) {
+	document.querySelectorAll( '.karmcp-modal [data-close]' ).forEach( function ( el ) {
 		el.addEventListener( 'click', closeModals );
 	} );
 	document.addEventListener( 'keydown', function ( e ) {
@@ -40,17 +40,17 @@
 	// Module toggles don't save on flip — surface an "unsaved changes" hint next
 	// to the Save Modules button the moment a toggle changes.
 	( function () {
-		var form = document.querySelector( '.emcp-modules-tab form' );
+		var form = document.querySelector( '.karmcp-modules-tab form' );
 		if ( ! form ) { return; }
-		var toggles = form.querySelectorAll( '.emcp-module-card input[type="checkbox"]' );
+		var toggles = form.querySelectorAll( '.karmcp-module-card input[type="checkbox"]' );
 		if ( ! toggles.length ) { return; }
 		var submit = form.querySelector( 'p.submit' ) || form.querySelector( '[type="submit"]' );
 		var hint = null;
 		function showHint() {
 			if ( hint || ! submit ) { return; }
 			hint = document.createElement( 'span' );
-			hint.className = 'emcp-modules-unsaved';
-			var m = window.emcpToolsModules;
+			hint.className = 'karmcp-modules-unsaved';
+			var m = window.karmcpToolsModules;
 			hint.textContent = ( m && m.unsaved ) || 'Unsaved changes — click Save Modules to apply.';
 			submit.appendChild( hint );
 		}
@@ -59,14 +59,14 @@
 		} );
 	} )();
 
-	var cfg = window.emcpToolsModules;
+	var cfg = window.karmcpToolsModules;
 	if ( ! cfg ) { return; }
 
-	var optimizeBtn = document.getElementById( 'emcp-bulk-optimize' );
-	var restoreBtn  = document.getElementById( 'emcp-bulk-restore' );
-	var progress    = document.querySelector( '.emcp-bulk-progress' );
-	var bar         = document.querySelector( '.emcp-bulk-bar span' );
-	var status      = document.querySelector( '.emcp-bulk-status' );
+	var optimizeBtn = document.getElementById( 'karmcp-bulk-optimize' );
+	var restoreBtn  = document.getElementById( 'karmcp-bulk-restore' );
+	var progress    = document.querySelector( '.karmcp-bulk-progress' );
+	var bar         = document.querySelector( '.karmcp-bulk-bar span' );
+	var status      = document.querySelector( '.karmcp-bulk-status' );
 
 	function post( action, extra ) {
 		var body = new URLSearchParams();

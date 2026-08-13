@@ -5,11 +5,11 @@
  * The schema is a type-aware options tree: relations (include / [pro] exclude) and
  * groups (Entire site / Archives / Singular) each with sub-types, some of which
  * carry an "object" descriptor enabling a [pro] specific-object search (a page, a
- * term, an author). Free = broad leaves only; the `emcp_themer_condition_schema`
+ * term, an author). Free = broad leaves only; the `karmcp_themer_condition_schema`
  * filter lets the Pro overlay add the Exclude relation, object search, and the
  * granular Author/Date/In-term nodes — so no Pro UI config lives in the free tree.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Condition_Schema {
+class KarMCP_Themer_Condition_Schema {
 
 	/**
 	 * Whether a template type uses the condition builder at all.
@@ -49,9 +49,9 @@ class EMCP_Tools_Themer_Condition_Schema {
 		if ( $want_general ) {
 			$groups[] = array(
 				'value' => 'general',
-				'label' => __( 'Entire site', 'emcp-tools' ),
+				'label' => __( 'Entire site', 'karmcp' ),
 				'subs'  => array(
-					array( 'value' => 'entire-site', 'label' => __( 'Entire site', 'emcp-tools' ), 'selector' => 'entire-site' ),
+					array( 'value' => 'entire-site', 'label' => __( 'Entire site', 'karmcp' ), 'selector' => 'entire-site' ),
 				),
 			);
 		}
@@ -59,7 +59,7 @@ class EMCP_Tools_Themer_Condition_Schema {
 		if ( $want_archive ) {
 			$groups[] = array(
 				'value' => 'archive',
-				'label' => __( 'Archives', 'emcp-tools' ),
+				'label' => __( 'Archives', 'karmcp' ),
 				'subs'  => self::archive_subs(),
 			);
 		}
@@ -67,14 +67,14 @@ class EMCP_Tools_Themer_Condition_Schema {
 		if ( $want_singular ) {
 			$groups[] = array(
 				'value' => 'singular',
-				'label' => __( 'Singular', 'emcp-tools' ),
+				'label' => __( 'Singular', 'karmcp' ),
 				'subs'  => self::singular_subs(),
 			);
 		}
 
 		$schema = array(
 			'relations' => array(
-				array( 'value' => 'include', 'label' => __( 'Include', 'emcp-tools' ) ),
+				array( 'value' => 'include', 'label' => __( 'Include', 'karmcp' ) ),
 			),
 			'groups'    => $groups,
 		);
@@ -86,7 +86,7 @@ class EMCP_Tools_Themer_Condition_Schema {
 		 * @param array  $schema The base (free) schema.
 		 * @param string $type   Template type.
 		 */
-		$filtered = apply_filters( 'emcp_themer_condition_schema', $schema, $type );
+		$filtered = apply_filters( 'karmcp_themer_condition_schema', $schema, $type );
 		return is_array( $filtered ) ? $filtered : $schema;
 	}
 
@@ -98,14 +98,14 @@ class EMCP_Tools_Themer_Condition_Schema {
 	 */
 	private static function archive_subs(): array {
 		$subs = array(
-			array( 'value' => 'all-archives', 'label' => __( 'All archives', 'emcp-tools' ), 'selector' => 'all-archives' ),
+			array( 'value' => 'all-archives', 'label' => __( 'All archives', 'karmcp' ), 'selector' => 'all-archives' ),
 		);
 
 		foreach ( get_post_types( array( 'public' => true, 'has_archive' => true ), 'objects' ) as $pt ) {
 			$subs[] = array(
 				'value'    => 'post-type-archive:' . $pt->name,
 				/* translators: %s: post type label */
-				'label'    => sprintf( __( '%s archive', 'emcp-tools' ), $pt->label ),
+				'label'    => sprintf( __( '%s archive', 'karmcp' ), $pt->label ),
 				'selector' => 'post-type-archive:' . $pt->name,
 			);
 		}
@@ -131,8 +131,8 @@ class EMCP_Tools_Themer_Condition_Schema {
 	 */
 	private static function singular_subs(): array {
 		$subs = array(
-			array( 'value' => 'all-singular', 'label' => __( 'All singular', 'emcp-tools' ), 'selector' => 'all-singular' ),
-			array( 'value' => 'front-page', 'label' => __( 'Front page', 'emcp-tools' ), 'selector' => 'front-page' ),
+			array( 'value' => 'all-singular', 'label' => __( 'All singular', 'karmcp' ), 'selector' => 'all-singular' ),
+			array( 'value' => 'front-page', 'label' => __( 'Front page', 'karmcp' ), 'selector' => 'front-page' ),
 		);
 
 		foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $pt ) {

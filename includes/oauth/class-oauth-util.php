@@ -1,11 +1,11 @@
 <?php
 /**
- * OAuth helpers — pure, dependency-free primitives for the EMCP OAuth 2.1
+ * OAuth helpers — pure, dependency-free primitives for the KarMCP OAuth 2.1
  * authorization server (token generation, hashing, PKCE verification,
  * base64url). Kept side-effect-free so they can be unit-tested without a
  * database or WordPress.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.1
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.1
  */
-class EMCP_Tools_OAuth_Util {
+class KarMCP_OAuth_Util {
 
 	/**
 	 * base64url-encode raw bytes (RFC 4648 §5, no padding).
@@ -75,12 +75,12 @@ class EMCP_Tools_OAuth_Util {
 	}
 
 	/**
-	 * Generate a public client id (`emcp_` + 24 hex chars).
+	 * Generate a public client id (`karmcp_` + 24 hex chars).
 	 *
 	 * @return string
 	 */
 	public static function generate_client_id(): string {
-		return 'emcp_' . bin2hex( random_bytes( 12 ) );
+		return 'karmcp_' . bin2hex( random_bytes( 12 ) );
 	}
 
 	/**

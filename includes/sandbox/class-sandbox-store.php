@@ -1,13 +1,13 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-abstract class EMCP_Tools_Sandbox_Store implements EMCP_Tools_Sandbox_Artifact {
-	const META_UUID       = '_emcp_uuid';
-	const META_ORIGIN     = '_emcp_origin';
-	const META_REMOTE_ID  = '_emcp_remote_id';
-	const META_SYNC_STATE = '_emcp_sync_state';
-	const META_VERSION    = '_emcp_version';
-	const META_UPDATED_AT = '_emcp_updated_at';
+abstract class KarMCP_Sandbox_Store implements KarMCP_Sandbox_Artifact {
+	const META_UUID       = '_karmcp_uuid';
+	const META_ORIGIN     = '_karmcp_origin';
+	const META_REMOTE_ID  = '_karmcp_remote_id';
+	const META_SYNC_STATE = '_karmcp_sync_state';
+	const META_VERSION    = '_karmcp_version';
+	const META_UPDATED_AT = '_karmcp_updated_at';
 
 	abstract public function kind(): string;
 	abstract protected function sandbox_subdir(): string;
@@ -45,7 +45,7 @@ abstract class EMCP_Tools_Sandbox_Store implements EMCP_Tools_Sandbox_Artifact {
 		);
 	}
 
-	public function sandbox_base(): string { return EMCP_Tools_Sandbox_Paths::base_dir(); }
+	public function sandbox_base(): string { return KarMCP_Sandbox_Paths::base_dir(); }
 	protected function subdir_path(): string { return $this->sandbox_base() . '/' . $this->sandbox_subdir(); }
 	public function artifact_dir( int $id ): string { return $this->subdir_path() . '/' . $id; }
 	/**
@@ -58,7 +58,7 @@ abstract class EMCP_Tools_Sandbox_Store implements EMCP_Tools_Sandbox_Artifact {
 	 * @return string
 	 */
 	public function artifact_url( int $id ): string {
-		return EMCP_Tools_Sandbox_Paths::base_url() . '/' . $this->sandbox_subdir() . '/' . $id;
+		return KarMCP_Sandbox_Paths::base_url() . '/' . $this->sandbox_subdir() . '/' . $id;
 	}
 	public function manifest_path(): string { return $this->sandbox_base() . '/' . $this->manifest_filename(); }
 
@@ -92,10 +92,10 @@ abstract class EMCP_Tools_Sandbox_Store implements EMCP_Tools_Sandbox_Artifact {
 	protected function ensure_sandbox() {
 		$dir = $this->subdir_path();
 		if ( ! wp_mkdir_p( $dir ) ) {
-			return new WP_Error( 'sandbox_unwritable', __( 'Could not create the sandbox directory under wp-content.', 'emcp-tools' ) );
+			return new WP_Error( 'sandbox_unwritable', __( 'Could not create the sandbox directory under wp-content.', 'karmcp' ) );
 		}
-		EMCP_Tools_Sandbox_Paths::harden();
-		EMCP_Tools_Sandbox_Paths::guard_subdir( $dir );
+		KarMCP_Sandbox_Paths::harden();
+		KarMCP_Sandbox_Paths::guard_subdir( $dir );
 		return true;
 	}
 }

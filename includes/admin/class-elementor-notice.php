@@ -8,7 +8,7 @@
  * Elementor, but it is purely informational, so it is dismissible per-user via
  * user_meta — once dismissed, it stays dismissed.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.1
  */
 
@@ -16,22 +16,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Elementor_Notice {
+class KarMCP_Elementor_Notice {
 
 	/**
 	 * User-meta key recording when this user dismissed the notice.
 	 * Value: Unix timestamp, or empty/false if never dismissed.
 	 */
-	const META_KEY = 'emcp_tools_elementor_notice_dismissed';
+	const META_KEY = 'karmcp_elementor_notice_dismissed';
 
 	/**
 	 * AJAX nonce action name.
 	 */
-	const NONCE_ACTION = 'emcp_tools_dismiss_elementor_notice';
+	const NONCE_ACTION = 'karmcp_dismiss_elementor_notice';
 
 	public function init(): void {
 		add_action( 'admin_notices', array( $this, 'maybe_render' ) );
-		add_action( 'wp_ajax_emcp_tools_dismiss_elementor_notice', array( $this, 'ajax_dismiss' ) );
+		add_action( 'wp_ajax_karmcp_dismiss_elementor_notice', array( $this, 'ajax_dismiss' ) );
 	}
 
 	/**
@@ -44,7 +44,7 @@ class EMCP_Tools_Elementor_Notice {
 		}
 
 		// Only when Elementor is absent.
-		if ( class_exists( 'EMCP_Tools_Bootstrap' ) && EMCP_Tools_Bootstrap::elementor_active() ) {
+		if ( class_exists( 'KarMCP_Bootstrap' ) && KarMCP_Bootstrap::elementor_active() ) {
 			return false;
 		}
 
@@ -65,24 +65,24 @@ class EMCP_Tools_Elementor_Notice {
 		$nonce   = wp_create_nonce( self::NONCE_ACTION );
 
 		printf(
-			'<div class="notice notice-warning is-dismissible" data-emcp-elementor-notice="1" data-emcp-nonce="%s"><p>%s</p><p><a class="button button-secondary" href="%s">%s</a></p></div>',
+			'<div class="notice notice-warning is-dismissible" data-karmcp-elementor-notice="1" data-karmcp-nonce="%s"><p>%s</p><p><a class="button button-secondary" href="%s">%s</a></p></div>',
 			esc_attr( $nonce ),
-			esc_html__( 'EMCP Tools is active. Install and activate Elementor to enable the Elementor page-building tools (widgets, layout, templates, brand kits). All other tools, WordPress content, plugins & themes, users, media, performance, security, filesystem, and database, work without it.', 'emcp-tools' ),
+			esc_html__( 'KarMCP is active. Install and activate Elementor to enable the Elementor page-building tools (widgets, layout, templates, brand kits). All other tools, WordPress content, plugins & themes, users, media, performance, security, filesystem, and database, work without it.', 'karmcp' ),
 			esc_url( $install ),
-			esc_html__( 'Install Elementor', 'emcp-tools' )
+			esc_html__( 'Install Elementor', 'karmcp' )
 		);
 		?>
 		<script>
 		( function () {
-			var notice = document.querySelector( '[data-emcp-elementor-notice]' );
+			var notice = document.querySelector( '[data-karmcp-elementor-notice]' );
 			if ( ! notice ) return;
 			// WordPress renders the dismiss button asynchronously; delegate on the
 			// notice so we catch the click whenever the button is added.
 			notice.addEventListener( 'click', function ( e ) {
 				if ( ! e.target.closest( '.notice-dismiss' ) ) return;
 				var body = new URLSearchParams();
-				body.append( 'action', 'emcp_tools_dismiss_elementor_notice' );
-				body.append( 'nonce', notice.getAttribute( 'data-emcp-nonce' ) || '' );
+				body.append( 'action', 'karmcp_dismiss_elementor_notice' );
+				body.append( 'nonce', notice.getAttribute( 'data-karmcp-nonce' ) || '' );
 				fetch( ajaxurl, {
 					method: 'POST',
 					credentials: 'same-origin',

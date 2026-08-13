@@ -5,7 +5,7 @@
  * Registers 7 read-only tools that let AI agents discover widgets,
  * inspect page structures, and read Elementor data.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -18,19 +18,19 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Query_Abilities {
+class KarMCP_Query_Abilities {
 
 	/**
 	 * The data access layer.
 	 *
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
 	 * The schema generator.
 	 *
-	 * @var EMCP_Tools_Schema_Generator
+	 * @var KarMCP_Schema_Generator
 	 */
 	private $schema_generator;
 
@@ -39,10 +39,10 @@ class EMCP_Tools_Query_Abilities {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param EMCP_Tools_Data             $data             The data access layer.
-	 * @param EMCP_Tools_Schema_Generator $schema_generator The schema generator.
+	 * @param KarMCP_Data             $data             The data access layer.
+	 * @param KarMCP_Schema_Generator $schema_generator The schema generator.
 	 */
-	public function __construct( EMCP_Tools_Data $data, EMCP_Tools_Schema_Generator $schema_generator ) {
+	public function __construct( KarMCP_Data $data, KarMCP_Schema_Generator $schema_generator ) {
 		$this->data             = $data;
 		$this->schema_generator = $schema_generator;
 	}
@@ -56,15 +56,15 @@ class EMCP_Tools_Query_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/list-widgets',
-			'emcp-tools/get-widget-schema',
-			'emcp-tools/get-container-schema',
-			'emcp-tools/get-page-structure',
-			'emcp-tools/get-element-settings',
-			'emcp-tools/find-element',
-			'emcp-tools/list-pages',
-			'emcp-tools/list-templates',
-			'emcp-tools/get-global-settings',
+			'karmcp/list-widgets',
+			'karmcp/get-widget-schema',
+			'karmcp/get-container-schema',
+			'karmcp/get-page-structure',
+			'karmcp/get-element-settings',
+			'karmcp/find-element',
+			'karmcp/list-pages',
+			'karmcp/list-templates',
+			'karmcp/get-global-settings',
 		);
 	}
 
@@ -104,12 +104,12 @@ class EMCP_Tools_Query_Abilities {
 	 * @since 1.0.0
 	 */
 	private function register_list_widgets(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/list-widgets',
+		karmcp_register_ability(
+			'karmcp/list-widgets',
 			array(
-				'label'               => __( 'List Elementor Widgets', 'emcp-tools' ),
-				'description'         => __( 'Lists Elementor widgets from the curated catalog as a compact index (type, title, tier, one-line use-case, param names). Filter by tier (free/pro/woo), category, or search by intent. Step 1 of discover → get-widget-schema → add-free-widget/add-pro-widget.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Elementor Widgets', 'karmcp' ),
+				'description'         => __( 'Lists Elementor widgets from the curated catalog as a compact index (type, title, tier, one-line use-case, param names). Filter by tier (free/pro/woo), category, or search by intent. Step 1 of discover → get-widget-schema → add-free-widget/add-pro-widget.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_widgets' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -118,15 +118,15 @@ class EMCP_Tools_Query_Abilities {
 						'tier'     => array(
 							'type'        => 'string',
 							'enum'        => array( 'all', 'free', 'pro', 'woo' ),
-							'description' => __( 'Filter by tier. Default: all.', 'emcp-tools' ),
+							'description' => __( 'Filter by tier. Default: all.', 'karmcp' ),
 						),
 						'category' => array(
 							'type'        => 'string',
-							'description' => __( 'Filter by widget category.', 'emcp-tools' ),
+							'description' => __( 'Filter by widget category.', 'karmcp' ),
 						),
 						'search'   => array(
 							'type'        => 'string',
-							'description' => __( 'Match by intent across title, use-case, and keywords (e.g. "pricing table").', 'emcp-tools' ),
+							'description' => __( 'Match by intent across title, use-case, and keywords (e.g. "pricing table").', 'karmcp' ),
 						),
 					),
 				),
@@ -185,8 +185,8 @@ class EMCP_Tools_Query_Abilities {
 		$search   = isset( $input['search'] ) ? sanitize_text_field( $input['search'] ) : '';
 
 		$catalog = '' !== $search
-			? EMCP_Tools_Widget_Catalog::search( $search )
-			: EMCP_Tools_Widget_Catalog::get();
+			? KarMCP_Widget_Catalog::search( $search )
+			: KarMCP_Widget_Catalog::get();
 
 		$rows = array();
 		foreach ( $catalog as $type => $entry ) {
@@ -217,12 +217,12 @@ class EMCP_Tools_Query_Abilities {
 	 * @since 1.0.0
 	 */
 	private function register_get_widget_schema(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/get-widget-schema',
+		karmcp_register_ability(
+			'karmcp/get-widget-schema',
 			array(
-				'label'               => __( 'Get Widget Schema', 'emcp-tools' ),
-				'description'         => __( 'Returns curated parameters (params, required, defaults) for a widget type by default. Pass types[] for a batch lookup ({widgets:[...]}), or full:true for the raw auto-generated control schema.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Widget Schema', 'karmcp' ),
+				'description'         => __( 'Returns curated parameters (params, required, defaults) for a widget type by default. Pass types[] for a batch lookup ({widgets:[...]}), or full:true for the raw auto-generated control schema.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_widget_schema' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -230,16 +230,16 @@ class EMCP_Tools_Query_Abilities {
 					'properties' => array(
 						'widget_type' => array(
 							'type'        => 'string',
-							'description' => __( 'A single widget type, e.g. "heading".', 'emcp-tools' ),
+							'description' => __( 'A single widget type, e.g. "heading".', 'karmcp' ),
 						),
 						'types'       => array(
 							'type'        => 'array',
 							'items'       => array( 'type' => 'string' ),
-							'description' => __( 'Batch: several widget types in one call. Returns {widgets:[...]}.', 'emcp-tools' ),
+							'description' => __( 'Batch: several widget types in one call. Returns {widgets:[...]}.', 'karmcp' ),
 						),
 						'full'        => array(
 							'type'        => 'boolean',
-							'description' => __( 'Return the full auto-generated control schema instead of the curated params. Default: false.', 'emcp-tools' ),
+							'description' => __( 'Return the full auto-generated control schema instead of the curated params. Default: false.', 'karmcp' ),
 						),
 					),
 				),
@@ -292,18 +292,18 @@ class EMCP_Tools_Query_Abilities {
 		}
 
 		if ( empty( $types ) ) {
-			return new \WP_Error( 'missing_widget_type', __( 'Provide widget_type or types[].', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_widget_type', __( 'Provide widget_type or types[].', 'karmcp' ) );
 		}
 
 		$build = function ( $type ) use ( $full ) {
-			$entry = EMCP_Tools_Widget_Catalog::get_widget( $type );
+			$entry = KarMCP_Widget_Catalog::get_widget( $type );
 
 			if ( $full ) {
 				// Escape hatch: full auto-generated control schema (needs a live widget).
 				$schema = $this->schema_generator->generate( $type );
 				return array(
 					'widget_type' => $type,
-					'tier'        => EMCP_Tools_Widget_Catalog::tier_of( $type ),
+					'tier'        => KarMCP_Widget_Catalog::tier_of( $type ),
 					'use_case'    => $entry['use_case'] ?? '',
 					'schema'      => is_wp_error( $schema ) ? array() : $schema,
 				);
@@ -312,7 +312,7 @@ class EMCP_Tools_Query_Abilities {
 			if ( null === $entry ) {
 				return array(
 					'widget_type' => $type,
-					'error'       => __( 'Not in the curated catalog. Retry with full:true for the raw control schema.', 'emcp-tools' ),
+					'error'       => __( 'Not in the curated catalog. Retry with full:true for the raw control schema.', 'karmcp' ),
 				);
 			}
 
@@ -344,12 +344,12 @@ class EMCP_Tools_Query_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_get_container_schema(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/get-container-schema',
+		karmcp_register_ability(
+			'karmcp/get-container-schema',
 			array(
-				'label'               => __( 'Get Container Schema', 'emcp-tools' ),
-				'description'         => __( 'Returns JSON Schema for all container controls (flex + grid), including flex_direction, justify_content, align_items, flex_wrap, gap, content_width, min_height, container_type, grid controls, background, border, padding, and more.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Container Schema', 'karmcp' ),
+				'description'         => __( 'Returns JSON Schema for all container controls (flex + grid), including flex_direction, justify_content, align_items, flex_wrap, gap, content_width, min_height, container_type, grid controls, background, border, padding, and more.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_container_schema' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -382,7 +382,7 @@ class EMCP_Tools_Query_Abilities {
 		$element_type = \Elementor\Plugin::$instance->elements_manager->get_element_types( 'container' );
 
 		if ( ! $element_type ) {
-			return new \WP_Error( 'container_not_found', __( 'Container element type not available.', 'emcp-tools' ) );
+			return new \WP_Error( 'container_not_found', __( 'Container element type not available.', 'karmcp' ) );
 		}
 
 		$controls = $element_type->get_controls();
@@ -468,12 +468,12 @@ class EMCP_Tools_Query_Abilities {
 	 * @since 1.0.0
 	 */
 	private function register_get_page_structure(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/get-page-structure',
+		karmcp_register_ability(
+			'karmcp/get-page-structure',
 			array(
-				'label'               => __( 'Get Page Structure', 'emcp-tools' ),
-				'description'         => __( 'Returns the element tree for an Elementor page, showing all containers, widgets, and their nesting structure. Each element includes its ID, type, widget type (for widgets), and child elements.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Page Structure', 'karmcp' ),
+				'description'         => __( 'Returns the element tree for an Elementor page, showing all containers, widgets, and their nesting structure. Each element includes its ID, type, widget type (for widgets), and child elements.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_page_structure' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -481,15 +481,15 @@ class EMCP_Tools_Query_Abilities {
 					'properties' => array(
 						'post_id'   => array(
 							'type'        => 'integer',
-							'description' => __( 'The WordPress post/page ID.', 'emcp-tools' ),
+							'description' => __( 'The WordPress post/page ID.', 'karmcp' ),
 						),
 						'summary'   => array(
 							'type'        => 'boolean',
-							'description' => __( 'Return a lighter tree: omit per-element settings and add a child_count per node. Use for large pages.', 'emcp-tools' ),
+							'description' => __( 'Return a lighter tree: omit per-element settings and add a child_count per node. Use for large pages.', 'karmcp' ),
 						),
 						'max_depth' => array(
 							'type'        => 'integer',
-							'description' => __( 'Only descend this many levels; deeper nodes report child_count instead of their children. 0 or omitted = full depth.', 'emcp-tools' ),
+							'description' => __( 'Only descend this many levels; deeper nodes report child_count instead of their children. 0 or omitted = full depth.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'post_id' ),
@@ -527,12 +527,12 @@ class EMCP_Tools_Query_Abilities {
 		$post_id = absint( $input['post_id'] ?? 0 );
 
 		if ( ! $post_id ) {
-			return new \WP_Error( 'missing_post_id', __( 'The post_id parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_post_id', __( 'The post_id parameter is required.', 'karmcp' ) );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'karmcp' ) );
 		}
 
 		$data = $this->data->get_page_data( $post_id );
@@ -646,12 +646,12 @@ class EMCP_Tools_Query_Abilities {
 	 * @since 1.0.0
 	 */
 	private function register_get_element_settings(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/get-element-settings',
+		karmcp_register_ability(
+			'karmcp/get-element-settings',
 			array(
-				'label'               => __( 'Get Element Settings', 'emcp-tools' ),
-				'description'         => __( 'Returns the current settings for a specific element on a page. Provide the post ID and element ID to retrieve all control values for that element.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Element Settings', 'karmcp' ),
+				'description'         => __( 'Returns the current settings for a specific element on a page. Provide the post ID and element ID to retrieve all control values for that element.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_element_settings' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -659,11 +659,11 @@ class EMCP_Tools_Query_Abilities {
 					'properties' => array(
 						'post_id'    => array(
 							'type'        => 'integer',
-							'description' => __( 'The WordPress post/page ID.', 'emcp-tools' ),
+							'description' => __( 'The WordPress post/page ID.', 'karmcp' ),
 						),
 						'element_id' => array(
 							'type'        => 'string',
-							'description' => __( 'The Elementor element ID.', 'emcp-tools' ),
+							'description' => __( 'The Elementor element ID.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'post_id', 'element_id' ),
@@ -702,11 +702,11 @@ class EMCP_Tools_Query_Abilities {
 		$element_id = sanitize_text_field( $input['element_id'] ?? '' );
 
 		if ( ! $post_id ) {
-			return new \WP_Error( 'missing_post_id', __( 'The post_id parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_post_id', __( 'The post_id parameter is required.', 'karmcp' ) );
 		}
 
 		if ( empty( $element_id ) ) {
-			return new \WP_Error( 'missing_element_id', __( 'The element_id parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_element_id', __( 'The element_id parameter is required.', 'karmcp' ) );
 		}
 
 		$data = $this->data->get_page_data( $post_id );
@@ -722,7 +722,7 @@ class EMCP_Tools_Query_Abilities {
 				'element_not_found',
 				sprintf(
 					/* translators: %s: element ID */
-					__( 'Element "%s" not found on this page.', 'emcp-tools' ),
+					__( 'Element "%s" not found on this page.', 'karmcp' ),
 					$element_id
 				)
 			);
@@ -741,12 +741,12 @@ class EMCP_Tools_Query_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_find_element(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/find-element',
+		karmcp_register_ability(
+			'karmcp/find-element',
 			array(
-				'label'               => __( 'Find Element', 'emcp-tools' ),
-				'description'         => __( 'Searches elements on a page by type, widget type, or settings content. Returns matching element IDs, types, and a settings preview.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Find Element', 'karmcp' ),
+				'description'         => __( 'Searches elements on a page by type, widget type, or settings content. Returns matching element IDs, types, and a settings preview.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_find_element' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -754,28 +754,28 @@ class EMCP_Tools_Query_Abilities {
 					'properties' => array(
 						'post_id'       => array(
 							'type'        => 'integer',
-							'description' => __( 'The post/page ID to search.', 'emcp-tools' ),
+							'description' => __( 'The post/page ID to search.', 'karmcp' ),
 						),
 						'widget_type'   => array(
 							'type'        => 'string',
-							'description' => __( 'Filter by widget type (e.g. "heading", "button"). Leave empty for all.', 'emcp-tools' ),
+							'description' => __( 'Filter by widget type (e.g. "heading", "button"). Leave empty for all.', 'karmcp' ),
 						),
 						'element_type'  => array(
 							'type'        => 'string',
 							'enum'        => array( 'container', 'widget' ),
-							'description' => __( 'Filter by element type.', 'emcp-tools' ),
+							'description' => __( 'Filter by element type.', 'karmcp' ),
 						),
 						'search_text'   => array(
 							'type'        => 'string',
-							'description' => __( 'Search for text content in settings values (case-insensitive).', 'emcp-tools' ),
+							'description' => __( 'Search for text content in settings values (case-insensitive).', 'karmcp' ),
 						),
 						'setting_key'   => array(
 							'type'        => 'string',
-							'description' => __( 'Filter by setting key existence (e.g. "title_color").', 'emcp-tools' ),
+							'description' => __( 'Filter by setting key existence (e.g. "title_color").', 'karmcp' ),
 						),
 						'setting_value' => array(
 							'type'        => 'string',
-							'description' => __( 'Filter by setting value (requires setting_key).', 'emcp-tools' ),
+							'description' => __( 'Filter by setting value (requires setting_key).', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'post_id' ),
@@ -819,7 +819,7 @@ class EMCP_Tools_Query_Abilities {
 		$setting_value = $input['setting_value'] ?? null;
 
 		if ( ! $post_id ) {
-			return new \WP_Error( 'missing_post_id', __( 'The post_id parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_post_id', __( 'The post_id parameter is required.', 'karmcp' ) );
 		}
 
 		$data = $this->data->get_page_data( $post_id );
@@ -921,12 +921,12 @@ class EMCP_Tools_Query_Abilities {
 	 * @since 1.0.0
 	 */
 	private function register_list_pages(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/list-pages',
+		karmcp_register_ability(
+			'karmcp/list-pages',
 			array(
-				'label'               => __( 'List Elementor Pages', 'emcp-tools' ),
-				'description'         => __( 'Returns all WordPress pages and posts that are built with Elementor. Optionally filter by post type and status.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Elementor Pages', 'karmcp' ),
+				'description'         => __( 'Returns all WordPress pages and posts that are built with Elementor. Optionally filter by post type and status.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_pages' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -934,11 +934,11 @@ class EMCP_Tools_Query_Abilities {
 					'properties' => array(
 						'post_type' => array(
 							'type'        => 'string',
-							'description' => __( 'Filter by post type (e.g. "page", "post"). Default: any.', 'emcp-tools' ),
+							'description' => __( 'Filter by post type (e.g. "page", "post"). Default: any.', 'karmcp' ),
 						),
 						'status'    => array(
 							'type'        => 'string',
-							'description' => __( 'Filter by post status (e.g. "publish", "draft"). Default: any.', 'emcp-tools' ),
+							'description' => __( 'Filter by post status (e.g. "publish", "draft"). Default: any.', 'karmcp' ),
 						),
 					),
 				),
@@ -1022,12 +1022,12 @@ class EMCP_Tools_Query_Abilities {
 	 * @since 1.0.0
 	 */
 	private function register_list_templates(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/list-templates',
+		karmcp_register_ability(
+			'karmcp/list-templates',
 			array(
-				'label'               => __( 'List Elementor Templates', 'emcp-tools' ),
-				'description'         => __( 'Returns all saved Elementor templates from the template library. Optionally filter by template type (page, section, container).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Elementor Templates', 'karmcp' ),
+				'description'         => __( 'Returns all saved Elementor templates from the template library. Optionally filter by template type (page, section, container).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_templates' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -1035,7 +1035,7 @@ class EMCP_Tools_Query_Abilities {
 					'properties' => array(
 						'template_type' => array(
 							'type'        => 'string',
-							'description' => __( 'Filter by template type (e.g. "page", "section", "container").', 'emcp-tools' ),
+							'description' => __( 'Filter by template type (e.g. "page", "section", "container").', 'karmcp' ),
 						),
 					),
 				),
@@ -1119,12 +1119,12 @@ class EMCP_Tools_Query_Abilities {
 	 * @since 1.0.0
 	 */
 	private function register_get_global_settings(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/get-global-settings',
+		karmcp_register_ability(
+			'karmcp/get-global-settings',
 			array(
-				'label'               => __( 'Get Global Settings', 'emcp-tools' ),
-				'description'         => __( 'Returns the active Elementor kit/global settings including colors, typography, spacing, and breakpoints. These are the site-wide design tokens used across all pages.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Global Settings', 'karmcp' ),
+				'description'         => __( 'Returns the active Elementor kit/global settings including colors, typography, spacing, and breakpoints. These are the site-wide design tokens used across all pages.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_global_settings' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -1164,7 +1164,7 @@ class EMCP_Tools_Query_Abilities {
 		$kit          = $kits_manager->get_active_kit();
 
 		if ( ! $kit ) {
-			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'karmcp' ) );
 		}
 
 		$settings = $kit->get_settings();

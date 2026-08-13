@@ -2,7 +2,7 @@
 /**
  * Auto-generates JSON Schema from Elementor widget control definitions.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Schema_Generator {
+class KarMCP_Schema_Generator {
 
 	/**
 	 * Generates a JSON Schema for a widget type's settings.
@@ -34,7 +34,7 @@ class EMCP_Tools_Schema_Generator {
 				'widget_not_found',
 				sprintf(
 					/* translators: %s: widget type name */
-					__( 'Widget type "%s" not found.', 'emcp-tools' ),
+					__( 'Widget type "%s" not found.', 'karmcp' ),
 					$widget_type
 				)
 			);
@@ -47,11 +47,11 @@ class EMCP_Tools_Schema_Generator {
 			foreach ( $controls as $control_id => $control ) {
 				$control_type = $control['type'] ?? '';
 
-				if ( EMCP_Tools_Control_Mapper::should_skip( $control_type ) ) {
+				if ( KarMCP_Control_Mapper::should_skip( $control_type ) ) {
 					continue;
 				}
 
-				$schema_fragment = EMCP_Tools_Control_Mapper::map( $control );
+				$schema_fragment = KarMCP_Control_Mapper::map( $control );
 				if ( ! empty( $schema_fragment ) ) {
 					$properties[ $control_id ] = $schema_fragment;
 				}
@@ -62,7 +62,7 @@ class EMCP_Tools_Schema_Generator {
 			'type'        => 'object',
 			'description' => sprintf(
 				/* translators: %s: widget title */
-				__( 'Settings for the %s widget.', 'emcp-tools' ),
+				__( 'Settings for the %s widget.', 'karmcp' ),
 				$widget->get_title()
 			),
 			'properties'  => $properties,

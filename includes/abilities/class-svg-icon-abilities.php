@@ -5,7 +5,7 @@
  * Registers tools for uploading SVG icons and using them with Elementor
  * icon and icon-box widgets.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.2.0
  */
 
@@ -18,15 +18,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.2.0
  */
-class EMCP_Tools_Svg_Icon_Abilities {
+class KarMCP_Svg_Icon_Abilities {
 
 	/**
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
-	 * @var EMCP_Tools_Element_Factory
+	 * @var KarMCP_Element_Factory
 	 */
 	private $factory;
 
@@ -35,10 +35,10 @@ class EMCP_Tools_Svg_Icon_Abilities {
 	 *
 	 * @since 1.2.0
 	 *
-	 * @param EMCP_Tools_Data            $data    The data access layer.
-	 * @param EMCP_Tools_Element_Factory $factory The element factory.
+	 * @param KarMCP_Data            $data    The data access layer.
+	 * @param KarMCP_Element_Factory $factory The element factory.
 	 */
-	public function __construct( EMCP_Tools_Data $data, EMCP_Tools_Element_Factory $factory ) {
+	public function __construct( KarMCP_Data $data, KarMCP_Element_Factory $factory ) {
 		$this->data    = $data;
 		$this->factory = $factory;
 	}
@@ -52,7 +52,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/upload-svg-icon',
+			'karmcp/upload-svg-icon',
 		);
 	}
 
@@ -90,12 +90,12 @@ class EMCP_Tools_Svg_Icon_Abilities {
 	 * @since 1.2.0
 	 */
 	private function register_upload_svg_icon(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/upload-svg-icon',
+		karmcp_register_ability(
+			'karmcp/upload-svg-icon',
 			array(
-				'label'               => __( 'Upload SVG Icon', 'emcp-tools' ),
-				'description'         => __( 'Uploads an SVG icon to the WordPress Media Library and returns an Elementor icon object ready to use with any widget that accepts icons (icon, icon-box, button, etc.). Accepts either an external SVG URL or raw SVG markup. The returned icon object has the format: { "value": { "id": 123, "url": "..." }, "library": "svg" }. Use this value for the selected_icon setting in icon/icon-box widgets, or the selected_icon setting in button widgets.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Upload SVG Icon', 'karmcp' ),
+				'description'         => __( 'Uploads an SVG icon to the WordPress Media Library and returns an Elementor icon object ready to use with any widget that accepts icons (icon, icon-box, button, etc.). Accepts either an external SVG URL or raw SVG markup. The returned icon object has the format: { "value": { "id": 123, "url": "..." }, "library": "svg" }. Use this value for the selected_icon setting in icon/icon-box widgets, or the selected_icon setting in button widgets.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_upload_svg_icon' ),
 				'permission_callback' => array( $this, 'check_upload_permission' ),
 				'input_schema'        => array(
@@ -103,15 +103,15 @@ class EMCP_Tools_Svg_Icon_Abilities {
 					'properties' => array(
 						'svg_url'     => array(
 							'type'        => 'string',
-							'description' => __( 'External URL to an SVG file to download and import. Use this OR svg_content, not both.', 'emcp-tools' ),
+							'description' => __( 'External URL to an SVG file to download and import. Use this OR svg_content, not both.', 'karmcp' ),
 						),
 						'svg_content' => array(
 							'type'        => 'string',
-							'description' => __( 'Raw SVG markup string (e.g. "<svg viewBox=\'0 0 24 24\'><path d=\'M12 ...\'/></svg>"). Use this OR svg_url, not both.', 'emcp-tools' ),
+							'description' => __( 'Raw SVG markup string (e.g. "<svg viewBox=\'0 0 24 24\'><path d=\'M12 ...\'/></svg>"). Use this OR svg_url, not both.', 'karmcp' ),
 						),
 						'title'       => array(
 							'type'        => 'string',
-							'description' => __( 'Title for the SVG in the Media Library. Falls back to filename or "Custom SVG Icon".', 'emcp-tools' ),
+							'description' => __( 'Title for the SVG in the Media Library. Falls back to filename or "Custom SVG Icon".', 'karmcp' ),
 						),
 					),
 				),
@@ -122,7 +122,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 						'url'           => array( 'type' => 'string' ),
 						'icon_object'   => array(
 							'type'        => 'object',
-							'description' => __( 'Ready-to-use Elementor icon object. Pass this directly as the selected_icon setting.', 'emcp-tools' ),
+							'description' => __( 'Ready-to-use Elementor icon object. Pass this directly as the selected_icon setting.', 'karmcp' ),
 							'properties'  => array(
 								'value'   => array(
 									'type'       => 'object',
@@ -168,14 +168,14 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( empty( $svg_url ) && empty( $svg_content ) ) {
 			return new \WP_Error(
 				'missing_input',
-				__( 'Either svg_url or svg_content is required.', 'emcp-tools' )
+				__( 'Either svg_url or svg_content is required.', 'karmcp' )
 			);
 		}
 
 		if ( ! empty( $svg_url ) && ! empty( $svg_content ) ) {
 			return new \WP_Error(
 				'conflicting_input',
-				__( 'Provide either svg_url or svg_content, not both.', 'emcp-tools' )
+				__( 'Provide either svg_url or svg_content, not both.', 'karmcp' )
 			);
 		}
 
@@ -263,14 +263,14 @@ class EMCP_Tools_Svg_Icon_Abilities {
 	private function upload_from_url( string $url, string $title ) {
 		// SSRF-guarded download: blocks private/reserved/loopback hosts and
 		// re-validates each redirect hop.
-		$tmp_file = EMCP_Tools_Url_Guard::safe_download( $url, 30 );
+		$tmp_file = KarMCP_Url_Guard::safe_download( $url, 30 );
 
 		if ( is_wp_error( $tmp_file ) ) {
 			return new \WP_Error(
 				'download_failed',
 				sprintf(
 					/* translators: %s: error message */
-					__( 'Failed to download SVG: %s', 'emcp-tools' ),
+					__( 'Failed to download SVG: %s', 'karmcp' ),
 					$tmp_file->get_error_message()
 				)
 			);
@@ -308,7 +308,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( stripos( $content, '<svg' ) === false ) {
 			return new \WP_Error(
 				'invalid_svg',
-				__( 'The svg_content does not contain valid SVG markup. Must include an <svg> element.', 'emcp-tools' )
+				__( 'The svg_content does not contain valid SVG markup. Must include an <svg> element.', 'karmcp' )
 			);
 		}
 
@@ -323,7 +323,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( ! $tmp_file ) {
 			return new \WP_Error(
 				'temp_file_failed',
-				__( 'Could not create temporary file for SVG upload.', 'emcp-tools' )
+				__( 'Could not create temporary file for SVG upload.', 'karmcp' )
 			);
 		}
 
@@ -361,7 +361,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 				'sideload_failed',
 				sprintf(
 					/* translators: %s: error message */
-					__( 'Failed to sideload SVG: %s', 'emcp-tools' ),
+					__( 'Failed to sideload SVG: %s', 'karmcp' ),
 					$attachment_id->get_error_message()
 				)
 			);
@@ -390,14 +390,14 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( empty( $content ) ) {
 			return new \WP_Error(
 				'empty_svg',
-				__( 'The downloaded file is empty.', 'emcp-tools' )
+				__( 'The downloaded file is empty.', 'karmcp' )
 			);
 		}
 
 		if ( stripos( $content, '<svg' ) === false ) {
 			return new \WP_Error(
 				'not_svg',
-				__( 'The downloaded file does not contain SVG markup.', 'emcp-tools' )
+				__( 'The downloaded file does not contain SVG markup.', 'karmcp' )
 			);
 		}
 
@@ -405,7 +405,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( preg_match( '/<script/i', $content ) ) {
 			return new \WP_Error(
 				'svg_has_script',
-				__( 'SVG contains script elements and was rejected for security.', 'emcp-tools' )
+				__( 'SVG contains script elements and was rejected for security.', 'karmcp' )
 			);
 		}
 
@@ -415,7 +415,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( ! class_exists( '\Elementor\Core\Utils\Svg\Svg_Sanitizer' ) ) {
 			return new \WP_Error(
 				'no_svg_sanitizer',
-				__( 'No SVG sanitizer is available; the SVG upload was rejected for security.', 'emcp-tools' )
+				__( 'No SVG sanitizer is available; the SVG upload was rejected for security.', 'karmcp' )
 			);
 		}
 
@@ -423,7 +423,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( ! $sanitizer->sanitize_file( $file_path ) ) {
 			return new \WP_Error(
 				'svg_sanitization_failed',
-				__( 'SVG failed security sanitization and was rejected.', 'emcp-tools' )
+				__( 'SVG failed security sanitization and was rejected.', 'karmcp' )
 			);
 		}
 
@@ -449,7 +449,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( preg_match( '/<script/i', $content ) ) {
 			return new \WP_Error(
 				'svg_has_script',
-				__( 'SVG contains script elements and was rejected for security.', 'emcp-tools' )
+				__( 'SVG contains script elements and was rejected for security.', 'karmcp' )
 			);
 		}
 
@@ -467,7 +467,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( ! class_exists( '\Elementor\Core\Utils\Svg\Svg_Sanitizer' ) ) {
 			return new \WP_Error(
 				'no_svg_sanitizer',
-				__( 'No SVG sanitizer is available; the SVG was rejected for security.', 'emcp-tools' )
+				__( 'No SVG sanitizer is available; the SVG was rejected for security.', 'karmcp' )
 			);
 		}
 
@@ -476,7 +476,7 @@ class EMCP_Tools_Svg_Icon_Abilities {
 		if ( false === $sanitized || '' === $sanitized ) {
 			return new \WP_Error(
 				'svg_sanitization_failed',
-				__( 'SVG failed security sanitization. Ensure it contains valid SVG markup.', 'emcp-tools' )
+				__( 'SVG failed security sanitization. Ensure it contains valid SVG markup.', 'karmcp' )
 			);
 		}
 

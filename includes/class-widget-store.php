@@ -3,10 +3,10 @@
  * Widget Store — source-of-truth + sandbox for AI-generated Elementor widgets.
  *
  * Generated widgets are NEVER written into the plugin, theme, or core. The
- * canonical record is a private `emcp_widget` custom post type whose
- * `_emcp_spec` meta holds the structured spec the PHP is compiled from (so the
+ * canonical record is a private `karmcp_widget` custom post type whose
+ * `_karmcp_spec` meta holds the structured spec the PHP is compiled from (so the
  * PHP is always regenerable). The compiled `Widget_Base` subclass lives in an
- * isolated sandbox under `wp-content/emcp-sandbox/`, guarded from direct
+ * isolated sandbox under `wp-content/karmcp-sandbox/`, guarded from direct
  * web access by an `index.php` + `.htaccess`. A derived `manifest.json` lists
  * only ACTIVE widgets; the loader reads it (fast, no DB query per request) while
  * the CPT stays authoritative.
@@ -14,7 +14,7 @@
  * Post status is the activation flag: `publish` = active (loaded into Elementor),
  * `draft` = inactive.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.9.0
  */
 
@@ -27,16 +27,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.9.0
  */
-class EMCP_Tools_Widget_Store {
+class KarMCP_Widget_Store {
 
-	const POST_TYPE        = 'emcp_widget';
-	const META_SPEC        = '_emcp_spec';
-	const META_WIDGET_NAME = '_emcp_widget_name';
-	const META_CLASS_NAME  = '_emcp_class_name';
-	const META_PHP_HASH    = '_emcp_php_hash';
-	const META_CSS_HASH    = '_emcp_css_hash';
-	const META_JS_HASH     = '_emcp_js_hash';
-	const META_LAST_ERROR  = '_emcp_last_error';
+	const POST_TYPE        = 'karmcp_widget';
+	const META_SPEC        = '_karmcp_spec';
+	const META_WIDGET_NAME = '_karmcp_widget_name';
+	const META_CLASS_NAME  = '_karmcp_class_name';
+	const META_PHP_HASH    = '_karmcp_php_hash';
+	const META_CSS_HASH    = '_karmcp_css_hash';
+	const META_JS_HASH     = '_karmcp_js_hash';
+	const META_LAST_ERROR  = '_karmcp_last_error';
 
 	/**
 	 * Registers the CPT. Hooked on `init`.
@@ -60,7 +60,7 @@ class EMCP_Tools_Widget_Store {
 				'map_meta_cap'        => true,
 				'supports'            => array( 'title', 'author' ),
 				'labels'              => array(
-					'name' => __( 'EMCP Custom Widgets', 'emcp-tools' ),
+					'name' => __( 'KarMCP Custom Widgets', 'karmcp' ),
 				),
 			)
 		);
@@ -75,10 +75,9 @@ class EMCP_Tools_Widget_Store {
 	 * @return bool
 	 */
 	public static function user_has_access(): bool {
-		if ( ! function_exists( 'emcp_tools_fs' ) || ! emcp_tools_fs()->can_use_premium_code() ) {
-			return false;
-		}
-		return current_user_can( 'manage_options' );
+		// See KarMCP_Widget_Loader::has_access() — the generator/compiler that
+		// produced these artifacts is not part of this build.
+		return false;
 	}
 
 	// -------------------------------------------------------------------------
@@ -93,7 +92,7 @@ class EMCP_Tools_Widget_Store {
 	 * @return string
 	 */
 	public static function sandbox_dir(): string {
-		return EMCP_Tools_Sandbox_Paths::base_dir();
+		return KarMCP_Sandbox_Paths::base_dir();
 	}
 
 	/**
@@ -131,14 +130,14 @@ class EMCP_Tools_Widget_Store {
 		if ( ! wp_mkdir_p( $widgets_dir ) ) {
 			return new WP_Error(
 				'sandbox_unwritable',
-				__( 'Could not create the widget sandbox directory under wp-content. Check filesystem permissions.', 'emcp-tools' )
+				__( 'Could not create the widget sandbox directory under wp-content. Check filesystem permissions.', 'karmcp' )
 			);
 		}
 
 		// Block direct web access to the generated PHP, but allow per-widget
 		// style.css / script.js to be served (they're enqueued on the front end).
-		EMCP_Tools_Sandbox_Paths::harden();
-		EMCP_Tools_Sandbox_Paths::guard_subdir( $widgets_dir );
+		KarMCP_Sandbox_Paths::harden();
+		KarMCP_Sandbox_Paths::guard_subdir( $widgets_dir );
 
 		return true;
 	}
@@ -237,7 +236,7 @@ class EMCP_Tools_Widget_Store {
 	 * @return string
 	 */
 	public static function widget_url( int $post_id ): string {
-		return EMCP_Tools_Sandbox_Paths::base_url() . '/' . self::relative_widget_dir( $post_id );
+		return KarMCP_Sandbox_Paths::base_url() . '/' . self::relative_widget_dir( $post_id );
 	}
 
 	/**
@@ -247,7 +246,7 @@ class EMCP_Tools_Widget_Store {
 	 * @return string
 	 */
 	public static function asset_handle( int $post_id ): string {
-		return 'emcp-widget-' . $post_id;
+		return 'karmcp-widget-' . $post_id;
 	}
 
 	// -------------------------------------------------------------------------
@@ -265,7 +264,7 @@ class EMCP_Tools_Widget_Store {
 	 */
 	public static function create( array $spec, bool $active = true ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to create widgets.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to create widgets.', 'karmcp' ) );
 		}
 
 		$ensured = self::ensure_sandbox();
@@ -273,7 +272,7 @@ class EMCP_Tools_Widget_Store {
 			return $ensured;
 		}
 
-		$title = isset( $spec['meta']['title'] ) ? sanitize_text_field( (string) $spec['meta']['title'] ) : __( 'Custom Widget', 'emcp-tools' );
+		$title = isset( $spec['meta']['title'] ) ? sanitize_text_field( (string) $spec['meta']['title'] ) : __( 'Custom Widget', 'karmcp' );
 
 		// Insert the post first so the ID can seed the unique class/widget names.
 		$post_id = wp_insert_post(
@@ -317,12 +316,12 @@ class EMCP_Tools_Widget_Store {
 	 */
 	public static function update( int $post_id, array $spec ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to update widgets.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to update widgets.', 'karmcp' ) );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Widget not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Widget not found.', 'karmcp' ) );
 		}
 
 		$ensured = self::ensure_sandbox();
@@ -369,11 +368,11 @@ class EMCP_Tools_Widget_Store {
 	private static function write_widget( int $post_id, array $spec ) {
 		// The generator ships in the private Pro overlay. Guard defensively so a
 		// free build (pro/ absent) returns a clean error instead of fataling.
-		if ( ! class_exists( 'EMCP_Tools_Widget_Generator' ) ) {
-			return new WP_Error( 'emcp_pro_required', __( 'Widget Builder requires EMCP Pro.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_Widget_Generator' ) ) {
+			return new WP_Error( 'karmcp_pro_required', __( 'Widget Builder requires KarMCP Pro.', 'karmcp' ) );
 		}
-		$class_name  = 'EMCP_Widget_' . $post_id;
-		$widget_name = 'emcp_custom_' . $post_id;
+		$class_name  = 'KarMCP_Widget_' . $post_id;
+		$widget_name = 'karmcp_custom_' . $post_id;
 
 		// Optional per-widget assets (full CSS/JS files, enqueued on the front end).
 		$css     = ( isset( $spec['styles'] ) && is_string( $spec['styles'] ) ) ? trim( $spec['styles'] ) : '';
@@ -381,7 +380,7 @@ class EMCP_Tools_Widget_Store {
 		$has_css = '' !== $css;
 		$has_js  = '' !== $js;
 
-		$php = EMCP_Tools_Widget_Generator::generate(
+		$php = KarMCP_Widget_Generator::generate(
 			$spec,
 			$class_name,
 			$widget_name,
@@ -396,7 +395,7 @@ class EMCP_Tools_Widget_Store {
 
 		$path = self::php_path( $post_id );
 		if ( ! self::write_file( $path, $php ) ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the widget file to the sandbox.', 'emcp-tools' ) );
+			return new WP_Error( 'write_failed', __( 'Could not write the widget file to the sandbox.', 'karmcp' ) );
 		}
 
 		// CSS file (defensively strip any PHP open tag — assets are served static).
@@ -462,7 +461,7 @@ class EMCP_Tools_Widget_Store {
 			include_once $path;
 		}
 		if ( ! class_exists( $class_name ) ) {
-			return new WP_Error( 'class_missing', __( 'The generated widget class did not load.', 'emcp-tools' ) );
+			return new WP_Error( 'class_missing', __( 'The generated widget class did not load.', 'karmcp' ) );
 		}
 		try {
 			$instance = new $class_name();
@@ -483,7 +482,7 @@ class EMCP_Tools_Widget_Store {
 	 * @param int $post_id Widget post ID.
 	 */
 	private static function safeguard_active( int $post_id ): void {
-		$rt = self::runtime_validate( $post_id, 'EMCP_Widget_' . $post_id );
+		$rt = self::runtime_validate( $post_id, 'KarMCP_Widget_' . $post_id );
 		if ( is_wp_error( $rt ) ) {
 			wp_update_post( array( 'ID' => $post_id, 'post_status' => 'draft' ) );
 			update_post_meta( $post_id, self::META_LAST_ERROR, sanitize_text_field( $rt->get_error_message() ) );
@@ -501,12 +500,12 @@ class EMCP_Tools_Widget_Store {
 	 */
 	public static function set_status( int $post_id, string $status ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to change widget status.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to change widget status.', 'karmcp' ) );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Widget not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Widget not found.', 'karmcp' ) );
 		}
 
 		$post_status = ( 'active' === $status ) ? 'publish' : 'draft';
@@ -515,7 +514,7 @@ class EMCP_Tools_Widget_Store {
 		// before going live, so a broken widget can never reach the manifest.
 		if ( 'publish' === $post_status ) {
 			if ( ! file_exists( self::php_path( $post_id ) ) ) {
-				return new WP_Error( 'missing_file', __( 'The generated widget file is missing; update the widget to regenerate it.', 'emcp-tools' ) );
+				return new WP_Error( 'missing_file', __( 'The generated widget file is missing; update the widget to regenerate it.', 'karmcp' ) );
 			}
 			$rt = self::runtime_validate( $post_id, (string) get_post_meta( $post_id, self::META_CLASS_NAME, true ) );
 			if ( is_wp_error( $rt ) ) {
@@ -524,7 +523,7 @@ class EMCP_Tools_Widget_Store {
 					'activation_blocked',
 					sprintf(
 						/* translators: %s: error message */
-						__( 'Cannot activate, the widget errors when Elementor builds it: %s. Fix the spec and update the widget.', 'emcp-tools' ),
+						__( 'Cannot activate, the widget errors when Elementor builds it: %s. Fix the spec and update the widget.', 'karmcp' ),
 						$rt->get_error_message()
 					)
 				);
@@ -554,12 +553,12 @@ class EMCP_Tools_Widget_Store {
 	 */
 	public static function delete( int $post_id ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to delete widgets.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to delete widgets.', 'karmcp' ) );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Widget not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Widget not found.', 'karmcp' ) );
 		}
 
 		// Remove the widget's whole directory (widget.php + any css/js).
@@ -626,7 +625,7 @@ class EMCP_Tools_Widget_Store {
 	public static function summary( int $post_id ) {
 		$post = get_post( $post_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Widget not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Widget not found.', 'karmcp' ) );
 		}
 
 		return array(

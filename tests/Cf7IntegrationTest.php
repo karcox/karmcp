@@ -8,12 +8,12 @@ use PHPUnit\Framework\TestCase;
 
 final class Cf7IntegrationTest extends TestCase {
 
-	private EMCP_Tools_CF7_Integration $cf7;
+	private KarMCP_CF7_Integration $cf7;
 
 	protected function setUp(): void {
-		emcp_test_reset();
-		$GLOBALS['emcp_test']['caps'] = array( 'wpcf7_read_contact_forms', 'wpcf7_edit_contact_forms' );
-		$GLOBALS['emcp_test']['cf7']  = array(
+		karmcp_test_reset();
+		$GLOBALS['karmcp_test']['caps'] = array( 'wpcf7_read_contact_forms', 'wpcf7_edit_contact_forms' );
+		$GLOBALS['karmcp_test']['cf7']  = array(
 			'forms' => array(
 				42 => array(
 					'title' => 'Contact',
@@ -32,12 +32,12 @@ final class Cf7IntegrationTest extends TestCase {
 				),
 			),
 		);
-		$this->cf7 = new EMCP_Tools_CF7_Integration();
+		$this->cf7 = new KarMCP_CF7_Integration();
 	}
 
 	public function test_id_and_tools(): void {
 		$this->assertSame( 'cf7', $this->cf7->id() );
-		$this->assertSame( array( 'emcp-tools/cf7-read', 'emcp-tools/cf7-write' ), $this->cf7->get_ability_names() );
+		$this->assertSame( array( 'karmcp/cf7-read', 'karmcp/cf7-write' ), $this->cf7->get_ability_names() );
 		$this->assertTrue( $this->cf7->is_active() );
 	}
 

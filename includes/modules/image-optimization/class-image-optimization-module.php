@@ -7,7 +7,7 @@
  * MCP media tools serve the optimized file). A resumable bulk optimizer handles
  * the existing library from the Modules admin card. Free tier; opt-in.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -20,10 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Image_Optimization_Module extends EMCP_Tools_Module {
+class KarMCP_Image_Optimization_Module extends KarMCP_Module {
 
 	const ID     = 'image-optimization';
-	const PREFIX = 'emcp_tools_module_image_optimization_';
+	const PREFIX = 'karmcp_module_image_optimization_';
 
 	public function id(): string {
 		return self::ID;
@@ -36,16 +36,16 @@ class EMCP_Tools_Image_Optimization_Module extends EMCP_Tools_Module {
 	 * @return bool
 	 */
 	public static function module_is_active(): bool {
-		$active = (array) get_option( EMCP_Tools_Module::OPTION_ACTIVE, array() );
+		$active = (array) get_option( KarMCP_Module::OPTION_ACTIVE, array() );
 		return in_array( self::ID, $active, true );
 	}
 
 	public function title(): string {
-		return __( 'Image Optimization', 'emcp-tools' );
+		return __( 'Image Optimization', 'karmcp' );
 	}
 
 	public function description(): string {
-		return __( 'Automatically compress uploaded images and generate/serve WebP. Images added to pages via MCP or AI Chat use the optimized version.', 'emcp-tools' );
+		return __( 'Automatically compress uploaded images and generate/serve WebP. Images added to pages via MCP or AI Chat use the optimized version.', 'karmcp' );
 	}
 
 	public function tier(): string {
@@ -58,7 +58,7 @@ class EMCP_Tools_Image_Optimization_Module extends EMCP_Tools_Module {
 
 	/** WebP generation needs an image editor that supports WebP output. */
 	public function is_available(): bool {
-		return ( new EMCP_Tools_Webp_Generator( 82 ) )->is_available();
+		return ( new KarMCP_Webp_Generator( 82 ) )->is_available();
 	}
 
 	/**
@@ -117,7 +117,7 @@ class EMCP_Tools_Image_Optimization_Module extends EMCP_Tools_Module {
 			'compress'       => '1' === (string) get_option( self::PREFIX . 'compress', '1' ),
 			'webp'           => '1' === (string) get_option( self::PREFIX . 'webp', '1' ),
 			'webp_serve'     => '1' === (string) get_option( self::PREFIX . 'webp_serve', '1' ),
-			'quality'        => EMCP_Tools_Image_Optimizer::clamp_quality( (int) get_option( self::PREFIX . 'quality', 60 ) ),
+			'quality'        => KarMCP_Image_Optimizer::clamp_quality( (int) get_option( self::PREFIX . 'quality', 60 ) ),
 			'max_dimension'  => max( 0, (int) get_option( self::PREFIX . 'max_dimension', 0 ) ),
 			'keep_originals' => '1' === (string) get_option( self::PREFIX . 'keep_originals', '1' ),
 		);
@@ -128,7 +128,7 @@ class EMCP_Tools_Image_Optimization_Module extends EMCP_Tools_Module {
 		$settings = $this->current_settings();
 
 		if ( $settings['compress'] || $settings['webp'] ) {
-			$optimizer = new EMCP_Tools_Image_Optimizer( $settings );
+			$optimizer = new KarMCP_Image_Optimizer( $settings );
 			add_filter(
 				'wp_generate_attachment_metadata',
 				array( $optimizer, 'on_generate_metadata' ),
@@ -139,16 +139,16 @@ class EMCP_Tools_Image_Optimization_Module extends EMCP_Tools_Module {
 		if ( $settings['webp'] ) {
 			// REST/CLI (MCP media tools) always resolve to WebP; the frontend
 			// rewrite is gated by the separate "serve on frontend" toggle.
-			( new EMCP_Tools_Webp_Rewriter( $settings['webp_serve'] ) )->register();
+			( new KarMCP_Webp_Rewriter( $settings['webp_serve'] ) )->register();
 		}
 		if ( is_admin() ) {
-			( new EMCP_Tools_Bulk_Optimizer( $settings ) )->register();
+			( new KarMCP_Bulk_Optimizer( $settings ) )->register();
 		}
 	}
 
 	/** Render the card knobs. Delegates to the shared view partial. */
 	public function render_settings(): void {
 		$settings = $this->current_settings();
-		include EMCP_TOOLS_DIR . 'includes/modules/image-optimization/settings-fields.php';
+		include KARMCP_DIR . 'includes/modules/image-optimization/settings-fields.php';
 	}
 }

@@ -4,11 +4,11 @@
  *
  * Registers two catalog-backed insert tools — add-free-widget and
  * add-pro-widget (the latter only when Elementor Pro is active) — which
- * validate the requested widget's tier against EMCP_Tools_Widget_Catalog,
+ * validate the requested widget's tier against KarMCP_Widget_Catalog,
  * merge catalog defaults, and delegate to the shared execute_add_widget
  * engine. Also registers the universal update-widget tool.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -21,25 +21,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Widget_Abilities {
+class KarMCP_Widget_Abilities {
 
 	/**
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
-	 * @var EMCP_Tools_Element_Factory
+	 * @var KarMCP_Element_Factory
 	 */
 	private $factory;
 
 	/**
-	 * @var EMCP_Tools_Schema_Generator
+	 * @var KarMCP_Schema_Generator
 	 */
 	private $schema_generator;
 
 	/**
-	 * @var EMCP_Tools_Settings_Validator
+	 * @var KarMCP_Settings_Validator
 	 */
 	private $validator;
 
@@ -55,16 +55,16 @@ class EMCP_Tools_Widget_Abilities {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param EMCP_Tools_Data               $data             The data access layer.
-	 * @param EMCP_Tools_Element_Factory    $factory          The element factory.
-	 * @param EMCP_Tools_Schema_Generator   $schema_generator The schema generator.
-	 * @param EMCP_Tools_Settings_Validator $validator        The settings validator.
+	 * @param KarMCP_Data               $data             The data access layer.
+	 * @param KarMCP_Element_Factory    $factory          The element factory.
+	 * @param KarMCP_Schema_Generator   $schema_generator The schema generator.
+	 * @param KarMCP_Settings_Validator $validator        The settings validator.
 	 */
 	public function __construct(
-		EMCP_Tools_Data $data,
-		EMCP_Tools_Element_Factory $factory,
-		EMCP_Tools_Schema_Generator $schema_generator,
-		EMCP_Tools_Settings_Validator $validator
+		KarMCP_Data $data,
+		KarMCP_Element_Factory $factory,
+		KarMCP_Schema_Generator $schema_generator,
+		KarMCP_Settings_Validator $validator
 	) {
 		$this->data             = $data;
 		$this->factory          = $factory;
@@ -133,11 +133,11 @@ class EMCP_Tools_Widget_Abilities {
 		return array(
 			'type'       => 'object',
 			'properties' => array(
-				'post_id'     => array( 'type' => 'integer', 'description' => __( 'The post/page ID.', 'emcp-tools' ) ),
-				'parent_id'   => array( 'type' => 'string', 'description' => __( 'Parent container element ID.', 'emcp-tools' ) ),
-				'position'    => array( 'type' => 'integer', 'description' => __( 'Insert position. -1 = append.', 'emcp-tools' ) ),
-				'widget_type' => array( 'type' => 'string', 'description' => __( 'Widget type from list-widgets. Use get-widget-schema for its curated params.', 'emcp-tools' ) ),
-				'settings'    => array( 'type' => 'object', 'description' => __( 'Widget settings (see get-widget-schema). Any valid Elementor control passes through.', 'emcp-tools' ) ),
+				'post_id'     => array( 'type' => 'integer', 'description' => __( 'The post/page ID.', 'karmcp' ) ),
+				'parent_id'   => array( 'type' => 'string', 'description' => __( 'Parent container element ID.', 'karmcp' ) ),
+				'position'    => array( 'type' => 'integer', 'description' => __( 'Insert position. -1 = append.', 'karmcp' ) ),
+				'widget_type' => array( 'type' => 'string', 'description' => __( 'Widget type from list-widgets. Use get-widget-schema for its curated params.', 'karmcp' ) ),
+				'settings'    => array( 'type' => 'object', 'description' => __( 'Widget settings (see get-widget-schema). Any valid Elementor control passes through.', 'karmcp' ) ),
 			),
 			'required'   => array( 'post_id', 'parent_id', 'widget_type' ),
 		);
@@ -149,13 +149,13 @@ class EMCP_Tools_Widget_Abilities {
 	 * @since 3.0.0
 	 */
 	private function register_add_free_widget(): void {
-		$this->ability_names[] = 'emcp-tools/add-free-widget';
-		emcp_tools_register_ability(
-			'emcp-tools/add-free-widget',
+		$this->ability_names[] = 'karmcp/add-free-widget';
+		karmcp_register_ability(
+			'karmcp/add-free-widget',
 			array(
-				'label'               => __( 'Add Widget', 'emcp-tools' ),
-				'description'         => __( 'Adds any free/core Elementor widget to a container. Discover types with list-widgets and their settings with get-widget-schema. Catalog defaults are merged automatically.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Widget', 'karmcp' ),
+				'description'         => __( 'Adds any free/core Elementor widget to a container. Discover types with list-widgets and their settings with get-widget-schema. Catalog defaults are merged automatically.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_free_widget' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => $this->catalog_insert_input_schema(),
@@ -180,13 +180,13 @@ class EMCP_Tools_Widget_Abilities {
 	 * @since 3.0.0
 	 */
 	private function register_add_pro_widget(): void {
-		$this->ability_names[] = 'emcp-tools/add-pro-widget';
-		emcp_tools_register_ability(
-			'emcp-tools/add-pro-widget',
+		$this->ability_names[] = 'karmcp/add-pro-widget';
+		karmcp_register_ability(
+			'karmcp/add-pro-widget',
 			array(
-				'label'               => __( 'Add Pro Widget', 'emcp-tools' ),
-				'description'         => __( 'Adds an Elementor Pro (or WooCommerce) widget to a container. Discover types with list-widgets (tier:pro) and settings with get-widget-schema. Only available when Elementor Pro is active.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Pro Widget', 'karmcp' ),
+				'description'         => __( 'Adds an Elementor Pro (or WooCommerce) widget to a container. Discover types with list-widgets (tier:pro) and settings with get-widget-schema. Only available when Elementor Pro is active.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_pro_widget' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => $this->catalog_insert_input_schema(),
@@ -240,18 +240,18 @@ class EMCP_Tools_Widget_Abilities {
 	private function insert_catalog_widget( $input, string $expected_tier ) {
 		$widget_type = sanitize_text_field( $input['widget_type'] ?? '' );
 		if ( '' === $widget_type ) {
-			return new \WP_Error( 'missing_params', __( 'widget_type is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'widget_type is required.', 'karmcp' ) );
 		}
 
-		$entry  = EMCP_Tools_Widget_Catalog::get_widget( $widget_type );
-		$is_pro = EMCP_Tools_Widget_Catalog::is_pro( $widget_type );
+		$entry  = KarMCP_Widget_Catalog::get_widget( $widget_type );
+		$is_pro = KarMCP_Widget_Catalog::is_pro( $widget_type );
 
 		// Tier gate. 'free' tool: reject Pro/Woo types. 'pro' tool: reject free types.
 		if ( 'free' === $expected_tier && $is_pro ) {
-			return new \WP_Error( 'wrong_tier', __( 'That is a Pro widget, use add-pro-widget.', 'emcp-tools' ) );
+			return new \WP_Error( 'wrong_tier', __( 'That is a Pro widget, use add-pro-widget.', 'karmcp' ) );
 		}
 		if ( 'pro' === $expected_tier && null !== $entry && ! $is_pro ) {
-			return new \WP_Error( 'wrong_tier', __( 'That is a free widget, use add-free-widget.', 'emcp-tools' ) );
+			return new \WP_Error( 'wrong_tier', __( 'That is a free widget, use add-free-widget.', 'karmcp' ) );
 		}
 
 		// Merge catalog defaults under the caller's settings (caller wins).
@@ -287,7 +287,7 @@ class EMCP_Tools_Widget_Abilities {
 		$settings    = $input['settings'] ?? array();
 
 		if ( ! $post_id || empty( $parent_id ) || empty( $widget_type ) ) {
-			return new \WP_Error( 'missing_params', __( 'post_id, parent_id, and widget_type are required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'post_id, parent_id, and widget_type are required.', 'karmcp' ) );
 		}
 
 		// Validate widget type exists.
@@ -296,7 +296,7 @@ class EMCP_Tools_Widget_Abilities {
 			return new \WP_Error(
 				'invalid_widget_type',
 				/* translators: %s: widget type name */
-				sprintf( __( 'Widget type "%s" not found.', 'emcp-tools' ), $widget_type )
+				sprintf( __( 'Widget type "%s" not found.', 'karmcp' ), $widget_type )
 			);
 		}
 
@@ -319,7 +319,7 @@ class EMCP_Tools_Widget_Abilities {
 		$inserted = $this->data->insert_element( $page_data, $parent_id, $widget, $position );
 
 		if ( ! $inserted ) {
-			return new \WP_Error( 'parent_not_found', __( 'Parent container not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'parent_not_found', __( 'Parent container not found.', 'karmcp' ) );
 		}
 
 		$result = $this->data->save_page_data( $post_id, $page_data );
@@ -339,14 +339,14 @@ class EMCP_Tools_Widget_Abilities {
 	// =========================================================================
 
 	private function register_update_widget(): void {
-		$this->ability_names[] = 'emcp-tools/update-widget';
+		$this->ability_names[] = 'karmcp/update-widget';
 
-		emcp_tools_register_ability(
-			'emcp-tools/update-widget',
+		karmcp_register_ability(
+			'karmcp/update-widget',
 			array(
-				'label'               => __( 'Update Widget', 'emcp-tools' ),
-				'description'         => __( 'Updates settings on an existing widget. Settings are merged (partial update).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Widget', 'karmcp' ),
+				'description'         => __( 'Updates settings on an existing widget. Settings are merged (partial update).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_widget' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => array(
@@ -354,15 +354,15 @@ class EMCP_Tools_Widget_Abilities {
 					'properties' => array(
 						'post_id'    => array(
 							'type'        => 'integer',
-							'description' => __( 'The post/page ID.', 'emcp-tools' ),
+							'description' => __( 'The post/page ID.', 'karmcp' ),
 						),
 						'element_id' => array(
 							'type'        => 'string',
-							'description' => __( 'The widget element ID.', 'emcp-tools' ),
+							'description' => __( 'The widget element ID.', 'karmcp' ),
 						),
 						'settings'   => array(
 							'type'        => 'object',
-							'description' => __( 'Partial settings to merge.', 'emcp-tools' ),
+							'description' => __( 'Partial settings to merge.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
@@ -400,7 +400,7 @@ class EMCP_Tools_Widget_Abilities {
 		$settings   = $input['settings'] ?? array();
 
 		if ( ! $post_id || empty( $element_id ) || empty( $settings ) ) {
-			return new \WP_Error( 'missing_params', __( 'post_id, element_id, and settings are required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'post_id, element_id, and settings are required.', 'karmcp' ) );
 		}
 
 		$page_data = $this->data->get_page_data( $post_id );
@@ -413,17 +413,17 @@ class EMCP_Tools_Widget_Abilities {
 		$element = $this->data->find_element_by_id( $page_data, $element_id );
 
 		if ( null === $element ) {
-			return new \WP_Error( 'element_not_found', __( 'Element not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'element_not_found', __( 'Element not found.', 'karmcp' ) );
 		}
 
 		if ( ( $element['elType'] ?? '' ) !== 'widget' ) {
-			return new \WP_Error( 'not_a_widget', __( 'Target element is not a widget.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_a_widget', __( 'Target element is not a widget.', 'karmcp' ) );
 		}
 
 		$updated = $this->data->update_element_settings( $page_data, $element_id, $settings );
 
 		if ( ! $updated ) {
-			return new \WP_Error( 'update_failed', __( 'Failed to update widget settings.', 'emcp-tools' ) );
+			return new \WP_Error( 'update_failed', __( 'Failed to update widget settings.', 'karmcp' ) );
 		}
 
 		$result = $this->data->save_page_data( $post_id, $page_data );

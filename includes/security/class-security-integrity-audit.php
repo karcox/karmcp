@@ -5,7 +5,7 @@
  * diff() is pure (unit-tested). run() fetches checksums + hashes core files
  * (verified live) and degrades gracefully when the checksum API is unreachable.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Security_Integrity_Audit {
+class KarMCP_Security_Integrity_Audit {
 
 	/**
 	 * Pure: compare a checksum manifest against actual file hashes.
@@ -30,7 +30,7 @@ class EMCP_Tools_Security_Integrity_Audit {
 		foreach ( $checksums as $path => $expected ) {
 			$actual = $hasher( (string) $path );
 			if ( null === $actual ) {
-				$findings[] = EMCP_Tools_Security_Finding::make(
+				$findings[] = KarMCP_Security_Finding::make(
 					'integrity_missing', 'integrity', 'Missing core file', 'warning', (string) $path,
 					sprintf( 'Core file %s is missing.', $path ),
 					'Reinstall WordPress core (Dashboard → Updates → Re-install) to restore missing files.'
@@ -38,7 +38,7 @@ class EMCP_Tools_Security_Integrity_Audit {
 				continue;
 			}
 			if ( ! hash_equals( strtolower( (string) $expected ), strtolower( (string) $actual ) ) ) {
-				$findings[] = EMCP_Tools_Security_Finding::make(
+				$findings[] = KarMCP_Security_Finding::make(
 					'integrity_modified', 'integrity', 'Modified core file', 'critical', (string) $path,
 					sprintf( 'Core file %s does not match the official checksum.', $path ),
 					'A modified core file is a strong infection signal. Re-install WordPress core and investigate how it changed.'
@@ -65,7 +65,7 @@ class EMCP_Tools_Security_Integrity_Audit {
 		if ( empty( $checksums ) || ! is_array( $checksums ) ) {
 			return array(
 				'findings' => array(
-					EMCP_Tools_Security_Finding::make(
+					KarMCP_Security_Finding::make(
 						'integrity_unavailable', 'integrity', 'Core checksums', 'info', false,
 						'Could not retrieve official core checksums (offline or wordpress.org unreachable).',
 						'Run this scan on an internet-connected environment to verify core file integrity.'

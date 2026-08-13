@@ -5,7 +5,7 @@
  * Bridges the MCP stdio transport (Claude Desktop, Claude Code, etc.) to the
  * WordPress MCP Adapter HTTP endpoint. Supports a SITE REGISTRY so one session
  * can drive several WordPress installs, switching between them with the injected
- * `emcp_use_site` tool.
+ * `karmcp_use_site` tool.
  *
  * Single-site (unchanged, backward-compatible):
  *   WP_URL               (required) WordPress site URL, e.g. http://mysite.test
@@ -13,10 +13,10 @@
  *   WP_APP_PASSWORD      (required) WordPress Application Password
  *
  * Multi-site (any ONE of):
- *   EMCP_SITES           JSON: { "alias": { "url", "username", "appPassword" }, ... }
- *   EMCP_SITES_FILE      Path to a JSON file with the same shape.
- *   EMCP_DEFAULT_SITE    Alias to start on (defaults to the first key).
- *   When >1 site is configured, two extra tools appear: emcp_list_sites, emcp_use_site.
+ *   KARMCP_SITES           JSON: { "alias": { "url", "username", "appPassword" }, ... }
+ *   KARMCP_SITES_FILE      Path to a JSON file with the same shape.
+ *   KARMCP_DEFAULT_SITE    Alias to start on (defaults to the first key).
+ *   When >1 site is configured, two extra tools appear: karmcp_list_sites, karmcp_use_site.
  *   Per-call routing: pass `site: "<alias>"` in ANY tool's arguments to run just
  *   that call against that site, without switching the active site.
  *
@@ -33,11 +33,11 @@ import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { appendFileSync, readFileSync } from 'node:fs';
 
-const MCP_REST_PATH = '/mcp/emcp-tools-server';
+const MCP_REST_PATH = '/mcp/karmcp-tools-server';
 // A named User-Agent so WAFs/CDNs (Cloudflare, etc.) that block requests with
 // a missing/empty UA don't reject the proxy as a bot. Aggressive bot-protection
 // modes may still block it — those need a host-side allow rule for the MCP path.
-const PROXY_UA = 'emcp-proxy/1.9.2 (+https://emcptools.com; MCP client)';
+const PROXY_UA = 'karmcp-proxy/1.9.2 (+https://example.com; MCP client)';
 const MCP_LOG_FILE = process.env.MCP_LOG_FILE || '';
 const MCP_PROTOCOL_VERSION = process.env.MCP_PROTOCOL_VERSION || '';
 
@@ -47,17 +47,17 @@ const MCP_PROTOCOL_VERSION = process.env.MCP_PROTOCOL_VERSION || '';
 
 /**
  * Resolve the site registry from the environment.
- * Priority: EMCP_SITES (JSON) / EMCP_SITES_FILE (path) → single WP_URL env → none.
+ * Priority: KARMCP_SITES (JSON) / KARMCP_SITES_FILE (path) → single WP_URL env → none.
  *
  * @param {Object} env process.env-like object.
  * @returns {{sites: Object, defaultSite: string}}
  */
 export function loadSites(env) {
   let raw = null;
-  if (env.EMCP_SITES) {
-    try { raw = JSON.parse(env.EMCP_SITES); } catch { raw = null; }
-  } else if (env.EMCP_SITES_FILE) {
-    try { raw = JSON.parse(readFileSync(env.EMCP_SITES_FILE, 'utf8')); } catch { raw = null; }
+  if (env.KARMCP_SITES) {
+    try { raw = JSON.parse(env.KARMCP_SITES); } catch { raw = null; }
+  } else if (env.KARMCP_SITES_FILE) {
+    try { raw = JSON.parse(readFileSync(env.KARMCP_SITES_FILE, 'utf8')); } catch { raw = null; }
   }
 
   const sites = {};
@@ -78,7 +78,7 @@ export function loadSites(env) {
   }
 
   const keys = Object.keys(sites);
-  let defaultSite = env.EMCP_DEFAULT_SITE && sites[env.EMCP_DEFAULT_SITE] ? env.EMCP_DEFAULT_SITE : (keys[0] || '');
+  let defaultSite = env.KARMCP_DEFAULT_SITE && sites[env.KARMCP_DEFAULT_SITE] ? env.KARMCP_DEFAULT_SITE : (keys[0] || '');
   return { sites, defaultSite };
 }
 
@@ -110,13 +110,13 @@ export function sitePath(site) {
 /** The two injected site-switching tools. */
 export const META_TOOLS = [
   {
-    name: 'emcp_list_sites',
-    description: 'List the WordPress sites this proxy can connect to, and which one is active. Use emcp_use_site to switch.',
+    name: 'karmcp_list_sites',
+    description: 'List the WordPress sites this proxy can connect to, and which one is active. Use karmcp_use_site to switch.',
     inputSchema: { type: 'object', properties: {} },
   },
   {
-    name: 'emcp_use_site',
-    description: 'Switch the active WordPress site for subsequent tool calls. Pass the site alias from emcp_list_sites.',
+    name: 'karmcp_use_site',
+    description: 'Switch the active WordPress site for subsequent tool calls. Pass the site alias from karmcp_list_sites.',
     inputSchema: { type: 'object', properties: { site: { type: 'string', description: 'Site alias to switch to.' } }, required: ['site'] },
   },
 ];
@@ -152,11 +152,11 @@ export function injectMetaTools(response, siteCount) {
  * @returns {Object}
  */
 export function handleMetaCall(name, args, state, id = null) {
-  if (name === 'emcp_list_sites') {
+  if (name === 'karmcp_list_sites') {
     const sites = Object.keys(state.sites).map((alias) => ({ alias, url: state.sites[alias].url, active: alias === state.active }));
     return jsonRpcText(id, { sites, active: state.active });
   }
-  if (name === 'emcp_use_site') {
+  if (name === 'karmcp_use_site') {
     const site = String(args?.site || '');
     if (!state.sites[site]) {
       return jsonRpcError(id, `Unknown site "${site}". Available: ${Object.keys(state.sites).join(', ')}`);
@@ -177,7 +177,7 @@ function jsonRpcError(id, message) {
 /**
  * Route a single tools/call to a per-call `site` argument when present + valid,
  * stripping `site` from the forwarded arguments. This is the per-call fan-out
- * companion to the session-switch `emcp_use_site` tool: pass `site: "<alias>"`
+ * companion to the session-switch `karmcp_use_site` tool: pass `site: "<alias>"`
  * in any tool's arguments to run just that call against that site, without
  * changing the active site. Falls back to the active site otherwise.
  *
@@ -205,7 +205,7 @@ export function resolveCallSite(message, state) {
 // Everything below is the running proxy — skipped when imported for tests.
 // ---------------------------------------------------------------------------
 
-if (!process.env.EMCP_PROXY_NO_MAIN) {
+if (!process.env.KARMCP_PROXY_NO_MAIN) {
   runProxy();
 }
 
@@ -213,7 +213,7 @@ function runProxy() {
   const { sites, defaultSite } = loadSites(process.env);
 
   if (Object.keys(sites).length === 0) {
-    logStderr('ERROR: No site configured. Set WP_URL/WP_USERNAME/WP_APP_PASSWORD, or EMCP_SITES / EMCP_SITES_FILE.');
+    logStderr('ERROR: No site configured. Set WP_URL/WP_USERNAME/WP_APP_PASSWORD, or KARMCP_SITES / KARMCP_SITES_FILE.');
     process.exit(1);
   }
 
@@ -354,7 +354,7 @@ function runProxy() {
 
   logStderr('MCP Tools for Elementor proxy starting');
   logStderr(`Sites: ${Object.keys(sites).join(', ')} (active: ${state.active})`);
-  if (siteCount > 1) logStderr('Multi-site mode: emcp_list_sites / emcp_use_site available.');
+  if (siteCount > 1) logStderr('Multi-site mode: karmcp_list_sites / karmcp_use_site available.');
 
   const rl = createInterface({ input: process.stdin, terminal: false });
   let pending = 0;

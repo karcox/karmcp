@@ -9,7 +9,7 @@
  * static methods so the dynamic logic lives in exactly one place. Every method
  * returns an escaped HTML string.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Dynamic {
+class KarMCP_Themer_Dynamic {
 
 	/** Tags an element may render as. */
 	const TITLE_TAGS = array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p' );
@@ -67,7 +67,7 @@ class EMCP_Tools_Themer_Dynamic {
 		if ( ! empty( $args['link'] ) && $id ) {
 			$inner = '<a href="' . esc_url( (string) get_permalink( $id ) ) . '">' . $inner . '</a>';
 		}
-		return '<' . $tag . ' class="emcp-dyn emcp-dyn-post-title">' . $inner . '</' . $tag . '>';
+		return '<' . $tag . ' class="karmcp-dyn karmcp-dyn-post-title">' . $inner . '</' . $tag . '>';
 	}
 
 	/**
@@ -91,7 +91,7 @@ class EMCP_Tools_Themer_Dynamic {
 		if ( '' === trim( wp_strip_all_tags( $title ) ) ) {
 			return '';
 		}
-		return '<' . $tag . ' class="emcp-dyn emcp-dyn-archive-title">' . $title . '</' . $tag . '>';
+		return '<' . $tag . ' class="karmcp-dyn karmcp-dyn-archive-title">' . $title . '</' . $tag . '>';
 	}
 
 	/**
@@ -104,7 +104,7 @@ class EMCP_Tools_Themer_Dynamic {
 	public static function breadcrumbs( array $args = array() ): string {
 		// Prefer a well-tested SEO-plugin breadcrumb if the site has one.
 		if ( function_exists( 'yoast_breadcrumb' ) ) {
-			$out = yoast_breadcrumb( '<nav class="emcp-dyn emcp-dyn-breadcrumbs" aria-label="Breadcrumb">', '</nav>', false );
+			$out = yoast_breadcrumb( '<nav class="karmcp-dyn karmcp-dyn-breadcrumbs" aria-label="Breadcrumb">', '</nav>', false );
 			if ( is_string( $out ) && '' !== trim( $out ) ) {
 				return $out;
 			}
@@ -112,7 +112,7 @@ class EMCP_Tools_Themer_Dynamic {
 		if ( function_exists( 'rank_math_the_breadcrumbs' ) ) {
 			$out = do_shortcode( '[rank_math_breadcrumb]' );
 			if ( '' !== trim( (string) $out ) ) {
-				return '<nav class="emcp-dyn emcp-dyn-breadcrumbs" aria-label="Breadcrumb">' . $out . '</nav>';
+				return '<nav class="karmcp-dyn karmcp-dyn-breadcrumbs" aria-label="Breadcrumb">' . $out . '</nav>';
 			}
 		}
 		if ( function_exists( 'seopress_display_breadcrumbs' ) ) {
@@ -134,7 +134,7 @@ class EMCP_Tools_Themer_Dynamic {
 	 */
 	private static function fallback_breadcrumbs( array $args ): string {
 		$sep   = isset( $args['separator'] ) && '' !== $args['separator'] ? (string) $args['separator'] : '/';
-		$home  = isset( $args['home_label'] ) && '' !== $args['home_label'] ? (string) $args['home_label'] : __( 'Home', 'emcp-tools' );
+		$home  = isset( $args['home_label'] ) && '' !== $args['home_label'] ? (string) $args['home_label'] : __( 'Home', 'karmcp' );
 		$crumb = array( '<a href="' . esc_url( home_url( '/' ) ) . '">' . esc_html( $home ) . '</a>' );
 
 		if ( is_singular() ) {
@@ -156,16 +156,16 @@ class EMCP_Tools_Themer_Dynamic {
 			$crumb[] = '<span aria-current="page">' . wp_kses_post( self::archive_title_text() ) . '</span>';
 		} elseif ( is_search() ) {
 			/* translators: %s: search query */
-			$crumb[] = '<span aria-current="page">' . esc_html( sprintf( __( 'Search: %s', 'emcp-tools' ), get_search_query() ) ) . '</span>';
+			$crumb[] = '<span aria-current="page">' . esc_html( sprintf( __( 'Search: %s', 'karmcp' ), get_search_query() ) ) . '</span>';
 		} elseif ( is_404() ) {
-			$crumb[] = '<span aria-current="page">' . esc_html__( '404 Not Found', 'emcp-tools' ) . '</span>';
+			$crumb[] = '<span aria-current="page">' . esc_html__( '404 Not Found', 'karmcp' ) . '</span>';
 		}
 
 		$html = implode(
-			' <span class="emcp-dyn-sep" aria-hidden="true">' . esc_html( $sep ) . '</span> ',
+			' <span class="karmcp-dyn-sep" aria-hidden="true">' . esc_html( $sep ) . '</span> ',
 			$crumb
 		);
-		return '<nav class="emcp-dyn emcp-dyn-breadcrumbs" aria-label="Breadcrumb">' . $html . '</nav>';
+		return '<nav class="karmcp-dyn karmcp-dyn-breadcrumbs" aria-label="Breadcrumb">' . $html . '</nav>';
 	}
 
 	/**
@@ -197,27 +197,27 @@ class EMCP_Tools_Themer_Dynamic {
 		foreach ( $items as $item ) {
 			switch ( (string) $item ) {
 				case 'date':
-					$out[] = '<li class="emcp-dyn-meta-date">' . esc_html( (string) get_the_date( '', $id ) ) . '</li>';
+					$out[] = '<li class="karmcp-dyn-meta-date">' . esc_html( (string) get_the_date( '', $id ) ) . '</li>';
 					break;
 				case 'author':
 					$author = (int) get_post_field( 'post_author', $id );
-					$out[]  = '<li class="emcp-dyn-meta-author"><a href="' . esc_url( (string) get_author_posts_url( $author ) ) . '">' . esc_html( (string) get_the_author_meta( 'display_name', $author ) ) . '</a></li>';
+					$out[]  = '<li class="karmcp-dyn-meta-author"><a href="' . esc_url( (string) get_author_posts_url( $author ) ) . '">' . esc_html( (string) get_the_author_meta( 'display_name', $author ) ) . '</a></li>';
 					break;
 				case 'categories':
 					$cats = get_the_category_list( ', ', '', $id );
 					if ( '' !== $cats ) {
-						$out[] = '<li class="emcp-dyn-meta-cats">' . wp_kses_post( $cats ) . '</li>';
+						$out[] = '<li class="karmcp-dyn-meta-cats">' . wp_kses_post( $cats ) . '</li>';
 					}
 					break;
 				case 'tags':
 					$tags = get_the_tag_list( '', ', ', '', $id );
 					if ( ! is_wp_error( $tags ) && '' !== (string) $tags ) {
-						$out[] = '<li class="emcp-dyn-meta-tags">' . wp_kses_post( (string) $tags ) . '</li>';
+						$out[] = '<li class="karmcp-dyn-meta-tags">' . wp_kses_post( (string) $tags ) . '</li>';
 					}
 					break;
 				case 'comments':
 					$count = (int) get_comments_number( $id );
-					$out[] = '<li class="emcp-dyn-meta-comments"><a href="' . esc_url( (string) get_comments_link( $id ) ) . '">' . esc_html( sprintf( _n( '%s comment', '%s comments', $count, 'emcp-tools' ), number_format_i18n( $count ) ) ) . '</a></li>';
+					$out[] = '<li class="karmcp-dyn-meta-comments"><a href="' . esc_url( (string) get_comments_link( $id ) ) . '">' . esc_html( sprintf( _n( '%s comment', '%s comments', $count, 'karmcp' ), number_format_i18n( $count ) ) ) . '</a></li>';
 					break;
 			}
 		}
@@ -225,7 +225,7 @@ class EMCP_Tools_Themer_Dynamic {
 		if ( empty( $out ) ) {
 			return '';
 		}
-		return '<ul class="emcp-dyn emcp-dyn-post-meta">' . implode( '', $out ) . '</ul>';
+		return '<ul class="karmcp-dyn karmcp-dyn-post-meta">' . implode( '', $out ) . '</ul>';
 	}
 
 	/**
@@ -242,13 +242,13 @@ class EMCP_Tools_Themer_Dynamic {
 		}
 		$logo_id = (int) get_theme_mod( 'custom_logo' );
 		if ( $logo_id ) {
-			$img = wp_get_attachment_image( $logo_id, 'full', false, array( 'class' => 'emcp-dyn-logo-img' ) );
+			$img = wp_get_attachment_image( $logo_id, 'full', false, array( 'class' => 'karmcp-dyn-logo-img' ) );
 			if ( $img ) {
-				return '<a class="emcp-dyn emcp-dyn-site-logo" href="' . esc_url( home_url( '/' ) ) . '"' . $style . '>' . $img . '</a>';
+				return '<a class="karmcp-dyn karmcp-dyn-site-logo" href="' . esc_url( home_url( '/' ) ) . '"' . $style . '>' . $img . '</a>';
 			}
 		}
 		// Fallback: linked site title.
-		return '<a class="emcp-dyn emcp-dyn-site-logo emcp-dyn-site-logo--text" href="' . esc_url( home_url( '/' ) ) . '">' . esc_html( (string) get_bloginfo( 'name' ) ) . '</a>';
+		return '<a class="karmcp-dyn karmcp-dyn-site-logo karmcp-dyn-site-logo--text" href="' . esc_url( home_url( '/' ) ) . '">' . esc_html( (string) get_bloginfo( 'name' ) ) . '</a>';
 	}
 
 	/**
@@ -259,11 +259,11 @@ class EMCP_Tools_Themer_Dynamic {
 	 */
 	public static function site_title( array $args = array() ): string {
 		$tag  = self::tag( (string) ( $args['tag'] ?? 'span' ), 'span' );
-		$html = '<' . $tag . ' class="emcp-dyn emcp-dyn-site-title"><a href="' . esc_url( home_url( '/' ) ) . '">' . esc_html( (string) get_bloginfo( 'name' ) ) . '</a></' . $tag . '>';
+		$html = '<' . $tag . ' class="karmcp-dyn karmcp-dyn-site-title"><a href="' . esc_url( home_url( '/' ) ) . '">' . esc_html( (string) get_bloginfo( 'name' ) ) . '</a></' . $tag . '>';
 		if ( ! empty( $args['show_tagline'] ) ) {
 			$desc = (string) get_bloginfo( 'description' );
 			if ( '' !== $desc ) {
-				$html .= '<span class="emcp-dyn emcp-dyn-site-tagline">' . esc_html( $desc ) . '</span>';
+				$html .= '<span class="karmcp-dyn karmcp-dyn-site-tagline">' . esc_html( $desc ) . '</span>';
 			}
 		}
 		return $html;
@@ -278,8 +278,8 @@ class EMCP_Tools_Themer_Dynamic {
 	public static function nav_menu( array $args = array() ): string {
 		$menu_args = array(
 			'container'      => 'nav',
-			'container_class' => 'emcp-dyn emcp-dyn-nav-menu',
-			'menu_class'     => 'emcp-dyn-menu',
+			'container_class' => 'karmcp-dyn karmcp-dyn-nav-menu',
+			'menu_class'     => 'karmcp-dyn-menu',
 			'echo'           => false,
 			'fallback_cb'    => false,
 			'depth'          => 0,
@@ -310,7 +310,7 @@ class EMCP_Tools_Themer_Dynamic {
 		if ( is_archive() || is_home() ) {
 			$desc = get_the_archive_description();
 			$desc = is_string( $desc ) ? trim( $desc ) : '';
-			return '' !== $desc ? '<div class="emcp-dyn emcp-dyn-description">' . wp_kses_post( $desc ) . '</div>' : '';
+			return '' !== $desc ? '<div class="karmcp-dyn karmcp-dyn-description">' . wp_kses_post( $desc ) . '</div>' : '';
 		}
 		$id = self::queried_id();
 		if ( ! $id ) {
@@ -325,7 +325,7 @@ class EMCP_Tools_Themer_Dynamic {
 		if ( $len > 0 ) {
 			$excerpt = wp_trim_words( $excerpt, $len, '&hellip;' );
 		}
-		return '<div class="emcp-dyn emcp-dyn-description">' . esc_html( $excerpt ) . '</div>';
+		return '<div class="karmcp-dyn karmcp-dyn-description">' . esc_html( $excerpt ) . '</div>';
 	}
 
 	/**
@@ -341,7 +341,7 @@ class EMCP_Tools_Themer_Dynamic {
 		$content = get_post_field( 'post_content', $id );
 		$content = apply_filters( 'the_content', (string) $content );
 		$content = str_replace( ']]>', ']]&gt;', $content );
-		return '<div class="emcp-dyn emcp-dyn-post-content entry-content">' . $content . '</div>';
+		return '<div class="karmcp-dyn karmcp-dyn-post-content entry-content">' . $content . '</div>';
 	}
 
 	/**
@@ -363,11 +363,11 @@ class EMCP_Tools_Themer_Dynamic {
 		}
 		$value = trim( (string) $value );
 		if ( '' === $value ) {
-			return isset( $args['fallback'] ) ? '<span class="emcp-dyn emcp-dyn-field">' . esc_html( (string) $args['fallback'] ) . '</span>' : '';
+			return isset( $args['fallback'] ) ? '<span class="karmcp-dyn karmcp-dyn-field">' . esc_html( (string) $args['fallback'] ) . '</span>' : '';
 		}
 		$before = isset( $args['before'] ) ? esc_html( (string) $args['before'] ) : '';
 		$after  = isset( $args['after'] ) ? esc_html( (string) $args['after'] ) : '';
-		return '<span class="emcp-dyn emcp-dyn-field">' . $before . esc_html( $value ) . $after . '</span>';
+		return '<span class="karmcp-dyn karmcp-dyn-field">' . $before . esc_html( $value ) . $after . '</span>';
 	}
 
 	/**
@@ -382,7 +382,7 @@ class EMCP_Tools_Themer_Dynamic {
 			return '';
 		}
 		$size = isset( $args['size'] ) ? sanitize_key( (string) $args['size'] ) : 'large';
-		return '<figure class="emcp-dyn emcp-dyn-featured-image">' . get_the_post_thumbnail( $id, $size ) . '</figure>';
+		return '<figure class="karmcp-dyn karmcp-dyn-featured-image">' . get_the_post_thumbnail( $id, $size ) . '</figure>';
 	}
 
 	/**
@@ -410,7 +410,7 @@ class EMCP_Tools_Themer_Dynamic {
 			'show_more'    => true,
 		);
 		$args      = array_merge( $defaults, $args );
-		$more_text = isset( $args['more_text'] ) && '' !== $args['more_text'] ? (string) $args['more_text'] : __( 'Read more', 'emcp-tools' );
+		$more_text = isset( $args['more_text'] ) && '' !== $args['more_text'] ? (string) $args['more_text'] : __( 'Read more', 'karmcp' );
 
 		// Real archive front-end → the main query. Editor/preview or anything that
 		// isn't an archive → a sample recent-posts query so the preview isn't empty.
@@ -453,7 +453,7 @@ class EMCP_Tools_Themer_Dynamic {
 			if ( $own ) {
 				wp_reset_postdata();
 			}
-			return '<div class="emcp-dyn emcp-dyn-archive-loop"><p class="emcp-dyn-empty">' . esc_html__( 'No posts found.', 'emcp-tools' ) . '</p></div>';
+			return '<div class="karmcp-dyn karmcp-dyn-archive-loop"><p class="karmcp-dyn-empty">' . esc_html__( 'No posts found.', 'karmcp' ) . '</p></div>';
 		}
 
 		$cards = array();
@@ -462,8 +462,8 @@ class EMCP_Tools_Themer_Dynamic {
 			$cards[] = self::loop_card( $args, $more_text );
 		}
 
-		$grid_style = 'grid' === $layout ? ' style="--emcp-cols:' . $columns . ';"' : '';
-		$html       = '<div class="emcp-dyn emcp-dyn-archive-loop emcp-dyn-archive-loop--' . $layout . '"' . $grid_style . '>' . implode( '', $cards ) . '</div>';
+		$grid_style = 'grid' === $layout ? ' style="--karmcp-cols:' . $columns . ';"' : '';
+		$html       = '<div class="karmcp-dyn karmcp-dyn-archive-loop karmcp-dyn-archive-loop--' . $layout . '"' . $grid_style . '>' . implode( '', $cards ) . '</div>';
 
 		if ( $paginate ) {
 			$links = paginate_links(
@@ -474,7 +474,7 @@ class EMCP_Tools_Themer_Dynamic {
 				)
 			);
 			if ( $links ) {
-				$html .= '<div class="emcp-dyn emcp-dyn-pagination">' . wp_kses_post( (string) $links ) . '</div>';
+				$html .= '<div class="karmcp-dyn karmcp-dyn-pagination">' . wp_kses_post( (string) $links ) . '</div>';
 			}
 		}
 
@@ -490,22 +490,22 @@ class EMCP_Tools_Themer_Dynamic {
 	 * @return string
 	 */
 	private static function loop_card( array $args, string $more_text ): string {
-		$card = '<article class="emcp-dyn-card">';
+		$card = '<article class="karmcp-dyn-card">';
 		if ( ! empty( $args['show_image'] ) && has_post_thumbnail() ) {
-			$card .= '<a class="emcp-dyn-card-media" href="' . esc_url( (string) get_permalink() ) . '">' . get_the_post_thumbnail( null, 'medium_large' ) . '</a>';
+			$card .= '<a class="karmcp-dyn-card-media" href="' . esc_url( (string) get_permalink() ) . '">' . get_the_post_thumbnail( null, 'medium_large' ) . '</a>';
 		}
-		$card .= '<div class="emcp-dyn-card-body">';
+		$card .= '<div class="karmcp-dyn-card-body">';
 		if ( ! empty( $args['show_meta'] ) ) {
-			$card .= '<div class="emcp-dyn-card-meta">' . esc_html( (string) get_the_date() ) . '</div>';
+			$card .= '<div class="karmcp-dyn-card-meta">' . esc_html( (string) get_the_date() ) . '</div>';
 		}
 		if ( ! empty( $args['show_title'] ) ) {
-			$card .= '<h3 class="emcp-dyn-card-title"><a href="' . esc_url( (string) get_permalink() ) . '">' . esc_html( (string) get_the_title() ) . '</a></h3>';
+			$card .= '<h3 class="karmcp-dyn-card-title"><a href="' . esc_url( (string) get_permalink() ) . '">' . esc_html( (string) get_the_title() ) . '</a></h3>';
 		}
 		if ( ! empty( $args['show_excerpt'] ) ) {
-			$card .= '<div class="emcp-dyn-card-excerpt">' . esc_html( wp_trim_words( (string) get_the_excerpt(), 24, '&hellip;' ) ) . '</div>';
+			$card .= '<div class="karmcp-dyn-card-excerpt">' . esc_html( wp_trim_words( (string) get_the_excerpt(), 24, '&hellip;' ) ) . '</div>';
 		}
 		if ( ! empty( $args['show_more'] ) ) {
-			$card .= '<a class="emcp-dyn-card-more" href="' . esc_url( (string) get_permalink() ) . '">' . esc_html( $more_text ) . '</a>';
+			$card .= '<a class="karmcp-dyn-card-more" href="' . esc_url( (string) get_permalink() ) . '">' . esc_html( $more_text ) . '</a>';
 		}
 		return $card . '</div></article>';
 	}
@@ -545,16 +545,16 @@ class EMCP_Tools_Themer_Dynamic {
 	 */
 	public static function catalog(): array {
 		return array(
-			'post-title'    => array( 'label' => __( 'Post/Page Title', 'emcp-tools' ), 'icon' => 'heading' ),
-			'archive-title' => array( 'label' => __( 'Archive Title', 'emcp-tools' ), 'icon' => 'archive' ),
-			'breadcrumbs'   => array( 'label' => __( 'Breadcrumbs', 'emcp-tools' ), 'icon' => 'admin-links' ),
-			'post-meta'     => array( 'label' => __( 'Post Meta', 'emcp-tools' ), 'icon' => 'list-view' ),
-			'site-logo'     => array( 'label' => __( 'Site Logo', 'emcp-tools' ), 'icon' => 'format-image' ),
-			'site-title'    => array( 'label' => __( 'Site Title', 'emcp-tools' ), 'icon' => 'admin-home' ),
-			'nav-menu'      => array( 'label' => __( 'Menu', 'emcp-tools' ), 'icon' => 'menu' ),
-			'description'   => array( 'label' => __( 'Description', 'emcp-tools' ), 'icon' => 'text' ),
-			'post-content'  => array( 'label' => __( 'Post Content', 'emcp-tools' ), 'icon' => 'media-document' ),
-			'archive-loop'  => array( 'label' => __( 'Archive Posts', 'emcp-tools' ), 'icon' => 'grid-view' ),
+			'post-title'    => array( 'label' => __( 'Post/Page Title', 'karmcp' ), 'icon' => 'heading' ),
+			'archive-title' => array( 'label' => __( 'Archive Title', 'karmcp' ), 'icon' => 'archive' ),
+			'breadcrumbs'   => array( 'label' => __( 'Breadcrumbs', 'karmcp' ), 'icon' => 'admin-links' ),
+			'post-meta'     => array( 'label' => __( 'Post Meta', 'karmcp' ), 'icon' => 'list-view' ),
+			'site-logo'     => array( 'label' => __( 'Site Logo', 'karmcp' ), 'icon' => 'format-image' ),
+			'site-title'    => array( 'label' => __( 'Site Title', 'karmcp' ), 'icon' => 'admin-home' ),
+			'nav-menu'      => array( 'label' => __( 'Menu', 'karmcp' ), 'icon' => 'menu' ),
+			'description'   => array( 'label' => __( 'Description', 'karmcp' ), 'icon' => 'text' ),
+			'post-content'  => array( 'label' => __( 'Post Content', 'karmcp' ), 'icon' => 'media-document' ),
+			'archive-loop'  => array( 'label' => __( 'Archive Posts', 'karmcp' ), 'icon' => 'grid-view' ),
 		);
 	}
 

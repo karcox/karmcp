@@ -1,5 +1,5 @@
-=== MCP Tools for Elementor ===
-Contributors: mianshahzadraza
+=== KarMCP ===
+Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
@@ -12,7 +12,14 @@ Extends the WordPress MCP Adapter to expose Elementor data, widgets, and page de
 
 == Description ==
 
-MCP Tools for Elementor bridges the gap between AI tools and Elementor page design. It extends the official WordPress MCP Adapter to expose a focused set of MCP (Model Context Protocol) tools that let AI agents like Claude, Cursor, and other MCP-compatible clients create and manipulate Elementor page designs programmatically.
+KarMCP is a hard fork of EMCP Tools 3.12.0 by Mian Shahzad Raza, redistributed under
+the GPL-2.0-or-later with the original copyright notices retained. It is not affiliated
+with or endorsed by the upstream project. KarMCP renames every symbol, serves its MCP
+endpoint at /wp-json/mcp/karmcp-server, ships no auto-updater, and does not bundle
+Freemius or any telemetry. The changelog below is upstream's release history, kept for
+reference; see UPSTREAM.md for what this fork has adopted since.
+
+KarMCP bridges the gap between AI tools and Elementor page design. It extends the official WordPress MCP Adapter to expose a focused set of MCP (Model Context Protocol) tools that let AI agents like Claude, Cursor, and other MCP-compatible clients create and manipulate Elementor page designs programmatically.
 
 As of v3.0.0 the 62 per-widget tools were folded into a catalog-backed model, so the active tool surface is much smaller while every widget stays reachable, and the toolset takes its first steps beyond Elementor with general WordPress content management, curated site-settings control, full plugin and theme management, media attachment management, safe user management, filesystem access, and database inspection over MCP. The v3.0.0 beyond-Elementor surface adds 8 WordPress Content tools + 3 surfaced WordPress core abilities + 2 WordPress Settings tools + 13 Plugins & Themes tools + 3 Media Library tools + 4 Users tools + 1 Performance Analyzer tool + 1 Security & Malware Scanner tool + 6 Filesystem tools + 6 Database tools. Tool counts scale with your environment (registered counts, verified on Elementor 4.1.4): around 107 tools on a free Elementor install, ~121 with the Elementor 4.0+ atomic elements, ~117 with Elementor Pro, and ~131 with Pro + Elementor 4.0+ (WooCommerce adds no new tools; its widgets are reached through add-pro-widget). When Advanced Custom Fields (free or PRO) is active, 2 ACF tools register on top of any of those counts: `acf-read` and `acf-write`, two dispatchers that expose 15 ACF operations (8 read, 7 write; the Custom Post Type and taxonomy operations need ACF 6.1+). Each dispatcher is a single toggle under Tools → Plugins → ACF, listing the operations it covers; `acf-read` is on by default and `acf-write` ships off. About 39 other tools ship disabled-by-default (SEO & Accessibility, Widget Builder, PHP Snippets, the 9 Plugins & Themes write tools, delete-media, the 2 Users write tools, the 3 Filesystem write tools, and the 3 Database write tools), so the typical active surface is smaller.
 

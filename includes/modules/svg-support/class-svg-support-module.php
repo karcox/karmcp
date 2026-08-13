@@ -14,7 +14,7 @@
  *
  * Free tier; opt-in (off by default) given the security surface.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -27,21 +27,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.0
  */
-class EMCP_Tools_SVG_Support_Module extends EMCP_Tools_Module {
+class KarMCP_SVG_Support_Module extends KarMCP_Module {
 
 	const ID     = 'svg-support';
-	const PREFIX = 'emcp_tools_module_svg_support_';
+	const PREFIX = 'karmcp_module_svg_support_';
 
 	public function id(): string {
 		return self::ID;
 	}
 
 	public function title(): string {
-		return __( 'SVG Uploads', 'emcp-tools' );
+		return __( 'SVG Uploads', 'karmcp' );
 	}
 
 	public function description(): string {
-		return __( 'Safely allow SVG uploads to the Media Library. Every SVG is sanitized (scripts, event handlers and external references stripped) before it is saved. Mainly for sites without Elementor, Elementor already allows SVG uploads for authorized users.', 'emcp-tools' );
+		return __( 'Safely allow SVG uploads to the Media Library. Every SVG is sanitized (scripts, event handlers and external references stripped) before it is saved. Mainly for sites without Elementor, Elementor already allows SVG uploads for authorized users.', 'karmcp' );
 	}
 
 	public function tier(): string {
@@ -55,7 +55,7 @@ class EMCP_Tools_SVG_Support_Module extends EMCP_Tools_Module {
 
 	/** Needs the sanitizer library present (bundled). Without it we must not allow SVGs. */
 	public function is_available(): bool {
-		return EMCP_Tools_SVG_Sanitizer::library_available();
+		return KarMCP_SVG_Sanitizer::library_available();
 	}
 
 	/** Whether some other plugin/theme (e.g. Elementor) already allows the svg mime. */
@@ -91,7 +91,7 @@ class EMCP_Tools_SVG_Support_Module extends EMCP_Tools_Module {
 		 *
 		 * @param string $cap Capability slug.
 		 */
-		return (string) apply_filters( 'emcp_tools_svg_upload_capability', $cap );
+		return (string) apply_filters( 'karmcp_svg_upload_capability', $cap );
 	}
 
 	/** Wire the module's runtime hooks. Called only when active + available. */
@@ -155,11 +155,11 @@ class EMCP_Tools_SVG_Support_Module extends EMCP_Tools_Module {
 			return $file;
 		}
 		if ( ! current_user_can( $this->required_capability() ) ) {
-			$file['error'] = __( 'You are not allowed to upload SVG files.', 'emcp-tools' );
+			$file['error'] = __( 'You are not allowed to upload SVG files.', 'karmcp' );
 			return $file;
 		}
-		if ( ! ( new EMCP_Tools_SVG_Sanitizer() )->sanitize_file( $file['tmp_name'] ) ) {
-			$file['error'] = __( 'This SVG could not be sanitized and was rejected for security. Its markup may contain scripts or unsupported content.', 'emcp-tools' );
+		if ( ! ( new KarMCP_SVG_Sanitizer() )->sanitize_file( $file['tmp_name'] ) ) {
+			$file['error'] = __( 'This SVG could not be sanitized and was rejected for security. Its markup may contain scripts or unsupported content.', 'karmcp' );
 		}
 		return $file;
 	}
@@ -173,9 +173,9 @@ class EMCP_Tools_SVG_Support_Module extends EMCP_Tools_Module {
 	public function render_settings(): void {
 		$admin_only = '1' === (string) get_option( self::PREFIX . 'admin_only', '0' );
 		if ( self::svg_already_supported() ) {
-			echo '<p class="description">' . esc_html__( 'SVG uploads are already enabled on this site (e.g. by Elementor or another plugin). This module will still sanitize SVGs when active.', 'emcp-tools' ) . '</p>';
+			echo '<p class="description">' . esc_html__( 'SVG uploads are already enabled on this site (e.g. by Elementor or another plugin). This module will still sanitize SVGs when active.', 'karmcp' ) . '</p>';
 		}
 		echo '<label><input type="checkbox" name="' . esc_attr( self::PREFIX . 'admin_only' ) . '" value="1" ' . checked( $admin_only, true, false ) . ' /> ';
-		echo esc_html__( 'Restrict SVG uploads to administrators only', 'emcp-tools' ) . '</label>';
+		echo esc_html__( 'Restrict SVG uploads to administrators only', 'karmcp' ) . '</label>';
 	}
 }

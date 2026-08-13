@@ -2,7 +2,7 @@
 /**
  * Compact tool mode — the meta-tool dispatcher.
  *
- * When dispatcher mode is on (EMCP_Tools_Plugin::is_dispatcher_mode()), the MCP
+ * When dispatcher mode is on (KarMCP_Plugin::is_dispatcher_mode()), the MCP
  * server surfaces only these three tools instead of every individual ability:
  *   - list-tools       : compact catalog of the enabled tools
  *   - get-tool-schema  : full input schema for named tools
@@ -10,7 +10,7 @@
  * They route to the existing abilities via wp_get_ability(); call-tool never
  * bypasses a target's permission_callback.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.2.0
  */
 
@@ -18,12 +18,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Dispatcher_Abilities {
+class KarMCP_Dispatcher_Abilities {
 
 	const NAMES = array(
-		'emcp-tools/list-tools',
-		'emcp-tools/get-tool-schema',
-		'emcp-tools/call-tool',
+		'karmcp/list-tools',
+		'karmcp/get-tool-schema',
+		'karmcp/call-tool',
 	);
 
 	/**
@@ -34,15 +34,15 @@ class EMCP_Tools_Dispatcher_Abilities {
 	}
 
 	/**
-	 * The enabled ability-name set (after the emcp_tools_ability_names filter).
+	 * The enabled ability-name set (after the karmcp_ability_names filter).
 	 * Seam for testing.
 	 *
 	 * @return string[]
 	 */
 	protected function active_names(): array {
 		$names = array();
-		if ( class_exists( 'EMCP_Tools_Plugin' ) && method_exists( 'EMCP_Tools_Plugin', 'instance' ) ) {
-			$names = EMCP_Tools_Plugin::instance()->get_active_ability_names();
+		if ( class_exists( 'KarMCP_Plugin' ) && method_exists( 'KarMCP_Plugin', 'instance' ) ) {
+			$names = KarMCP_Plugin::instance()->get_active_ability_names();
 		}
 		// Fold in the same WordPress core context abilities the server surfaces
 		// directly in full mode, so they stay listable + callable via call-tool
@@ -110,7 +110,7 @@ class EMCP_Tools_Dispatcher_Abilities {
 
 		return array(
 			'tools'   => $tools,
-			'context' => class_exists( 'EMCP_Tools_Site_Context' ) ? EMCP_Tools_Site_Context::environment_summary() : '',
+			'context' => class_exists( 'KarMCP_Site_Context' ) ? KarMCP_Site_Context::environment_summary() : '',
 		);
 	}
 
@@ -154,16 +154,16 @@ class EMCP_Tools_Dispatcher_Abilities {
 		$args = (array) ( $input['arguments'] ?? array() );
 
 		if ( '' === $name || ! in_array( $name, $this->active_names(), true ) ) {
-			return new \WP_Error( 'tool_unavailable', __( 'Unknown or disabled tool.', 'emcp-tools' ) );
+			return new \WP_Error( 'tool_unavailable', __( 'Unknown or disabled tool.', 'karmcp' ) );
 		}
 		$ability = $this->resolve_ability( $name );
 		if ( ! $ability ) {
-			return new \WP_Error( 'tool_unavailable', __( 'Tool is not registered.', 'emcp-tools' ) );
+			return new \WP_Error( 'tool_unavailable', __( 'Tool is not registered.', 'karmcp' ) );
 		}
 
 		$perm = $ability->check_permissions( $args );
 		if ( is_wp_error( $perm ) || ! $perm ) {
-			return new \WP_Error( 'forbidden', __( 'You are not allowed to run this tool.', 'emcp-tools' ) );
+			return new \WP_Error( 'forbidden', __( 'You are not allowed to run this tool.', 'karmcp' ) );
 		}
 
 		if ( method_exists( $ability, 'validate_input' ) ) {
@@ -181,31 +181,31 @@ class EMCP_Tools_Dispatcher_Abilities {
 	 * resolves them); only surfaced on the server when dispatcher mode is on.
 	 */
 	public function register(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/list-tools',
+		karmcp_register_ability(
+			'karmcp/list-tools',
 			array(
-				'label'               => __( 'List Tools', 'emcp-tools' ),
-				'description'         => __( 'Compact catalog of the available EMCP tools (name, description, category). Filter with search or category. Step 1 of compact tool mode: list-tools -> get-tool-schema -> call-tool. Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Tools', 'karmcp' ),
+				'description'         => __( 'Compact catalog of the available KarMCP tools (name, description, category). Filter with search or category. Step 1 of compact tool mode: list-tools -> get-tool-schema -> call-tool. Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_tools' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'search'   => array( 'type' => 'string', 'description' => __( 'Filter by substring of the tool name or description.', 'emcp-tools' ) ),
-						'category' => array( 'type' => 'string', 'description' => __( 'Filter by tool category.', 'emcp-tools' ) ),
+						'search'   => array( 'type' => 'string', 'description' => __( 'Filter by substring of the tool name or description.', 'karmcp' ) ),
+						'category' => array( 'type' => 'string', 'description' => __( 'Filter by tool category.', 'karmcp' ) ),
 					),
 				),
 				'meta'                => array( 'annotations' => array( 'readonly' => true, 'destructive' => false, 'idempotent' => true ), 'show_in_rest' => true ),
 			)
 		);
 
-		emcp_tools_register_ability(
-			'emcp-tools/get-tool-schema',
+		karmcp_register_ability(
+			'karmcp/get-tool-schema',
 			array(
-				'label'               => __( 'Get Tool Schema', 'emcp-tools' ),
-				'description'         => __( 'Return the full input schema for one or more tools by name. Step 2 of compact tool mode. Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Tool Schema', 'karmcp' ),
+				'description'         => __( 'Return the full input schema for one or more tools by name. Step 2 of compact tool mode. Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_tool_schema' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -215,7 +215,7 @@ class EMCP_Tools_Dispatcher_Abilities {
 						'names' => array(
 							'type'        => 'array',
 							'items'       => array( 'type' => 'string' ),
-							'description' => __( 'Tool names to fetch schemas for (e.g. ["emcp-tools/list-widgets"]).', 'emcp-tools' ),
+							'description' => __( 'Tool names to fetch schemas for (e.g. ["karmcp/list-widgets"]).', 'karmcp' ),
 						),
 					),
 				),
@@ -223,20 +223,20 @@ class EMCP_Tools_Dispatcher_Abilities {
 			)
 		);
 
-		emcp_tools_register_ability(
-			'emcp-tools/call-tool',
+		karmcp_register_ability(
+			'karmcp/call-tool',
 			array(
-				'label'               => __( 'Call Tool', 'emcp-tools' ),
-				'description'         => __( 'Run a tool by name with its arguments. Step 3 of compact tool mode. Enforces the target tool\'s own permissions; check the destructive flag from list-tools before calling.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Call Tool', 'karmcp' ),
+				'description'         => __( 'Run a tool by name with its arguments. Step 3 of compact tool mode. Enforces the target tool\'s own permissions; check the destructive flag from list-tools before calling.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_call_tool' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'required'   => array( 'name' ),
 					'properties' => array(
-						'name'      => array( 'type' => 'string', 'description' => __( 'The tool name to run (from list-tools).', 'emcp-tools' ) ),
-						'arguments' => array( 'type' => 'object', 'description' => __( 'The arguments object for the tool (shape from get-tool-schema).', 'emcp-tools' ) ),
+						'name'      => array( 'type' => 'string', 'description' => __( 'The tool name to run (from list-tools).', 'karmcp' ) ),
+						'arguments' => array( 'type' => 'object', 'description' => __( 'The arguments object for the tool (shape from get-tool-schema).', 'karmcp' ) ),
 					),
 				),
 				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => false ), 'show_in_rest' => true ),

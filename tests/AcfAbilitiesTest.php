@@ -1,24 +1,24 @@
 <?php
 /**
- * Unit tests for EMCP_Tools_ACF_Abilities.
+ * Unit tests for KarMCP_ACF_Abilities.
  *
  * Runs against the standalone stub harness in tests/bootstrap.php:
  *
  *     vendor/bin/phpunit -c tests/phpunit.xml
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 use PHPUnit\Framework\TestCase;
 
 class AcfAbilitiesTest extends TestCase {
 
-	/** @var EMCP_Tools_ACF_Abilities */
+	/** @var KarMCP_ACF_Abilities */
 	private $abilities;
 
 	protected function setUp(): void {
-		emcp_test_reset();
-		$this->abilities = new EMCP_Tools_ACF_Abilities();
+		karmcp_test_reset();
+		$this->abilities = new KarMCP_ACF_Abilities();
 	}
 
 	/**
@@ -27,12 +27,12 @@ class AcfAbilitiesTest extends TestCase {
 	 * "hero" layout.
 	 */
 	private function seed_post_with_group(): void {
-		$GLOBALS['emcp_test']['posts'][10] = new WP_Post( array( 'ID' => 10, 'post_title' => 'Sample' ) );
+		$GLOBALS['karmcp_test']['posts'][10] = new WP_Post( array( 'ID' => 10, 'post_title' => 'Sample' ) );
 
 		$group = array( 'key' => 'group_demo', 'ID' => 55, 'title' => 'Demo Group', 'active' => true );
-		$GLOBALS['emcp_test']['field_groups'][]        = $group;
-		$GLOBALS['emcp_test']['groups_for_post'][10]   = array( $group );
-		$GLOBALS['emcp_test']['group_fields']['group_demo'] = array(
+		$GLOBALS['karmcp_test']['field_groups'][]        = $group;
+		$GLOBALS['karmcp_test']['groups_for_post'][10]   = array( $group );
+		$GLOBALS['karmcp_test']['group_fields']['group_demo'] = array(
 			array( 'key' => 'field_headline', 'name' => 'headline', 'label' => 'Headline', 'type' => 'text' ),
 			array(
 				'key'        => 'field_items',
@@ -65,10 +65,10 @@ class AcfAbilitiesTest extends TestCase {
 	public function test_registers_two_dispatcher_tools(): void {
 		$this->abilities->register();
 
-		$expected = array( 'emcp-tools/acf-read', 'emcp-tools/acf-write' );
+		$expected = array( 'karmcp/acf-read', 'karmcp/acf-write' );
 		$this->assertSame( $expected, $this->abilities->get_ability_names() );
 		foreach ( $expected as $name ) {
-			$this->assertArrayHasKey( $name, $GLOBALS['emcp_test']['abilities'] );
+			$this->assertArrayHasKey( $name, $GLOBALS['karmcp_test']['abilities'] );
 		}
 	}
 
@@ -112,7 +112,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_structural_write_requires_manage_options(): void {
-		$GLOBALS['emcp_test']['caps'] = array( 'edit_posts' ); // no manage_options
+		$GLOBALS['karmcp_test']['caps'] = array( 'edit_posts' ); // no manage_options
 		$out = $this->abilities->run_acf_write( array( 'operation' => 'create-taxonomy', 'arguments' => array( 'taxonomy' => 'x', 'title' => 'X' ) ) );
 		$this->assertInstanceOf( WP_Error::class, $out );
 		$this->assertSame( 'forbidden', $out->get_error_code() );
@@ -120,15 +120,15 @@ class AcfAbilitiesTest extends TestCase {
 
 	public function test_cpt_tax_support_is_detected(): void {
 		// The harness declares the ACF 6.1+ functions, so the gate is on.
-		$this->assertTrue( EMCP_Tools_ACF_Abilities::cpt_tax_supported() );
+		$this->assertTrue( KarMCP_ACF_Abilities::cpt_tax_supported() );
 	}
 
 	public function test_dispatchers_are_annotated_read_and_write(): void {
 		$this->abilities->register();
-		$abilities = $GLOBALS['emcp_test']['abilities'];
+		$abilities = $GLOBALS['karmcp_test']['abilities'];
 
-		$this->assertTrue( $abilities['emcp-tools/acf-read']['meta']['annotations']['readonly'] );
-		$this->assertFalse( $abilities['emcp-tools/acf-write']['meta']['annotations']['readonly'] );
+		$this->assertTrue( $abilities['karmcp/acf-read']['meta']['annotations']['readonly'] );
+		$this->assertFalse( $abilities['karmcp/acf-write']['meta']['annotations']['readonly'] );
 	}
 
 	// -------------------------------------------------------------------
@@ -136,27 +136,27 @@ class AcfAbilitiesTest extends TestCase {
 	// -------------------------------------------------------------------
 
 	public function test_options_target_requires_manage_options(): void {
-		$GLOBALS['emcp_test']['caps'] = array( 'edit_posts' ); // no manage_options
+		$GLOBALS['karmcp_test']['caps'] = array( 'edit_posts' ); // no manage_options
 		$this->assertFalse( $this->abilities->check_fields_permission( array( 'options_page' => 'options' ) ) );
 
-		$GLOBALS['emcp_test']['caps'] = array( 'manage_options' );
+		$GLOBALS['karmcp_test']['caps'] = array( 'manage_options' );
 		$this->assertTrue( $this->abilities->check_fields_permission( array( 'options_page' => 'options' ) ) );
 	}
 
 	public function test_post_target_requires_edit_post_on_that_post(): void {
-		$GLOBALS['emcp_test']['caps']          = array( 'edit_posts' );
-		$GLOBALS['emcp_test']['post_caps'][10] = false;
+		$GLOBALS['karmcp_test']['caps']          = array( 'edit_posts' );
+		$GLOBALS['karmcp_test']['post_caps'][10] = false;
 		$this->assertFalse( $this->abilities->check_fields_permission( array( 'post_id' => 10 ) ) );
 
-		$GLOBALS['emcp_test']['post_caps'][10] = true;
+		$GLOBALS['karmcp_test']['post_caps'][10] = true;
 		$this->assertTrue( $this->abilities->check_fields_permission( array( 'post_id' => 10 ) ) );
 	}
 
 	public function test_field_group_authoring_requires_manage_options(): void {
-		$GLOBALS['emcp_test']['caps'] = array( 'edit_posts' );
+		$GLOBALS['karmcp_test']['caps'] = array( 'edit_posts' );
 		$this->assertFalse( $this->abilities->check_manage_permission() );
 
-		$GLOBALS['emcp_test']['caps'] = array( 'manage_options' );
+		$GLOBALS['karmcp_test']['caps'] = array( 'manage_options' );
 		$this->assertTrue( $this->abilities->check_manage_permission() );
 	}
 
@@ -178,7 +178,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_options_target_requires_pro(): void {
-		$GLOBALS['emcp_test']['acf_pro'] = false;
+		$GLOBALS['karmcp_test']['acf_pro'] = false;
 		$result = $this->abilities->execute_update_fields( array( 'options_page' => 'options', 'fields' => array( 'x' => 'y' ) ) );
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'acf_pro_required', $result->get_error_code() );
@@ -197,13 +197,13 @@ class AcfAbilitiesTest extends TestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertSame( array( 'headline' ), $result['updated'] );
-		$this->assertCount( 1, $GLOBALS['emcp_test']['update_field_calls'] );
-		$this->assertSame( array( 'field_headline', 'Hello World', 10 ), $GLOBALS['emcp_test']['update_field_calls'][0] );
+		$this->assertCount( 1, $GLOBALS['karmcp_test']['update_field_calls'] );
+		$this->assertSame( array( 'field_headline', 'Hello World', 10 ), $GLOBALS['karmcp_test']['update_field_calls'][0] );
 	}
 
 	public function test_update_accepts_field_keys_directly(): void {
 		$this->seed_post_with_group();
-		$GLOBALS['emcp_test']['fields_by_key']['field_headline'] = $GLOBALS['emcp_test']['group_fields']['group_demo'][0];
+		$GLOBALS['karmcp_test']['fields_by_key']['field_headline'] = $GLOBALS['karmcp_test']['group_fields']['group_demo'][0];
 
 		$result = $this->abilities->execute_update_fields( array(
 			'post_id' => 10,
@@ -211,7 +211,7 @@ class AcfAbilitiesTest extends TestCase {
 		) );
 
 		$this->assertSame( array( 'headline' ), $result['updated'] );
-		$this->assertSame( 'field_headline', $GLOBALS['emcp_test']['update_field_calls'][0][0] );
+		$this->assertSame( 'field_headline', $GLOBALS['karmcp_test']['update_field_calls'][0][0] );
 	}
 
 	public function test_update_skips_unknown_fields_with_reason(): void {
@@ -223,7 +223,7 @@ class AcfAbilitiesTest extends TestCase {
 
 		$this->assertSame( array(), $result['updated'] );
 		$this->assertSame( array( array( 'field' => 'nope', 'reason' => 'field_not_found' ) ), $result['skipped'] );
-		$this->assertCount( 0, $GLOBALS['emcp_test']['update_field_calls'] );
+		$this->assertCount( 0, $GLOBALS['karmcp_test']['update_field_calls'] );
 	}
 
 	public function test_update_repeater_rows_pass_through_to_acf(): void {
@@ -238,12 +238,12 @@ class AcfAbilitiesTest extends TestCase {
 		) );
 
 		$this->assertSame( array( 'items' ), $result['updated'] );
-		$this->assertSame( array( 'field_items', $rows, 10 ), $GLOBALS['emcp_test']['update_field_calls'][0] );
+		$this->assertSame( array( 'field_items', $rows, 10 ), $GLOBALS['karmcp_test']['update_field_calls'][0] );
 	}
 
 	public function test_update_pro_field_rejected_on_free_acf(): void {
 		$this->seed_post_with_group();
-		$GLOBALS['emcp_test']['acf_pro'] = false;
+		$GLOBALS['karmcp_test']['acf_pro'] = false;
 
 		$result = $this->abilities->execute_update_fields( array(
 			'post_id' => 10,
@@ -251,7 +251,7 @@ class AcfAbilitiesTest extends TestCase {
 		) );
 
 		$this->assertSame( array( array( 'field' => 'items', 'reason' => 'acf_pro_required' ) ), $result['skipped'] );
-		$this->assertCount( 0, $GLOBALS['emcp_test']['update_field_calls'] );
+		$this->assertCount( 0, $GLOBALS['karmcp_test']['update_field_calls'] );
 	}
 
 	public function test_flexible_rows_require_known_layout(): void {
@@ -282,7 +282,7 @@ class AcfAbilitiesTest extends TestCase {
 
 	public function test_get_fields_returns_null_for_unsaved_fields(): void {
 		$this->seed_post_with_group();
-		$GLOBALS['emcp_test']['values']['10'] = array( 'field_headline' => 'Stored' );
+		$GLOBALS['karmcp_test']['values']['10'] = array( 'field_headline' => 'Stored' );
 
 		$result = $this->abilities->execute_get_fields( array( 'post_id' => 10 ) );
 
@@ -293,7 +293,7 @@ class AcfAbilitiesTest extends TestCase {
 
 	public function test_get_fields_normalizes_wp_post_and_image_arrays(): void {
 		$this->seed_post_with_group();
-		$GLOBALS['emcp_test']['values']['10'] = array(
+		$GLOBALS['karmcp_test']['values']['10'] = array(
 			'field_headline' => new WP_Post( array( 'ID' => 7, 'post_title' => 'Linked', 'post_type' => 'page' ) ),
 			'field_items'    => array( array( 'item_img' => array( 'ID' => 42, 'url' => 'http://example.test/i.jpg', 'mime_type' => 'image/jpeg', 'alt' => 'Alt' ) ) ),
 		);
@@ -326,7 +326,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_list_field_groups_filters_inactive_by_default(): void {
-		$GLOBALS['emcp_test']['field_groups'] = array(
+		$GLOBALS['karmcp_test']['field_groups'] = array(
 			array( 'key' => 'group_a', 'ID' => 1, 'title' => 'Active', 'active' => true ),
 			array( 'key' => 'group_b', 'ID' => 2, 'title' => 'Inactive', 'active' => false ),
 		);
@@ -360,8 +360,8 @@ class AcfAbilitiesTest extends TestCase {
 		) );
 
 		$this->assertIsArray( $result );
-		$this->assertCount( 1, $GLOBALS['emcp_test']['imported_groups'] );
-		$imported = $GLOBALS['emcp_test']['imported_groups'][0];
+		$this->assertCount( 1, $GLOBALS['karmcp_test']['imported_groups'] );
+		$imported = $GLOBALS['karmcp_test']['imported_groups'][0];
 
 		$this->assertStringStartsWith( 'group_', $imported['key'] );
 		$this->assertStringStartsWith( 'field_', $imported['fields'][0]['key'] );
@@ -372,7 +372,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_create_group_rejects_pro_types_on_free_acf(): void {
-		$GLOBALS['emcp_test']['acf_pro'] = false;
+		$GLOBALS['karmcp_test']['acf_pro'] = false;
 		$result = $this->abilities->execute_create_field_group( array(
 			'title'  => 'New Group',
 			'fields' => array( array( 'label' => 'Items', 'name' => 'items', 'type' => 'repeater' ) ),
@@ -380,7 +380,7 @@ class AcfAbilitiesTest extends TestCase {
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'acf_pro_required', $result->get_error_code() );
-		$this->assertCount( 0, $GLOBALS['emcp_test']['imported_groups'] );
+		$this->assertCount( 0, $GLOBALS['karmcp_test']['imported_groups'] );
 	}
 
 	public function test_create_group_rejects_unknown_field_type(): void {
@@ -409,7 +409,7 @@ class AcfAbilitiesTest extends TestCase {
 	// -------------------------------------------------------------------
 
 	public function test_update_group_refuses_local_groups(): void {
-		$GLOBALS['emcp_test']['field_groups'][] = array( 'key' => 'group_json', 'ID' => 9, 'title' => 'From JSON', 'local' => 'json' );
+		$GLOBALS['karmcp_test']['field_groups'][] = array( 'key' => 'group_json', 'ID' => 9, 'title' => 'From JSON', 'local' => 'json' );
 
 		$result = $this->abilities->execute_update_field_group( array( 'key' => 'group_json', 'title' => 'Renamed' ) );
 		$this->assertInstanceOf( WP_Error::class, $result );
@@ -417,7 +417,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_update_group_refuses_field_renames_and_type_changes(): void {
-		$GLOBALS['emcp_test']['field_groups'][] = array( 'key' => 'group_db', 'ID' => 12, 'title' => 'DB Group' );
+		$GLOBALS['karmcp_test']['field_groups'][] = array( 'key' => 'group_db', 'ID' => 12, 'title' => 'DB Group' );
 
 		foreach ( array( 'name', 'type' ) as $immutable ) {
 			$result = $this->abilities->execute_update_field_group( array(
@@ -430,8 +430,8 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_update_group_appends_fields_and_updates_settings(): void {
-		$GLOBALS['emcp_test']['field_groups'][]                = array( 'key' => 'group_db', 'ID' => 12, 'title' => 'DB Group' );
-		$GLOBALS['emcp_test']['fields_by_key']['field_headline'] = array( 'key' => 'field_headline', 'name' => 'headline', 'label' => 'Old', 'type' => 'text' );
+		$GLOBALS['karmcp_test']['field_groups'][]                = array( 'key' => 'group_db', 'ID' => 12, 'title' => 'DB Group' );
+		$GLOBALS['karmcp_test']['fields_by_key']['field_headline'] = array( 'key' => 'field_headline', 'name' => 'headline', 'label' => 'Old', 'type' => 'text' );
 
 		$result = $this->abilities->execute_update_field_group( array(
 			'key'           => 'group_db',
@@ -445,9 +445,9 @@ class AcfAbilitiesTest extends TestCase {
 		$this->assertSame( array( 'field_headline' ), $result['fields_updated'] );
 
 		// The appended field was parented to the group and the setting change kept name/type intact.
-		$added = $GLOBALS['emcp_test']['updated_fields'][0];
+		$added = $GLOBALS['karmcp_test']['updated_fields'][0];
 		$this->assertSame( 12, $added['parent'] );
-		$edited = $GLOBALS['emcp_test']['updated_fields'][1];
+		$edited = $GLOBALS['karmcp_test']['updated_fields'][1];
 		$this->assertSame( 'New Label', $edited['label'] );
 		$this->assertSame( 'headline', $edited['name'] );
 		$this->assertSame( 'text', $edited['type'] );
@@ -458,7 +458,7 @@ class AcfAbilitiesTest extends TestCase {
 	// -------------------------------------------------------------------
 
 	public function test_list_options_pages_returns_pages(): void {
-		$GLOBALS['emcp_test']['options_pages'] = array(
+		$GLOBALS['karmcp_test']['options_pages'] = array(
 			array( 'menu_slug' => 'site-settings', 'page_title' => 'Site Settings', 'post_id' => 'options', 'parent_slug' => '' ),
 		);
 
@@ -470,14 +470,14 @@ class AcfAbilitiesTest extends TestCase {
 	public function test_options_first_write_by_name_resolves_via_located_group(): void {
 		// A group located on an options page whose field has NO stored value yet:
 		// the name must still resolve to the key through the group index.
-		$GLOBALS['emcp_test']['field_groups'][] = array(
+		$GLOBALS['karmcp_test']['field_groups'][] = array(
 			'key'      => 'group_opts',
 			'ID'       => 30,
 			'title'    => 'Options Group',
 			'active'   => true,
 			'location' => array( array( array( 'param' => 'options_page', 'operator' => '==', 'value' => 'site-settings' ) ) ),
 		);
-		$GLOBALS['emcp_test']['group_fields']['group_opts'] = array(
+		$GLOBALS['karmcp_test']['group_fields']['group_opts'] = array(
 			array( 'key' => 'field_footer', 'name' => 'footer_text', 'label' => 'Footer', 'type' => 'text' ),
 		);
 
@@ -487,14 +487,14 @@ class AcfAbilitiesTest extends TestCase {
 		) );
 
 		$this->assertSame( array( 'footer_text' ), $result['updated'] );
-		$this->assertSame( array( 'field_footer', 'First write', 'options' ), $GLOBALS['emcp_test']['update_field_calls'][0] );
+		$this->assertSame( array( 'field_footer', 'First write', 'options' ), $GLOBALS['karmcp_test']['update_field_calls'][0] );
 	}
 
 	public function test_options_target_reads_via_field_objects(): void {
-		$GLOBALS['emcp_test']['field_objects']['options'] = array(
+		$GLOBALS['karmcp_test']['field_objects']['options'] = array(
 			'footer_text' => array( 'key' => 'field_footer', 'name' => 'footer_text', 'label' => 'Footer', 'type' => 'text' ),
 		);
-		$GLOBALS['emcp_test']['values']['options'] = array( 'field_footer' => '© 2026' );
+		$GLOBALS['karmcp_test']['values']['options'] = array( 'field_footer' => '© 2026' );
 
 		$result = $this->abilities->execute_get_fields( array( 'options_page' => 'options' ) );
 		$this->assertSame( '© 2026', $result['fields']['footer_text'] );
@@ -513,8 +513,8 @@ class AcfAbilitiesTest extends TestCase {
 		) );
 
 		$this->assertIsArray( $result );
-		$this->assertCount( 1, $GLOBALS['emcp_test']['imported_types'] );
-		$imported = $GLOBALS['emcp_test']['imported_types'][0];
+		$this->assertCount( 1, $GLOBALS['karmcp_test']['imported_types'] );
+		$imported = $GLOBALS['karmcp_test']['imported_types'][0];
 		$this->assertStringStartsWith( 'post_type_', $imported['key'] );
 		$this->assertSame( 'book', $imported['post_type'] );
 		$this->assertSame( 'Books', $imported['labels']['name'] );
@@ -523,7 +523,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_create_post_type_rejects_existing_slug(): void {
-		$GLOBALS['emcp_test']['existing_types'][] = 'book';
+		$GLOBALS['karmcp_test']['existing_types'][] = 'book';
 		$result = $this->abilities->execute_create_post_type( array( 'post_type' => 'book', 'title' => 'Books' ) );
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'post_type_exists', $result->get_error_code() );
@@ -542,7 +542,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_update_post_type_rejects_slug_change(): void {
-		$GLOBALS['emcp_test']['acf_post_types']['post_type_x'] = array(
+		$GLOBALS['karmcp_test']['acf_post_types']['post_type_x'] = array(
 			'key' => 'post_type_x', 'ID' => 210, 'post_type' => 'book', 'title' => 'Books', 'active' => true,
 		);
 		$result = $this->abilities->execute_update_post_type( array( 'key' => 'post_type_x', 'post_type' => 'novel' ) );
@@ -551,7 +551,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_update_post_type_changes_title_and_taxonomies(): void {
-		$GLOBALS['emcp_test']['acf_post_types']['post_type_x'] = array(
+		$GLOBALS['karmcp_test']['acf_post_types']['post_type_x'] = array(
 			'key' => 'post_type_x', 'ID' => 210, 'post_type' => 'book', 'title' => 'Books',
 			'active' => true, 'labels' => array( 'name' => 'Books', 'singular_name' => 'Book' ),
 		);
@@ -562,8 +562,8 @@ class AcfAbilitiesTest extends TestCase {
 		) );
 
 		$this->assertIsArray( $result );
-		$saved = $GLOBALS['emcp_test']['updated_internal'][0]['item'];
-		$this->assertSame( 'acf-post-type', $GLOBALS['emcp_test']['updated_internal'][0]['post_type'] );
+		$saved = $GLOBALS['karmcp_test']['updated_internal'][0]['item'];
+		$this->assertSame( 'acf-post-type', $GLOBALS['karmcp_test']['updated_internal'][0]['post_type'] );
 		$this->assertSame( 'Publications', $saved['title'] );
 		$this->assertSame( 'Publications', $saved['labels']['name'] );
 		$this->assertSame( array( 'genre', 'author' ), $saved['taxonomies'] ); // deduped, sanitized
@@ -576,7 +576,7 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_list_post_types_filters_inactive_and_search(): void {
-		$GLOBALS['emcp_test']['acf_post_types'] = array(
+		$GLOBALS['karmcp_test']['acf_post_types'] = array(
 			array( 'key' => 'post_type_a', 'ID' => 1, 'post_type' => 'book', 'title' => 'Books', 'active' => true ),
 			array( 'key' => 'post_type_b', 'ID' => 2, 'post_type' => 'movie', 'title' => 'Movies', 'active' => false ),
 		);
@@ -610,8 +610,8 @@ class AcfAbilitiesTest extends TestCase {
 		) );
 
 		$this->assertIsArray( $result );
-		$this->assertCount( 1, $GLOBALS['emcp_test']['imported_taxes'] );
-		$imported = $GLOBALS['emcp_test']['imported_taxes'][0];
+		$this->assertCount( 1, $GLOBALS['karmcp_test']['imported_taxes'] );
+		$imported = $GLOBALS['karmcp_test']['imported_taxes'][0];
 		$this->assertStringStartsWith( 'taxonomy_', $imported['key'] );
 		$this->assertSame( 'genre', $imported['taxonomy'] );
 		$this->assertSame( array( 'book' ), $imported['object_type'] );
@@ -619,14 +619,14 @@ class AcfAbilitiesTest extends TestCase {
 	}
 
 	public function test_create_taxonomy_rejects_existing_slug(): void {
-		$GLOBALS['emcp_test']['existing_taxes'][] = 'genre';
+		$GLOBALS['karmcp_test']['existing_taxes'][] = 'genre';
 		$result = $this->abilities->execute_create_taxonomy( array( 'taxonomy' => 'genre', 'title' => 'Genres', 'object_type' => array( 'book' ) ) );
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'taxonomy_exists', $result->get_error_code() );
 	}
 
 	public function test_update_taxonomy_rejects_slug_change_and_updates_object_type(): void {
-		$GLOBALS['emcp_test']['acf_taxonomies']['taxonomy_x'] = array(
+		$GLOBALS['karmcp_test']['acf_taxonomies']['taxonomy_x'] = array(
 			'key' => 'taxonomy_x', 'ID' => 310, 'taxonomy' => 'genre', 'title' => 'Genres',
 			'active' => true, 'object_type' => array( 'book' ), 'labels' => array( 'name' => 'Genres' ),
 		);
@@ -636,8 +636,8 @@ class AcfAbilitiesTest extends TestCase {
 
 		$ok = $this->abilities->execute_update_taxonomy( array( 'key' => 'taxonomy_x', 'object_type' => array( 'book', 'movie' ) ) );
 		$this->assertIsArray( $ok );
-		$saved = $GLOBALS['emcp_test']['updated_internal'][0]['item'];
-		$this->assertSame( 'acf-taxonomy', $GLOBALS['emcp_test']['updated_internal'][0]['post_type'] );
+		$saved = $GLOBALS['karmcp_test']['updated_internal'][0]['item'];
+		$this->assertSame( 'acf-taxonomy', $GLOBALS['karmcp_test']['updated_internal'][0]['post_type'] );
 		$this->assertSame( array( 'book', 'movie' ), $saved['object_type'] );
 	}
 
@@ -646,10 +646,10 @@ class AcfAbilitiesTest extends TestCase {
 	// -------------------------------------------------------------------
 
 	public function test_cpt_tax_tools_require_manage_options(): void {
-		$GLOBALS['emcp_test']['caps'] = array( 'edit_posts' ); // no manage_options
+		$GLOBALS['karmcp_test']['caps'] = array( 'edit_posts' ); // no manage_options
 		$this->assertFalse( $this->abilities->check_manage_permission() );
 
-		$GLOBALS['emcp_test']['caps'] = array( 'manage_options' );
+		$GLOBALS['karmcp_test']['caps'] = array( 'manage_options' );
 		$this->assertTrue( $this->abilities->check_manage_permission() );
 	}
 }

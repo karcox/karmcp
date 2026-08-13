@@ -8,7 +8,7 @@
  * library Safe SVG uses) and is **fail-closed**: if the library is unavailable
  * or the markup can't be cleaned, sanitization fails and the upload is rejected.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.0
  */
-class EMCP_Tools_SVG_Sanitizer {
+class KarMCP_SVG_Sanitizer {
 
 	/**
 	 * Ensure the enshrined/svg-sanitize library is autoloadable.
@@ -38,10 +38,10 @@ class EMCP_Tools_SVG_Sanitizer {
 			return true;
 		}
 		// Preferred: the Jetpack autoloader (same mechanism as the bundled MCP adapter).
-		if ( class_exists( 'EMCP_Tools_Adapter_Bootstrap' ) && method_exists( 'EMCP_Tools_Adapter_Bootstrap', 'ensure' ) ) {
-			EMCP_Tools_Adapter_Bootstrap::ensure();
-		} elseif ( defined( 'EMCP_TOOLS_DIR' ) && is_readable( EMCP_TOOLS_DIR . 'vendor/autoload_packages.php' ) ) {
-			require_once EMCP_TOOLS_DIR . 'vendor/autoload_packages.php';
+		if ( class_exists( 'KarMCP_Adapter_Bootstrap' ) && method_exists( 'KarMCP_Adapter_Bootstrap', 'ensure' ) ) {
+			KarMCP_Adapter_Bootstrap::ensure();
+		} elseif ( defined( 'KARMCP_DIR' ) && is_readable( KARMCP_DIR . 'vendor/autoload_packages.php' ) ) {
+			require_once KARMCP_DIR . 'vendor/autoload_packages.php';
 		}
 		if ( class_exists( '\\enshrined\\svgSanitize\\Sanitizer' ) ) {
 			return true;
@@ -59,10 +59,10 @@ class EMCP_Tools_SVG_Sanitizer {
 			return;
 		}
 		$registered = true;
-		if ( ! defined( 'EMCP_TOOLS_DIR' ) ) {
+		if ( ! defined( 'KARMCP_DIR' ) ) {
 			return;
 		}
-		$base = EMCP_TOOLS_DIR . 'vendor/enshrined/svg-sanitize/src/';
+		$base = KARMCP_DIR . 'vendor/enshrined/svg-sanitize/src/';
 		if ( ! is_dir( $base ) ) {
 			return;
 		}

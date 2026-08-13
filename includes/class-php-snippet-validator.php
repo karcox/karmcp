@@ -16,7 +16,7 @@
  * step: an AI can create a DRAFT and run the validator, but only an admin can
  * activate a snippet so it actually executes.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   2.1.0
  */
 
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.1.0
  */
-class EMCP_Tools_PHP_Snippet_Validator {
+class KarMCP_PHP_Snippet_Validator {
 
 	/**
 	 * Function names that block a snippet outright (code exec, shell, dynamic
@@ -180,7 +180,7 @@ class EMCP_Tools_PHP_Snippet_Validator {
 
 		if ( '' === trim( $clean ) ) {
 			$result['valid'] = false;
-			$result['parse_error'] = __( 'The snippet is empty.', 'emcp-tools' );
+			$result['parse_error'] = __( 'The snippet is empty.', 'karmcp' );
 			return $result;
 		}
 
@@ -188,12 +188,12 @@ class EMCP_Tools_PHP_Snippet_Validator {
 		// wrapper into raw HTML/inline output we can't reason about.
 		if ( false !== strpos( $clean, '?>' ) ) {
 			$result['safe'] = false;
-			$result['findings'][] = self::finding( 'critical', 'close_tag', __( 'A PHP closing tag ( ?> ) is not allowed in a snippet.', 'emcp-tools' ), 0 );
+			$result['findings'][] = self::finding( 'critical', 'close_tag', __( 'A PHP closing tag ( ?> ) is not allowed in a snippet.', 'karmcp' ), 0 );
 		}
 
 		// Wrap so top-level statements (return, etc.) are valid in a function
 		// context — this is exactly how the snippet will be executed.
-		$wrapped = '<?php function __emcp_snippet_validate() { ' . $clean . "\n}";
+		$wrapped = '<?php function __karmcp_snippet_validate() { ' . $clean . "\n}";
 
 		$tokens = null;
 		try {
@@ -271,31 +271,31 @@ class EMCP_Tools_PHP_Snippet_Validator {
 
 			// Backtick shell execution: `...`
 			if ( null === $id && '`' === $text ) {
-				$result['findings'][] = self::finding( 'critical', 'backtick', __( 'Shell execution via the backtick operator.', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'critical', 'backtick', __( 'Shell execution via the backtick operator.', 'karmcp' ), $line );
 				continue;
 			}
 
 			// Dynamic include/require.
 			if ( in_array( $id, array( T_INCLUDE, T_INCLUDE_ONCE, T_REQUIRE, T_REQUIRE_ONCE ), true ) ) {
-				$result['findings'][] = self::finding( 'critical', 'include', __( 'Loads and runs another PHP file (include/require).', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'critical', 'include', __( 'Loads and runs another PHP file (include/require).', 'karmcp' ), $line );
 				continue;
 			}
 
 			// eval as a dedicated language construct (T_EVAL) where the engine emits it.
 			if ( defined( 'T_EVAL' ) && T_EVAL === $id ) {
-				$result['findings'][] = self::finding( 'critical', 'eval', __( 'Executes arbitrary code (eval).', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'critical', 'eval', __( 'Executes arbitrary code (eval).', 'karmcp' ), $line );
 				continue;
 			}
 
 			// Variable function call: $var( …  or  $var->( …  treated as dynamic call.
 			if ( T_VARIABLE === $id && $next && null === $next['id'] && '(' === $next['text'] ) {
-				$result['findings'][] = self::finding( 'critical', 'variable_function', __( 'Calls a function named by a variable (bypasses static checks).', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'critical', 'variable_function', __( 'Calls a function named by a variable (bypasses static checks).', 'karmcp' ), $line );
 				continue;
 			}
 
 			// Dynamic class instantiation: `new $var` — class chosen at runtime.
 			if ( T_NEW === $id && $next && T_VARIABLE === $next['id'] ) {
-				$result['findings'][] = self::finding( 'critical', 'dynamic_instantiation', __( 'Instantiates a class named by a variable (bypasses static checks).', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'critical', 'dynamic_instantiation', __( 'Instantiates a class named by a variable (bypasses static checks).', 'karmcp' ), $line );
 				continue;
 			}
 
@@ -304,7 +304,7 @@ class EMCP_Tools_PHP_Snippet_Validator {
 				&& in_array( strtolower( ltrim( $next['text'], '\\' ) ), array( 'reflectionfunction', 'reflectionmethod', 'reflectionclass', 'reflectionobject', 'closure' ), true ) ) {
 				$result['findings'][] = self::finding( 'critical', 'reflection', sprintf(
 					/* translators: %s: class name */
-					__( 'Uses %s, which can invoke functions/methods chosen at runtime.', 'emcp-tools' ),
+					__( 'Uses %s, which can invoke functions/methods chosen at runtime.', 'karmcp' ),
 					$next['text']
 				), $line );
 				continue;
@@ -312,19 +312,19 @@ class EMCP_Tools_PHP_Snippet_Validator {
 
 			// die / exit — abruptly terminates the request (can skip recovery logic).
 			if ( defined( 'T_EXIT' ) && T_EXIT === $id ) {
-				$result['findings'][] = self::finding( 'warning', 'exit', __( 'Terminates the request (die/exit).', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'warning', 'exit', __( 'Terminates the request (die/exit).', 'karmcp' ), $line );
 				continue;
 			}
 
 			// Variable variable: $ immediately before a $var, or T_VARIABLE '${'.
 			if ( null === $id && '$' === $text && $next && T_VARIABLE === $next['id'] ) {
-				$result['findings'][] = self::finding( 'warning', 'variable_variable', __( 'Uses a variable variable ($$x).', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'warning', 'variable_variable', __( 'Uses a variable variable ($$x).', 'karmcp' ), $line );
 				continue;
 			}
 
 			// @ error suppression.
 			if ( null === $id && '@' === $text ) {
-				$result['findings'][] = self::finding( 'warning', 'suppress', __( 'Suppresses errors with @ (can hide failures).', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'warning', 'suppress', __( 'Suppresses errors with @ (can hide failures).', 'karmcp' ), $line );
 				continue;
 			}
 
@@ -335,7 +335,7 @@ class EMCP_Tools_PHP_Snippet_Validator {
 					'superglobal',
 					sprintf(
 						/* translators: %s: superglobal name */
-						__( 'Reads request/server input (%s).', 'emcp-tools' ),
+						__( 'Reads request/server input (%s).', 'karmcp' ),
 						$text
 					),
 					$line
@@ -346,7 +346,7 @@ class EMCP_Tools_PHP_Snippet_Validator {
 			// Destructive SQL inside a string literal.
 			if ( in_array( $id, array( T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE ), true ) ) {
 				if ( preg_match( '/\b(DROP|TRUNCATE|ALTER)\s+(TABLE|DATABASE)\b/i', $text ) || preg_match( '/\bDELETE\s+FROM\b/i', $text ) ) {
-					$result['findings'][] = self::finding( 'critical', 'destructive_sql', __( 'Contains destructive SQL (DROP/TRUNCATE/ALTER/DELETE).', 'emcp-tools' ), $line );
+					$result['findings'][] = self::finding( 'critical', 'destructive_sql', __( 'Contains destructive SQL (DROP/TRUNCATE/ALTER/DELETE).', 'karmcp' ), $line );
 				}
 				continue;
 			}
@@ -373,11 +373,11 @@ class EMCP_Tools_PHP_Snippet_Validator {
 
 			// Top-level function/class definitions inside a snippet (redeclaration risk).
 			if ( in_array( $id, array( T_FUNCTION, T_CLASS, T_TRAIT, T_INTERFACE ), true ) ) {
-				// Skip the wrapper's own function token (line 1, name __emcp_snippet_validate).
-				if ( $next && T_STRING === $next['id'] && '__emcp_snippet_validate' === $next['text'] ) {
+				// Skip the wrapper's own function token (line 1, name __karmcp_snippet_validate).
+				if ( $next && T_STRING === $next['id'] && '__karmcp_snippet_validate' === $next['text'] ) {
 					continue;
 				}
-				$result['findings'][] = self::finding( 'warning', 'definition', __( 'Defines a function/class (re-runs may redeclare and fatal).', 'emcp-tools' ), $line );
+				$result['findings'][] = self::finding( 'warning', 'definition', __( 'Defines a function/class (re-runs may redeclare and fatal).', 'karmcp' ), $line );
 				continue;
 			}
 		}

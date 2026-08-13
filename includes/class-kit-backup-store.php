@@ -2,13 +2,13 @@
 /**
  * Kit Backup Store — pre-apply snapshots of the active Elementor kit's globals.
  *
- * Backups are stored in a private `emcp_kit_backup` custom post type, NOT the
+ * Backups are stored in a private `karmcp_kit_backup` custom post type, NOT the
  * Media Library: `application/json` is not an allowed upload MIME in WordPress
  * core, and filtering `upload_mimes` to permit it would open a site-wide upload
  * hole. A CPT is self-owned, never web-addressable, listable via WP_Query, and
  * carries no third-party surface. See docs/BRAND_KITS_PLAN.md §§ 5.4, 5.5.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.8.0
  */
 
@@ -21,21 +21,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.8.0
  */
-class EMCP_Tools_Kit_Backup_Store {
+class KarMCP_Kit_Backup_Store {
 
 	/**
 	 * Custom post type name.
 	 *
 	 * @var string
 	 */
-	const POST_TYPE = 'emcp_kit_backup';
+	const POST_TYPE = 'karmcp_kit_backup';
 
 	/**
 	 * Meta key holding the JSON-encoded snapshot blob.
 	 *
 	 * @var string
 	 */
-	const META_SNAPSHOT = '_emcp_kit_snapshot';
+	const META_SNAPSHOT = '_karmcp_kit_snapshot';
 
 	/**
 	 * Register the CPT. Hooked on `init`.
@@ -59,7 +59,7 @@ class EMCP_Tools_Kit_Backup_Store {
 				'map_meta_cap'        => true,
 				'supports'            => array( 'title', 'author' ),
 				'labels'              => array(
-					'name' => __( 'EMCP Brand Kit Backups', 'emcp-tools' ),
+					'name' => __( 'KarMCP Brand Kit Backups', 'karmcp' ),
 				),
 			)
 		);
@@ -88,14 +88,14 @@ class EMCP_Tools_Kit_Backup_Store {
 	 */
 	public static function create( string $label = '' ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to create brand kit backups.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to create brand kit backups.', 'karmcp' ) );
 		}
 
-		if ( ! class_exists( 'EMCP_Tools_System_Kit_Writer' ) ) {
-			return new WP_Error( 'no_writer', __( 'The kit writer service is unavailable.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_System_Kit_Writer' ) ) {
+			return new WP_Error( 'no_writer', __( 'The kit writer service is unavailable.', 'karmcp' ) );
 		}
 
-		$snapshot = EMCP_Tools_System_Kit_Writer::snapshot();
+		$snapshot = KarMCP_System_Kit_Writer::snapshot();
 		if ( is_wp_error( $snapshot ) ) {
 			return $snapshot;
 		}
@@ -105,9 +105,9 @@ class EMCP_Tools_Kit_Backup_Store {
 		$stamp = current_time( 'Y-m-d H:i:s' );
 		$title = '' !== $label
 			/* translators: 1: brand kit label, 2: date/time */
-			? sprintf( __( 'Before "%1$s", %2$s', 'emcp-tools' ), $label, $stamp )
+			? sprintf( __( 'Before "%1$s", %2$s', 'karmcp' ), $label, $stamp )
 			/* translators: %s: date/time */
-			: sprintf( __( 'Backup, %s', 'emcp-tools' ), $stamp );
+			: sprintf( __( 'Backup, %s', 'karmcp' ), $stamp );
 
 		$post_id = wp_insert_post(
 			array(
@@ -171,17 +171,17 @@ class EMCP_Tools_Kit_Backup_Store {
 	public static function get_snapshot( int $backup_id ) {
 		$post = get_post( $backup_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Backup not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Backup not found.', 'karmcp' ) );
 		}
 
 		$raw = get_post_meta( $backup_id, self::META_SNAPSHOT, true );
 		if ( empty( $raw ) ) {
-			return new WP_Error( 'empty_backup', __( 'That backup is empty or corrupted.', 'emcp-tools' ) );
+			return new WP_Error( 'empty_backup', __( 'That backup is empty or corrupted.', 'karmcp' ) );
 		}
 
 		$snapshot = json_decode( $raw, true );
 		if ( ! is_array( $snapshot ) ) {
-			return new WP_Error( 'invalid_backup', __( 'That backup could not be decoded.', 'emcp-tools' ) );
+			return new WP_Error( 'invalid_backup', __( 'That backup could not be decoded.', 'karmcp' ) );
 		}
 
 		return $snapshot;
@@ -198,7 +198,7 @@ class EMCP_Tools_Kit_Backup_Store {
 	 */
 	public static function restore( int $backup_id, bool $full_clobber = false ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to restore brand kit backups.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to restore brand kit backups.', 'karmcp' ) );
 		}
 
 		$snapshot = self::get_snapshot( $backup_id );
@@ -206,10 +206,10 @@ class EMCP_Tools_Kit_Backup_Store {
 			return $snapshot;
 		}
 
-		if ( ! class_exists( 'EMCP_Tools_System_Kit_Writer' ) ) {
-			return new WP_Error( 'no_writer', __( 'The kit writer service is unavailable.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_System_Kit_Writer' ) ) {
+			return new WP_Error( 'no_writer', __( 'The kit writer service is unavailable.', 'karmcp' ) );
 		}
 
-		return EMCP_Tools_System_Kit_Writer::restore_snapshot( $snapshot, $full_clobber );
+		return KarMCP_System_Kit_Writer::restore_snapshot( $snapshot, $full_clobber );
 	}
 }

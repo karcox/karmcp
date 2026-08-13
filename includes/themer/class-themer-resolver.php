@@ -9,7 +9,7 @@
  * highest matched specificity, then highest ranker() value (priority), then newest
  * (largest) id.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Resolver {
+class KarMCP_Themer_Resolver {
 
 	/**
 	 * The body-slot template type for a request context, or null.
@@ -50,11 +50,11 @@ class EMCP_Tools_Themer_Resolver {
 	 *
 	 * @param array                              $index    type => rows[{id, include, exclude, priority}].
 	 * @param array                              $ctx      Request context.
-	 * @param EMCP_Tools_Themer_Matcher_Registry $registry Matcher registry.
+	 * @param KarMCP_Themer_Matcher_Registry $registry Matcher registry.
 	 * @param callable                           $ranker   fn(array $row): int priority.
 	 * @return array{header:?int, body:?int, footer:?int}
 	 */
-	public static function resolve( array $index, array $ctx, EMCP_Tools_Themer_Matcher_Registry $registry, callable $ranker ): array {
+	public static function resolve( array $index, array $ctx, KarMCP_Themer_Matcher_Registry $registry, callable $ranker ): array {
 		$body_type = self::body_type( $ctx );
 
 		return array(
@@ -69,11 +69,11 @@ class EMCP_Tools_Themer_Resolver {
 	 *
 	 * @param array                              $rows     Candidate rows.
 	 * @param array                              $ctx      Request context.
-	 * @param EMCP_Tools_Themer_Matcher_Registry $registry Matcher registry.
+	 * @param KarMCP_Themer_Matcher_Registry $registry Matcher registry.
 	 * @param callable                           $ranker   Priority ranker.
 	 * @return int|null
 	 */
-	private static function winner( array $rows, array $ctx, EMCP_Tools_Themer_Matcher_Registry $registry, callable $ranker ): ?int {
+	private static function winner( array $rows, array $ctx, KarMCP_Themer_Matcher_Registry $registry, callable $ranker ): ?int {
 		$best      = null;
 		$best_spec = -1;
 		$best_prio = PHP_INT_MIN;
@@ -82,7 +82,7 @@ class EMCP_Tools_Themer_Resolver {
 			if ( ! is_array( $row ) || ! isset( $row['id'] ) ) {
 				continue;
 			}
-			$spec = EMCP_Tools_Themer_Conditions::evaluate(
+			$spec = KarMCP_Themer_Conditions::evaluate(
 				array(
 					'include' => $row['include'] ?? array(),
 					'exclude' => $row['exclude'] ?? array(),

@@ -5,7 +5,7 @@
  * Registers tools for adding custom CSS, JavaScript, and site-wide
  * code snippets via the MCP Tools for Elementor server.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.3.0
  */
 
@@ -18,15 +18,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.3.0
  */
-class EMCP_Tools_Custom_Code_Abilities {
+class KarMCP_Custom_Code_Abilities {
 
 	/**
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
-	 * @var EMCP_Tools_Element_Factory
+	 * @var KarMCP_Element_Factory
 	 */
 	private $factory;
 
@@ -42,10 +42,10 @@ class EMCP_Tools_Custom_Code_Abilities {
 	 *
 	 * @since 1.3.0
 	 *
-	 * @param EMCP_Tools_Data            $data    The data access layer.
-	 * @param EMCP_Tools_Element_Factory $factory The element factory.
+	 * @param KarMCP_Data            $data    The data access layer.
+	 * @param KarMCP_Element_Factory $factory The element factory.
 	 */
-	public function __construct( EMCP_Tools_Data $data, EMCP_Tools_Element_Factory $factory ) {
+	public function __construct( KarMCP_Data $data, KarMCP_Element_Factory $factory ) {
 		$this->data    = $data;
 		$this->factory = $factory;
 	}
@@ -152,14 +152,14 @@ class EMCP_Tools_Custom_Code_Abilities {
 	 * @since 1.3.0
 	 */
 	private function register_add_custom_css(): void {
-		$this->ability_names[] = 'emcp-tools/add-custom-css';
+		$this->ability_names[] = 'karmcp/add-custom-css';
 
-		emcp_tools_register_ability(
-			'emcp-tools/add-custom-css',
+		karmcp_register_ability(
+			'karmcp/add-custom-css',
 			array(
-				'label'               => __( 'Add Custom CSS', 'emcp-tools' ),
-				'description'         => __( 'Adds custom CSS to a specific element or to the entire page. Requires Elementor Pro. For element-level CSS, use the keyword "selector" as a placeholder for the element\'s CSS wrapper (e.g. "selector .heading { color: red; }" or "selector:hover { transform: scale(1.05); }"). For page-level CSS, omit element_id. Appends to existing CSS by default; set replace=true to overwrite.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Custom CSS', 'karmcp' ),
+				'description'         => __( 'Adds custom CSS to a specific element or to the entire page. Requires Elementor Pro. For element-level CSS, use the keyword "selector" as a placeholder for the element\'s CSS wrapper (e.g. "selector .heading { color: red; }" or "selector:hover { transform: scale(1.05); }"). For page-level CSS, omit element_id. Appends to existing CSS by default; set replace=true to overwrite.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_custom_css' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => array(
@@ -167,19 +167,19 @@ class EMCP_Tools_Custom_Code_Abilities {
 					'properties' => array(
 						'post_id'    => array(
 							'type'        => 'integer',
-							'description' => __( 'The post/page ID.', 'emcp-tools' ),
+							'description' => __( 'The post/page ID.', 'karmcp' ),
 						),
 						'element_id' => array(
 							'type'        => 'string',
-							'description' => __( 'Optional element ID to apply CSS to. If omitted, CSS is applied at the page level.', 'emcp-tools' ),
+							'description' => __( 'Optional element ID to apply CSS to. If omitted, CSS is applied at the page level.', 'karmcp' ),
 						),
 						'css'        => array(
 							'type'        => 'string',
-							'description' => __( 'CSS rules to add. Use "selector" as the element wrapper placeholder for element-level CSS.', 'emcp-tools' ),
+							'description' => __( 'CSS rules to add. Use "selector" as the element wrapper placeholder for element-level CSS.', 'karmcp' ),
 						),
 						'replace'    => array(
 							'type'        => 'boolean',
-							'description' => __( 'If true, replaces existing custom CSS instead of appending. Default: false.', 'emcp-tools' ),
+							'description' => __( 'If true, replaces existing custom CSS instead of appending. Default: false.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'post_id', 'css' ),
@@ -219,7 +219,7 @@ class EMCP_Tools_Custom_Code_Abilities {
 		$replace    = ! empty( $input['replace'] );
 
 		if ( ! $post_id || empty( $css ) ) {
-			return new \WP_Error( 'missing_params', __( 'post_id and css are required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'post_id and css are required.', 'karmcp' ) );
 		}
 
 		// Basic sanitization: strip PHP tags and script tags.
@@ -251,7 +251,7 @@ class EMCP_Tools_Custom_Code_Abilities {
 			$element = $this->data->find_element_by_id( $page_data, $element_id );
 
 			if ( null === $element ) {
-				return new \WP_Error( 'element_not_found', __( 'Element not found.', 'emcp-tools' ) );
+				return new \WP_Error( 'element_not_found', __( 'Element not found.', 'karmcp' ) );
 			}
 
 			$existing_css = $element['settings']['custom_css'] ?? '';
@@ -264,7 +264,7 @@ class EMCP_Tools_Custom_Code_Abilities {
 			);
 
 			if ( ! $updated ) {
-				return new \WP_Error( 'update_failed', __( 'Failed to update element settings.', 'emcp-tools' ) );
+				return new \WP_Error( 'update_failed', __( 'Failed to update element settings.', 'karmcp' ) );
 			}
 
 			$result = $this->data->save_page_data( $post_id, $page_data );
@@ -316,14 +316,14 @@ class EMCP_Tools_Custom_Code_Abilities {
 	 * @since 1.3.0
 	 */
 	private function register_add_custom_js(): void {
-		$this->ability_names[] = 'emcp-tools/add-custom-js';
+		$this->ability_names[] = 'karmcp/add-custom-js';
 
-		emcp_tools_register_ability(
-			'emcp-tools/add-custom-js',
+		karmcp_register_ability(
+			'karmcp/add-custom-js',
 			array(
-				'label'               => __( 'Add Custom JavaScript', 'emcp-tools' ),
-				'description'         => __( 'Adds a custom JavaScript snippet to a page by inserting an HTML widget containing a <script> tag. Works with free Elementor (no Pro required). The JS code is automatically wrapped in <script> tags, do NOT include them yourself. Use wrap_dom_ready=true to wrap in a DOMContentLoaded listener. For site-wide JS, use add-code-snippet instead (requires Pro).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Custom JavaScript', 'karmcp' ),
+				'description'         => __( 'Adds a custom JavaScript snippet to a page by inserting an HTML widget containing a <script> tag. Works with free Elementor (no Pro required). The JS code is automatically wrapped in <script> tags, do NOT include them yourself. Use wrap_dom_ready=true to wrap in a DOMContentLoaded listener. For site-wide JS, use add-code-snippet instead (requires Pro).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_custom_js' ),
 				'permission_callback' => array( $this, 'check_js_permission' ),
 				'input_schema'        => array(
@@ -331,23 +331,23 @@ class EMCP_Tools_Custom_Code_Abilities {
 					'properties' => array(
 						'post_id'        => array(
 							'type'        => 'integer',
-							'description' => __( 'The post/page ID.', 'emcp-tools' ),
+							'description' => __( 'The post/page ID.', 'karmcp' ),
 						),
 						'parent_id'      => array(
 							'type'        => 'string',
-							'description' => __( 'Parent container element ID.', 'emcp-tools' ),
+							'description' => __( 'Parent container element ID.', 'karmcp' ),
 						),
 						'js'             => array(
 							'type'        => 'string',
-							'description' => __( 'JavaScript code to inject. Do NOT include <script> tags, they are added automatically.', 'emcp-tools' ),
+							'description' => __( 'JavaScript code to inject. Do NOT include <script> tags, they are added automatically.', 'karmcp' ),
 						),
 						'position'       => array(
 							'type'        => 'integer',
-							'description' => __( 'Insert position within parent. -1 = append (default).', 'emcp-tools' ),
+							'description' => __( 'Insert position within parent. -1 = append (default).', 'karmcp' ),
 						),
 						'wrap_dom_ready' => array(
 							'type'        => 'boolean',
-							'description' => __( 'Wrap the code in a DOMContentLoaded listener. Default: false.', 'emcp-tools' ),
+							'description' => __( 'Wrap the code in a DOMContentLoaded listener. Default: false.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'post_id', 'parent_id', 'js' ),
@@ -387,7 +387,7 @@ class EMCP_Tools_Custom_Code_Abilities {
 		$wrap_dom_ready = ! empty( $input['wrap_dom_ready'] );
 
 		if ( ! $post_id || empty( $parent_id ) || empty( $js ) ) {
-			return new \WP_Error( 'missing_params', __( 'post_id, parent_id, and js are required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'post_id, parent_id, and js are required.', 'karmcp' ) );
 		}
 
 		// Strip any existing script tags the caller may have included.
@@ -415,7 +415,7 @@ class EMCP_Tools_Custom_Code_Abilities {
 				'parent_not_found',
 				sprintf(
 					/* translators: %s: parent element ID */
-					__( 'Parent element "%s" not found.', 'emcp-tools' ),
+					__( 'Parent element "%s" not found.', 'karmcp' ),
 					$parent_id
 				)
 			);
@@ -443,14 +443,14 @@ class EMCP_Tools_Custom_Code_Abilities {
 	 * @since 1.3.0
 	 */
 	private function register_add_code_snippet(): void {
-		$this->ability_names[] = 'emcp-tools/add-code-snippet';
+		$this->ability_names[] = 'karmcp/add-code-snippet';
 
-		emcp_tools_register_ability(
-			'emcp-tools/add-code-snippet',
+		karmcp_register_ability(
+			'karmcp/add-code-snippet',
 			array(
-				'label'               => __( 'Add Code Snippet', 'emcp-tools' ),
-				'description'         => __( 'Creates a site-wide Custom Code snippet using Elementor Pro. Injects CSS or JavaScript into the <head>, after <body> open, or before </body> close on ALL pages. Use this for analytics scripts, site-wide CSS overrides, meta tags, or tracking pixels. Requires Elementor Pro and manage_options capability.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Code Snippet', 'karmcp' ),
+				'description'         => __( 'Creates a site-wide Custom Code snippet using Elementor Pro. Injects CSS or JavaScript into the <head>, after <body> open, or before </body> close on ALL pages. Use this for analytics scripts, site-wide CSS overrides, meta tags, or tracking pixels. Requires Elementor Pro and manage_options capability.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_code_snippet' ),
 				'permission_callback' => array( $this, 'check_snippet_permission' ),
 				'input_schema'        => array(
@@ -458,29 +458,29 @@ class EMCP_Tools_Custom_Code_Abilities {
 					'properties' => array(
 						'title'         => array(
 							'type'        => 'string',
-							'description' => __( 'Descriptive title for the snippet (e.g. "Google Analytics", "Global CSS overrides").', 'emcp-tools' ),
+							'description' => __( 'Descriptive title for the snippet (e.g. "Google Analytics", "Global CSS overrides").', 'karmcp' ),
 						),
 						'code'          => array(
 							'type'        => 'string',
-							'description' => __( 'The full code to inject. Include <script>, <style>, or <meta> tags as needed.', 'emcp-tools' ),
+							'description' => __( 'The full code to inject. Include <script>, <style>, or <meta> tags as needed.', 'karmcp' ),
 						),
 						'location'      => array(
 							'type'        => 'string',
 							'enum'        => array( 'head', 'body_start', 'body_end' ),
-							'description' => __( 'Where to inject: "head" = <head> tag, "body_start" = after <body>, "body_end" = before </body>. Default: head.', 'emcp-tools' ),
+							'description' => __( 'Where to inject: "head" = <head> tag, "body_start" = after <body>, "body_end" = before </body>. Default: head.', 'karmcp' ),
 						),
 						'priority'      => array(
 							'type'        => 'integer',
-							'description' => __( 'Load order priority (1-10, lower = earlier). Default: 1.', 'emcp-tools' ),
+							'description' => __( 'Load order priority (1-10, lower = earlier). Default: 1.', 'karmcp' ),
 						),
 						'status'        => array(
 							'type'        => 'string',
 							'enum'        => array( 'publish', 'draft' ),
-							'description' => __( 'Post status. "publish" = active immediately. "draft" = saved but not active. Default: publish.', 'emcp-tools' ),
+							'description' => __( 'Post status. "publish" = active immediately. "draft" = saved but not active. Default: publish.', 'karmcp' ),
 						),
 						'ensure_jquery' => array(
 							'type'        => 'boolean',
-							'description' => __( 'If true, ensures jQuery is loaded before this snippet runs. Default: false.', 'emcp-tools' ),
+							'description' => __( 'If true, ensures jQuery is loaded before this snippet runs. Default: false.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'title', 'code' ),
@@ -525,7 +525,7 @@ class EMCP_Tools_Custom_Code_Abilities {
 		$ensure_jquery = ! empty( $input['ensure_jquery'] );
 
 		if ( empty( $title ) || empty( $code ) ) {
-			return new \WP_Error( 'missing_params', __( 'title and code are required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'title and code are required.', 'karmcp' ) );
 		}
 
 		// Map user-friendly location names to Elementor's internal values.
@@ -593,14 +593,14 @@ class EMCP_Tools_Custom_Code_Abilities {
 	 * @since 1.3.0
 	 */
 	private function register_list_code_snippets(): void {
-		$this->ability_names[] = 'emcp-tools/list-code-snippets';
+		$this->ability_names[] = 'karmcp/list-code-snippets';
 
-		emcp_tools_register_ability(
-			'emcp-tools/list-code-snippets',
+		karmcp_register_ability(
+			'karmcp/list-code-snippets',
 			array(
-				'label'               => __( 'List Code Snippets', 'emcp-tools' ),
-				'description'         => __( 'Lists all existing Elementor Pro Custom Code snippets with their titles, locations, priorities, and statuses. Requires Elementor Pro.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Code Snippets', 'karmcp' ),
+				'description'         => __( 'Lists all existing Elementor Pro Custom Code snippets with their titles, locations, priorities, and statuses. Requires Elementor Pro.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_code_snippets' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
@@ -609,12 +609,12 @@ class EMCP_Tools_Custom_Code_Abilities {
 						'location' => array(
 							'type'        => 'string',
 							'enum'        => array( 'head', 'body_start', 'body_end' ),
-							'description' => __( 'Optional filter by location.', 'emcp-tools' ),
+							'description' => __( 'Optional filter by location.', 'karmcp' ),
 						),
 						'status'   => array(
 							'type'        => 'string',
 							'enum'        => array( 'publish', 'draft', 'any' ),
-							'description' => __( 'Filter by post status. Default: any.', 'emcp-tools' ),
+							'description' => __( 'Filter by post status. Default: any.', 'karmcp' ),
 						),
 					),
 				),

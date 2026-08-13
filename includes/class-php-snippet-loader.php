@@ -5,14 +5,14 @@
  * Loading is MANIFEST-ONLY (never a directory scan): each active snippet's file
  * is checked to live inside the sandbox and to match its recorded sha256 before
  * it is included. Defining the wrapped function does not execute user code; the
- * code only runs when its hook fires or its [emcp_snippet] shortcode renders,
+ * code only runs when its hook fires or its [karmcp_snippet] shortcode renders,
  * and each of those runs inside try/catch + a shutdown handler that deactivates
  * a snippet which fatals — so a bad snippet can't repeatedly break the site.
  *
  * Snippets are a free, capability-gated feature: activation is the admin gate;
  * once active, a snippet runs for site visitors like any plugin code.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   2.1.0
  */
 
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.1.0
  */
-class EMCP_Tools_PHP_Snippet_Loader {
+class KarMCP_PHP_Snippet_Loader {
 
 	/**
 	 * Post ID currently being included or executed, for fatal attribution.
@@ -61,7 +61,7 @@ class EMCP_Tools_PHP_Snippet_Loader {
 	 * @since 2.1.0
 	 */
 	public function register_hooks(): void {
-		add_shortcode( 'emcp_snippet', array( $this, 'render_shortcode' ) );
+		add_shortcode( 'karmcp_snippet', array( $this, 'render_shortcode' ) );
 		// Load now: defining the wrapped functions runs no user code, and any
 		// hooks we attach below still fire (we run during plugins_loaded).
 		$this->load();
@@ -74,16 +74,16 @@ class EMCP_Tools_PHP_Snippet_Loader {
 	 * @since 2.1.0
 	 */
 	public function load(): void {
-		if ( ! class_exists( 'EMCP_Tools_PHP_Snippet_Store' ) ) {
+		if ( ! class_exists( 'KarMCP_PHP_Snippet_Store' ) ) {
 			return;
 		}
-		$manifest = EMCP_Tools_PHP_Snippet_Store::read_manifest();
+		$manifest = KarMCP_PHP_Snippet_Store::read_manifest();
 		if ( empty( $manifest ) ) {
 			return;
 		}
 
 		$this->arm_shutdown();
-		$sandbox = EMCP_Tools_PHP_Snippet_Store::sandbox_dir() . '/';
+		$sandbox = KarMCP_PHP_Snippet_Store::sandbox_dir() . '/';
 
 		foreach ( $manifest as $entry ) {
 			$post_id  = isset( $entry['post_id'] ) ? (int) $entry['post_id'] : 0;
@@ -115,7 +115,7 @@ class EMCP_Tools_PHP_Snippet_Loader {
 			try {
 				include_once $path;
 			} catch ( \Throwable $e ) {
-				EMCP_Tools_PHP_Snippet_Store::mark_error( $post_id, $e->getMessage() );
+				KarMCP_PHP_Snippet_Store::mark_error( $post_id, $e->getMessage() );
 				$this->active = null;
 				continue;
 			}
@@ -161,13 +161,13 @@ class EMCP_Tools_PHP_Snippet_Loader {
 		try {
 			$func();
 		} catch ( \Throwable $e ) {
-			EMCP_Tools_PHP_Snippet_Store::mark_error( $post_id, $e->getMessage() );
+			KarMCP_PHP_Snippet_Store::mark_error( $post_id, $e->getMessage() );
 		}
 		$this->active = null;
 	}
 
 	/**
-	 * Renders a shortcode-context snippet: [emcp_snippet id="123"].
+	 * Renders a shortcode-context snippet: [karmcp_snippet id="123"].
 	 *
 	 * @since 2.1.0
 	 *
@@ -198,7 +198,7 @@ class EMCP_Tools_PHP_Snippet_Loader {
 		} catch ( \Throwable $e ) {
 			ob_end_clean();
 			$this->active = null;
-			EMCP_Tools_PHP_Snippet_Store::mark_error( $post_id, $e->getMessage() );
+			KarMCP_PHP_Snippet_Store::mark_error( $post_id, $e->getMessage() );
 			return '';
 		}
 		$out = (string) ob_get_clean();
@@ -235,8 +235,8 @@ class EMCP_Tools_PHP_Snippet_Loader {
 		}
 		$err = error_get_last();
 		$fatal_types = array( E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR );
-		if ( is_array( $err ) && in_array( $err['type'], $fatal_types, true ) && class_exists( 'EMCP_Tools_PHP_Snippet_Store' ) ) {
-			EMCP_Tools_PHP_Snippet_Store::mark_error(
+		if ( is_array( $err ) && in_array( $err['type'], $fatal_types, true ) && class_exists( 'KarMCP_PHP_Snippet_Store' ) ) {
+			KarMCP_PHP_Snippet_Store::mark_error(
 				$this->active,
 				isset( $err['message'] ) ? (string) $err['message'] : 'Fatal error while running snippet.'
 			);

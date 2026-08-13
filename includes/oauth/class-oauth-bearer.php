@@ -9,7 +9,7 @@
  * Also emits the `WWW-Authenticate` challenge on unauthorized MCP responses so
  * clients can discover the OAuth flow (RFC 9728 §5.1).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.1
  */
 
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.1
  */
-class EMCP_Tools_OAuth_Bearer {
+class KarMCP_OAuth_Bearer {
 
 	/**
 	 * Transport permission callback. Returns bool (fail-closed).
@@ -38,8 +38,8 @@ class EMCP_Tools_OAuth_Bearer {
 			// natural, high-frequency point to purge expired tokens/orphans. Kept
 			// throttled so it is not a DELETE per request; this keeps the tables
 			// tidy on active sites within minutes, not waiting on a daily WP-Cron.
-			EMCP_Tools_OAuth_Store::gc_throttled();
-			$row = EMCP_Tools_OAuth_Store::find_token( $token, 'access' );
+			KarMCP_OAuth_Store::gc_throttled();
+			$row = KarMCP_OAuth_Store::find_token( $token, 'access' );
 			if ( null !== $row ) {
 				wp_set_current_user( (int) $row['user_id'] );
 				return true;
@@ -108,10 +108,10 @@ class EMCP_Tools_OAuth_Bearer {
 		if ( 401 !== $status && 403 !== $status ) {
 			return $response;
 		}
-		if ( false === strpos( (string) $request->get_route(), 'mcp/emcp-tools-server' ) ) {
+		if ( false === strpos( (string) $request->get_route(), 'mcp/karmcp-server' ) ) {
 			return $response;
 		}
-		$metadata = rtrim( (string) home_url(), '/' ) . EMCP_Tools_OAuth_Metadata::PATH_PROTECTED_RESOURCE;
+		$metadata = rtrim( (string) home_url(), '/' ) . KarMCP_OAuth_Metadata::PATH_PROTECTED_RESOURCE;
 		$response->header( 'WWW-Authenticate', sprintf( 'Bearer resource_metadata="%s"', $metadata ) );
 		return $response;
 	}

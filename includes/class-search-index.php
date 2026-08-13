@@ -3,11 +3,11 @@
  * Content search index — a materialized, searchable corpus of pages, templates,
  * widgets, and global styles, plus the pure document builders that feed it.
  *
- * v1 is lexical (see EMCP_Tools_Search_Ranker); the storage is a single custom
+ * v1 is lexical (see KarMCP_Search_Ranker); the storage is a single custom
  * table. Document builders are pure/static so they can be unit-tested without a
  * database, and reuse the P1 page-snapshot helpers to normalize page text.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -20,10 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Search_Index {
+class KarMCP_Search_Index {
 
 	const DB_VERSION        = 1;
-	const DB_VERSION_OPTION = 'emcp_tools_search_index_db_version';
+	const DB_VERSION_OPTION = 'karmcp_search_index_db_version';
 	const OBJECT_TYPES      = array( 'page', 'template', 'widget', 'global_color', 'global_font', 'global_class' );
 
 	/**
@@ -33,7 +33,7 @@ class EMCP_Tools_Search_Index {
 	 */
 	public static function table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'emcp_search_index';
+		return $wpdb->prefix . 'karmcp_search_index';
 	}
 
 	/**
@@ -92,7 +92,7 @@ class EMCP_Tools_Search_Index {
 	 */
 	public static function upsert( string $object_type, string $object_id, string $title, string $content, array $meta = array() ): void {
 		global $wpdb;
-		$tokens = implode( ' ', EMCP_Tools_Search_Ranker::tokenize( $title . ' ' . $content ) );
+		$tokens = implode( ' ', KarMCP_Search_Ranker::tokenize( $title . ' ' . $content ) );
 		$wpdb->replace(
 			self::table(),
 			array(
@@ -157,7 +157,7 @@ class EMCP_Tools_Search_Index {
 			);
 		}
 
-		return EMCP_Tools_Search_Ranker::rank( $docs, $query, $limit );
+		return KarMCP_Search_Ranker::rank( $docs, $query, $limit );
 	}
 
 	/**
@@ -253,10 +253,10 @@ class EMCP_Tools_Search_Index {
 	 * @return int Count.
 	 */
 	private static function index_post_ids( array $ids, string $type ): int {
-		if ( ! class_exists( 'EMCP_Tools_Data' ) ) {
+		if ( ! class_exists( 'KarMCP_Data' ) ) {
 			return 0;
 		}
-		$data = new EMCP_Tools_Data();
+		$data = new KarMCP_Data();
 		$n    = 0;
 		foreach ( $ids as $id ) {
 			$id       = (int) $id;
@@ -335,7 +335,7 @@ class EMCP_Tools_Search_Index {
 		// that lands here) before its document manager exists — indexing then would
 		// dereference a null manager and fatal on activation (#105). Skip until
 		// Elementor is fully initialized; the reindex tool covers anything missed.
-		if ( class_exists( 'EMCP_Tools_Data' ) && ! EMCP_Tools_Data::elementor_documents_ready() ) {
+		if ( class_exists( 'KarMCP_Data' ) && ! KarMCP_Data::elementor_documents_ready() ) {
 			return;
 		}
 		// The active kit stores global colours + typography — re-index those when
@@ -373,10 +373,10 @@ class EMCP_Tools_Search_Index {
 	public static function page_document( array $elements, string $title ): array {
 		$parts = array( $title );
 
-		if ( class_exists( 'EMCP_Tools_Page_Snapshot' ) ) {
-			$norm    = EMCP_Tools_Page_Snapshot::normalize_tree( $elements );
-			$content = EMCP_Tools_Page_Snapshot::content_stats( $elements );
-			$tokens  = EMCP_Tools_Page_Snapshot::extract_tokens( $elements );
+		if ( class_exists( 'KarMCP_Page_Snapshot' ) ) {
+			$norm    = KarMCP_Page_Snapshot::normalize_tree( $elements );
+			$content = KarMCP_Page_Snapshot::content_stats( $elements );
+			$tokens  = KarMCP_Page_Snapshot::extract_tokens( $elements );
 
 			foreach ( ( $content['headings'] ?? array() ) as $h ) {
 				$parts[] = (string) ( $h['text'] ?? '' );
@@ -427,10 +427,10 @@ class EMCP_Tools_Search_Index {
 	 */
 	public static function widget_documents(): array {
 		$docs = array();
-		if ( ! class_exists( 'EMCP_Tools_Widget_Catalog' ) ) {
+		if ( ! class_exists( 'KarMCP_Widget_Catalog' ) ) {
 			return $docs;
 		}
-		foreach ( EMCP_Tools_Widget_Catalog::get() as $type => $e ) {
+		foreach ( KarMCP_Widget_Catalog::get() as $type => $e ) {
 			$keywords = ( isset( $e['keywords'] ) && is_array( $e['keywords'] ) ) ? implode( ' ', $e['keywords'] ) : '';
 			$params   = ( isset( $e['params'] ) && is_array( $e['params'] ) ) ? implode( ' ', array_keys( $e['params'] ) ) : '';
 			$content  = trim( implode( ' ', array(

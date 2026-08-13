@@ -7,7 +7,7 @@
  * the_content filter). The default the_content path guarantees nothing ever fatals
  * on an unknown builder.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Content_Renderer {
+class KarMCP_Themer_Content_Renderer {
 
 	/**
 	 * Detect the owning builder for a post id.
@@ -53,10 +53,10 @@ class EMCP_Tools_Themer_Content_Renderer {
 	public static function render( int $post_id ): string {
 		// A PHP template attached to this Themer post takes over the region's render
 		// (feature-gated + human-attached). Empty/error output falls back to builder.
-		if ( class_exists( 'EMCP_Tools_Themer_PHP' ) && EMCP_Tools_Themer_PHP::enabled() ) {
-			$php_id = (int) get_post_meta( $post_id, '_emcp_themer_php_template', true );
-			if ( $php_id > 0 && class_exists( 'EMCP_Tools_Themer_PHP_Renderer' ) ) {
-				$php_out = EMCP_Tools_Themer_PHP_Renderer::render( $php_id );
+		if ( class_exists( 'KarMCP_Themer_PHP' ) && KarMCP_Themer_PHP::enabled() ) {
+			$php_id = (int) get_post_meta( $post_id, '_karmcp_themer_php_template', true );
+			if ( $php_id > 0 && class_exists( 'KarMCP_Themer_PHP_Renderer' ) ) {
+				$php_out = KarMCP_Themer_PHP_Renderer::render( $php_id );
 				if ( '' !== $php_out ) {
 					return $php_out;
 				}

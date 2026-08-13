@@ -9,7 +9,7 @@
  * `astra-settings` option over a curated allowlist (generic get/update shape,
  * mirroring the WordPress Settings domain).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Astra theme settings integration.
  */
-class EMCP_Tools_Astra_Integration extends EMCP_Tools_Theme_Integration {
+class KarMCP_Astra_Integration extends KarMCP_Theme_Integration {
 
 	const OPTION = 'astra-settings';
 
@@ -59,7 +59,7 @@ class EMCP_Tools_Astra_Integration extends EMCP_Tools_Theme_Integration {
 	}
 
 	public function label(): string {
-		return __( 'Astra', 'emcp-tools' );
+		return __( 'Astra', 'karmcp' );
 	}
 
 	public function is_available(): bool {
@@ -72,13 +72,13 @@ class EMCP_Tools_Astra_Integration extends EMCP_Tools_Theme_Integration {
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_get_settings' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'Read curated Astra settings with value + type/label/group metadata. Optional { group } (colors|typography|layout|header-footer) or { keys: [...] }; no arg returns all.', 'emcp-tools' ),
+				'desc' => __( 'Read curated Astra settings with value + type/label/group metadata. Optional { group } (colors|typography|layout|header-footer) or { keys: [...] }; no arg returns all.', 'karmcp' ),
 			),
 			'update-settings' => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'execute_update_settings' ),
 				'perm' => array( $this, 'can_write' ),
-				'desc' => __( 'Write curated Astra settings ({ values: { key: value } }). Non-allowlisted keys are reported in skipped[].', 'emcp-tools' ),
+				'desc' => __( 'Write curated Astra settings ({ values: { key: value } }). Non-allowlisted keys are reported in skipped[].', 'karmcp' ),
 			),
 		);
 	}
@@ -133,7 +133,7 @@ class EMCP_Tools_Astra_Integration extends EMCP_Tools_Theme_Integration {
 	public function execute_update_settings( $input ) {
 		$values = ( isset( $input['values'] ) && is_array( $input['values'] ) ) ? $input['values'] : array();
 		if ( empty( $values ) ) {
-			return new WP_Error( 'missing_values', __( 'Provide a "values" object of Astra setting key => value pairs.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_values', __( 'Provide a "values" object of Astra setting key => value pairs.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 
 		$option = get_option( self::OPTION, array() );

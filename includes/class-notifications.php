@@ -2,11 +2,11 @@
 /**
  * Cloud-fed header notifications: transient-cached fetch + per-user read state.
  *
- * Feeds the admin app-bar notifications bell (see EMCP_Tools_Admin). Fully
+ * Feeds the admin app-bar notifications bell (see KarMCP_Admin). Fully
  * graceful offline — a down or unreachable Cloud endpoint yields an empty
  * list rather than surfacing an error to the admin UI.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.10.0
  */
 
@@ -20,21 +20,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.10.0
  */
-class EMCP_Tools_Notifications {
+class KarMCP_Notifications {
 
 	/**
 	 * Transient key for the cached notification list.
 	 *
 	 * @var string
 	 */
-	const TRANSIENT = 'emcp_tools_notifications';
+	const TRANSIENT = 'karmcp_notifications';
 
 	/**
 	 * User meta key storing the array of notification ids a user has seen.
 	 *
 	 * @var string
 	 */
-	const META_READ = '_emcp_tools_read_notifications';
+	const META_READ = '_karmcp_read_notifications';
 
 	/**
 	 * Cap on how many seen ids are retained per user (oldest dropped first).
@@ -67,7 +67,7 @@ class EMCP_Tools_Notifications {
 	}
 
 	/**
-	 * Fetches + sanitizes the notification list from EMCP Cloud. Never throws;
+	 * Fetches + sanitizes the notification list from KarMCP Cloud. Never throws;
 	 * any failure (network, non-200, malformed JSON) yields an empty array.
 	 *
 	 * @since 3.10.0
@@ -75,12 +75,12 @@ class EMCP_Tools_Notifications {
 	 * @return array[]
 	 */
 	private static function fetch_remote(): array {
-		if ( ! class_exists( 'EMCP_Tools_Cloud' ) ) {
+		if ( ! class_exists( 'KarMCP_Cloud' ) ) {
 			return array();
 		}
 
 		$response = wp_remote_get(
-			EMCP_Tools_Cloud::base_url() . '/api/emcp/notifications',
+			KarMCP_Cloud::base_url() . '/api/karmcp/notifications',
 			array( 'timeout' => 6 )
 		);
 

@@ -5,7 +5,7 @@
  * 301/302. Skips wp-admin, REST, cron, and login. The hot path is a single
  * indexed source_path lookup.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.11.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.11.0
  */
-class EMCP_Tools_Redirect_Handler {
+class KarMCP_Redirect_Handler {
 
 	/**
 	 * Register the front-end hook (early, before 404 templating).
@@ -50,23 +50,23 @@ class EMCP_Tools_Redirect_Handler {
 	 * Match the current request and redirect when a source is found.
 	 */
 	public static function maybe_redirect(): void {
-		if ( self::should_skip() || ! class_exists( 'EMCP_Tools_Redirect_Store' ) ) {
+		if ( self::should_skip() || ! class_exists( 'KarMCP_Redirect_Store' ) ) {
 			return;
 		}
 		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-		$path = EMCP_Tools_Redirect_Store::normalize_path( $uri );
+		$path = KarMCP_Redirect_Store::normalize_path( $uri );
 		if ( '/' === $path ) {
 			return;
 		}
-		$row = EMCP_Tools_Redirect_Store::find_by_source( $path );
+		$row = KarMCP_Redirect_Store::find_by_source( $path );
 		if ( ! $row || empty( $row['enabled'] ) ) {
 			return;
 		}
-		$target = EMCP_Tools_Redirect_Store::resolve_target( $row );
+		$target = KarMCP_Redirect_Store::resolve_target( $row );
 		if ( '' === $target ) {
 			return; // Target post is gone → treat as inactive.
 		}
-		if ( EMCP_Tools_Redirect_Store::would_loop( $path, $target ) ) {
+		if ( KarMCP_Redirect_Store::would_loop( $path, $target ) ) {
 			return;
 		}
 		// Forward the original query string to a query-less target.
@@ -74,7 +74,7 @@ class EMCP_Tools_Redirect_Handler {
 		if ( '' !== $query && false === strpos( $target, '?' ) ) {
 			$target .= '?' . $query;
 		}
-		EMCP_Tools_Redirect_Store::record_hit( (int) $row['id'] );
+		KarMCP_Redirect_Store::record_hit( (int) $row['id'] );
 		$code = in_array( (int) $row['status_code'], array( 301, 302 ), true ) ? (int) $row['status_code'] : 301;
 		wp_redirect( $target, $code ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect
 		exit;

@@ -6,7 +6,7 @@
  * and performs ONE loopback GET to the site host to read security headers and
  * the generator meta tag. Read-only.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -17,50 +17,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Security_Hardening_Audit {
+class KarMCP_Security_Hardening_Audit {
 
 	const FETCH_TIMEOUT = 8;
 
 	public function evaluate_file_edit( bool $disallowed ): array {
 		return $disallowed
-			? EMCP_Tools_Security_Finding::make( 'harden_file_edit', 'hardening', 'File editor', 'pass', true, 'The built-in theme/plugin file editor is disabled.' )
-			: EMCP_Tools_Security_Finding::make( 'harden_file_edit', 'hardening', 'File editor', 'warning', false, 'The theme/plugin file editor is enabled.', 'Add define( "DISALLOW_FILE_EDIT", true ); to wp-config.php so a compromised admin account cannot edit PHP from the dashboard.' );
+			? KarMCP_Security_Finding::make( 'harden_file_edit', 'hardening', 'File editor', 'pass', true, 'The built-in theme/plugin file editor is disabled.' )
+			: KarMCP_Security_Finding::make( 'harden_file_edit', 'hardening', 'File editor', 'warning', false, 'The theme/plugin file editor is enabled.', 'Add define( "DISALLOW_FILE_EDIT", true ); to wp-config.php so a compromised admin account cannot edit PHP from the dashboard.' );
 	}
 
 	public function evaluate_debug_display( bool $on, string $environment ): array {
 		if ( ! $on ) {
-			return EMCP_Tools_Security_Finding::make( 'harden_debug_display', 'hardening', 'Debug output', 'pass', false, 'WP_DEBUG_DISPLAY is off.' );
+			return KarMCP_Security_Finding::make( 'harden_debug_display', 'hardening', 'Debug output', 'pass', false, 'WP_DEBUG_DISPLAY is off.' );
 		}
 		if ( 'production' === $environment ) {
-			return EMCP_Tools_Security_Finding::make( 'harden_debug_display', 'hardening', 'Debug output', 'warning', true, 'Debug output is shown to visitors in production.', 'Set WP_DEBUG_DISPLAY to false in production; on-screen errors leak paths and internals.' );
+			return KarMCP_Security_Finding::make( 'harden_debug_display', 'hardening', 'Debug output', 'warning', true, 'Debug output is shown to visitors in production.', 'Set WP_DEBUG_DISPLAY to false in production; on-screen errors leak paths and internals.' );
 		}
-		return EMCP_Tools_Security_Finding::make( 'harden_debug_display', 'hardening', 'Debug output', 'info', true, sprintf( 'Debug output is on (environment: %s).', $environment ) );
+		return KarMCP_Security_Finding::make( 'harden_debug_display', 'hardening', 'Debug output', 'info', true, sprintf( 'Debug output is on (environment: %s).', $environment ) );
 	}
 
 	public function evaluate_admin_user( bool $exists ): array {
 		return $exists
-			? EMCP_Tools_Security_Finding::make( 'harden_admin_user', 'hardening', 'Default admin username', 'warning', true, 'A user named "admin" exists.', 'Create a new administrator with a unique username and remove or demote the "admin" account; it is the #1 brute-force target.' )
-			: EMCP_Tools_Security_Finding::make( 'harden_admin_user', 'hardening', 'Default admin username', 'pass', false, 'No user named "admin".' );
+			? KarMCP_Security_Finding::make( 'harden_admin_user', 'hardening', 'Default admin username', 'warning', true, 'A user named "admin" exists.', 'Create a new administrator with a unique username and remove or demote the "admin" account; it is the #1 brute-force target.' )
+			: KarMCP_Security_Finding::make( 'harden_admin_user', 'hardening', 'Default admin username', 'pass', false, 'No user named "admin".' );
 	}
 
 	public function evaluate_xmlrpc( bool $enabled ): array {
 		return $enabled
-			? EMCP_Tools_Security_Finding::make( 'harden_xmlrpc', 'hardening', 'XML-RPC', 'warning', true, 'XML-RPC is enabled.', 'If you do not use the Jetpack/app XML-RPC API, disable it (a security plugin or server rule) to remove a brute-force and pingback amplification vector.' )
-			: EMCP_Tools_Security_Finding::make( 'harden_xmlrpc', 'hardening', 'XML-RPC', 'pass', false, 'XML-RPC is disabled.' );
+			? KarMCP_Security_Finding::make( 'harden_xmlrpc', 'hardening', 'XML-RPC', 'warning', true, 'XML-RPC is enabled.', 'If you do not use the Jetpack/app XML-RPC API, disable it (a security plugin or server rule) to remove a brute-force and pingback amplification vector.' )
+			: KarMCP_Security_Finding::make( 'harden_xmlrpc', 'hardening', 'XML-RPC', 'pass', false, 'XML-RPC is disabled.' );
 	}
 
 	public function evaluate_version_disclosure( bool $readme_present, bool $generator_meta ): array {
 		if ( $readme_present || $generator_meta ) {
-			return EMCP_Tools_Security_Finding::make( 'harden_version_disclosure', 'hardening', 'Version disclosure', 'warning', array( 'readme' => $readme_present, 'generator' => $generator_meta ), 'The WordPress version is discoverable (readme.html and/or the generator meta tag).', 'Delete readme.html after upgrades and remove the generator meta tag so attackers cannot fingerprint your version.' );
+			return KarMCP_Security_Finding::make( 'harden_version_disclosure', 'hardening', 'Version disclosure', 'warning', array( 'readme' => $readme_present, 'generator' => $generator_meta ), 'The WordPress version is discoverable (readme.html and/or the generator meta tag).', 'Delete readme.html after upgrades and remove the generator meta tag so attackers cannot fingerprint your version.' );
 		}
-		return EMCP_Tools_Security_Finding::make( 'harden_version_disclosure', 'hardening', 'Version disclosure', 'pass', false, 'No obvious WordPress version disclosure detected.' );
+		return KarMCP_Security_Finding::make( 'harden_version_disclosure', 'hardening', 'Version disclosure', 'pass', false, 'No obvious WordPress version disclosure detected.' );
 	}
 
 	public function evaluate_https( string $home_url ): array {
 		$scheme = strtolower( (string) wp_parse_url( $home_url, PHP_URL_SCHEME ) );
 		return 'https' === $scheme
-			? EMCP_Tools_Security_Finding::make( 'harden_https', 'hardening', 'HTTPS', 'pass', $home_url, 'The site URL uses HTTPS.' )
-			: EMCP_Tools_Security_Finding::make( 'harden_https', 'hardening', 'HTTPS', 'warning', $home_url, 'The site is not served over HTTPS.', 'Install a TLS certificate and move Site Address to https://, plain HTTP exposes logins and cookies.' );
+			? KarMCP_Security_Finding::make( 'harden_https', 'hardening', 'HTTPS', 'pass', $home_url, 'The site URL uses HTTPS.' )
+			: KarMCP_Security_Finding::make( 'harden_https', 'hardening', 'HTTPS', 'warning', $home_url, 'The site is not served over HTTPS.', 'Install a TLS certificate and move Site Address to https://, plain HTTP exposes logins and cookies.' );
 	}
 
 	/**
@@ -75,9 +75,9 @@ class EMCP_Tools_Security_Hardening_Audit {
 			}
 		}
 		if ( empty( $missing ) ) {
-			return EMCP_Tools_Security_Finding::make( 'harden_security_headers', 'hardening', 'Security headers', 'pass', array(), 'All checked security headers are present.' );
+			return KarMCP_Security_Finding::make( 'harden_security_headers', 'hardening', 'Security headers', 'pass', array(), 'All checked security headers are present.' );
 		}
-		return EMCP_Tools_Security_Finding::make( 'harden_security_headers', 'hardening', 'Security headers', 'warning', $missing, sprintf( 'Missing security headers: %s.', implode( ', ', $missing ) ), 'Add the missing headers (X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, Content-Security-Policy) at the server or via a security plugin.' );
+		return KarMCP_Security_Finding::make( 'harden_security_headers', 'hardening', 'Security headers', 'warning', $missing, sprintf( 'Missing security headers: %s.', implode( ', ', $missing ) ), 'Add the missing headers (X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, Content-Security-Policy) at the server or via a security plugin.' );
 	}
 
 	/**
@@ -121,7 +121,7 @@ class EMCP_Tools_Security_Hardening_Audit {
 			array(
 				'timeout'     => self::FETCH_TIMEOUT,
 				'redirection' => 2,
-				'user-agent'  => 'EMCP-Security-Scanner/' . ( defined( 'EMCP_TOOLS_VERSION' ) ? EMCP_TOOLS_VERSION : '0' ),
+				'user-agent'  => 'KarMCP-Security-Scanner/' . ( defined( 'KARMCP_VERSION' ) ? KARMCP_VERSION : '0' ),
 			)
 		);
 		if ( is_wp_error( $res ) ) {

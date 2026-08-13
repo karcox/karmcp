@@ -8,7 +8,7 @@
  * operations() plus their execute_* methods; this base owns registration,
  * dispatch, the discovery catalog, and per-operation permission delegation.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.0
  */
 
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Two-dispatcher base for a theme integration.
  */
-abstract class EMCP_Tools_Theme_Integration {
+abstract class KarMCP_Theme_Integration {
 
 	/**
 	 * Short integration id, used to build the tool names (`<id>-read`/`-write`).
@@ -54,14 +54,14 @@ abstract class EMCP_Tools_Theme_Integration {
 	 * @return string The read tool ability name.
 	 */
 	final public function read_tool(): string {
-		return 'emcp-tools/' . $this->id() . '-read';
+		return 'karmcp/' . $this->id() . '-read';
 	}
 
 	/**
 	 * @return string The write tool ability name.
 	 */
 	final public function write_tool(): string {
-		return 'emcp-tools/' . $this->id() . '-write';
+		return 'karmcp/' . $this->id() . '-write';
 	}
 
 	/**
@@ -75,12 +75,12 @@ abstract class EMCP_Tools_Theme_Integration {
 	 * Register the read + write dispatcher tools.
 	 */
 	public function register(): void {
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$this->read_tool(),
 			array(
 				'label'               => $this->label() . ' Read',
 				'description'         => $this->read_description(),
-				'category'            => 'emcp-tools',
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_read' ),
 				'permission_callback' => array( $this, 'can_read' ),
 				'input_schema'        => $this->dispatch_schema(),
@@ -90,12 +90,12 @@ abstract class EMCP_Tools_Theme_Integration {
 				),
 			)
 		);
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$this->write_tool(),
 			array(
 				'label'               => $this->label() . ' Write',
 				'description'         => $this->write_description(),
-				'category'            => 'emcp-tools',
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_write' ),
 				'permission_callback' => array( $this, 'can_write' ),
 				'input_schema'        => $this->dispatch_schema(),
@@ -166,7 +166,7 @@ abstract class EMCP_Tools_Theme_Integration {
 				'unknown_operation',
 				sprintf(
 					/* translators: 1: mode (read/write), 2: operation name. */
-					__( 'Unknown %1$s operation: %2$s', 'emcp-tools' ),
+					__( 'Unknown %1$s operation: %2$s', 'karmcp' ),
 					$mode,
 					$operation
 				),
@@ -178,7 +178,7 @@ abstract class EMCP_Tools_Theme_Integration {
 		if ( ! call_user_func( $op['perm'] ) ) {
 			return new WP_Error(
 				'forbidden',
-				__( 'You do not have permission for this operation.', 'emcp-tools' ),
+				__( 'You do not have permission for this operation.', 'karmcp' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -244,11 +244,11 @@ abstract class EMCP_Tools_Theme_Integration {
 			'properties' => array(
 				'operation' => array(
 					'type'        => 'string',
-					'description' => __( 'Operation name. Omit to list the available operations.', 'emcp-tools' ),
+					'description' => __( 'Operation name. Omit to list the available operations.', 'karmcp' ),
 				),
 				'arguments' => array(
 					'type'        => 'object',
-					'description' => __( 'Arguments for the operation.', 'emcp-tools' ),
+					'description' => __( 'Arguments for the operation.', 'karmcp' ),
 				),
 			),
 		);

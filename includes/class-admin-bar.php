@@ -3,14 +3,14 @@
  * MCP status + exposure toggle in the WordPress admin bar.
  *
  * A small, admin-only quick menu (front-end + wp-admin) showing whether the
- * Abilities API is available and whether the EMCP MCP server is exposed, with a
+ * Abilities API is available and whether the KarMCP MCP server is exposed, with a
  * one-click nonce toggle that flips the SAME option the Connection tab writes
- * (emcp_tools_server_enabled). Free; loaded unconditionally because the admin bar
+ * (karmcp_server_enabled). Free; loaded unconditionally because the admin bar
  * renders on the front end too. All display logic derives from the pure status()
  * snapshot; the two environment seams (api_available/active_tool_count) are
  * protected so status() is unit-testable without WordPress.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -21,9 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Admin_Bar {
+class KarMCP_Admin_Bar {
 
-	const TOGGLE_ACTION = 'emcp_tools_toggle_server';
+	const TOGGLE_ACTION = 'karmcp_toggle_server';
 
 	/**
 	 * @since 3.1.0
@@ -68,7 +68,7 @@ class EMCP_Tools_Admin_Bar {
 	 */
 	public function flip(): string {
 		$new = $this->is_enabled() ? '0' : '1';
-		update_option( 'emcp_tools_server_enabled', $new );
+		update_option( 'karmcp_server_enabled', $new );
 		return $new;
 	}
 
@@ -81,10 +81,10 @@ class EMCP_Tools_Admin_Bar {
 	 * @return bool
 	 */
 	private function is_enabled(): bool {
-		if ( class_exists( 'EMCP_Tools_Plugin' ) ) {
-			return EMCP_Tools_Plugin::is_server_enabled();
+		if ( class_exists( 'KarMCP_Plugin' ) ) {
+			return KarMCP_Plugin::is_server_enabled();
 		}
-		return '1' === (string) get_option( 'emcp_tools_server_enabled', '1' );
+		return '1' === (string) get_option( 'karmcp_server_enabled', '1' );
 	}
 
 	/**
@@ -105,10 +105,10 @@ class EMCP_Tools_Admin_Bar {
 	 * @return int
 	 */
 	protected function active_tool_count(): int {
-		if ( ! class_exists( 'EMCP_Tools_Plugin' ) ) {
+		if ( ! class_exists( 'KarMCP_Plugin' ) ) {
 			return 0;
 		}
-		$names = EMCP_Tools_Plugin::instance()->get_active_ability_names();
+		$names = KarMCP_Plugin::instance()->get_active_ability_names();
 		return is_array( $names ) ? count( $names ) : 0;
 	}
 
@@ -142,51 +142,51 @@ class EMCP_Tools_Admin_Bar {
 		}
 
 		$s        = $this->status();
-		$settings = admin_url( 'admin.php?page=emcp-tools-connection' );
+		$settings = admin_url( 'admin.php?page=karmcp-connection' );
 		$dot      = '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:' . esc_attr( $this->dot_hex( $s['color'] ) ) . '"></span>';
 
 		$wp_admin_bar->add_node( array(
-			'id'    => 'emcp-tools-mcp',
-			'title' => $dot . esc_html__( 'MCP', 'emcp-tools' ),
+			'id'    => 'karmcp-mcp',
+			'title' => $dot . esc_html__( 'MCP', 'karmcp' ),
 			'href'  => esc_url( $settings ),
-			'meta'  => array( 'title' => esc_attr__( 'EMCP Tools, MCP status', 'emcp-tools' ) ),
+			'meta'  => array( 'title' => esc_attr__( 'KarMCP, MCP status', 'karmcp' ) ),
 		) );
 
 		$wp_admin_bar->add_node( array(
-			'parent' => 'emcp-tools-mcp',
-			'id'     => 'emcp-tools-mcp-api',
-			'title'  => esc_html__( 'Abilities API:', 'emcp-tools' ) . ' ' . ( $s['api_available'] ? esc_html__( 'Available', 'emcp-tools' ) : esc_html__( 'Unavailable', 'emcp-tools' ) ),
+			'parent' => 'karmcp-mcp',
+			'id'     => 'karmcp-mcp-api',
+			'title'  => esc_html__( 'Abilities API:', 'karmcp' ) . ' ' . ( $s['api_available'] ? esc_html__( 'Available', 'karmcp' ) : esc_html__( 'Unavailable', 'karmcp' ) ),
 		) );
 
 		$wp_admin_bar->add_node( array(
-			'parent' => 'emcp-tools-mcp',
-			'id'     => 'emcp-tools-mcp-state',
-			'title'  => esc_html__( 'MCP exposure:', 'emcp-tools' ) . ' ' . ( $s['enabled'] ? esc_html__( 'Enabled', 'emcp-tools' ) : esc_html__( 'Disabled', 'emcp-tools' ) ),
+			'parent' => 'karmcp-mcp',
+			'id'     => 'karmcp-mcp-state',
+			'title'  => esc_html__( 'MCP exposure:', 'karmcp' ) . ' ' . ( $s['enabled'] ? esc_html__( 'Enabled', 'karmcp' ) : esc_html__( 'Disabled', 'karmcp' ) ),
 		) );
 
 		if ( $s['api_available'] && $s['enabled'] && $s['tool_count'] > 0 ) {
 			$wp_admin_bar->add_node( array(
-				'parent' => 'emcp-tools-mcp',
-				'id'     => 'emcp-tools-mcp-count',
+				'parent' => 'karmcp-mcp',
+				'id'     => 'karmcp-mcp-count',
 				/* translators: %d: number of active MCP tools */
-				'title'  => sprintf( esc_html__( 'Active tools: %d', 'emcp-tools' ), (int) $s['tool_count'] ),
+				'title'  => sprintf( esc_html__( 'Active tools: %d', 'karmcp' ), (int) $s['tool_count'] ),
 			) );
 		}
 
 		if ( $s['api_available'] ) {
 			$toggle_url = wp_nonce_url( admin_url( 'admin-post.php?action=' . self::TOGGLE_ACTION ), self::TOGGLE_ACTION );
 			$wp_admin_bar->add_node( array(
-				'parent' => 'emcp-tools-mcp',
-				'id'     => 'emcp-tools-mcp-toggle',
-				'title'  => $s['enabled'] ? esc_html__( 'Turn MCP off', 'emcp-tools' ) : esc_html__( 'Turn MCP on', 'emcp-tools' ),
+				'parent' => 'karmcp-mcp',
+				'id'     => 'karmcp-mcp-toggle',
+				'title'  => $s['enabled'] ? esc_html__( 'Turn MCP off', 'karmcp' ) : esc_html__( 'Turn MCP on', 'karmcp' ),
 				'href'   => esc_url( $toggle_url ),
 			) );
 		}
 
 		$wp_admin_bar->add_node( array(
-			'parent' => 'emcp-tools-mcp',
-			'id'     => 'emcp-tools-mcp-settings',
-			'title'  => esc_html__( 'Connection settings', 'emcp-tools' ) . ' →',
+			'parent' => 'karmcp-mcp',
+			'id'     => 'karmcp-mcp-settings',
+			'title'  => esc_html__( 'Connection settings', 'karmcp' ) . ' →',
 			'href'   => esc_url( $settings ),
 		) );
 	}
@@ -198,7 +198,7 @@ class EMCP_Tools_Admin_Bar {
 	 */
 	public function handle_toggle(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You are not allowed to do this.', 'emcp-tools' ), '', array( 'response' => 403 ) );
+			wp_die( esc_html__( 'You are not allowed to do this.', 'karmcp' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( self::TOGGLE_ACTION );
 		$this->flip();

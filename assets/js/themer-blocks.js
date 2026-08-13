@@ -1,8 +1,8 @@
 /**
- * EMCP Themer — dynamic block editor registration (no build step).
+ * KarMCP Themer — dynamic block editor registration (no build step).
  *
  * Registers each server-rendered block (attributes + supports + controls come
- * from PHP via window.emcpThemerBlocks) with a shared edit() that shows a
+ * from PHP via window.karmcpThemerBlocks) with a shared edit() that shows a
  * ServerSideRender live preview and an InspectorControls panel built from the
  * per-block control descriptors. save() returns null — output is dynamic.
  */
@@ -17,7 +17,7 @@
 	var be = wp.blockEditor || wp.editor;
 	var comp = wp.components;
 	var SSR = wp.serverSideRender;
-	var data = window.emcpThemerBlocks || { blocks: {}, menus: [], category: 'emcp-themer' };
+	var data = window.karmcpThemerBlocks || { blocks: {}, menus: [], category: 'karmcp-themer' };
 
 	var InspectorControls = be.InspectorControls;
 	var useBlockProps = be.useBlockProps;
@@ -77,7 +77,7 @@
 
 	Object.keys( data.blocks ).forEach( function ( key ) {
 		var cfg = data.blocks[ key ];
-		var name = 'emcp/' + key;
+		var name = 'karmcp/' + key;
 		if ( blocks.getBlockType && blocks.getBlockType( name ) ) {
 			return;
 		}
@@ -105,7 +105,7 @@
 				var preview = el( SSR, {
 					block: name,
 					attributes: props.attributes,
-					className: 'emcp-dyn-ssr'
+					className: 'karmcp-dyn-ssr'
 				} );
 				return el( Fragment, {}, panel, el( 'div', blockProps, preview ) );
 			},

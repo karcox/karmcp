@@ -7,9 +7,9 @@
  * outline, SEO-lite) so an AI agent can reason about a page from a single
  * call instead of chaining get-page-structure / get-global-settings /
  * list-global-classes and reassembling. Heavy audit summaries are opt-in and
- * resolved through the `emcp_tools_page_snapshot_sections` filter seam.
+ * resolved through the `karmcp_page_snapshot_sections` filter seam.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -22,21 +22,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Page_Snapshot {
+class KarMCP_Page_Snapshot {
 
 	/**
 	 * The data access layer.
 	 *
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param EMCP_Tools_Data $data The data access layer.
+	 * @param KarMCP_Data $data The data access layer.
 	 */
-	public function __construct( EMCP_Tools_Data $data ) {
+	public function __construct( KarMCP_Data $data ) {
 		$this->data = $data;
 	}
 
@@ -114,7 +114,7 @@ class EMCP_Tools_Page_Snapshot {
 	 * Free SEO-lite read: h1 count from content + meta title/description/canonical/og
 	 * read from the common postmeta-based SEO plugins (Yoast / Rank Math / SEOPress).
 	 * Plugins that store SEO data outside postmeta (e.g. All in One SEO's own table)
-	 * supply their values through the `emcp_tools_page_snapshot_seo_lite` filter.
+	 * supply their values through the `karmcp_page_snapshot_seo_lite` filter.
 	 *
 	 * @param int   $post_id Post ID.
 	 * @param array $content From content_stats().
@@ -157,12 +157,12 @@ class EMCP_Tools_Page_Snapshot {
 		 * @param array $result  { h1_count, meta_title, meta_description, canonical, og_image }.
 		 * @param int   $post_id Post ID.
 		 */
-		return (array) apply_filters( 'emcp_tools_page_snapshot_seo_lite', $result, $post_id );
+		return (array) apply_filters( 'karmcp_page_snapshot_seo_lite', $result, $post_id );
 	}
 
 	/**
 	 * Resolve opt-in heavy sections. Free-core supplies `performance`; the Pro overlay
-	 * hooks `emcp_tools_page_snapshot_sections` for `a11y` + deep `seo`. Anything still
+	 * hooks `karmcp_page_snapshot_sections` for `a11y` + deep `seo`. Anything still
 	 * unresolved degrades to a pro-gated/unavailable stub. Heavy sections are
 	 * transient-cached (15 min) unless $args['fresh'].
 	 *
@@ -188,13 +188,13 @@ class EMCP_Tools_Page_Snapshot {
 							'reason'    => 'permission',
 						);
 					}
-					if ( ! class_exists( 'EMCP_Tools_Performance_Analyzer' ) ) {
+					if ( ! class_exists( 'KarMCP_Performance_Analyzer' ) ) {
 						return array(
 							'available' => false,
 							'reason'    => 'unavailable',
 						);
 					}
-					$analyzer = new EMCP_Tools_Performance_Analyzer();
+					$analyzer = new KarMCP_Performance_Analyzer();
 					$input    = array( 'post_id' => $post_id );
 					if ( ! empty( $args['url'] ) ) {
 						$input['url'] = (string) $args['url'];
@@ -218,7 +218,7 @@ class EMCP_Tools_Page_Snapshot {
 		}
 
 		// Pro sections via the seam.
-		$seam = apply_filters( 'emcp_tools_page_snapshot_sections', array(), $post_id, $include, $args );
+		$seam = apply_filters( 'karmcp_page_snapshot_sections', array(), $post_id, $include, $args );
 		foreach ( array( 'a11y', 'seo' ) as $key ) {
 			if ( ! in_array( $key, $include, true ) ) {
 				continue;
@@ -246,7 +246,7 @@ class EMCP_Tools_Page_Snapshot {
 	 * @return array
 	 */
 	private function cached_section( int $post_id, string $section, bool $fresh, callable $compute ): array {
-		$key = 'emcp_snap_' . $post_id . '_' . $section;
+		$key = 'karmcp_snap_' . $post_id . '_' . $section;
 		if ( ! $fresh && function_exists( 'get_transient' ) ) {
 			$hit = get_transient( $key );
 			if ( is_array( $hit ) ) {
@@ -639,8 +639,8 @@ class EMCP_Tools_Page_Snapshot {
 		if ( is_string( $prop ) ) {
 			return $prop;
 		}
-		if ( is_array( $prop ) && isset( $prop['$$type'] ) && class_exists( 'EMCP_Tools_Atomic_Props' ) ) {
-			$value = EMCP_Tools_Atomic_Props::unwrap( $prop );
+		if ( is_array( $prop ) && isset( $prop['$$type'] ) && class_exists( 'KarMCP_Atomic_Props' ) ) {
+			$value = KarMCP_Atomic_Props::unwrap( $prop );
 			return is_string( $value ) ? $value : '';
 		}
 		return '';
@@ -654,10 +654,10 @@ class EMCP_Tools_Page_Snapshot {
 	 * @return array{id:mixed,url:mixed}|null
 	 */
 	private static function atomic_image( $prop ): ?array {
-		if ( ! is_array( $prop ) || ! isset( $prop['$$type'] ) || ! class_exists( 'EMCP_Tools_Atomic_Props' ) ) {
+		if ( ! is_array( $prop ) || ! isset( $prop['$$type'] ) || ! class_exists( 'KarMCP_Atomic_Props' ) ) {
 			return null;
 		}
-		$image = EMCP_Tools_Atomic_Props::unwrap( $prop );
+		$image = KarMCP_Atomic_Props::unwrap( $prop );
 		if ( is_array( $image ) && ( ! empty( $image['id'] ) || ! empty( $image['url'] ) ) ) {
 			return $image;
 		}

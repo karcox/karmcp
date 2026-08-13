@@ -5,7 +5,7 @@
  * snapshots, and audits. is_read_only_sql() is the safety boundary for the
  * flexible read path.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Database_Guard {
+class KarMCP_Database_Guard {
 
 	const MAX_ROWS         = 1000;
 	const BEFORE_IMAGE_CAP = 500;
@@ -87,27 +87,27 @@ class EMCP_Tools_Database_Guard {
 		// MySQL executes the body of /*! ... */ executable comments, so we cannot
 		// safely strip-and-trust. Refuse any SQL containing the marker.
 		if ( false !== strpos( $sql, '/*!' ) ) {
-			return new \WP_Error( 'executable_comment', __( 'MySQL executable comments (/*! ... */) are not allowed.', 'emcp-tools' ) );
+			return new \WP_Error( 'executable_comment', __( 'MySQL executable comments (/*! ... */) are not allowed.', 'karmcp' ) );
 		}
 		$norm = trim( self::normalize_sql( $sql ) );
 		if ( '' === $norm ) {
-			return new \WP_Error( 'empty_sql', __( 'Empty query.', 'emcp-tools' ) );
+			return new \WP_Error( 'empty_sql', __( 'Empty query.', 'karmcp' ) );
 		}
 		// Multi-statement: any ';' that isn't the sole trailing character.
 		$no_trailing = rtrim( $norm, "; \t\r\n" );
 		if ( false !== strpos( $no_trailing, ';' ) ) {
-			return new \WP_Error( 'multi_statement', __( 'Multiple SQL statements are not allowed.', 'emcp-tools' ) );
+			return new \WP_Error( 'multi_statement', __( 'Multiple SQL statements are not allowed.', 'karmcp' ) );
 		}
 		// File-access vectors (comments already normalized to spaces). Note: no
 		// trailing \b — the load_file(...) branch ends in '(', and '(' followed
 		// by another non-word char has no word boundary, so a trailing \b would
 		// (incorrectly) let LOAD_FILE through.
 		if ( preg_match( '/\b(into\s+outfile|into\s+dumpfile|load_file\s*\(|load\s+data\b)/i', $norm ) ) {
-			return new \WP_Error( 'file_access_blocked', __( 'File-access SQL (OUTFILE/DUMPFILE/LOAD_FILE/LOAD DATA) is not allowed.', 'emcp-tools' ) );
+			return new \WP_Error( 'file_access_blocked', __( 'File-access SQL (OUTFILE/DUMPFILE/LOAD_FILE/LOAD DATA) is not allowed.', 'karmcp' ) );
 		}
 		// First keyword must be read-only.
 		if ( ! preg_match( '/^([a-z]+)/i', $norm, $m ) ) {
-			return new \WP_Error( 'not_read_only', __( 'Only read-only queries are allowed.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_read_only', __( 'Only read-only queries are allowed.', 'karmcp' ) );
 		}
 		$kw      = strtoupper( $m[1] );
 		$allowed = array( 'SELECT', 'SHOW', 'DESCRIBE', 'DESC', 'EXPLAIN', 'WITH' );
@@ -115,13 +115,13 @@ class EMCP_Tools_Database_Guard {
 			return new \WP_Error(
 				'not_read_only',
 				/* translators: %s: SQL keyword */
-				sprintf( __( 'Only read-only queries are allowed (got %s).', 'emcp-tools' ), $kw )
+				sprintf( __( 'Only read-only queries are allowed (got %s).', 'karmcp' ), $kw )
 			);
 		}
 		// Whole-statement write/DDL denylist (literals/comments already stripped,
 		// so these match only real keyword tokens, not strings or identifiers).
 		if ( preg_match( '/\b(INSERT|UPDATE|DELETE|REPLACE|MERGE|DROP|TRUNCATE|ALTER|CREATE|RENAME|GRANT|REVOKE|HANDLER|CALL|LOCK|UNLOCK|PREPARE|EXECUTE|INTO)\b/i', $norm ) ) {
-			return new \WP_Error( 'not_read_only', __( 'The query contains a write or unsafe keyword.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_read_only', __( 'The query contains a write or unsafe keyword.', 'karmcp' ) );
 		}
 		return true;
 	}
@@ -137,7 +137,7 @@ class EMCP_Tools_Database_Guard {
 		global $wpdb;
 		$table = trim( $table );
 		if ( '' === $table ) {
-			return new \WP_Error( 'unknown_table', __( 'A table name is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'unknown_table', __( 'A table name is required.', 'karmcp' ) );
 		}
 		$tables = (array) $wpdb->get_col( 'SHOW TABLES' );
 		foreach ( $tables as $t ) {
@@ -145,7 +145,7 @@ class EMCP_Tools_Database_Guard {
 				return (string) $t;
 			}
 		}
-		return new \WP_Error( 'unknown_table', __( 'Unknown table.', 'emcp-tools' ) );
+		return new \WP_Error( 'unknown_table', __( 'Unknown table.', 'karmcp' ) );
 	}
 
 	/**
@@ -173,7 +173,7 @@ class EMCP_Tools_Database_Guard {
 	 */
 	public static function is_protected( string $table ): bool {
 		global $wpdb;
-		$protected = apply_filters( 'emcp_tools_db_protected_tables', array( $wpdb->users, $wpdb->usermeta ) );
+		$protected = apply_filters( 'karmcp_db_protected_tables', array( $wpdb->users, $wpdb->usermeta ) );
 		return self::table_is_protected( $table, (array) $protected );
 	}
 
@@ -209,14 +209,14 @@ class EMCP_Tools_Database_Guard {
 
 	/**
 	 * Whether a read-only $sql touches a protected table (users/usermeta by
-	 * default; filter via emcp_tools_db_protected_tables).
+	 * default; filter via karmcp_db_protected_tables).
 	 *
 	 * @param string $sql
 	 * @return bool
 	 */
 	public static function query_touches_protected( string $sql ): bool {
 		global $wpdb;
-		$protected = apply_filters( 'emcp_tools_db_protected_tables', array( $wpdb->users, $wpdb->usermeta ) );
+		$protected = apply_filters( 'karmcp_db_protected_tables', array( $wpdb->users, $wpdb->usermeta ) );
 		return self::query_touches_tables( $sql, (array) $protected );
 	}
 
@@ -245,7 +245,7 @@ class EMCP_Tools_Database_Guard {
 
 	/**
 	 * Deprecated: DB writes are now recorded in the unified change ledger
-	 * (EMCP_Tools_Change_Log) via EMCP_Tools_Change_Recorder, which is the single
+	 * (KarMCP_Change_Log) via KarMCP_Change_Recorder, which is the single
 	 * audit + rollback source. Kept as a no-op for backward compatibility.
 	 *
 	 * @deprecated 3.10.0

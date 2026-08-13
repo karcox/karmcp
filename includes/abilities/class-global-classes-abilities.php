@@ -12,7 +12,7 @@
  * Registers only when Elementor's Global Classes repository is present
  * (Elementor 4.0+). Read-only, gated on `edit_posts`.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   2.1.0
  */
 
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.1.0
  */
-class EMCP_Tools_Global_Classes_Abilities {
+class KarMCP_Global_Classes_Abilities {
 
 	/**
 	 * Elementor's global-classes repository class.
@@ -48,7 +48,7 @@ class EMCP_Tools_Global_Classes_Abilities {
 	 * @return string[]
 	 */
 	public function get_ability_names(): array {
-		return self::is_available() ? array( 'emcp-tools/list-global-classes' ) : array();
+		return self::is_available() ? array( 'karmcp/list-global-classes' ) : array();
 	}
 
 	/**
@@ -58,12 +58,12 @@ class EMCP_Tools_Global_Classes_Abilities {
 		if ( ! self::is_available() ) {
 			return;
 		}
-		emcp_tools_register_ability(
-			'emcp-tools/list-global-classes',
+		karmcp_register_ability(
+			'karmcp/list-global-classes',
 			array(
-				'label'               => __( 'List Global Classes', 'emcp-tools' ),
-				'description'         => __( 'Resolves Elementor Class Manager (Global Classes) entries. Maps the opaque "g-" class IDs that appear on elements back to their human-readable names and the CSS properties they define, per breakpoint/state. Use it to understand what styling a g- class applies. Pass class_ids to resolve specific IDs, or omit to list them all. Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Global Classes', 'karmcp' ),
+				'description'         => __( 'Resolves Elementor Class Manager (Global Classes) entries. Maps the opaque "g-" class IDs that appear on elements back to their human-readable names and the CSS properties they define, per breakpoint/state. Use it to understand what styling a g- class applies. Pass class_ids to resolve specific IDs, or omit to list them all. Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_global_classes' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -72,7 +72,7 @@ class EMCP_Tools_Global_Classes_Abilities {
 						'class_ids' => array(
 							'type'        => 'array',
 							'items'       => array( 'type' => 'string' ),
-							'description' => __( 'Optional list of g- class IDs to resolve (e.g. ["g-037bb9c"]). Omit to return every global class.', 'emcp-tools' ),
+							'description' => __( 'Optional list of g- class IDs to resolve (e.g. ["g-037bb9c"]). Omit to return every global class.', 'karmcp' ),
 						),
 					),
 				),
@@ -119,7 +119,7 @@ class EMCP_Tools_Global_Classes_Abilities {
 	 */
 	public function execute_list_global_classes( $input ) {
 		if ( ! self::is_available() ) {
-			return new \WP_Error( 'unavailable', __( 'Global Classes are not available, Elementor 4.0+ is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'unavailable', __( 'Global Classes are not available, Elementor 4.0+ is required.', 'karmcp' ) );
 		}
 
 		$filter = array();
@@ -166,7 +166,7 @@ class EMCP_Tools_Global_Classes_Abilities {
 				}
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 					// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-					error_log( '[EMCP Tools] list-global-classes: could not fully resolve class "' . $id . '": ' . $e->getMessage() );
+					error_log( '[KarMCP] list-global-classes: could not fully resolve class "' . $id . '": ' . $e->getMessage() );
 				}
 				// Still surface the class id so enumeration/discovery is complete.
 				$classes[] = array(
@@ -209,8 +209,8 @@ class EMCP_Tools_Global_Classes_Abilities {
 				// Per-prop guard: an unexpected single prop value must not lose the
 				// rest of the class's resolved CSS.
 				try {
-					$flat[ (string) $prop_name ] = class_exists( 'EMCP_Tools_Atomic_Props' )
-						? EMCP_Tools_Atomic_Props::unwrap( $prop_value )
+					$flat[ (string) $prop_name ] = class_exists( 'KarMCP_Atomic_Props' )
+						? KarMCP_Atomic_Props::unwrap( $prop_value )
 						: $prop_value;
 				} catch ( \Throwable $e ) {
 					$flat[ (string) $prop_name ] = $prop_value;

@@ -2,13 +2,13 @@
 /**
  * Themer dynamic Elementor widgets — loader.
  *
- * Registers a "EMCP Themer" widget category and the dynamic widgets (Post Title,
+ * Registers a "KarMCP Themer" widget category and the dynamic widgets (Post Title,
  * Archive Title, Breadcrumbs, …) that mirror the Gutenberg blocks. The widget
  * classes extend \Elementor\Widget_Base, so they're defined in a separate file
  * required only inside the `elementor/widgets/register` callback (when Elementor
  * is guaranteed loaded). Every widget renders through the shared provider.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -19,9 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Widgets {
+class KarMCP_Themer_Widgets {
 
-	const CATEGORY = 'emcp-themer';
+	const CATEGORY = 'karmcp-themer';
 
 	/** Hook Elementor's registration points. No-op when Elementor is absent. */
 	public function init(): void {
@@ -32,7 +32,7 @@ class EMCP_Tools_Themer_Widgets {
 	}
 
 	/**
-	 * Add the EMCP Themer widget category.
+	 * Add the KarMCP Themer widget category.
 	 *
 	 * @param object $manager Elementor elements categories manager.
 	 */
@@ -41,7 +41,7 @@ class EMCP_Tools_Themer_Widgets {
 			$manager->add_category(
 				self::CATEGORY,
 				array(
-					'title' => __( 'EMCP Themer', 'emcp-tools' ),
+					'title' => __( 'KarMCP Themer', 'karmcp' ),
 					'icon'  => 'eicon-theme-builder',
 				)
 			);
@@ -58,7 +58,7 @@ class EMCP_Tools_Themer_Widgets {
 			return;
 		}
 		require_once __DIR__ . '/class-themer-widget-classes.php';
-		foreach ( EMCP_Tools_Themer_Widget_Base::widget_classes() as $class ) {
+		foreach ( KarMCP_Themer_Widget_Base::widget_classes() as $class ) {
 			if ( class_exists( $class ) ) {
 				$manager->register( new $class() );
 			}
@@ -67,11 +67,11 @@ class EMCP_Tools_Themer_Widgets {
 
 	/** Reuse the block stylesheet for the widgets' shared layout CSS. */
 	public function enqueue_style(): void {
-		$css = EMCP_TOOLS_DIR . 'assets/css/themer-blocks.css';
+		$css = KARMCP_DIR . 'assets/css/themer-blocks.css';
 		if ( ! file_exists( $css ) ) {
 			return;
 		}
-		$ver = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? (string) filemtime( $css ) : EMCP_TOOLS_VERSION;
-		wp_enqueue_style( 'emcp-themer-blocks', EMCP_TOOLS_URL . 'assets/css/themer-blocks.css', array(), $ver );
+		$ver = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? (string) filemtime( $css ) : KARMCP_VERSION;
+		wp_enqueue_style( 'karmcp-themer-blocks', KARMCP_URL . 'assets/css/themer-blocks.css', array(), $ver );
 	}
 }

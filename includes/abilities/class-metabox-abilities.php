@@ -13,7 +13,7 @@
  * written; field definitions are only ever read. Note Meta Box's field naming:
  * a field's `id` is the meta key and `name` is the human label.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.2
  */
 
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.2
  */
-class EMCP_Tools_Meta_Box_Abilities {
+class KarMCP_Meta_Box_Abilities {
 
 	/** Max recursion depth for value/field normalization. @since 3.4.2 */
 	const MAX_DEPTH = 10;
@@ -67,28 +67,28 @@ class EMCP_Tools_Meta_Box_Abilities {
 	 */
 	private function operations(): array {
 		return array(
-			'list-field-groups' => array( 'mode' => 'read', 'run' => 'execute_list_field_groups', 'perm' => 'check_read_permission', 'desc' => __( 'List registered Meta Box field groups (id, title, object type, post types, field count). arguments: { search?, object_type? }.', 'emcp-tools' ) ),
-			'get-field-group'   => array( 'mode' => 'read', 'run' => 'execute_get_field_group', 'perm' => 'check_read_permission', 'desc' => __( 'Get one Meta Box field group and its fields (id, label, type, settings). arguments: { id }.', 'emcp-tools' ) ),
-			'get-fields'        => array( 'mode' => 'read', 'run' => 'execute_get_fields', 'perm' => 'check_fields_permission', 'desc' => __( 'Read Meta Box field values from a post or object. arguments: { post_id } or { object_type, object_id }; optional { fields, include_field_settings }.', 'emcp-tools' ) ),
-			'update-fields'     => array( 'mode' => 'write', 'run' => 'execute_update_fields', 'perm' => 'check_fields_permission', 'desc' => __( 'Write Meta Box field values on a post or object. arguments: { post_id | object_type + object_id, fields: { id: value } }.', 'emcp-tools' ) ),
+			'list-field-groups' => array( 'mode' => 'read', 'run' => 'execute_list_field_groups', 'perm' => 'check_read_permission', 'desc' => __( 'List registered Meta Box field groups (id, title, object type, post types, field count). arguments: { search?, object_type? }.', 'karmcp' ) ),
+			'get-field-group'   => array( 'mode' => 'read', 'run' => 'execute_get_field_group', 'perm' => 'check_read_permission', 'desc' => __( 'Get one Meta Box field group and its fields (id, label, type, settings). arguments: { id }.', 'karmcp' ) ),
+			'get-fields'        => array( 'mode' => 'read', 'run' => 'execute_get_fields', 'perm' => 'check_fields_permission', 'desc' => __( 'Read Meta Box field values from a post or object. arguments: { post_id } or { object_type, object_id }; optional { fields, include_field_settings }.', 'karmcp' ) ),
+			'update-fields'     => array( 'mode' => 'write', 'run' => 'execute_update_fields', 'perm' => 'check_fields_permission', 'desc' => __( 'Write Meta Box field values on a post or object. arguments: { post_id | object_type + object_id, fields: { id: value } }.', 'karmcp' ) ),
 		);
 	}
 
 	private function register_read_dispatcher(): void {
-		$this->ability_names[] = 'emcp-tools/metabox-read';
-		emcp_tools_register_ability(
-			'emcp-tools/metabox-read',
+		$this->ability_names[] = 'karmcp/metabox-read';
+		karmcp_register_ability(
+			'karmcp/metabox-read',
 			array(
-				'label'               => __( 'Meta Box Read', 'emcp-tools' ),
-				'description'         => __( 'Read Meta Box (metabox.io) custom-field data: registered field groups, their field definitions, and field values on a post or object. Call with no "operation" to list the available read operations and their arguments, then call again with { operation, arguments }.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Meta Box Read', 'karmcp' ),
+				'description'         => __( 'Read Meta Box (metabox.io) custom-field data: registered field groups, their field definitions, and field values on a post or object. Call with no "operation" to list the available read operations and their arguments, then call again with { operation, arguments }.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_metabox_read' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'operation' => array( 'type' => 'string', 'description' => __( 'The read operation to run. Omit to list operations. One of: list-field-groups, get-field-group, get-fields.', 'emcp-tools' ) ),
-						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'emcp-tools' ) ),
+						'operation' => array( 'type' => 'string', 'description' => __( 'The read operation to run. Omit to list operations. One of: list-field-groups, get-field-group, get-fields.', 'karmcp' ) ),
+						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'karmcp' ) ),
 					),
 				),
 				'meta'                => array(
@@ -100,20 +100,20 @@ class EMCP_Tools_Meta_Box_Abilities {
 	}
 
 	private function register_write_dispatcher(): void {
-		$this->ability_names[] = 'emcp-tools/metabox-write';
-		emcp_tools_register_ability(
-			'emcp-tools/metabox-write',
+		$this->ability_names[] = 'karmcp/metabox-write';
+		karmcp_register_ability(
+			'karmcp/metabox-write',
 			array(
-				'label'               => __( 'Meta Box Write', 'emcp-tools' ),
-				'description'         => __( 'Write Meta Box (metabox.io) custom-field values. Disabled by default, enable under EMCP Tools → Tools → Plugins → Meta Box. Call with no "operation" to list the available write operations and their arguments, then call again with { operation, arguments }.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Meta Box Write', 'karmcp' ),
+				'description'         => __( 'Write Meta Box (metabox.io) custom-field values. Disabled by default, enable under KarMCP → Tools → Plugins → Meta Box. Call with no "operation" to list the available write operations and their arguments, then call again with { operation, arguments }.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_metabox_write' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'operation' => array( 'type' => 'string', 'description' => __( 'The write operation to run. Omit to list operations. One of: update-fields.', 'emcp-tools' ) ),
-						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'emcp-tools' ) ),
+						'operation' => array( 'type' => 'string', 'description' => __( 'The write operation to run. Omit to list operations. One of: update-fields.', 'karmcp' ) ),
+						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'karmcp' ) ),
 					),
 				),
 				'meta'                => array(
@@ -153,7 +153,7 @@ class EMCP_Tools_Meta_Box_Abilities {
 				'unknown_operation',
 				sprintf(
 					/* translators: 1: mode (read/write), 2: operation name */
-					__( 'Unknown Meta Box %1$s operation "%2$s". Call metabox-%1$s with no operation to list the available operations.', 'emcp-tools' ),
+					__( 'Unknown Meta Box %1$s operation "%2$s". Call metabox-%1$s with no operation to list the available operations.', 'karmcp' ),
 					$mode,
 					$operation
 				)
@@ -163,7 +163,7 @@ class EMCP_Tools_Meta_Box_Abilities {
 		$args = ( isset( $input['arguments'] ) && is_array( $input['arguments'] ) ) ? $input['arguments'] : array();
 		$perm = $op['perm'];
 		if ( ! $this->$perm( $args ) ) {
-			return new \WP_Error( 'forbidden', __( 'You do not have permission to perform this Meta Box operation.', 'emcp-tools' ) );
+			return new \WP_Error( 'forbidden', __( 'You do not have permission to perform this Meta Box operation.', 'karmcp' ) );
 		}
 		$run = $op['run'];
 		return $this->$run( $args );
@@ -189,7 +189,7 @@ class EMCP_Tools_Meta_Box_Abilities {
 			'operations' => $list,
 			'usage'      => sprintf(
 				/* translators: %s: mode (read/write) */
-				__( 'Call metabox-%s again with { "operation": "<name>", "arguments": { ... } }.', 'emcp-tools' ),
+				__( 'Call metabox-%s again with { "operation": "<name>", "arguments": { ... } }.', 'karmcp' ),
 				$mode
 			),
 		);
@@ -243,7 +243,7 @@ class EMCP_Tools_Meta_Box_Abilities {
 	public function execute_get_field_group( $input ) {
 		$id = sanitize_text_field( (string) ( $input['id'] ?? '' ) );
 		if ( '' === $id ) {
-			return new \WP_Error( 'missing_params', __( 'A field group "id" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A field group "id" is required.', 'karmcp' ) );
 		}
 		$found = null;
 		foreach ( $this->all_meta_boxes() as $mb ) {
@@ -253,7 +253,7 @@ class EMCP_Tools_Meta_Box_Abilities {
 			}
 		}
 		if ( ! $found ) {
-			return new \WP_Error( 'group_not_found', __( 'Field group not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'group_not_found', __( 'Field group not found.', 'karmcp' ) );
 		}
 		$object_type = method_exists( $found, 'get_object_type' ) ? (string) $found->get_object_type() : 'post';
 		return array(
@@ -366,7 +366,7 @@ class EMCP_Tools_Meta_Box_Abilities {
 		$object_id   = $input['object_id'] ?? null;
 
 		if ( $post_id && '' !== $object_type ) {
-			return new \WP_Error( 'invalid_target', __( 'Pass either "post_id" or "object_type"+"object_id", not both.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_target', __( 'Pass either "post_id" or "object_type"+"object_id", not both.', 'karmcp' ) );
 		}
 		// Normalize { object_type:'post', object_id:N } onto the post_id path so
 		// it gets the same 404 check and edit_post gating as { post_id:N }.
@@ -376,18 +376,18 @@ class EMCP_Tools_Meta_Box_Abilities {
 		}
 		if ( $post_id ) {
 			if ( ! get_post( $post_id ) ) {
-				return new \WP_Error( 'post_not_found', __( 'Post not found.', 'emcp-tools' ) );
+				return new \WP_Error( 'post_not_found', __( 'Post not found.', 'karmcp' ) );
 			}
 			return array( 'object_type' => 'post', 'object_id' => $post_id );
 		}
 		if ( '' !== $object_type ) {
 			if ( null === $object_id || '' === $object_id ) {
-				return new \WP_Error( 'invalid_target', __( 'An "object_id" is required with "object_type".', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_target', __( 'An "object_id" is required with "object_type".', 'karmcp' ) );
 			}
 			$object_id = is_numeric( $object_id ) ? absint( $object_id ) : sanitize_text_field( (string) $object_id );
 			return array( 'object_type' => $object_type, 'object_id' => $object_id );
 		}
-		return new \WP_Error( 'invalid_target', __( 'A target is required: pass "post_id" or "object_type"+"object_id".', 'emcp-tools' ) );
+		return new \WP_Error( 'invalid_target', __( 'A target is required: pass "post_id" or "object_type"+"object_id".', 'karmcp' ) );
 	}
 
 	/**
@@ -497,7 +497,7 @@ class EMCP_Tools_Meta_Box_Abilities {
 		}
 		$fields = $input['fields'] ?? null;
 		if ( ! is_array( $fields ) || array() === $fields ) {
-			return new \WP_Error( 'missing_params', __( 'A non-empty "fields" map is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A non-empty "fields" map is required.', 'karmcp' ) );
 		}
 
 		$known   = $this->applicable_fields( $target['object_type'], $target['object_id'] );

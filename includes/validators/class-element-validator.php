@@ -2,7 +2,7 @@
 /**
  * Validates Elementor element structures before saving.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Element_Validator {
+class KarMCP_Element_Validator {
 
 	/**
 	 * Validates an element structure.
@@ -27,11 +27,11 @@ class EMCP_Tools_Element_Validator {
 	 */
 	public function validate( array $element ) {
 		if ( empty( $element['id'] ) ) {
-			return new \WP_Error( 'missing_id', __( 'Element is missing an ID.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_id', __( 'Element is missing an ID.', 'karmcp' ) );
 		}
 
 		if ( empty( $element['elType'] ) ) {
-			return new \WP_Error( 'missing_el_type', __( 'Element is missing elType.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_el_type', __( 'Element is missing elType.', 'karmcp' ) );
 		}
 
 		$valid_types = array(
@@ -46,14 +46,14 @@ class EMCP_Tools_Element_Validator {
 				'invalid_el_type',
 				sprintf(
 					/* translators: %s: element type */
-					__( 'Invalid element type: %s.', 'emcp-tools' ),
+					__( 'Invalid element type: %s.', 'karmcp' ),
 					$element['elType']
 				)
 			);
 		}
 
 		if ( 'widget' === $element['elType'] && empty( $element['widgetType'] ) ) {
-			return new \WP_Error( 'missing_widget_type', __( 'Widget element is missing widgetType.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_widget_type', __( 'Widget element is missing widgetType.', 'karmcp' ) );
 		}
 
 		return true;

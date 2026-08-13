@@ -6,7 +6,7 @@
  * $wpdb->insert/update/delete with forced WHERE, protected tables, before-image
  * snapshots, confirm-on-delete, and an audit log.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Database_Abilities {
+class KarMCP_Database_Abilities {
 
 	/** @var string[] */
 	private $ability_names = array();
@@ -42,12 +42,12 @@ class EMCP_Tools_Database_Abilities {
 
 	private function ability( string $name, string $label, string $description, string $exec, array $props, array $required, bool $readonly ): void {
 		$this->ability_names[] = $name;
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$name,
 			array(
 				'label'               => $label,
 				'description'         => $description,
-				'category'            => 'emcp-tools',
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, $exec ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array( 'type' => 'object', 'properties' => $props, 'required' => $required ),
@@ -60,7 +60,7 @@ class EMCP_Tools_Database_Abilities {
 	// ---- reads ---------------------------------------------------------
 
 	private function register_list_tables(): void {
-		$this->ability( 'emcp-tools/list-tables', __( 'List Tables', 'emcp-tools' ), __( 'List database tables with estimated row counts and sizes.', 'emcp-tools' ), 'execute_list_tables', array(), array(), true );
+		$this->ability( 'karmcp/list-tables', __( 'List Tables', 'karmcp' ), __( 'List database tables with estimated row counts and sizes.', 'karmcp' ), 'execute_list_tables', array(), array(), true );
 	}
 	public function execute_list_tables( $input ) {
 		global $wpdb;
@@ -79,10 +79,10 @@ class EMCP_Tools_Database_Abilities {
 	}
 
 	private function register_describe_table(): void {
-		$this->ability( 'emcp-tools/describe-table', __( 'Describe Table', 'emcp-tools' ), __( 'Return the columns, types, and keys of a table.', 'emcp-tools' ), 'execute_describe_table', array( 'table' => array( 'type' => 'string' ) ), array( 'table' ), true );
+		$this->ability( 'karmcp/describe-table', __( 'Describe Table', 'karmcp' ), __( 'Return the columns, types, and keys of a table.', 'karmcp' ), 'execute_describe_table', array( 'table' => array( 'type' => 'string' ) ), array( 'table' ), true );
 	}
 	public function execute_describe_table( $input ) {
-		$table = EMCP_Tools_Database_Guard::valid_table( (string) ( $input['table'] ?? '' ) );
+		$table = KarMCP_Database_Guard::valid_table( (string) ( $input['table'] ?? '' ) );
 		if ( is_wp_error( $table ) ) {
 			return $table;
 		}
@@ -92,29 +92,29 @@ class EMCP_Tools_Database_Abilities {
 	}
 
 	private function register_query(): void {
-		$this->ability( 'emcp-tools/query', __( 'Query (read-only)', 'emcp-tools' ), __( 'Run a read-only SQL query (SELECT/SHOW/DESCRIBE/EXPLAIN). Writes/DDL and file-access SQL are rejected. Results are capped.', 'emcp-tools' ), 'execute_query', array( 'sql' => array( 'type' => 'string' ), 'limit' => array( 'type' => 'integer' ) ), array( 'sql' ), true );
+		$this->ability( 'karmcp/query', __( 'Query (read-only)', 'karmcp' ), __( 'Run a read-only SQL query (SELECT/SHOW/DESCRIBE/EXPLAIN). Writes/DDL and file-access SQL are rejected. Results are capped.', 'karmcp' ), 'execute_query', array( 'sql' => array( 'type' => 'string' ), 'limit' => array( 'type' => 'integer' ) ), array( 'sql' ), true );
 	}
 	public function execute_query( $input ) {
 		$sql = (string) ( $input['sql'] ?? '' );
-		$ro  = EMCP_Tools_Database_Guard::is_read_only_sql( $sql );
+		$ro  = KarMCP_Database_Guard::is_read_only_sql( $sql );
 		if ( is_wp_error( $ro ) ) {
 			return $ro;
 		}
 		// Read-path secret guard: the user tables hold password hashes, session
 		// tokens, and activation keys. Refuse raw reads that touch them and point
 		// the agent at the dedicated, redacting user tools.
-		if ( EMCP_Tools_Database_Guard::query_touches_protected( $sql ) ) {
+		if ( KarMCP_Database_Guard::query_touches_protected( $sql ) ) {
 			return new \WP_Error(
 				'protected_read',
-				__( 'Reading the user tables (passwords, session tokens, activation keys) via raw SQL is not allowed. Use the list-users / get-user tools instead.', 'emcp-tools' )
+				__( 'Reading the user tables (passwords, session tokens, activation keys) via raw SQL is not allowed. Use the list-users / get-user tools instead.', 'karmcp' )
 			);
 		}
 		global $wpdb;
-		$limit = isset( $input['limit'] ) ? (int) $input['limit'] : EMCP_Tools_Database_Guard::MAX_ROWS;
-		$limit = min( EMCP_Tools_Database_Guard::MAX_ROWS, max( 1, $limit ) );
+		$limit = isset( $input['limit'] ) ? (int) $input['limit'] : KarMCP_Database_Guard::MAX_ROWS;
+		$limit = min( KarMCP_Database_Guard::MAX_ROWS, max( 1, $limit ) );
 		$rows  = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB -- validated read-only; admin-authored.
 		if ( null === $rows ) {
-			return new \WP_Error( 'query_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Query failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'query_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Query failed.', 'karmcp' ) );
 		}
 		$truncated = count( $rows ) > $limit;
 		if ( $truncated ) {
@@ -132,32 +132,32 @@ class EMCP_Tools_Database_Abilities {
 	 * @param array $entry Ledger entry.
 	 */
 	private function record_change( array $entry ): void {
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			EMCP_Tools_Change_Recorder::record_db( $entry );
-		} elseif ( class_exists( 'EMCP_Tools_Change_Log' ) ) {
-			EMCP_Tools_Change_Log::record( $entry );
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			KarMCP_Change_Recorder::record_db( $entry );
+		} elseif ( class_exists( 'KarMCP_Change_Log' ) ) {
+			KarMCP_Change_Log::record( $entry );
 		}
 	}
 
 	private function register_insert_row(): void {
-		$this->ability( 'emcp-tools/insert-row', __( 'Insert Row', 'emcp-tools' ), __( 'Insert a row into a table (parameterized). Refuses protected tables. Disabled by default.', 'emcp-tools' ), 'execute_insert_row', array( 'table' => array( 'type' => 'string' ), 'data' => array( 'type' => 'object' ) ), array( 'table', 'data' ), false );
+		$this->ability( 'karmcp/insert-row', __( 'Insert Row', 'karmcp' ), __( 'Insert a row into a table (parameterized). Refuses protected tables. Disabled by default.', 'karmcp' ), 'execute_insert_row', array( 'table' => array( 'type' => 'string' ), 'data' => array( 'type' => 'object' ) ), array( 'table', 'data' ), false );
 	}
 	public function execute_insert_row( $input ) {
 		$data = (array) ( $input['data'] ?? array() );
 		if ( empty( $data ) ) {
-			return new \WP_Error( 'no_data', __( 'A non-empty data object is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_data', __( 'A non-empty data object is required.', 'karmcp' ) );
 		}
-		$table = EMCP_Tools_Database_Guard::valid_table( (string) ( $input['table'] ?? '' ) );
+		$table = KarMCP_Database_Guard::valid_table( (string) ( $input['table'] ?? '' ) );
 		if ( is_wp_error( $table ) ) {
 			return $table;
 		}
-		if ( EMCP_Tools_Database_Guard::is_protected( $table ) ) {
-			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'emcp-tools' ) );
+		if ( KarMCP_Database_Guard::is_protected( $table ) ) {
+			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'karmcp' ) );
 		}
 		global $wpdb;
 		$ok = $wpdb->insert( $table, $data );
 		if ( false === $ok ) {
-			return new \WP_Error( 'insert_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Insert failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'insert_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Insert failed.', 'karmcp' ) );
 		}
 		$this->record_change( array(
 				'domain'   => 'database',
@@ -170,70 +170,70 @@ class EMCP_Tools_Database_Abilities {
 	}
 
 	private function register_update_rows(): void {
-		$this->ability( 'emcp-tools/update-rows', __( 'Update Rows', 'emcp-tools' ), __( 'Update rows matching an equality WHERE (required, non-empty). Parameterized; before-image snapshot; refuses protected tables. Disabled by default.', 'emcp-tools' ), 'execute_update_rows', array( 'table' => array( 'type' => 'string' ), 'data' => array( 'type' => 'object' ), 'where' => array( 'type' => 'object' ) ), array( 'table', 'data', 'where' ), false );
+		$this->ability( 'karmcp/update-rows', __( 'Update Rows', 'karmcp' ), __( 'Update rows matching an equality WHERE (required, non-empty). Parameterized; before-image snapshot; refuses protected tables. Disabled by default.', 'karmcp' ), 'execute_update_rows', array( 'table' => array( 'type' => 'string' ), 'data' => array( 'type' => 'object' ), 'where' => array( 'type' => 'object' ) ), array( 'table', 'data', 'where' ), false );
 	}
 	public function execute_update_rows( $input ) {
 		$data  = (array) ( $input['data'] ?? array() );
 		$where = (array) ( $input['where'] ?? array() );
 		if ( empty( $data ) ) {
-			return new \WP_Error( 'no_data', __( 'A non-empty data object is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_data', __( 'A non-empty data object is required.', 'karmcp' ) );
 		}
 		if ( empty( $where ) ) {
-			return new \WP_Error( 'where_required', __( 'A non-empty where object is required for update.', 'emcp-tools' ) );
+			return new \WP_Error( 'where_required', __( 'A non-empty where object is required for update.', 'karmcp' ) );
 		}
-		$table = EMCP_Tools_Database_Guard::valid_table( (string) ( $input['table'] ?? '' ) );
+		$table = KarMCP_Database_Guard::valid_table( (string) ( $input['table'] ?? '' ) );
 		if ( is_wp_error( $table ) ) {
 			return $table;
 		}
-		if ( EMCP_Tools_Database_Guard::is_protected( $table ) ) {
-			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'emcp-tools' ) );
+		if ( KarMCP_Database_Guard::is_protected( $table ) ) {
+			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'karmcp' ) );
 		}
-		$before = EMCP_Tools_Database_Guard::before_image( $table, $where );
+		$before = KarMCP_Database_Guard::before_image( $table, $where );
 		global $wpdb;
 		$affected = $wpdb->update( $table, $data, $where );
 		if ( false === $affected ) {
-			return new \WP_Error( 'update_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Update failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'update_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Update failed.', 'karmcp' ) );
 		}
 		$this->record_change( array(
 				'domain'   => 'database',
 				'action'   => 'update',
 				'target'   => $table,
 				'summary'  => sprintf( 'Updated %d row(s) in %s', (int) $affected, $table ),
-				'rollback' => array( 'type' => 'db-before-image', 'op' => 'update', 'table' => $table, 'key_cols' => array_keys( $where ), 'before_rows' => $before, 'partial' => ( count( $before ) >= EMCP_Tools_Database_Guard::BEFORE_IMAGE_CAP ) ),
+				'rollback' => array( 'type' => 'db-before-image', 'op' => 'update', 'table' => $table, 'key_cols' => array_keys( $where ), 'before_rows' => $before, 'partial' => ( count( $before ) >= KarMCP_Database_Guard::BEFORE_IMAGE_CAP ) ),
 			) );
 		return array( 'table' => $table, 'affected' => (int) $affected, 'before_image_rows' => count( $before ) );
 	}
 
 	private function register_delete_rows(): void {
-		$this->ability( 'emcp-tools/delete-rows', __( 'Delete Rows', 'emcp-tools' ), __( 'Delete rows matching an equality WHERE (required). Needs confirm:true; before-image snapshot; refuses protected tables. Disabled by default.', 'emcp-tools' ), 'execute_delete_rows', array( 'table' => array( 'type' => 'string' ), 'where' => array( 'type' => 'object' ), 'confirm' => array( 'type' => 'boolean' ) ), array( 'table', 'where' ), false );
+		$this->ability( 'karmcp/delete-rows', __( 'Delete Rows', 'karmcp' ), __( 'Delete rows matching an equality WHERE (required). Needs confirm:true; before-image snapshot; refuses protected tables. Disabled by default.', 'karmcp' ), 'execute_delete_rows', array( 'table' => array( 'type' => 'string' ), 'where' => array( 'type' => 'object' ), 'confirm' => array( 'type' => 'boolean' ) ), array( 'table', 'where' ), false );
 	}
 	public function execute_delete_rows( $input ) {
 		if ( empty( $input['confirm'] ) || true !== $input['confirm'] ) {
-			return new \WP_Error( 'confirm_required', __( 'Deleting rows requires confirm:true.', 'emcp-tools' ) );
+			return new \WP_Error( 'confirm_required', __( 'Deleting rows requires confirm:true.', 'karmcp' ) );
 		}
 		$where = (array) ( $input['where'] ?? array() );
 		if ( empty( $where ) ) {
-			return new \WP_Error( 'where_required', __( 'A non-empty where object is required for delete.', 'emcp-tools' ) );
+			return new \WP_Error( 'where_required', __( 'A non-empty where object is required for delete.', 'karmcp' ) );
 		}
-		$table = EMCP_Tools_Database_Guard::valid_table( (string) ( $input['table'] ?? '' ) );
+		$table = KarMCP_Database_Guard::valid_table( (string) ( $input['table'] ?? '' ) );
 		if ( is_wp_error( $table ) ) {
 			return $table;
 		}
-		if ( EMCP_Tools_Database_Guard::is_protected( $table ) ) {
-			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'emcp-tools' ) );
+		if ( KarMCP_Database_Guard::is_protected( $table ) ) {
+			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'karmcp' ) );
 		}
-		$before = EMCP_Tools_Database_Guard::before_image( $table, $where );
+		$before = KarMCP_Database_Guard::before_image( $table, $where );
 		global $wpdb;
 		$affected = $wpdb->delete( $table, $where );
 		if ( false === $affected ) {
-			return new \WP_Error( 'delete_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Delete failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'delete_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Delete failed.', 'karmcp' ) );
 		}
 		$this->record_change( array(
 				'domain'   => 'database',
 				'action'   => 'delete',
 				'target'   => $table,
 				'summary'  => sprintf( 'Deleted %d row(s) from %s', (int) $affected, $table ),
-				'rollback' => array( 'type' => 'db-before-image', 'op' => 'delete', 'table' => $table, 'key_cols' => array_keys( $where ), 'before_rows' => $before, 'partial' => ( count( $before ) >= EMCP_Tools_Database_Guard::BEFORE_IMAGE_CAP ) ),
+				'rollback' => array( 'type' => 'db-before-image', 'op' => 'delete', 'table' => $table, 'key_cols' => array_keys( $where ), 'before_rows' => $before, 'partial' => ( count( $before ) >= KarMCP_Database_Guard::BEFORE_IMAGE_CAP ) ),
 			) );
 		return array( 'table' => $table, 'affected' => (int) $affected, 'before_image_rows' => count( $before ) );
 	}

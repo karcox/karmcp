@@ -4,7 +4,7 @@
  * public `client_id` (no secret; they use PKCE). Open registration, as the spec
  * expects, but the redirect URIs are validated (https, or http loopback only).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.1
  */
 
@@ -17,14 +17,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.1
  */
-class EMCP_Tools_OAuth_Clients {
+class KarMCP_OAuth_Clients {
 
 	/**
 	 * Register the REST route.
 	 */
 	public static function register_routes(): void {
 		register_rest_route(
-			EMCP_Tools_OAuth_Server::REST_NAMESPACE,
+			KarMCP_OAuth_Server::REST_NAMESPACE,
 			'/register',
 			array(
 				'methods'             => 'POST',
@@ -57,7 +57,7 @@ class EMCP_Tools_OAuth_Clients {
 			);
 		}
 
-		$client = EMCP_Tools_OAuth_Store::create_client(
+		$client = KarMCP_OAuth_Store::create_client(
 			$result['client_name'],
 			$result['redirect_uris'],
 			get_current_user_id()

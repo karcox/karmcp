@@ -3,12 +3,12 @@
  * Recorder façade for the change ledger.
  *
  * Every write site records through here rather than calling
- * EMCP_Tools_Change_Log::record() directly. The recorder (1) offloads large
- * before-images to the durable EMCP_Tools_Change_Blobs store so the ledger row
+ * KarMCP_Change_Log::record() directly. The recorder (1) offloads large
+ * before-images to the durable KarMCP_Change_Blobs store so the ledger row
  * stays light, and (2) stamps an `after_hash` of the just-written state so
  * rollback can detect that the target changed underneath it (conflict guard).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.10.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.10.0
  */
-class EMCP_Tools_Change_Recorder {
+class KarMCP_Change_Recorder {
 
 	/** Before-images larger than this (bytes, JSON-encoded) go to the blob store. */
 	const BLOB_THRESHOLD = 4096;
@@ -36,12 +36,12 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string Ledger entry id ('' when suppressed).
 	 */
 	public static function record_elementor( int $post_id, array $before_tree, string $summary, string $target = '' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress ) {
+		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
 		$rb               = self::attach_before( array( 'type' => 'elementor-data', 'post_id' => $post_id ), array( 'before' => $before_tree ) );
 		$rb['after_hash'] = self::hash_elementor( $post_id );
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => 'elementor',
 			'action'   => 'page-edit',
 			'target'   => $target,
@@ -59,7 +59,7 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string Ledger entry id.
 	 */
 	public static function record_db( array $entry ): string {
-		if ( EMCP_Tools_Change_Log::$suppress ) {
+		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
 		$rb = ( isset( $entry['rollback'] ) && is_array( $entry['rollback'] ) ) ? $entry['rollback'] : array();
@@ -69,7 +69,7 @@ class EMCP_Tools_Change_Recorder {
 			$rb = self::attach_before( $rb, $heavy );
 		}
 		$entry['rollback'] = $rb;
-		return EMCP_Tools_Change_Log::record( $entry );
+		return KarMCP_Change_Log::record( $entry );
 	}
 
 	/**
@@ -81,13 +81,13 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string Ledger entry id.
 	 */
 	public static function record_file( array $entry, string $written_abs ): string {
-		if ( EMCP_Tools_Change_Log::$suppress ) {
+		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
 		if ( isset( $entry['rollback'] ) && is_array( $entry['rollback'] ) ) {
 			$entry['rollback']['after_hash'] = self::hash_file( $written_abs );
 		}
-		return EMCP_Tools_Change_Log::record( $entry );
+		return KarMCP_Change_Log::record( $entry );
 	}
 
 	/**
@@ -104,12 +104,12 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_post_fields( int $post_id, array $before, string $summary, string $target = '', string $domain = 'content', string $action = 'update-post' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress ) {
+		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
 		$rb               = self::attach_before( array( 'type' => 'post-fields', 'post_id' => $post_id ), array( 'before' => $before ) );
 		$rb['after_hash'] = self::hash_post( $post_id );
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => $domain,
 			'action'   => $action,
 			'target'   => $target,
@@ -127,10 +127,10 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_post_create( int $post_id, string $summary, string $target = '' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress ) {
+		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => 'content',
 			'action'   => 'create-post',
 			'target'   => $target,
@@ -151,7 +151,7 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_post_delete( int $post_id, array $snapshot, bool $forced, string $summary, string $target = '' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress ) {
+		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
 		if ( $forced ) {
@@ -159,7 +159,7 @@ class EMCP_Tools_Change_Recorder {
 		} else {
 			$rb = array( 'type' => 'post-restore', 'mode' => 'untrash', 'post_id' => $post_id );
 		}
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => 'content',
 			'action'   => 'delete-post',
 			'target'   => $target,
@@ -181,13 +181,13 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_options( array $before_map, string $summary, string $target = '', string $domain = 'settings', string $action = 'update-settings' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress || empty( $before_map ) ) {
+		if ( KarMCP_Change_Log::$suppress || empty( $before_map ) ) {
 			return '';
 		}
 		$rb = self::attach_before( array( 'type' => 'option' ), array( 'values' => $before_map ) );
 		$rb['option_keys'] = array_keys( $before_map );
 		$rb['after_hash']  = self::hash_options( array_keys( $before_map ) );
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => $domain,
 			'action'   => $action,
 			'target'   => $target,
@@ -208,10 +208,10 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_redirect( string $action, array $before, string $summary, string $target = '' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress ) {
+		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => 'redirect',
 			'action'   => $action,
 			'target'   => $target,
@@ -234,13 +234,13 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_meta( string $object, int $id, array $before_map, string $summary, string $target = '', string $domain = 'content', string $action = 'update' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress || empty( $before_map ) ) {
+		if ( KarMCP_Change_Log::$suppress || empty( $before_map ) ) {
 			return '';
 		}
 		$keys              = array_keys( $before_map );
 		$rb                = self::attach_before( array( 'type' => 'meta-before-image', 'object' => $object, 'id' => $id, 'meta_keys' => $keys ), array( 'before' => $before_map ) );
 		$rb['after_hash']  = self::hash_meta( $object, $id, $keys );
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => $domain,
 			'action'   => $action,
 			'target'   => $target,
@@ -273,10 +273,10 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_user_create( int $user_id, string $summary, string $target = '' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress ) {
+		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => 'users',
 			'action'   => 'create-user',
 			'target'   => $target,
@@ -296,11 +296,11 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_user_fields( int $user_id, array $before, string $summary, string $target = '' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress || empty( $before ) ) {
+		if ( KarMCP_Change_Log::$suppress || empty( $before ) ) {
 			return '';
 		}
 		$rb = self::attach_before( array( 'type' => 'user-fields', 'user_id' => $user_id ), array( 'before' => $before ) );
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => 'users',
 			'action'   => 'update-user',
 			'target'   => $target,
@@ -320,11 +320,11 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_acf_fields( $acf_target, array $before, string $summary, string $target = '' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress || empty( $before ) ) {
+		if ( KarMCP_Change_Log::$suppress || empty( $before ) ) {
 			return '';
 		}
 		$rb = self::attach_before( array( 'type' => 'acf-fields', 'acf_target' => $acf_target ), array( 'before' => $before ) );
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => 'acf',
 			'action'   => 'update-fields',
 			'target'   => $target,
@@ -363,11 +363,11 @@ class EMCP_Tools_Change_Recorder {
 	 * @return string
 	 */
 	public static function record_attachment_delete( array $snapshot, int $att_id, string $summary, string $target = '' ): string {
-		if ( EMCP_Tools_Change_Log::$suppress || empty( $snapshot ) ) {
+		if ( KarMCP_Change_Log::$suppress || empty( $snapshot ) ) {
 			return '';
 		}
 		$rb = self::attach_before( array( 'type' => 'attachment-delete', 'att_id' => $att_id ), array( 'snapshot' => $snapshot ) );
-		return EMCP_Tools_Change_Log::record( array(
+		return KarMCP_Change_Log::record( array(
 			'domain'   => 'media',
 			'action'   => 'delete-media',
 			'target'   => $target,
@@ -403,7 +403,7 @@ class EMCP_Tools_Change_Recorder {
 			}
 		}
 		$up    = function_exists( 'wp_get_upload_dir' ) ? wp_get_upload_dir() : array( 'basedir' => sys_get_temp_dir() );
-		$trash = rtrim( (string) ( $up['basedir'] ?? sys_get_temp_dir() ), '/\\' ) . '/emcp-originals/trash/' . $att_id;
+		$trash = rtrim( (string) ( $up['basedir'] ?? sys_get_temp_dir() ), '/\\' ) . '/karmcp-originals/trash/' . $att_id;
 		if ( ! is_dir( $trash ) && function_exists( 'wp_mkdir_p' ) ) {
 			wp_mkdir_p( $trash );
 		}
@@ -459,8 +459,8 @@ class EMCP_Tools_Change_Recorder {
 	 */
 	public static function attach_before( array $rb, array $heavy ): array {
 		$json = (string) wp_json_encode( $heavy );
-		if ( strlen( $json ) > self::BLOB_THRESHOLD && class_exists( 'EMCP_Tools_Change_Blobs' ) ) {
-			$blob = EMCP_Tools_Change_Blobs::put( $heavy );
+		if ( strlen( $json ) > self::BLOB_THRESHOLD && class_exists( 'KarMCP_Change_Blobs' ) ) {
+			$blob = KarMCP_Change_Blobs::put( $heavy );
 			if ( '' !== $blob ) {
 				$rb['blob_id'] = $blob;
 				return $rb;

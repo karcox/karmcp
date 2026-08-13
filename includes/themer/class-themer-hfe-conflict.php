@@ -1,6 +1,6 @@
 <?php
 /**
- * EMCP Themer / Ultimate Addons for Elementor conflict handling.
+ * KarMCP Themer / Ultimate Addons for Elementor conflict handling.
  *
  * UAE was formerly named Header Footer Elementor. Its hooks, class and CPT still
  * use the HFE names, so this class keeps them for the things it filters.
@@ -14,7 +14,7 @@
  *
  *  1. Warns. An admin notice explains the clash and asks the owner to pick one:
  *     turn off the Themer module, or stop using HFE for headers/footers.
- *  2. Resolves it deterministically in the meantime. EMCP Themer takes
+ *  2. Resolves it deterministically in the meantime. KarMCP Themer takes
  *     priority: when Themer has a template for a slot on this request, HFE's
  *     own render gate for that slot is filtered off, so exactly one header and
  *     one footer render. HFE keeps rendering any slot Themer does not claim, so
@@ -23,7 +23,7 @@
  * This lives in the FREE tree because the clash exists whenever the (free)
  * Themer module and HFE are both active, independently of the Pro HFE tools.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.6.0
  */
 
@@ -36,14 +36,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.6.0
  */
-class EMCP_Tools_Themer_HFE_Conflict {
+class KarMCP_Themer_HFE_Conflict {
 
 	/**
 	 * Option that lets an admin dismiss the notice.
 	 *
 	 * @var string
 	 */
-	const OPTION_DISMISSED = 'emcp_tools_hfe_conflict_dismissed';
+	const OPTION_DISMISSED = 'karmcp_hfe_conflict_dismissed';
 
 	/**
 	 * Wires the notice and the render-priority filters.
@@ -65,7 +65,7 @@ class EMCP_Tools_Themer_HFE_Conflict {
 
 		if ( is_admin() ) {
 			add_action( 'admin_notices', array( __CLASS__, 'notice' ) );
-			add_action( 'admin_post_emcp_tools_dismiss_hfe_conflict', array( __CLASS__, 'handle_dismiss' ) );
+			add_action( 'admin_post_karmcp_dismiss_hfe_conflict', array( __CLASS__, 'handle_dismiss' ) );
 		}
 	}
 
@@ -86,8 +86,8 @@ class EMCP_Tools_Themer_HFE_Conflict {
 	 */
 	public static function in_conflict(): bool {
 		return self::hfe_active()
-			&& class_exists( 'EMCP_Tools_Themer_Module' )
-			&& EMCP_Tools_Themer_Module::is_enabled();
+			&& class_exists( 'KarMCP_Themer_Module' )
+			&& KarMCP_Themer_Module::is_enabled();
 	}
 
 	// ---------------------------------------------------------------------
@@ -125,11 +125,11 @@ class EMCP_Tools_Themer_HFE_Conflict {
 	 * @return bool
 	 */
 	protected static function themer_claims( string $slot ): bool {
-		if ( is_admin() || ! class_exists( 'EMCP_Tools_Themer_Render_Controller' ) ) {
+		if ( is_admin() || ! class_exists( 'KarMCP_Themer_Render_Controller' ) ) {
 			return false;
 		}
 
-		$slots = EMCP_Tools_Themer_Render_Controller::slots();
+		$slots = KarMCP_Themer_Render_Controller::slots();
 		return is_array( $slots ) && ! empty( $slots[ $slot ] );
 	}
 
@@ -153,42 +153,42 @@ class EMCP_Tools_Themer_HFE_Conflict {
 			return;
 		}
 
-		$modules_url = admin_url( 'admin.php?page=emcp-tools-modules' );
+		$modules_url = admin_url( 'admin.php?page=karmcp-modules' );
 		$plugins_url = admin_url( 'plugins.php' );
 		$dismiss_url = wp_nonce_url(
-			admin_url( 'admin-post.php?action=emcp_tools_dismiss_hfe_conflict' ),
-			'emcp_tools_dismiss_hfe_conflict'
+			admin_url( 'admin-post.php?action=karmcp_dismiss_hfe_conflict' ),
+			'karmcp_dismiss_hfe_conflict'
 		);
 		?>
 		<div class="notice notice-warning">
 			<p>
-				<strong><?php esc_html_e( 'EMCP Themer and Ultimate Addons for Elementor are both active.', 'emcp-tools' ); ?></strong>
+				<strong><?php esc_html_e( 'KarMCP Themer and Ultimate Addons for Elementor are both active.', 'karmcp' ); ?></strong>
 			</p>
 			<p>
 				<?php
 				esc_html_e(
-					'Both build headers and footers and inject them into the same place, so a page can end up with two headers. To avoid surprises, pick one system: turn off the EMCP Themer module, or stop using Ultimate Addons for Elementor for headers and footers.',
-					'emcp-tools'
+					'Both build headers and footers and inject them into the same place, so a page can end up with two headers. To avoid surprises, pick one system: turn off the KarMCP Themer module, or stop using Ultimate Addons for Elementor for headers and footers.',
+					'karmcp'
 				);
 				?>
 			</p>
 			<p>
 				<?php
 				esc_html_e(
-					'Until you choose, EMCP Themer takes priority: where Themer has a matching template, its header or footer renders and the Ultimate Addons one is skipped. Any slot Themer does not claim still renders from Ultimate Addons for Elementor.',
-					'emcp-tools'
+					'Until you choose, KarMCP Themer takes priority: where Themer has a matching template, its header or footer renders and the Ultimate Addons one is skipped. Any slot Themer does not claim still renders from Ultimate Addons for Elementor.',
+					'karmcp'
 				);
 				?>
 			</p>
 			<p>
 				<a class="button button-primary" href="<?php echo esc_url( $modules_url ); ?>">
-					<?php esc_html_e( 'Manage EMCP Modules', 'emcp-tools' ); ?>
+					<?php esc_html_e( 'Manage KarMCP Modules', 'karmcp' ); ?>
 				</a>
 				<a class="button" href="<?php echo esc_url( $plugins_url ); ?>">
-					<?php esc_html_e( 'Manage Plugins', 'emcp-tools' ); ?>
+					<?php esc_html_e( 'Manage Plugins', 'karmcp' ); ?>
 				</a>
 				<a class="button-link" href="<?php echo esc_url( $dismiss_url ); ?>">
-					<?php esc_html_e( 'Dismiss', 'emcp-tools' ); ?>
+					<?php esc_html_e( 'Dismiss', 'karmcp' ); ?>
 				</a>
 			</p>
 		</div>
@@ -202,9 +202,9 @@ class EMCP_Tools_Themer_HFE_Conflict {
 	 */
 	public static function handle_dismiss(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to do that.', 'emcp-tools' ), '', array( 'response' => 403 ) );
+			wp_die( esc_html__( 'You do not have permission to do that.', 'karmcp' ), '', array( 'response' => 403 ) );
 		}
-		check_admin_referer( 'emcp_tools_dismiss_hfe_conflict' );
+		check_admin_referer( 'karmcp_dismiss_hfe_conflict' );
 
 		update_option( self::OPTION_DISMISSED, '1' );
 

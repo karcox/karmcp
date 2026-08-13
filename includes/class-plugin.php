@@ -5,7 +5,7 @@
  * Singleton that initializes all components, registers hooks for the
  * Abilities API and MCP Adapter, and coordinates the plugin lifecycle.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Plugin {
+class KarMCP_Plugin {
 
 	/**
 	 * Singleton instance.
@@ -30,28 +30,28 @@ class EMCP_Tools_Plugin {
 	/**
 	 * The data access layer.
 	 *
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
 	 * The element factory.
 	 *
-	 * @var EMCP_Tools_Element_Factory
+	 * @var KarMCP_Element_Factory
 	 */
 	private $factory;
 
 	/**
 	 * The schema generator.
 	 *
-	 * @var EMCP_Tools_Schema_Generator
+	 * @var KarMCP_Schema_Generator
 	 */
 	private $schema_generator;
 
 	/**
 	 * The ability registrar.
 	 *
-	 * @var EMCP_Tools_Ability_Registrar
+	 * @var KarMCP_Ability_Registrar
 	 */
 	private $registrar;
 
@@ -67,7 +67,7 @@ class EMCP_Tools_Plugin {
 	/**
 	 * The admin settings page handler.
 	 *
-	 * @var EMCP_Tools_Admin|null
+	 * @var KarMCP_Admin|null
 	 */
 	private $admin = null;
 
@@ -108,15 +108,15 @@ class EMCP_Tools_Plugin {
 	 */
 	private function init(): void {
 		// Instantiate core components.
-		$this->data             = new EMCP_Tools_Data();
-		$this->factory          = new EMCP_Tools_Element_Factory();
-		$this->schema_generator = new EMCP_Tools_Schema_Generator();
-		$validator              = new EMCP_Tools_Settings_Validator( $this->schema_generator );
-		$this->registrar        = new EMCP_Tools_Ability_Registrar( $this->data, $this->factory, $this->schema_generator, $validator );
+		$this->data             = new KarMCP_Data();
+		$this->factory          = new KarMCP_Element_Factory();
+		$this->schema_generator = new KarMCP_Schema_Generator();
+		$validator              = new KarMCP_Settings_Validator( $this->schema_generator );
+		$this->registrar        = new KarMCP_Ability_Registrar( $this->data, $this->factory, $this->schema_generator, $validator );
 
 		// Admin settings page.
-		if ( is_admin() && class_exists( 'EMCP_Tools_Admin' ) ) {
-			$this->admin = new EMCP_Tools_Admin();
+		if ( is_admin() && class_exists( 'KarMCP_Admin' ) ) {
+			$this->admin = new KarMCP_Admin();
 			$this->admin->init();
 		}
 
@@ -134,17 +134,17 @@ class EMCP_Tools_Plugin {
 		// request. The admin class is only loaded in is_admin() context, so the
 		// MCP REST endpoint would otherwise never see this filter and would
 		// expose every registered tool regardless of what the user disabled.
-		add_filter( 'emcp_tools_ability_names', array( $this, 'filter_disabled_tools' ) );
+		add_filter( 'karmcp_ability_names', array( $this, 'filter_disabled_tools' ) );
 
 		// Refuse MCP requests whose Host header no longer matches this site's
 		// home host (connector left pointed at an old/temporary domain).
-		require_once EMCP_TOOLS_DIR . 'includes/class-mcp-host-guard.php';
-		add_filter( 'rest_pre_dispatch', array( 'EMCP_Tools_MCP_Host_Guard', 'guard' ), 5, 3 );
+		require_once KARMCP_DIR . 'includes/class-mcp-host-guard.php';
+		add_filter( 'rest_pre_dispatch', array( 'KarMCP_MCP_Host_Guard', 'guard' ), 5, 3 );
 		// Never cache/buffer MCP responses (LiteSpeed/QUIC drop-suspect, Issue 1).
-		add_filter( 'rest_pre_serve_request', array( 'EMCP_Tools_MCP_Host_Guard', 'no_store_headers' ), 10, 4 );
+		add_filter( 'rest_pre_serve_request', array( 'KarMCP_MCP_Host_Guard', 'no_store_headers' ), 10, 4 );
 
 		// Record every MCP request (tool, status, duration) for the MCP Log tab.
-		require_once EMCP_TOOLS_DIR . 'includes/class-mcp-request-log.php';
+		require_once KARMCP_DIR . 'includes/class-mcp-request-log.php';
 		add_filter( 'rest_pre_dispatch', array( $this, 'mcp_log_pre_dispatch' ), 6, 3 );
 		add_filter( 'rest_post_dispatch', array( $this, 'mcp_log_post_dispatch' ), 10, 3 );
 	}
@@ -158,7 +158,7 @@ class EMCP_Tools_Plugin {
 	 * @return mixed Unmodified $result.
 	 */
 	public function mcp_log_pre_dispatch( $result, $server, $request ) {
-		if ( is_object( $request ) && method_exists( $request, 'get_route' ) && 0 === strpos( (string) $request->get_route(), '/mcp/emcp-tools-server' ) ) {
+		if ( is_object( $request ) && method_exists( $request, 'get_route' ) && 0 === strpos( (string) $request->get_route(), '/mcp/karmcp-server' ) ) {
 			$this->mcp_req_start = microtime( true );
 			$body                = json_decode( (string) $request->get_body(), true );
 			$this->mcp_req_tool  = is_array( $body ) ? (string) ( $body['params']['name'] ?? ( $body['method'] ?? '' ) ) : '';
@@ -176,10 +176,10 @@ class EMCP_Tools_Plugin {
 	 * @return mixed Unmodified $response.
 	 */
 	public function mcp_log_post_dispatch( $response, $server, $request ) {
-		if ( is_object( $request ) && method_exists( $request, 'get_route' ) && 0 === strpos( (string) $request->get_route(), '/mcp/emcp-tools-server' ) && null !== $this->mcp_req_start ) {
+		if ( is_object( $request ) && method_exists( $request, 'get_route' ) && 0 === strpos( (string) $request->get_route(), '/mcp/karmcp-server' ) && null !== $this->mcp_req_start ) {
 			$status = is_wp_error( $response ) ? 'error' : ( is_object( $response ) && method_exists( $response, 'get_status' ) ? (string) $response->get_status() : 'ok' );
 			$error  = is_wp_error( $response ) ? $response->get_error_message() : '';
-			EMCP_Tools_MCP_Request_Log::record(
+			KarMCP_MCP_Request_Log::record(
 				array(
 					'tool'   => $this->mcp_req_tool,
 					'status' => $status,
@@ -202,7 +202,7 @@ class EMCP_Tools_Plugin {
 	 * @return string[] Ability names with disabled tools removed.
 	 */
 	public function filter_disabled_tools( array $names ): array {
-		$disabled = get_option( 'emcp_tools_disabled_tools', array() );
+		$disabled = get_option( 'karmcp_disabled_tools', array() );
 		if ( ! is_array( $disabled ) || empty( $disabled ) ) {
 			return $names;
 		}
@@ -211,12 +211,12 @@ class EMCP_Tools_Plugin {
 	}
 
 	/**
-	 * Option name for the "Activate Abilities API for EMCP" server gate.
+	 * Option name for the "Activate Abilities API for KarMCP" server gate.
 	 *
 	 * @since 1.7.4
 	 * @var string
 	 */
-	const OPTION_SERVER_ENABLED = 'emcp_tools_server_enabled';
+	const OPTION_SERVER_ENABLED = 'karmcp_server_enabled';
 
 	/**
 	 * Whether the MCP server should be exposed. On by default; the Connection
@@ -235,7 +235,7 @@ class EMCP_Tools_Plugin {
 	 *
 	 * @var string
 	 */
-	const OPTION_DISPATCHER_MODE = 'emcp_tools_dispatcher_mode';
+	const OPTION_DISPATCHER_MODE = 'karmcp_dispatcher_mode';
 
 	/**
 	 * Whether "compact tool mode" (the meta-tool dispatcher) is on. Default OFF —
@@ -259,10 +259,10 @@ class EMCP_Tools_Plugin {
 	 */
 	public function register_category(): void {
 		wp_register_ability_category(
-			'emcp-tools',
+			'karmcp',
 			array(
-				'label'       => __( 'MCP Tools for Elementor', 'emcp-tools' ),
-				'description' => __( 'Tools for reading and manipulating Elementor page designs via MCP.', 'emcp-tools' ),
+				'label'       => __( 'MCP Tools for Elementor', 'karmcp' ),
+				'description' => __( 'Tools for reading and manipulating Elementor page designs via MCP.', 'karmcp' ),
 			)
 		);
 	}
@@ -275,7 +275,7 @@ class EMCP_Tools_Plugin {
 	 * @since 1.0.0
 	 */
 	public function register_abilities(): void {
-		$this->ability_names = $this->registrar->register_all( EMCP_Tools_Bootstrap::elementor_active() );
+		$this->ability_names = $this->registrar->register_all( KarMCP_Bootstrap::elementor_active() );
 	}
 
 	/**
@@ -292,7 +292,7 @@ class EMCP_Tools_Plugin {
 	public function get_active_ability_names(): array {
 		if ( empty( $this->ability_names ) && function_exists( 'wp_get_ability' ) ) {
 			// Any known ability triggers wp_abilities_api_init → register_abilities().
-			wp_get_ability( 'emcp-tools/list-pages' );
+			wp_get_ability( 'karmcp/list-pages' );
 		}
 		return is_array( $this->ability_names ) ? $this->ability_names : array();
 	}
@@ -307,7 +307,7 @@ class EMCP_Tools_Plugin {
 	 * @param \WP\MCP\Core\McpAdapter $mcp_adapter The MCP adapter instance.
 	 */
 	public function register_mcp_server( $mcp_adapter ): void {
-		// "Activate Abilities API for EMCP" gate (Connection tab). On by default;
+		// "Activate Abilities API for KarMCP" gate (Connection tab). On by default;
 		// when switched off, the abilities stay registered in core but no MCP
 		// server endpoint is created — nothing is exposed to AI agents.
 		if ( ! self::is_server_enabled() ) {
@@ -323,26 +323,26 @@ class EMCP_Tools_Plugin {
 		if ( self::is_dispatcher_mode() ) {
 			// Exactly the 3 meta-tools — the core context abilities are folded in
 			// too (reachable through call-tool), so the surface stays at 3.
-			$tools = EMCP_Tools_Dispatcher_Abilities::NAMES;
+			$tools = KarMCP_Dispatcher_Abilities::NAMES;
 		} else {
 			$tools = $this->ability_names;
 
 			// Also expose WordPress core's read-only context abilities (site/user/
 			// environment info) on our server — registered by core, free to surface.
-			foreach ( array( 'core/get-site-info', 'core/get-user-info', 'core/get-environment-info' ) as $emcp_core_ability ) {
-				if ( function_exists( 'wp_get_ability' ) && wp_get_ability( $emcp_core_ability ) && ! in_array( $emcp_core_ability, $tools, true ) ) {
-					$tools[] = $emcp_core_ability;
+			foreach ( array( 'core/get-site-info', 'core/get-user-info', 'core/get-environment-info' ) as $karmcp_core_ability ) {
+				if ( function_exists( 'wp_get_ability' ) && wp_get_ability( $karmcp_core_ability ) && ! in_array( $karmcp_core_ability, $tools, true ) ) {
+					$tools[] = $karmcp_core_ability;
 				}
 			}
 		}
 
 		$mcp_adapter->create_server(
-			'emcp-tools-server',                                   // server_id
+			'karmcp-server',                                   // server_id
 			'mcp',                                                    // route_namespace
-			'emcp-tools-server',                                   // route
-			__( 'MCP Tools for Elementor Server', 'emcp-tools' ),            // server_name
-			EMCP_Tools_Site_Context::compose_instructions( EMCP_Tools_Site_Context::default_base() . "\n\n" . EMCP_Tools_Site_Context::environment_summary() ), // description (base + env + site context)
-			'v' . EMCP_TOOLS_VERSION,                              // version
+			'karmcp-server',                                   // route
+			__( 'MCP Tools for Elementor Server', 'karmcp' ),            // server_name
+			KarMCP_Site_Context::compose_instructions( KarMCP_Site_Context::default_base() . "\n\n" . KarMCP_Site_Context::environment_summary() ), // description (base + env + site context)
+			'v' . KARMCP_VERSION,                              // version
 			array( \WP\MCP\Transport\HttpTransport::class ),          // transports
 			null,                                                     // error_handler (use default)
 			null,                                                     // observability_handler
@@ -350,8 +350,8 @@ class EMCP_Tools_Plugin {
 			array(),                                                  // resources
 			array(),                                                  // prompts
 			// OAuth bearer auth when enabled (falls through to App Password); else adapter default.
-			( class_exists( 'EMCP_Tools_OAuth_Server' ) && EMCP_Tools_OAuth_Server::is_enabled() )
-				? array( 'EMCP_Tools_OAuth_Bearer', 'permission_callback' )
+			( class_exists( 'KarMCP_OAuth_Server' ) && KarMCP_OAuth_Server::is_enabled() )
+				? array( 'KarMCP_OAuth_Bearer', 'permission_callback' )
 				: null                                                // transport_permission_callback
 		);
 	}
@@ -361,9 +361,9 @@ class EMCP_Tools_Plugin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return EMCP_Tools_Data
+	 * @return KarMCP_Data
 	 */
-	public function get_data(): EMCP_Tools_Data {
+	public function get_data(): KarMCP_Data {
 		return $this->data;
 	}
 
@@ -372,9 +372,9 @@ class EMCP_Tools_Plugin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return EMCP_Tools_Element_Factory
+	 * @return KarMCP_Element_Factory
 	 */
-	public function get_factory(): EMCP_Tools_Element_Factory {
+	public function get_factory(): KarMCP_Element_Factory {
 		return $this->factory;
 	}
 
@@ -383,9 +383,9 @@ class EMCP_Tools_Plugin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return EMCP_Tools_Schema_Generator
+	 * @return KarMCP_Schema_Generator
 	 */
-	public function get_schema_generator(): EMCP_Tools_Schema_Generator {
+	public function get_schema_generator(): KarMCP_Schema_Generator {
 		return $this->schema_generator;
 	}
 

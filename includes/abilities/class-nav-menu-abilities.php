@@ -5,7 +5,7 @@
  * Exposes WordPress nav-menu management (menus, items, theme locations, and
  * HTML rendering) as two dispatcher tools, mirroring the ACF abilities pattern.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Nav_Menu_Abilities {
+class KarMCP_Nav_Menu_Abilities {
 
 	/**
 	 * All registered ability names.
@@ -55,19 +55,19 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 */
 	private function operations(): array {
 		return array(
-			'list-menus'        => array( 'mode' => 'read',  'run' => 'op_list_menus',       'desc' => __( 'List all nav menus with id, name, slug, item count, and assigned theme locations. arguments: {}.', 'emcp-tools' ) ),
-			'get-menu'          => array( 'mode' => 'read',  'run' => 'op_get_menu',         'desc' => __( 'Get one menu and its nested item tree. arguments: { menu: id|slug|name }.', 'emcp-tools' ) ),
-			'list-locations'    => array( 'mode' => 'read',  'run' => 'op_list_locations',   'desc' => __( 'List the theme\'s registered menu locations and which menu (if any) is assigned. arguments: {}.', 'emcp-tools' ) ),
-			'render'            => array( 'mode' => 'read',  'run' => 'op_render',           'desc' => __( 'Render a menu to HTML via wp_nav_menu, for embedding in a custom header. arguments: { menu | location, depth?, container?, container_class?, menu_class?, menu_id? }.', 'emcp-tools' ) ),
-			'create-menu'       => array( 'mode' => 'write', 'run' => 'op_create_menu',      'desc' => __( 'Create a nav menu. arguments: { name }.', 'emcp-tools' ) ),
-			'rename-menu'       => array( 'mode' => 'write', 'run' => 'op_rename_menu',       'desc' => __( 'Rename a menu. arguments: { menu, name }.', 'emcp-tools' ) ),
-			'delete-menu'       => array( 'mode' => 'write', 'run' => 'op_delete_menu',       'desc' => __( 'Delete a menu. arguments: { menu }.', 'emcp-tools' ) ),
-			'assign-location'   => array( 'mode' => 'write', 'run' => 'op_assign_location',   'desc' => __( 'Assign a menu to a registered theme location. arguments: { menu, location }.', 'emcp-tools' ) ),
-			'unassign-location' => array( 'mode' => 'write', 'run' => 'op_unassign_location', 'desc' => __( 'Clear a theme location assignment. arguments: { location }.', 'emcp-tools' ) ),
-			'add-item'          => array( 'mode' => 'write', 'run' => 'op_add_item',          'desc' => __( 'Add a menu item. arguments: { menu, type: custom|page|post|<cpt>|category|taxonomy, object_id?, object?, url?, title?, parent?, position?, target?, classes?, description?, xfn? }.', 'emcp-tools' ) ),
-			'update-item'       => array( 'mode' => 'write', 'run' => 'op_update_item',       'desc' => __( 'Update a menu item; unspecified fields are preserved. arguments: { item, title?, url?, parent?, position?, target?, classes?, description?, xfn? }.', 'emcp-tools' ) ),
-			'delete-item'       => array( 'mode' => 'write', 'run' => 'op_delete_item',       'desc' => __( 'Delete a menu item. arguments: { item }.', 'emcp-tools' ) ),
-			'reorder-items'     => array( 'mode' => 'write', 'run' => 'op_reorder_items',     'desc' => __( 'Reorder / re-parent items in one call; other fields preserved. arguments: { menu, items: [ { id, parent?, position } ] }.', 'emcp-tools' ) ),
+			'list-menus'        => array( 'mode' => 'read',  'run' => 'op_list_menus',       'desc' => __( 'List all nav menus with id, name, slug, item count, and assigned theme locations. arguments: {}.', 'karmcp' ) ),
+			'get-menu'          => array( 'mode' => 'read',  'run' => 'op_get_menu',         'desc' => __( 'Get one menu and its nested item tree. arguments: { menu: id|slug|name }.', 'karmcp' ) ),
+			'list-locations'    => array( 'mode' => 'read',  'run' => 'op_list_locations',   'desc' => __( 'List the theme\'s registered menu locations and which menu (if any) is assigned. arguments: {}.', 'karmcp' ) ),
+			'render'            => array( 'mode' => 'read',  'run' => 'op_render',           'desc' => __( 'Render a menu to HTML via wp_nav_menu, for embedding in a custom header. arguments: { menu | location, depth?, container?, container_class?, menu_class?, menu_id? }.', 'karmcp' ) ),
+			'create-menu'       => array( 'mode' => 'write', 'run' => 'op_create_menu',      'desc' => __( 'Create a nav menu. arguments: { name }.', 'karmcp' ) ),
+			'rename-menu'       => array( 'mode' => 'write', 'run' => 'op_rename_menu',       'desc' => __( 'Rename a menu. arguments: { menu, name }.', 'karmcp' ) ),
+			'delete-menu'       => array( 'mode' => 'write', 'run' => 'op_delete_menu',       'desc' => __( 'Delete a menu. arguments: { menu }.', 'karmcp' ) ),
+			'assign-location'   => array( 'mode' => 'write', 'run' => 'op_assign_location',   'desc' => __( 'Assign a menu to a registered theme location. arguments: { menu, location }.', 'karmcp' ) ),
+			'unassign-location' => array( 'mode' => 'write', 'run' => 'op_unassign_location', 'desc' => __( 'Clear a theme location assignment. arguments: { location }.', 'karmcp' ) ),
+			'add-item'          => array( 'mode' => 'write', 'run' => 'op_add_item',          'desc' => __( 'Add a menu item. arguments: { menu, type: custom|page|post|<cpt>|category|taxonomy, object_id?, object?, url?, title?, parent?, position?, target?, classes?, description?, xfn? }.', 'karmcp' ) ),
+			'update-item'       => array( 'mode' => 'write', 'run' => 'op_update_item',       'desc' => __( 'Update a menu item; unspecified fields are preserved. arguments: { item, title?, url?, parent?, position?, target?, classes?, description?, xfn? }.', 'karmcp' ) ),
+			'delete-item'       => array( 'mode' => 'write', 'run' => 'op_delete_item',       'desc' => __( 'Delete a menu item. arguments: { item }.', 'karmcp' ) ),
+			'reorder-items'     => array( 'mode' => 'write', 'run' => 'op_reorder_items',     'desc' => __( 'Reorder / re-parent items in one call; other fields preserved. arguments: { menu, items: [ { id, parent?, position } ] }.', 'karmcp' ) ),
 		);
 	}
 
@@ -77,20 +77,20 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 * @since 3.3.0
 	 */
 	private function register_read_dispatcher(): void {
-		$this->ability_names[] = 'emcp-tools/menu-read';
-		emcp_tools_register_ability(
-			'emcp-tools/menu-read',
+		$this->ability_names[] = 'karmcp/menu-read';
+		karmcp_register_ability(
+			'karmcp/menu-read',
 			array(
-				'label'               => __( 'Menu Read', 'emcp-tools' ),
-				'description'         => __( 'Read WordPress nav menus: list menus, get a menu\'s nested item tree, list theme locations, and render a menu to HTML. Call with no "operation" to list the available read operations and their arguments, then call again with { operation, arguments }.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Menu Read', 'karmcp' ),
+				'description'         => __( 'Read WordPress nav menus: list menus, get a menu\'s nested item tree, list theme locations, and render a menu to HTML. Call with no "operation" to list the available read operations and their arguments, then call again with { operation, arguments }.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_menu_read' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'operation' => array( 'type' => 'string', 'description' => __( 'The read operation to run. Omit to list operations. One of: list-menus, get-menu, list-locations, render.', 'emcp-tools' ) ),
-						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'emcp-tools' ) ),
+						'operation' => array( 'type' => 'string', 'description' => __( 'The read operation to run. Omit to list operations. One of: list-menus, get-menu, list-locations, render.', 'karmcp' ) ),
+						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'karmcp' ) ),
 					),
 				),
 				'meta'                => array(
@@ -107,20 +107,20 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 * @since 3.3.0
 	 */
 	private function register_write_dispatcher(): void {
-		$this->ability_names[] = 'emcp-tools/menu-write';
-		emcp_tools_register_ability(
-			'emcp-tools/menu-write',
+		$this->ability_names[] = 'karmcp/menu-write';
+		karmcp_register_ability(
+			'karmcp/menu-write',
 			array(
-				'label'               => __( 'Menu Write', 'emcp-tools' ),
-				'description'         => __( 'Manage WordPress nav menus: create/rename/delete menus, assign theme locations, and add/update/delete/reorder items. Call with no "operation" to list the available write operations and their arguments, then call again with { operation, arguments }.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Menu Write', 'karmcp' ),
+				'description'         => __( 'Manage WordPress nav menus: create/rename/delete menus, assign theme locations, and add/update/delete/reorder items. Call with no "operation" to list the available write operations and their arguments, then call again with { operation, arguments }.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_menu_write' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'operation' => array( 'type' => 'string', 'description' => __( 'The write operation to run. Omit to list operations. One of: create-menu, rename-menu, delete-menu, assign-location, unassign-location, add-item, update-item, delete-item, reorder-items.', 'emcp-tools' ) ),
-						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'emcp-tools' ) ),
+						'operation' => array( 'type' => 'string', 'description' => __( 'The write operation to run. Omit to list operations. One of: create-menu, rename-menu, delete-menu, assign-location, unassign-location, add-item, update-item, delete-item, reorder-items.', 'karmcp' ) ),
+						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'karmcp' ) ),
 					),
 				),
 				'meta'                => array(
@@ -183,7 +183,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 				'unknown_operation',
 				sprintf(
 					/* translators: 1: mode (read/write), 2: operation name */
-					__( 'Unknown menu %1$s operation "%2$s". Call menu-%1$s with no operation to list the available operations.', 'emcp-tools' ),
+					__( 'Unknown menu %1$s operation "%2$s". Call menu-%1$s with no operation to list the available operations.', 'karmcp' ),
 					$mode,
 					$operation
 				)
@@ -218,7 +218,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 			'operations' => $list,
 			'usage'      => sprintf(
 				/* translators: %s: mode (read/write) */
-				__( 'Call menu-%s again with { "operation": "<name>", "arguments": { ... } }.', 'emcp-tools' ),
+				__( 'Call menu-%s again with { "operation": "<name>", "arguments": { ... } }.', 'karmcp' ),
 				$mode
 			),
 		);
@@ -241,7 +241,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 		}
 		$menu = wp_get_nav_menu_object( $ref );
 		if ( ! $menu ) {
-			return new \WP_Error( 'menu_not_found', __( 'No nav menu matches the given id, slug, or name.', 'emcp-tools' ) );
+			return new \WP_Error( 'menu_not_found', __( 'No nav menu matches the given id, slug, or name.', 'karmcp' ) );
 		}
 		return $menu;
 	}
@@ -280,7 +280,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 			return $terms;
 		}
 		if ( empty( $terms ) ) {
-			return new \WP_Error( 'item_menu_not_found', __( 'The menu item is not attached to a menu.', 'emcp-tools' ) );
+			return new \WP_Error( 'item_menu_not_found', __( 'The menu item is not attached to a menu.', 'karmcp' ) );
 		}
 		return (int) $terms[0]->term_id;
 	}
@@ -299,11 +299,11 @@ class EMCP_Tools_Nav_Menu_Abilities {
 			return 0;
 		}
 		if ( ! is_nav_menu_item( $parent_id ) ) {
-			return new \WP_Error( 'invalid_parent', __( 'The "parent" is not a menu item.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_parent', __( 'The "parent" is not a menu item.', 'karmcp' ) );
 		}
 		$owner = $this->menu_id_for_item( $parent_id );
 		if ( is_wp_error( $owner ) || (int) $owner !== (int) $menu_id ) {
-			return new \WP_Error( 'invalid_parent', __( 'The "parent" must be an item in the same menu.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_parent', __( 'The "parent" must be an item in the same menu.', 'karmcp' ) );
 		}
 		return $parent_id;
 	}
@@ -407,10 +407,10 @@ class EMCP_Tools_Nav_Menu_Abilities {
 				$taxonomy = isset( $args['object'] ) ? sanitize_key( (string) $args['object'] ) : '';
 			}
 			if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
-				return new \WP_Error( 'invalid_taxonomy', __( 'A valid "object" taxonomy is required for taxonomy items.', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_taxonomy', __( 'A valid "object" taxonomy is required for taxonomy items.', 'karmcp' ) );
 			}
 			if ( ! $object_id || ! get_term( $object_id, $taxonomy ) instanceof \WP_Term ) {
-				return new \WP_Error( 'invalid_object', __( 'A valid "object_id" (existing term) is required.', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_object', __( 'A valid "object_id" (existing term) is required.', 'karmcp' ) );
 			}
 			return array( 'type' => 'taxonomy', 'object' => $taxonomy, 'object_id' => $object_id );
 		}
@@ -420,14 +420,14 @@ class EMCP_Tools_Nav_Menu_Abilities {
 			$post_type = isset( $args['object'] ) ? sanitize_key( (string) $args['object'] ) : '';
 		}
 		if ( '' === $post_type || ! post_type_exists( $post_type ) ) {
-			return new \WP_Error( 'invalid_type', __( 'Unknown item "type". Use custom, page, post, a CPT slug, category, or taxonomy.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_type', __( 'Unknown item "type". Use custom, page, post, a CPT slug, category, or taxonomy.', 'karmcp' ) );
 		}
 		$post = $object_id ? get_post( $object_id ) : null;
 		if ( ! ( $post instanceof \WP_Post ) ) {
-			return new \WP_Error( 'invalid_object', __( 'A valid "object_id" (existing post/page) is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_object', __( 'A valid "object_id" (existing post/page) is required.', 'karmcp' ) );
 		}
 		if ( (string) $post->post_type !== $post_type ) {
-			return new \WP_Error( 'type_mismatch', __( 'The "object_id" does not match the requested "type".', 'emcp-tools' ) );
+			return new \WP_Error( 'type_mismatch', __( 'The "object_id" does not match the requested "type".', 'karmcp' ) );
 		}
 		return array( 'type' => 'post_type', 'object' => $post_type, 'object_id' => (int) $object_id );
 	}
@@ -498,7 +498,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 */
 	private function op_get_menu( array $args ) {
 		if ( ! isset( $args['menu'] ) || '' === $args['menu'] ) {
-			return new \WP_Error( 'missing_menu', __( 'The "menu" argument (id, slug, or name) is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_menu', __( 'The "menu" argument (id, slug, or name) is required.', 'karmcp' ) );
 		}
 		$menu = $this->resolve_menu( $args['menu'] );
 		if ( is_wp_error( $menu ) ) {
@@ -564,7 +564,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 		} elseif ( isset( $args['location'] ) && '' !== $args['location'] ) {
 			$wp_args['theme_location'] = sanitize_key( (string) $args['location'] );
 		} else {
-			return new \WP_Error( 'missing_target', __( 'Provide either "menu" (id/slug/name) or "location".', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_target', __( 'Provide either "menu" (id/slug/name) or "location".', 'karmcp' ) );
 		}
 		if ( isset( $args['depth'] ) ) {
 			$wp_args['depth'] = (int) $args['depth'];
@@ -601,7 +601,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	private function op_create_menu( array $args ) {
 		$name = isset( $args['name'] ) ? sanitize_text_field( (string) $args['name'] ) : '';
 		if ( '' === $name ) {
-			return new \WP_Error( 'missing_name', __( 'The "name" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_name', __( 'The "name" argument is required.', 'karmcp' ) );
 		}
 		$menu_id = wp_create_nav_menu( $name );
 		if ( is_wp_error( $menu_id ) ) {
@@ -622,7 +622,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 */
 	private function op_rename_menu( array $args ) {
 		if ( ! isset( $args['menu'] ) || '' === $args['menu'] ) {
-			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'karmcp' ) );
 		}
 		$menu = $this->resolve_menu( $args['menu'] );
 		if ( is_wp_error( $menu ) ) {
@@ -630,7 +630,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 		}
 		$name = isset( $args['name'] ) ? sanitize_text_field( (string) $args['name'] ) : '';
 		if ( '' === $name ) {
-			return new \WP_Error( 'missing_name', __( 'The "name" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_name', __( 'The "name" argument is required.', 'karmcp' ) );
 		}
 		$result = wp_update_nav_menu_object( (int) $menu->term_id, array( 'menu-name' => $name ) );
 		if ( is_wp_error( $result ) ) {
@@ -651,7 +651,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 */
 	private function op_delete_menu( array $args ) {
 		if ( ! isset( $args['menu'] ) || '' === $args['menu'] ) {
-			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'karmcp' ) );
 		}
 		$menu = $this->resolve_menu( $args['menu'] );
 		if ( is_wp_error( $menu ) ) {
@@ -663,7 +663,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 			return $result;
 		}
 		if ( false === $result ) {
-			return new \WP_Error( 'delete_failed', __( 'The menu could not be deleted.', 'emcp-tools' ) );
+			return new \WP_Error( 'delete_failed', __( 'The menu could not be deleted.', 'karmcp' ) );
 		}
 		return array( 'deleted' => true, 'menu_id' => $menu_id );
 	}
@@ -675,7 +675,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 */
 	private function op_assign_location( array $args ) {
 		if ( ! isset( $args['menu'] ) || '' === $args['menu'] ) {
-			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'karmcp' ) );
 		}
 		$menu = $this->resolve_menu( $args['menu'] );
 		if ( is_wp_error( $menu ) ) {
@@ -683,7 +683,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 		}
 		$location = isset( $args['location'] ) ? sanitize_key( (string) $args['location'] ) : '';
 		if ( '' === $location ) {
-			return new \WP_Error( 'missing_location', __( 'The "location" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_location', __( 'The "location" argument is required.', 'karmcp' ) );
 		}
 		$registered = get_registered_nav_menus();
 		if ( ! isset( $registered[ $location ] ) ) {
@@ -691,7 +691,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 				'unregistered_location',
 				sprintf(
 					/* translators: %s: location slug */
-					__( 'The theme does not register a "%s" menu location. Call list-locations for valid slugs.', 'emcp-tools' ),
+					__( 'The theme does not register a "%s" menu location. Call list-locations for valid slugs.', 'karmcp' ),
 					$location
 				)
 			);
@@ -710,7 +710,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	private function op_unassign_location( array $args ) {
 		$location = isset( $args['location'] ) ? sanitize_key( (string) $args['location'] ) : '';
 		if ( '' === $location ) {
-			return new \WP_Error( 'missing_location', __( 'The "location" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_location', __( 'The "location" argument is required.', 'karmcp' ) );
 		}
 		$locations = get_nav_menu_locations();
 		if ( isset( $locations[ $location ] ) ) {
@@ -727,7 +727,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 */
 	private function op_add_item( array $args ) {
 		if ( ! isset( $args['menu'] ) || '' === $args['menu'] ) {
-			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'karmcp' ) );
 		}
 		$menu = $this->resolve_menu( $args['menu'] );
 		if ( is_wp_error( $menu ) ) {
@@ -756,10 +756,10 @@ class EMCP_Tools_Nav_Menu_Abilities {
 		if ( 'custom' === $resolved['type'] ) {
 			$url = isset( $args['url'] ) ? esc_url_raw( (string) $args['url'] ) : '';
 			if ( '' === $url ) {
-				return new \WP_Error( 'missing_url', __( 'Custom-link items require a "url".', 'emcp-tools' ) );
+				return new \WP_Error( 'missing_url', __( 'Custom-link items require a "url".', 'karmcp' ) );
 			}
 			if ( '' === $title ) {
-				return new \WP_Error( 'missing_title', __( 'Custom-link items require a "title".', 'emcp-tools' ) );
+				return new \WP_Error( 'missing_title', __( 'Custom-link items require a "title".', 'karmcp' ) );
 			}
 			$data['menu-item-url'] = $url;
 		}
@@ -779,7 +779,7 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	private function op_update_item( array $args ) {
 		$item_id = isset( $args['item'] ) ? absint( $args['item'] ) : 0;
 		if ( ! $item_id || ! is_nav_menu_item( $item_id ) ) {
-			return new \WP_Error( 'item_not_found', __( 'A valid "item" (menu item id) is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'item_not_found', __( 'A valid "item" (menu item id) is required.', 'karmcp' ) );
 		}
 		$menu_id = $this->menu_id_for_item( $item_id );
 		if ( is_wp_error( $menu_id ) ) {
@@ -836,11 +836,11 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	private function op_delete_item( array $args ) {
 		$item_id = isset( $args['item'] ) ? absint( $args['item'] ) : 0;
 		if ( ! $item_id || ! is_nav_menu_item( $item_id ) ) {
-			return new \WP_Error( 'item_not_found', __( 'A valid "item" (menu item id) is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'item_not_found', __( 'A valid "item" (menu item id) is required.', 'karmcp' ) );
 		}
 		$deleted = wp_delete_post( $item_id, true );
 		if ( ! $deleted ) {
-			return new \WP_Error( 'delete_failed', __( 'The menu item could not be deleted.', 'emcp-tools' ) );
+			return new \WP_Error( 'delete_failed', __( 'The menu item could not be deleted.', 'karmcp' ) );
 		}
 		return array( 'deleted' => true, 'item_id' => $item_id );
 	}
@@ -852,14 +852,14 @@ class EMCP_Tools_Nav_Menu_Abilities {
 	 */
 	private function op_reorder_items( array $args ) {
 		if ( ! isset( $args['menu'] ) || '' === $args['menu'] ) {
-			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_menu', __( 'The "menu" argument is required.', 'karmcp' ) );
 		}
 		$menu = $this->resolve_menu( $args['menu'] );
 		if ( is_wp_error( $menu ) ) {
 			return $menu;
 		}
 		if ( ! isset( $args['items'] ) || ! is_array( $args['items'] ) || empty( $args['items'] ) ) {
-			return new \WP_Error( 'missing_items', __( 'The "items" argument must be a non-empty array of { id, parent?, position }.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_items', __( 'The "items" argument must be a non-empty array of { id, parent?, position }.', 'karmcp' ) );
 		}
 		$menu_id = (int) $menu->term_id;
 		$updated = 0;

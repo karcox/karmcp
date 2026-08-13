@@ -11,7 +11,7 @@
  *
  * The whole loader is Pro-gated: on a free/unlicensed site nothing is loaded.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.9.0
  */
 
@@ -24,14 +24,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.9.0
  */
-class EMCP_Tools_Widget_Loader {
+class KarMCP_Widget_Loader {
 
 	/**
 	 * Category slug for generated widgets in the Elementor panel.
 	 *
 	 * @var string
 	 */
-	const CATEGORY = 'emcp-custom';
+	const CATEGORY = 'karmcp-custom';
 
 	/**
 	 * Post ID of the widget currently being included, if any. Read by the
@@ -56,7 +56,11 @@ class EMCP_Tools_Widget_Loader {
 	 * @return bool
 	 */
 	private function has_access(): bool {
-		return function_exists( 'emcp_tools_fs' ) && emcp_tools_fs()->can_use_premium_code();
+		// The sandbox widget generator/compiler lived in the upstream Pro overlay
+		// and is absent from this build, so generated widgets can never be
+		// compiled or loaded. Kept as a single seam: when KarMCP grows its own
+		// widget builder, this is the one method to reopen.
+		return false;
 	}
 
 	/**
@@ -80,16 +84,16 @@ class EMCP_Tools_Widget_Loader {
 	 * @since 1.9.0
 	 */
 	public function register_assets(): void {
-		if ( ! $this->has_access() || ! class_exists( 'EMCP_Tools_Widget_Store' ) ) {
+		if ( ! $this->has_access() || ! class_exists( 'KarMCP_Widget_Store' ) ) {
 			return;
 		}
-		foreach ( EMCP_Tools_Widget_Store::read_manifest() as $entry ) {
+		foreach ( KarMCP_Widget_Store::read_manifest() as $entry ) {
 			$post_id = isset( $entry['post_id'] ) ? (int) $entry['post_id'] : 0;
 			if ( ! $post_id ) {
 				continue;
 			}
-			$base = EMCP_Tools_Widget_Store::asset_handle( $post_id );
-			$url  = EMCP_Tools_Widget_Store::widget_url( $post_id );
+			$base = KarMCP_Widget_Store::asset_handle( $post_id );
+			$url  = KarMCP_Widget_Store::widget_url( $post_id );
 
 			if ( ! empty( $entry['css'] ) ) {
 				wp_register_style( $base . '-style', $url . '/style.css', array(), (string) $entry['css'] );
@@ -101,7 +105,7 @@ class EMCP_Tools_Widget_Loader {
 	}
 
 	/**
-	 * Registers the "Custom (EMCP)" widget category.
+	 * Registers the "Custom (KarMCP)" widget category.
 	 *
 	 * @since 1.9.0
 	 *
@@ -114,7 +118,7 @@ class EMCP_Tools_Widget_Loader {
 		$elements_manager->add_category(
 			self::CATEGORY,
 			array(
-				'title' => __( 'Custom (EMCP)', 'emcp-tools' ),
+				'title' => __( 'Custom (KarMCP)', 'karmcp' ),
 				'icon'  => 'eicon-code',
 			)
 		);
@@ -128,17 +132,17 @@ class EMCP_Tools_Widget_Loader {
 	 * @param \Elementor\Widgets_Manager $widgets_manager Elementor widgets manager.
 	 */
 	public function register_widgets( $widgets_manager ): void {
-		if ( ! $this->has_access() || ! class_exists( 'EMCP_Tools_Widget_Store' ) ) {
+		if ( ! $this->has_access() || ! class_exists( 'KarMCP_Widget_Store' ) ) {
 			return;
 		}
 
-		$manifest = EMCP_Tools_Widget_Store::read_manifest();
+		$manifest = KarMCP_Widget_Store::read_manifest();
 		if ( empty( $manifest ) ) {
 			return;
 		}
 
 		$this->arm_shutdown();
-		$sandbox = EMCP_Tools_Widget_Store::sandbox_dir() . '/';
+		$sandbox = KarMCP_Widget_Store::sandbox_dir() . '/';
 
 		foreach ( $manifest as $entry ) {
 			$post_id    = isset( $entry['post_id'] ) ? (int) $entry['post_id'] : 0;
@@ -167,8 +171,8 @@ class EMCP_Tools_Widget_Loader {
 				include_once $path;
 			} catch ( \Throwable $e ) {
 				// Runtime throwable during include — record and skip.
-				if ( class_exists( 'EMCP_Tools_Widget_Store' ) ) {
-					EMCP_Tools_Widget_Store::mark_error( $post_id, $e->getMessage() );
+				if ( class_exists( 'KarMCP_Widget_Store' ) ) {
+					KarMCP_Widget_Store::mark_error( $post_id, $e->getMessage() );
 				}
 				$this->loading = null;
 				continue;
@@ -179,7 +183,7 @@ class EMCP_Tools_Widget_Loader {
 				try {
 					$widgets_manager->register( new $class_name() );
 				} catch ( \Throwable $e ) {
-					EMCP_Tools_Widget_Store::mark_error( $post_id, $e->getMessage() );
+					KarMCP_Widget_Store::mark_error( $post_id, $e->getMessage() );
 				}
 			}
 		}
@@ -212,8 +216,8 @@ class EMCP_Tools_Widget_Loader {
 		$err = error_get_last();
 		$fatal_types = array( E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR );
 		if ( is_array( $err ) && in_array( $err['type'], $fatal_types, true ) ) {
-			if ( class_exists( 'EMCP_Tools_Widget_Store' ) ) {
-				EMCP_Tools_Widget_Store::mark_error(
+			if ( class_exists( 'KarMCP_Widget_Store' ) ) {
+				KarMCP_Widget_Store::mark_error(
 					$this->loading,
 					isset( $err['message'] ) ? (string) $err['message'] : 'Fatal error while loading widget.'
 				);

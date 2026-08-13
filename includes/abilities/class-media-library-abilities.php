@@ -9,7 +9,7 @@
  * job-site images already in their library). Backed by a direct WP_Query on
  * attachments — no HTTP round-trip.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   2.0.2
  * @link    https://github.com/msrbuilds/elementor-mcp/issues/25
  */
@@ -23,12 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.0.2
  */
-class EMCP_Tools_Media_Library_Abilities {
+class KarMCP_Media_Library_Abilities {
 
 	/**
 	 * The data access layer.
 	 *
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
@@ -37,9 +37,9 @@ class EMCP_Tools_Media_Library_Abilities {
 	 *
 	 * @since 2.0.2
 	 *
-	 * @param EMCP_Tools_Data $data The data access layer.
+	 * @param KarMCP_Data $data The data access layer.
 	 */
-	public function __construct( EMCP_Tools_Data $data ) {
+	public function __construct( KarMCP_Data $data ) {
 		$this->data = $data;
 	}
 
@@ -52,10 +52,10 @@ class EMCP_Tools_Media_Library_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/list-media',
-			'emcp-tools/get-media',
-			'emcp-tools/update-media',
-			'emcp-tools/delete-media',
+			'karmcp/list-media',
+			'karmcp/get-media',
+			'karmcp/update-media',
+			'karmcp/delete-media',
 		);
 	}
 
@@ -89,12 +89,12 @@ class EMCP_Tools_Media_Library_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_list_media(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/list-media',
+		karmcp_register_ability(
+			'karmcp/list-media',
 			array(
-				'label'               => __( 'List Media', 'emcp-tools' ),
-				'description'         => __( 'Lists and searches images already in the WordPress Media Library. Use this to find a site\'s own uploaded photos (e.g. a client\'s product or job-site images) before reaching for stock photos. The optional "search" matches the title, alt text, caption, and description. Returns attachment IDs and URLs you can pass straight to add-free-widget.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Media', 'karmcp' ),
+				'description'         => __( 'Lists and searches images already in the WordPress Media Library. Use this to find a site\'s own uploaded photos (e.g. a client\'s product or job-site images) before reaching for stock photos. The optional "search" matches the title, alt text, caption, and description. Returns attachment IDs and URLs you can pass straight to add-free-widget.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_media' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -102,29 +102,29 @@ class EMCP_Tools_Media_Library_Abilities {
 					'properties' => array(
 						'search'    => array(
 							'type'        => 'string',
-							'description' => __( 'Keyword to match against the attachment title, alt text, caption, and description. Omit to list everything.', 'emcp-tools' ),
+							'description' => __( 'Keyword to match against the attachment title, alt text, caption, and description. Omit to list everything.', 'karmcp' ),
 						),
 						'mime_type' => array(
 							'type'        => 'string',
-							'description' => __( 'MIME type filter. Accepts a top-level type ("image") or a specific type ("image/jpeg", "image/png"). Use "any" for all media types. Default: image.', 'emcp-tools' ),
+							'description' => __( 'MIME type filter. Accepts a top-level type ("image") or a specific type ("image/jpeg", "image/png"). Use "any" for all media types. Default: image.', 'karmcp' ),
 						),
 						'page'      => array(
 							'type'        => 'integer',
-							'description' => __( 'Page number (1-based). Default: 1.', 'emcp-tools' ),
+							'description' => __( 'Page number (1-based). Default: 1.', 'karmcp' ),
 						),
 						'per_page'  => array(
 							'type'        => 'integer',
-							'description' => __( 'Results per page (1-100). Default: 20.', 'emcp-tools' ),
+							'description' => __( 'Results per page (1-100). Default: 20.', 'karmcp' ),
 						),
 						'orderby'   => array(
 							'type'        => 'string',
 							'enum'        => array( 'date', 'title' ),
-							'description' => __( 'Sort field. Default: date (newest first).', 'emcp-tools' ),
+							'description' => __( 'Sort field. Default: date (newest first).', 'karmcp' ),
 						),
 						'order'     => array(
 							'type'        => 'string',
 							'enum'        => array( 'desc', 'asc' ),
-							'description' => __( 'Sort direction. Default: desc.', 'emcp-tools' ),
+							'description' => __( 'Sort direction. Default: desc.', 'karmcp' ),
 						),
 					),
 				),
@@ -296,14 +296,14 @@ class EMCP_Tools_Media_Library_Abilities {
 	private function resolve_attachment( $raw ) {
 		$id = absint( $raw );
 		if ( ! $id ) {
-			return new \WP_Error( 'missing_params', __( 'An attachment "id" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'An attachment "id" is required.', 'karmcp' ) );
 		}
 		$post = get_post( $id );
 		if ( ! $post ) {
-			return new \WP_Error( 'attachment_not_found', __( 'Attachment not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'attachment_not_found', __( 'Attachment not found.', 'karmcp' ) );
 		}
 		if ( 'attachment' !== ( $post->post_type ?? '' ) ) {
-			return new \WP_Error( 'not_an_attachment', __( 'That ID is not a media attachment.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_an_attachment', __( 'That ID is not a media attachment.', 'karmcp' ) );
 		}
 		return $post;
 	}
@@ -313,17 +313,17 @@ class EMCP_Tools_Media_Library_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_get_media(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/get-media',
+		karmcp_register_ability(
+			'karmcp/get-media',
 			array(
-				'label'               => __( 'Get Media', 'emcp-tools' ),
-				'description'         => __( 'Returns full detail for one Media Library attachment: title, URL, every registered image size (url + dimensions), mime type, filesize, alt text, caption, description, and raw attachment metadata. The single-item complement to list-media.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Media', 'karmcp' ),
+				'description'         => __( 'Returns full detail for one Media Library attachment: title, URL, every registered image size (url + dimensions), mime type, filesize, alt text, caption, description, and raw attachment metadata. The single-item complement to list-media.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_media' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'id' => array( 'type' => 'integer', 'description' => __( 'Attachment ID.', 'emcp-tools' ) ) ),
+					'properties' => array( 'id' => array( 'type' => 'integer', 'description' => __( 'Attachment ID.', 'karmcp' ) ) ),
 					'required'   => array( 'id' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array(
@@ -397,20 +397,20 @@ class EMCP_Tools_Media_Library_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_update_media(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/update-media',
+		karmcp_register_ability(
+			'karmcp/update-media',
 			array(
-				'label'               => __( 'Update Media', 'emcp-tools' ),
-				'description'         => __( 'Updates an existing attachment\'s metadata: title, alt text, caption, and/or description. Only the fields you pass change. Great for fixing missing alt text (accessibility/SEO) on images already in the library.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Media', 'karmcp' ),
+				'description'         => __( 'Updates an existing attachment\'s metadata: title, alt text, caption, and/or description. Only the fields you pass change. Great for fixing missing alt text (accessibility/SEO) on images already in the library.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_media' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id'          => array( 'type' => 'integer', 'description' => __( 'Attachment ID.', 'emcp-tools' ) ),
+						'id'          => array( 'type' => 'integer', 'description' => __( 'Attachment ID.', 'karmcp' ) ),
 						'title'       => array( 'type' => 'string' ),
-						'alt'         => array( 'type' => 'string', 'description' => __( 'Alt text (accessibility).', 'emcp-tools' ) ),
+						'alt'         => array( 'type' => 'string', 'description' => __( 'Alt text (accessibility).', 'karmcp' ) ),
 						'caption'     => array( 'type' => 'string' ),
 						'description' => array( 'type' => 'string' ),
 					),
@@ -439,19 +439,19 @@ class EMCP_Tools_Media_Library_Abilities {
 		$updated = array();
 
 		// Capture the before-image of exactly what this update changes, for rollback.
-		$emcp_before = null;
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			$emcp_bf = array();
-			if ( array_key_exists( 'title', $input ) )       { $emcp_bf['post_title'] = $post->post_title; }
-			if ( array_key_exists( 'caption', $input ) )     { $emcp_bf['post_excerpt'] = $post->post_excerpt; }
-			if ( array_key_exists( 'description', $input ) ) { $emcp_bf['post_content'] = $post->post_content; }
-			$emcp_bm = array();
+		$karmcp_before = null;
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			$karmcp_bf = array();
+			if ( array_key_exists( 'title', $input ) )       { $karmcp_bf['post_title'] = $post->post_title; }
+			if ( array_key_exists( 'caption', $input ) )     { $karmcp_bf['post_excerpt'] = $post->post_excerpt; }
+			if ( array_key_exists( 'description', $input ) ) { $karmcp_bf['post_content'] = $post->post_content; }
+			$karmcp_bm = array();
 			if ( array_key_exists( 'alt', $input ) ) {
-				$emcp_prior_alt = get_post_meta( $id, '_wp_attachment_image_alt', true );
-				$emcp_bm['_wp_attachment_image_alt'] = ( '' === $emcp_prior_alt ) ? '__DELETE__' : $emcp_prior_alt;
+				$karmcp_prior_alt = get_post_meta( $id, '_wp_attachment_image_alt', true );
+				$karmcp_bm['_wp_attachment_image_alt'] = ( '' === $karmcp_prior_alt ) ? '__DELETE__' : $karmcp_prior_alt;
 			}
-			if ( $emcp_bf || $emcp_bm ) {
-				$emcp_before = array( 'fields' => $emcp_bf, 'meta' => $emcp_bm, 'terms' => array() );
+			if ( $karmcp_bf || $karmcp_bm ) {
+				$karmcp_before = array( 'fields' => $karmcp_bf, 'meta' => $karmcp_bm, 'terms' => array() );
 			}
 		}
 
@@ -483,10 +483,10 @@ class EMCP_Tools_Media_Library_Abilities {
 			$updated[] = 'alt';
 		}
 
-		if ( null !== $emcp_before && ! empty( $updated ) ) {
-			EMCP_Tools_Change_Recorder::record_post_fields(
+		if ( null !== $karmcp_before && ! empty( $updated ) ) {
+			KarMCP_Change_Recorder::record_post_fields(
 				$id,
-				$emcp_before,
+				$karmcp_before,
 				sprintf( 'Updated media #%d (%s)', $id, implode( ', ', $updated ) ),
 				trim( (string) $post->post_title . ' (#' . $id . ')' ),
 				'media',
@@ -510,20 +510,20 @@ class EMCP_Tools_Media_Library_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_delete_media(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/delete-media',
+		karmcp_register_ability(
+			'karmcp/delete-media',
 			array(
-				'label'               => __( 'Delete Media', 'emcp-tools' ),
-				'description'         => __( 'Deletes a Media Library attachment. DESTRUCTIVE and effectively permanent, WordPress bypasses Trash for media unless MEDIA_TRASH is defined. Requires confirm:true. Pass force:true to skip Trash even when MEDIA_TRASH is on.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Delete Media', 'karmcp' ),
+				'description'         => __( 'Deletes a Media Library attachment. DESTRUCTIVE and effectively permanent, WordPress bypasses Trash for media unless MEDIA_TRASH is defined. Requires confirm:true. Pass force:true to skip Trash even when MEDIA_TRASH is on.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_delete_media' ),
 				'permission_callback' => array( $this, 'check_delete_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id'      => array( 'type' => 'integer', 'description' => __( 'Attachment ID.', 'emcp-tools' ) ),
-						'confirm' => array( 'type' => 'boolean', 'description' => __( 'Must be true to proceed (acknowledges permanent deletion).', 'emcp-tools' ) ),
-						'force'   => array( 'type' => 'boolean', 'description' => __( 'Skip Trash even when MEDIA_TRASH is defined. Default: false.', 'emcp-tools' ) ),
+						'id'      => array( 'type' => 'integer', 'description' => __( 'Attachment ID.', 'karmcp' ) ),
+						'confirm' => array( 'type' => 'boolean', 'description' => __( 'Must be true to proceed (acknowledges permanent deletion).', 'karmcp' ) ),
+						'force'   => array( 'type' => 'boolean', 'description' => __( 'Skip Trash even when MEDIA_TRASH is defined. Default: false.', 'karmcp' ) ),
 					),
 					'required'   => array( 'id', 'confirm' ),
 				),
@@ -546,7 +546,7 @@ class EMCP_Tools_Media_Library_Abilities {
 			return $post;
 		}
 		if ( true !== ( $input['confirm'] ?? null ) ) {
-			return new \WP_Error( 'confirmation_required', __( 'Deleting media is permanent on most sites (WordPress bypasses Trash unless MEDIA_TRASH is defined). Pass confirm:true to proceed.', 'emcp-tools' ) );
+			return new \WP_Error( 'confirmation_required', __( 'Deleting media is permanent on most sites (WordPress bypasses Trash unless MEDIA_TRASH is defined). Pass confirm:true to proceed.', 'karmcp' ) );
 		}
 		$id      = (int) $post->ID;
 		$force   = ! empty( $input['force'] );
@@ -554,13 +554,13 @@ class EMCP_Tools_Media_Library_Abilities {
 
 		// Snapshot the attachment (post + meta + a trashed copy of every file)
 		// BEFORE deleting, so the delete is reversible from the change ledger.
-		$has_rec  = class_exists( 'EMCP_Tools_Change_Recorder' ) && ! EMCP_Tools_Change_Log::$suppress;
-		$snapshot = ( $has_rec && ! $trashed ) ? EMCP_Tools_Change_Recorder::snapshot_attachment( $id ) : array();
+		$has_rec  = class_exists( 'KarMCP_Change_Recorder' ) && ! KarMCP_Change_Log::$suppress;
+		$snapshot = ( $has_rec && ! $trashed ) ? KarMCP_Change_Recorder::snapshot_attachment( $id ) : array();
 
 		$res = wp_delete_attachment( $id, $force );
 
 		if ( $has_rec && $res && ! empty( $snapshot ) ) {
-			EMCP_Tools_Change_Recorder::record_attachment_delete(
+			KarMCP_Change_Recorder::record_attachment_delete(
 				$snapshot,
 				$id,
 				sprintf( 'Deleted media #%d', $id ),

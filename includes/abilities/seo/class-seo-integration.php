@@ -15,7 +15,7 @@
  * Accessibility toolkit (audit-page-seo / generate-meta-tags), which analyses
  * and generates rather than reading/writing a plugin's stored data.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.5.0
  */
 
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.5.0
  */
-abstract class EMCP_Tools_SEO_Integration {
+abstract class KarMCP_SEO_Integration {
 
 	/**
 	 * Short integration id, used to build the tool names (`<id>-read`/`-write`).
@@ -77,14 +77,14 @@ abstract class EMCP_Tools_SEO_Integration {
 	 * @return string The read tool ability name.
 	 */
 	final public function read_tool(): string {
-		return 'emcp-tools/' . $this->id() . '-read';
+		return 'karmcp/' . $this->id() . '-read';
 	}
 
 	/**
 	 * @return string The write tool ability name.
 	 */
 	final public function write_tool(): string {
-		return 'emcp-tools/' . $this->id() . '-write';
+		return 'karmcp/' . $this->id() . '-write';
 	}
 
 	/**
@@ -98,12 +98,12 @@ abstract class EMCP_Tools_SEO_Integration {
 	 * Register the read + write dispatcher tools.
 	 */
 	public function register(): void {
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$this->read_tool(),
 			array(
 				'label'               => $this->label() . ' Read',
 				'description'         => $this->read_description(),
-				'category'            => 'emcp-tools',
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_read' ),
 				'permission_callback' => array( $this, 'can_read' ),
 				'input_schema'        => $this->dispatch_schema(),
@@ -113,12 +113,12 @@ abstract class EMCP_Tools_SEO_Integration {
 				),
 			)
 		);
-		emcp_tools_register_ability(
+		karmcp_register_ability(
 			$this->write_tool(),
 			array(
 				'label'               => $this->label() . ' Write',
 				'description'         => $this->write_description(),
-				'category'            => 'emcp-tools',
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_write' ),
 				'permission_callback' => array( $this, 'can_write' ),
 				'input_schema'        => $this->dispatch_schema(),
@@ -191,7 +191,7 @@ abstract class EMCP_Tools_SEO_Integration {
 				'plugin_inactive',
 				sprintf(
 					/* translators: %s: plugin label */
-					__( 'Install and activate %s to use this tool.', 'emcp-tools' ),
+					__( 'Install and activate %s to use this tool.', 'karmcp' ),
 					$this->label()
 				),
 				array( 'status' => 409 )
@@ -203,7 +203,7 @@ abstract class EMCP_Tools_SEO_Integration {
 				'unknown_operation',
 				sprintf(
 					/* translators: 1: mode (read/write), 2: operation name */
-					__( 'Unknown %1$s operation: %2$s. Call the tool with no operation to list them.', 'emcp-tools' ),
+					__( 'Unknown %1$s operation: %2$s. Call the tool with no operation to list them.', 'karmcp' ),
 					$mode,
 					$operation
 				),
@@ -217,7 +217,7 @@ abstract class EMCP_Tools_SEO_Integration {
 		if ( ! call_user_func( $op['perm'] ) ) {
 			return new WP_Error(
 				'forbidden',
-				__( 'You do not have permission for this operation.', 'emcp-tools' ),
+				__( 'You do not have permission for this operation.', 'karmcp' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -225,7 +225,7 @@ abstract class EMCP_Tools_SEO_Integration {
 		if ( ! empty( $op['confirm'] ) && ( ! isset( $args['confirm'] ) || true !== $args['confirm'] ) ) {
 			return new WP_Error(
 				'confirmation_required',
-				__( 'This operation is irreversible. Pass confirm:true in arguments to proceed.', 'emcp-tools' ),
+				__( 'This operation is irreversible. Pass confirm:true in arguments to proceed.', 'karmcp' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -254,15 +254,15 @@ abstract class EMCP_Tools_SEO_Integration {
 
 		$before = $this->snapshot_meta( $object, $obj_id, $meta_keys );
 		$result = call_user_func( $op['run'], $args );
-		if ( ! is_wp_error( $result ) && class_exists( 'EMCP_Tools_Change_Log' ) ) {
-			EMCP_Tools_Change_Log::record(
+		if ( ! is_wp_error( $result ) && class_exists( 'KarMCP_Change_Log' ) ) {
+			KarMCP_Change_Log::record(
 				array(
 					'domain'   => 'seo',
 					'action'   => 'update',
 					'target'   => $this->id() . ':' . $object . ':' . $obj_id,
 					'summary'  => sprintf(
 						/* translators: 1: plugin label, 2: object type, 3: id */
-						__( 'Updated %1$s SEO for %2$s #%3$d', 'emcp-tools' ),
+						__( 'Updated %1$s SEO for %2$s #%3$d', 'karmcp' ),
 						$this->label(),
 						$object,
 						$obj_id
@@ -338,11 +338,11 @@ abstract class EMCP_Tools_SEO_Integration {
 			'properties' => array(
 				'operation' => array(
 					'type'        => 'string',
-					'description' => __( 'Operation name. Omit to list the available operations.', 'emcp-tools' ),
+					'description' => __( 'Operation name. Omit to list the available operations.', 'karmcp' ),
 				),
 				'arguments' => array(
 					'type'        => 'object',
-					'description' => __( 'Arguments for the operation.', 'emcp-tools' ),
+					'description' => __( 'Arguments for the operation.', 'karmcp' ),
 				),
 			),
 		);

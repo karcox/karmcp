@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-interface EMCP_Tools_Sandbox_Artifact {
+interface KarMCP_Sandbox_Artifact {
 	public function kind(): string;
 	public function uuid( int $id ): string;
 	public function to_bundle( int $id );          // array|WP_Error

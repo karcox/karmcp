@@ -5,7 +5,7 @@
  * Registers the build-page tool that creates a complete page from
  * a declarative structure in a single call.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Composite_Abilities {
+class KarMCP_Composite_Abilities {
 
 	/**
 	 * Element count above which build-page warns about possible remote-connector
@@ -27,12 +27,12 @@ class EMCP_Tools_Composite_Abilities {
 	const SOFT_ELEMENT_LIMIT = 150;
 
 	/**
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
-	 * @var EMCP_Tools_Element_Factory
+	 * @var KarMCP_Element_Factory
 	 */
 	private $factory;
 
@@ -56,10 +56,10 @@ class EMCP_Tools_Composite_Abilities {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param EMCP_Tools_Data            $data    The data access layer.
-	 * @param EMCP_Tools_Element_Factory $factory The element factory.
+	 * @param KarMCP_Data            $data    The data access layer.
+	 * @param KarMCP_Element_Factory $factory The element factory.
 	 */
-	public function __construct( EMCP_Tools_Data $data, EMCP_Tools_Element_Factory $factory ) {
+	public function __construct( KarMCP_Data $data, KarMCP_Element_Factory $factory ) {
 		$this->data    = $data;
 		$this->factory = $factory;
 	}
@@ -73,7 +73,7 @@ class EMCP_Tools_Composite_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/build-page',
+			'karmcp/build-page',
 		);
 	}
 
@@ -102,12 +102,12 @@ class EMCP_Tools_Composite_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_build_page(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/build-page',
+		karmcp_register_ability(
+			'karmcp/build-page',
 			array(
-				'label'               => __( 'Build Page', 'emcp-tools' ),
-				'description'         => __( 'Creates a complete Elementor page from a declarative structure in a single call. Supports nested containers and any widget types. IMPORTANT LAYOUT RULES: (1) For side-by-side columns, use a parent container with flex_direction=row, children are auto-set to content_width=full with equal percentage widths (e.g. 2 children = 50%, 3 = 33.33%). (2) NEVER set flex_wrap or _flex_size in settings, these cause layout overflow. The tool handles layout automatically. (3) Background colors: set background_background=classic and background_color=#hex on containers. (4) Background images: set background_background=classic, background_image={url,id}, background_size=cover. (5) Background overlay: background_overlay_background=classic, background_overlay_color=#hex, background_overlay_opacity={size:0.7,unit:px}. (6) Text alignment: text_align on text/heading widgets. (7) Use search-images and sideload-image tools to get real images before building.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Build Page', 'karmcp' ),
+				'description'         => __( 'Creates a complete Elementor page from a declarative structure in a single call. Supports nested containers and any widget types. IMPORTANT LAYOUT RULES: (1) For side-by-side columns, use a parent container with flex_direction=row, children are auto-set to content_width=full with equal percentage widths (e.g. 2 children = 50%, 3 = 33.33%). (2) NEVER set flex_wrap or _flex_size in settings, these cause layout overflow. The tool handles layout automatically. (3) Background colors: set background_background=classic and background_color=#hex on containers. (4) Background images: set background_background=classic, background_image={url,id}, background_size=cover. (5) Background overlay: background_overlay_background=classic, background_overlay_color=#hex, background_overlay_opacity={size:0.7,unit:px}. (6) Text alignment: text_align on text/heading widgets. (7) Use search-images and sideload-image tools to get real images before building.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_build_page' ),
 				'permission_callback' => array( $this, 'check_create_permission' ),
 				'input_schema'        => array(
@@ -115,35 +115,35 @@ class EMCP_Tools_Composite_Abilities {
 					'properties' => array(
 						'title'         => array(
 							'type'        => 'string',
-							'description' => __( 'Page title.', 'emcp-tools' ),
+							'description' => __( 'Page title.', 'karmcp' ),
 						),
 						'status'        => array(
 							'type'        => 'string',
 							'enum'        => array( 'draft', 'publish' ),
-							'description' => __( 'Post status. Default: draft.', 'emcp-tools' ),
+							'description' => __( 'Post status. Default: draft.', 'karmcp' ),
 						),
 						'post_type'     => array(
 							'type'        => 'string',
 							'enum'        => array( 'page', 'post' ),
-							'description' => __( 'Post type. Default: page.', 'emcp-tools' ),
+							'description' => __( 'Post type. Default: page.', 'karmcp' ),
 						),
 						'page_settings' => array(
 							'type'        => 'object',
-							'description' => __( 'Page-level Elementor settings (background, padding, etc.).', 'emcp-tools' ),
+							'description' => __( 'Page-level Elementor settings (background, padding, etc.).', 'karmcp' ),
 						),
 						'dry_run'       => array(
 							'type'        => 'boolean',
-							'description' => __( 'Validate the structure and report the element count + any coercion/skip warnings WITHOUT creating a page. Use to check a large payload before committing (build-page can time out over a remote connector past ~150 elements).', 'emcp-tools' ),
+							'description' => __( 'Validate the structure and report the element count + any coercion/skip warnings WITHOUT creating a page. Use to check a large payload before committing (build-page can time out over a remote connector past ~150 elements).', 'karmcp' ),
 						),
 						'structure'     => array(
 							'type'        => 'array',
-							'description' => __( 'Declarative element tree. Each item is type:"container" (with children) or type:"widget" (with widget_type + settings). Shorthand is accepted and coerced: type:"heading" is read as a heading widget, and any node with children is treated as a container, but the response lists these coercions under "warnings", so prefer the explicit shape. Every widget needs a widget_type; a widget with none is skipped and reported.', 'emcp-tools' ),
+							'description' => __( 'Declarative element tree. Each item is type:"container" (with children) or type:"widget" (with widget_type + settings). Shorthand is accepted and coerced: type:"heading" is read as a heading widget, and any node with children is treated as a container, but the response lists these coercions under "warnings", so prefer the explicit shape. Every widget needs a widget_type; a widget with none is skipped and reported.', 'karmcp' ),
 							'items'       => array(
 								'type'       => 'object',
 								'properties' => array(
 									'type'        => array(
 										'type'        => 'string',
-										'description' => __( 'Preferably "container" or "widget". A widget name (e.g. "heading") is accepted as shorthand and coerced, with a note in "warnings".', 'emcp-tools' ),
+										'description' => __( 'Preferably "container" or "widget". A widget name (e.g. "heading") is accepted as shorthand and coerced, with a note in "warnings".', 'karmcp' ),
 									),
 									'widget_type' => array( 'type' => 'string' ),
 									'settings'    => array( 'type' => 'object' ),
@@ -165,7 +165,7 @@ class EMCP_Tools_Composite_Abilities {
 						'elements_created' => array( 'type' => 'integer' ),
 						'warnings'         => array(
 							'type'        => 'array',
-							'description' => __( 'Non-fatal notes: nodes that were coerced from shorthand or skipped. If present, some elements did not land exactly as written, fix and rebuild or patch with the layout/widget tools.', 'emcp-tools' ),
+							'description' => __( 'Non-fatal notes: nodes that were coerced from shorthand or skipped. If present, some elements did not land exactly as written, fix and rebuild or patch with the layout/widget tools.', 'karmcp' ),
 							'items'       => array( 'type' => 'string' ),
 						),
 					),
@@ -198,11 +198,11 @@ class EMCP_Tools_Composite_Abilities {
 		$structure     = $input['structure'] ?? array();
 
 		if ( empty( $title ) ) {
-			return new \WP_Error( 'missing_title', __( 'The title parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_title', __( 'The title parameter is required.', 'karmcp' ) );
 		}
 
 		if ( empty( $structure ) || ! is_array( $structure ) ) {
-			return new \WP_Error( 'missing_structure', __( 'The structure parameter is required and must be an array.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_structure', __( 'The structure parameter is required and must be an array.', 'karmcp' ) );
 		}
 
 		// build-page emits legacy `container` elements, which only render when
@@ -210,10 +210,10 @@ class EMCP_Tools_Composite_Abilities {
 		// is OFF, Elementor silently skips them and the whole page renders empty
 		// with no error (#111). Refuse up front with an actionable message rather
 		// than persisting an unrenderable document.
-		if ( ! EMCP_Tools_Atomic_Props::is_container_supported() ) {
+		if ( ! KarMCP_Atomic_Props::is_container_supported() ) {
 			return new \WP_Error(
 				'container_unsupported',
-				__( 'This site has Elementor\'s Flexbox Container experiment disabled, so build-page would store a page that renders empty. Enable Elementor → Settings → Features → "Flexbox Container" before building pages via MCP. Editing existing pages is unaffected.', 'emcp-tools' )
+				__( 'This site has Elementor\'s Flexbox Container experiment disabled, so build-page would store a page that renders empty. Enable Elementor → Settings → Features → "Flexbox Container" before building pages via MCP. Editing existing pages is unaffected.', 'karmcp' )
 			);
 		}
 
@@ -227,7 +227,7 @@ class EMCP_Tools_Composite_Abilities {
 		if ( $this->elements_created > self::SOFT_ELEMENT_LIMIT ) {
 			$this->warnings[] = sprintf(
 				/* translators: %d: number of elements */
-				__( 'Large page (%d elements). If build-page times out over a remote connector, split it into multiple calls or run dry_run first.', 'emcp-tools' ),
+				__( 'Large page (%d elements). If build-page times out over a remote connector, split it into multiple calls or run dry_run first.', 'karmcp' ),
 				$this->elements_created
 			);
 		}
@@ -455,7 +455,7 @@ class EMCP_Tools_Composite_Abilities {
 	 *
 	 * For an Elementor 4.0+ atomic widget type this routes the node's settings
 	 * through the SAME convenience mapping the add-atomic-* tools use
-	 * (EMCP_Tools_Atomic_Widget_Map), so friendly params like `content`,
+	 * (KarMCP_Atomic_Widget_Map), so friendly params like `content`,
 	 * `image_url`/`alt` and `video_url` become the typed props Elementor stores
 	 * instead of being discarded. Any style params on the node (padding,
 	 * background_color, …) are applied as a local class, exactly as the
@@ -480,10 +480,10 @@ class EMCP_Tools_Composite_Abilities {
 		if ( '' === $widget_type ) {
 			return false;
 		}
-		if ( class_exists( 'EMCP_Tools_Widget_Catalog' ) && EMCP_Tools_Widget_Catalog::get_widget( $widget_type ) ) {
+		if ( class_exists( 'KarMCP_Widget_Catalog' ) && KarMCP_Widget_Catalog::get_widget( $widget_type ) ) {
 			return true;
 		}
-		if ( class_exists( 'EMCP_Tools_Atomic_Widget_Map' ) && EMCP_Tools_Atomic_Widget_Map::is_atomic( $widget_type ) ) {
+		if ( class_exists( 'KarMCP_Atomic_Widget_Map' ) && KarMCP_Atomic_Widget_Map::is_atomic( $widget_type ) ) {
 			return true;
 		}
 		if ( class_exists( '\Elementor\Plugin' ) && isset( \Elementor\Plugin::$instance->widgets_manager ) ) {
@@ -497,19 +497,19 @@ class EMCP_Tools_Composite_Abilities {
 
 	private function build_widget( string $widget_type, array $settings ): array {
 		if (
-			class_exists( 'EMCP_Tools_Atomic_Widget_Map' )
-			&& EMCP_Tools_Atomic_Widget_Map::is_atomic( $widget_type )
+			class_exists( 'KarMCP_Atomic_Widget_Map' )
+			&& KarMCP_Atomic_Widget_Map::is_atomic( $widget_type )
 		) {
-			$mapped  = EMCP_Tools_Atomic_Widget_Map::settings( $widget_type, $settings );
+			$mapped  = KarMCP_Atomic_Widget_Map::settings( $widget_type, $settings );
 			$element = $this->factory->create_atomic_widget( $widget_type, $mapped );
 
 			// Style params (padding, background_color, min_height, …) become a
 			// local class, mirroring the add-atomic-* tools.
-			if ( class_exists( 'EMCP_Tools_Atomic_Styles' ) ) {
-				$common = EMCP_Tools_Atomic_Styles::build_common_props( $settings );
+			if ( class_exists( 'KarMCP_Atomic_Styles' ) ) {
+				$common = KarMCP_Atomic_Styles::build_common_props( $settings );
 				if ( ! empty( $common ) ) {
-					$style = EMCP_Tools_Atomic_Styles::create_local_class( $element['id'], $common );
-					EMCP_Tools_Atomic_Styles::apply_to_element( $element, $style['class_id'], $style['style_def'] );
+					$style = KarMCP_Atomic_Styles::create_local_class( $element['id'], $common );
+					KarMCP_Atomic_Styles::apply_to_element( $element, $style['class_id'], $style['style_def'] );
 				}
 			}
 

@@ -1,31 +1,30 @@
 <?php
 /**
- * Dashboard tab — the landing screen for EMCP Tools.
+ * Dashboard tab — the landing screen for KarMCP.
  *
  * Shows the headline stat cards (large format), a sneak-peek grid of every
  * feature area that doubles as fast navigation, a row of featured video guides,
- * and a help & resources panel. Included from EMCP_Tools_Admin::render_page(),
+ * and a help & resources panel. Included from KarMCP_Admin::render_page(),
  * so `$this` is the admin instance.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  *
- * @var EMCP_Tools_Admin $this
+ * @var KarMCP_Admin $this
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$emcp_page    = EMCP_Tools_Admin::PAGE_SLUG;
-$emcp_is_free = ! function_exists( 'emcp_tools_fs' ) || ! emcp_tools_fs()->can_use_premium_code();
+$karmcp_page = KarMCP_Admin::PAGE_SLUG;
 
 /**
  * Inline SVGs for the headline stat cards, keyed by the stat `key` returned by
- * EMCP_Tools_Admin::get_dashboard_stats(). Kept here (not in the class) so the
+ * KarMCP_Admin::get_dashboard_stats(). Kept here (not in the class) so the
  * data method stays markup-free.
  */
-$emcp_stat_svgs = array(
+$karmcp_stat_svgs = array(
 	'tools'      => '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>',
 	'active'     => '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>',
 	'pro'        => '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>',
@@ -39,85 +38,69 @@ $emcp_stat_svgs = array(
  * premium-tier area; `show` gates visibility (module-backed cards drop when
  * their module is off, matching the tab nav).
  */
-$emcp_features = array(
+$karmcp_features = array(
 	array(
 		'icon'  => 'dashicons-admin-tools',
-		'title' => __( 'MCP Tools', 'emcp-tools' ),
-		'desc'  => __( 'Toggle the ~140 abilities your AI client can call, Elementor, WordPress core, and Gutenberg.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-tools' ),
+		'title' => __( 'MCP Tools', 'karmcp' ),
+		'desc'  => __( 'Toggle the ~140 abilities your AI client can call, Elementor, WordPress core, and Gutenberg.', 'karmcp' ),
+		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-tools' ),
 		'show'  => true,
 	),
 	array(
 		'icon'  => 'dashicons-admin-links',
-		'title' => __( 'Connection', 'emcp-tools' ),
-		'desc'  => __( 'Connect Claude, Cursor, the ChatGPT App and more, copy-paste configs, app passwords, and a one-click bundle.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-connection' ),
+		'title' => __( 'Connection', 'karmcp' ),
+		'desc'  => __( 'Connect Claude, Cursor, the ChatGPT App and more, copy-paste configs, app passwords, and a one-click bundle.', 'karmcp' ),
+		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-connection' ),
 		'show'  => true,
 	),
 	array(
 		'icon'  => 'dashicons-screenoptions',
-		'title' => __( 'Modules', 'emcp-tools' ),
-		'desc'  => __( 'Turn big features on and off: AI Chat, Themer, Image Optimization, Prompts, Brand Kits and more.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-modules' ),
+		'title' => __( 'Modules', 'karmcp' ),
+		'desc'  => __( 'Turn big features on and off: AI Chat, Themer, Image Optimization, Prompts, Brand Kits and more.', 'karmcp' ),
+		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-modules' ),
 		'show'  => true,
 	),
 	array(
 		'icon'  => 'dashicons-undo',
-		'title' => __( 'History', 'emcp-tools' ),
-		'desc'  => __( 'Review every change your AI made and roll any of them back, a unified change ledger with one-click undo.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-history' ),
+		'title' => __( 'History', 'karmcp' ),
+		'desc'  => __( 'Review every change your AI made and roll any of them back, a unified change ledger with one-click undo.', 'karmcp' ),
+		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-history' ),
 		'show'  => true,
 	),
 	array(
-		'icon'  => 'dashicons-format-chat',
-		'title' => __( 'AI Chat', 'emcp-tools' ),
-		'desc'  => __( 'Edit pages by chatting with AI right inside the Elementor and Gutenberg editors.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-ai-chat' ),
-		'pro'   => true,
-		'show'  => $this->ai_chat_tab_visible(),
-	),
-	array(
 		'icon'  => 'dashicons-layout',
-		'title' => __( 'EMCP Themer', 'emcp-tools' ),
-		'desc'  => __( 'Build headers, footers, and dynamic layouts with any page builder, assigned by display conditions.', 'emcp-tools' ),
-		'href'  => admin_url( 'edit.php?post_type=emcp_theme_template' ),
-		'show'  => class_exists( 'EMCP_Tools_Themer_Module' ) && EMCP_Tools_Themer_Module::is_enabled(),
+		'title' => __( 'KarMCP Themer', 'karmcp' ),
+		'desc'  => __( 'Build headers, footers, and dynamic layouts with any page builder, assigned by display conditions.', 'karmcp' ),
+		'href'  => admin_url( 'edit.php?post_type=karmcp_theme_tpl' ),
+		'show'  => class_exists( 'KarMCP_Themer_Module' ) && KarMCP_Themer_Module::is_enabled(),
 	),
 	array(
 		'icon'  => 'dashicons-lightbulb',
-		'title' => __( 'Prompts', 'emcp-tools' ),
-		'desc'  => __( 'A library of ready-to-use prompts for building pages, sections, and full sites with your AI client.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-prompts' ),
+		'title' => __( 'Prompts', 'karmcp' ),
+		'desc'  => __( 'A library of ready-to-use prompts for building pages, sections, and full sites with your AI client.', 'karmcp' ),
+		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-prompts' ),
 		'show'  => $this->module_tab_visible( 'prompts' ),
 	),
 	array(
 		'icon'  => 'dashicons-art',
-		'title' => __( 'Brand Kits', 'emcp-tools' ),
-		'desc'  => __( 'Apply curated color palettes and typography to your site\'s global styles in one click.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-brand-kits' ),
+		'title' => __( 'Brand Kits', 'karmcp' ),
+		'desc'  => __( 'Apply curated color palettes and typography to your site\'s global styles in one click.', 'karmcp' ),
+		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-brand-kits' ),
 		'show'  => $this->module_tab_visible( 'brand-kits' ),
 	),
 	array(
 		'icon'  => 'dashicons-layout',
-		'title' => __( 'Templates', 'emcp-tools' ),
-		'desc'  => __( 'Import professionally designed Elementor templates straight into your pages.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-templates' ),
+		'title' => __( 'Templates', 'karmcp' ),
+		'desc'  => __( 'Import professionally designed Elementor templates straight into your pages.', 'karmcp' ),
+		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-templates' ),
 		'pro'   => true,
 		'show'  => $this->module_tab_visible( 'templates' ),
 	),
 	array(
-		'icon'  => 'dashicons-superhero',
-		'title' => __( 'Skills', 'emcp-tools' ),
-		'desc'  => __( 'Install Claude Code skills that teach your AI how to build with this plugin like an expert.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-skills' ),
-		'pro'   => true,
-		'show'  => true,
-	),
-	array(
 		'icon'  => 'dashicons-editor-code',
-		'title' => __( 'PHP Sandbox', 'emcp-tools' ),
-		'desc'  => __( 'Review and activate AI-authored PHP snippets behind a human approval gate, nothing runs unattended.', 'emcp-tools' ),
-		'href'  => admin_url( 'admin.php?page=' . $emcp_page . '-widgets' ),
+		'title' => __( 'PHP Sandbox', 'karmcp' ),
+		'desc'  => __( 'Review and activate AI-authored PHP snippets behind a human approval gate, nothing runs unattended.', 'karmcp' ),
+		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-widgets' ),
 		'show'  => true,
 	),
 );
@@ -127,7 +110,7 @@ $emcp_features = array(
  * for the thumbnail + watch link), `channel` is the creator. To feature a
  * different video, swap `id`/`title`/`channel` and the `watch?v=` URL.
  */
-$emcp_videos = array(
+$karmcp_videos = array(
 	array(
 		'title'   => 'Build a Full WordPress Site Without Touching Elementor',
 		'channel' => 'WP Academy',
@@ -156,18 +139,18 @@ $emcp_videos = array(
 );
 ?>
 
-<div class="emcp-dash">
+<div class="karmcp-dash">
 
 	<!-- Headline stats -->
-	<section class="emcp-dash-stats" aria-label="<?php esc_attr_e( 'At a glance', 'emcp-tools' ); ?>">
-		<?php foreach ( $this->get_dashboard_stats() as $emcp_stat ) : ?>
-			<div class="emcp-dash-stat">
-				<span class="emcp-dash-stat-icon emcp-dash-stat-icon--<?php echo esc_attr( $emcp_stat['key'] ); ?>">
-					<?php echo isset( $emcp_stat_svgs[ $emcp_stat['key'] ] ) ? $emcp_stat_svgs[ $emcp_stat['key'] ] : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static, trusted inline SVG markup. ?>
+	<section class="karmcp-dash-stats" aria-label="<?php esc_attr_e( 'At a glance', 'karmcp' ); ?>">
+		<?php foreach ( $this->get_dashboard_stats() as $karmcp_stat ) : ?>
+			<div class="karmcp-dash-stat">
+				<span class="karmcp-dash-stat-icon karmcp-dash-stat-icon--<?php echo esc_attr( $karmcp_stat['key'] ); ?>">
+					<?php echo isset( $karmcp_stat_svgs[ $karmcp_stat['key'] ] ) ? $karmcp_stat_svgs[ $karmcp_stat['key'] ] : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static, trusted inline SVG markup. ?>
 				</span>
-				<span class="emcp-dash-stat-body">
-					<span class="emcp-dash-stat-value"><?php echo esc_html( number_format_i18n( $emcp_stat['value'] ) ); ?></span>
-					<span class="emcp-dash-stat-label"><?php echo esc_html( $emcp_stat['label'] ); ?></span>
+				<span class="karmcp-dash-stat-body">
+					<span class="karmcp-dash-stat-value"><?php echo esc_html( number_format_i18n( $karmcp_stat['value'] ) ); ?></span>
+					<span class="karmcp-dash-stat-label"><?php echo esc_html( $karmcp_stat['label'] ); ?></span>
 				</span>
 			</div>
 		<?php endforeach; ?>
@@ -177,150 +160,150 @@ $emcp_videos = array(
 	// Activity pulse: usage KPIs (Pro), change-ledger overview, most-used actions,
 	// and the Sandbox item count. History + Most-used + Sandbox are free features,
 	// so the whole section renders on both tiers.
-	$emcp_has_usage   = class_exists( 'EMCP_Tools_Pro_Usage' );
-	$emcp_usage_local = $emcp_has_usage
-		? EMCP_Tools_Pro_Usage::local_summary()
+	$karmcp_has_usage   = class_exists( 'KarMCP_Pro_Usage' );
+	$karmcp_usage_local = $karmcp_has_usage
+		? KarMCP_Pro_Usage::local_summary()
 		: array( 'templates' => 0, 'prompts' => 0 );
 
 	// Change-ledger overview + most-used actions.
-	$emcp_log       = class_exists( 'EMCP_Tools_Change_Log' ) ? EMCP_Tools_Change_Log::all() : array();
-	$emcp_changes   = count( $emcp_log );
-	$emcp_rolled    = 0;
-	$emcp_last_ts   = 0;
-	$emcp_action_ct = array();
-	foreach ( $emcp_log as $emcp_e ) {
-		if ( ! empty( $emcp_e['rolled_back'] ) ) {
-			++$emcp_rolled;
+	$karmcp_log       = class_exists( 'KarMCP_Change_Log' ) ? KarMCP_Change_Log::all() : array();
+	$karmcp_changes   = count( $karmcp_log );
+	$karmcp_rolled    = 0;
+	$karmcp_last_ts   = 0;
+	$karmcp_action_ct = array();
+	foreach ( $karmcp_log as $karmcp_e ) {
+		if ( ! empty( $karmcp_e['rolled_back'] ) ) {
+			++$karmcp_rolled;
 		}
-		if ( isset( $emcp_e['ts'] ) && (int) $emcp_e['ts'] > $emcp_last_ts ) {
-			$emcp_last_ts = (int) $emcp_e['ts'];
+		if ( isset( $karmcp_e['ts'] ) && (int) $karmcp_e['ts'] > $karmcp_last_ts ) {
+			$karmcp_last_ts = (int) $karmcp_e['ts'];
 		}
-		$emcp_dom = isset( $emcp_e['domain'] ) ? (string) $emcp_e['domain'] : '';
-		$emcp_act = isset( $emcp_e['action'] ) ? (string) $emcp_e['action'] : '';
-		if ( '' === $emcp_dom && '' === $emcp_act ) {
+		$karmcp_dom = isset( $karmcp_e['domain'] ) ? (string) $karmcp_e['domain'] : '';
+		$karmcp_act = isset( $karmcp_e['action'] ) ? (string) $karmcp_e['action'] : '';
+		if ( '' === $karmcp_dom && '' === $karmcp_act ) {
 			continue;
 		}
-		$emcp_key = $emcp_dom . '|' . $emcp_act;
-		if ( ! isset( $emcp_action_ct[ $emcp_key ] ) ) {
-			$emcp_action_ct[ $emcp_key ] = 0;
+		$karmcp_key = $karmcp_dom . '|' . $karmcp_act;
+		if ( ! isset( $karmcp_action_ct[ $karmcp_key ] ) ) {
+			$karmcp_action_ct[ $karmcp_key ] = 0;
 		}
-		++$emcp_action_ct[ $emcp_key ];
+		++$karmcp_action_ct[ $karmcp_key ];
 	}
-	arsort( $emcp_action_ct );
-	$emcp_top_actions = array_slice( $emcp_action_ct, 0, 4, true );
+	arsort( $karmcp_action_ct );
+	$karmcp_top_actions = array_slice( $karmcp_action_ct, 0, 4, true );
 
 	// Sandbox items across all three pillars (blocks + widgets + snippets):
 	// active = publish, drafts = draft. Blocks/widgets are Pro CPTs; on a free
 	// site they simply do not exist and wp_count_posts() returns zeros.
-	$emcp_snip_active = 0;
-	$emcp_snip_draft  = 0;
+	$karmcp_snip_active = 0;
+	$karmcp_snip_draft  = 0;
 	if ( function_exists( 'wp_count_posts' ) ) {
-		foreach ( array( 'emcp_block', 'emcp_widget', 'emcp_php_snippet' ) as $emcp_sb_cpt ) {
-			$emcp_ct = wp_count_posts( $emcp_sb_cpt );
-			$emcp_snip_active += ( $emcp_ct && isset( $emcp_ct->publish ) ) ? (int) $emcp_ct->publish : 0;
-			$emcp_snip_draft  += ( $emcp_ct && isset( $emcp_ct->draft ) ) ? (int) $emcp_ct->draft : 0;
+		foreach ( array( 'karmcp_block', 'karmcp_widget', 'karmcp_php_snippet' ) as $karmcp_sb_cpt ) {
+			$karmcp_ct = wp_count_posts( $karmcp_sb_cpt );
+			$karmcp_snip_active += ( $karmcp_ct && isset( $karmcp_ct->publish ) ) ? (int) $karmcp_ct->publish : 0;
+			$karmcp_snip_draft  += ( $karmcp_ct && isset( $karmcp_ct->draft ) ) ? (int) $karmcp_ct->draft : 0;
 		}
 	}
-	$emcp_snip_total = $emcp_snip_active + $emcp_snip_draft;
+	$karmcp_snip_total = $karmcp_snip_active + $karmcp_snip_draft;
 
-	$emcp_url_prompts = admin_url( 'admin.php?page=' . $emcp_page . '-prompts' );
-	$emcp_url_history = admin_url( 'admin.php?page=' . $emcp_page . '-history' );
-	$emcp_url_sandbox = admin_url( 'admin.php?page=' . $emcp_page . '-widgets' );
+	$karmcp_url_prompts = admin_url( 'admin.php?page=' . $karmcp_page . '-prompts' );
+	$karmcp_url_history = admin_url( 'admin.php?page=' . $karmcp_page . '-history' );
+	$karmcp_url_sandbox = admin_url( 'admin.php?page=' . $karmcp_page . '-widgets' );
 	?>
-	<section class="emcp-dash-section" aria-labelledby="emcp-dash-usage-h">
-		<div class="emcp-dash-section-head">
-			<h2 id="emcp-dash-usage-h" class="emcp-dash-section-title"><?php esc_html_e( 'Your usage', 'emcp-tools' ); ?></h2>
-			<p class="emcp-dash-section-sub"><?php esc_html_e( 'A quick pulse on what your AI has done on this site.', 'emcp-tools' ); ?></p>
+	<section class="karmcp-dash-section" aria-labelledby="karmcp-dash-usage-h">
+		<div class="karmcp-dash-section-head">
+			<h2 id="karmcp-dash-usage-h" class="karmcp-dash-section-title"><?php esc_html_e( 'Your usage', 'karmcp' ); ?></h2>
+			<p class="karmcp-dash-section-sub"><?php esc_html_e( 'A quick pulse on what your AI has done on this site.', 'karmcp' ); ?></p>
 		</div>
-		<div class="emcp-dash-usage-grid">
+		<div class="karmcp-dash-usage-grid">
 
 			<!-- Usage KPIs -->
-			<a class="emcp-dash-ucard" href="<?php echo esc_url( $emcp_url_prompts ); ?>">
-				<span class="emcp-dash-ucard-head">
-					<span class="emcp-dash-ucard-ico emcp-dash-ucard-ico--usage"><span class="dashicons dashicons-chart-bar" aria-hidden="true"></span></span>
-					<span class="emcp-dash-ucard-title">
-						<?php esc_html_e( 'Usage', 'emcp-tools' ); ?>
-						<?php if ( ! $emcp_has_usage ) : ?>
-							<span class="emcp-dash-badge emcp-dash-badge--pro"><?php esc_html_e( 'Pro', 'emcp-tools' ); ?></span>
+			<a class="karmcp-dash-ucard" href="<?php echo esc_url( $karmcp_url_prompts ); ?>">
+				<span class="karmcp-dash-ucard-head">
+					<span class="karmcp-dash-ucard-ico karmcp-dash-ucard-ico--usage"><span class="dashicons dashicons-chart-bar" aria-hidden="true"></span></span>
+					<span class="karmcp-dash-ucard-title">
+						<?php esc_html_e( 'Usage', 'karmcp' ); ?>
+						<?php if ( ! $karmcp_has_usage ) : ?>
+							<span class="karmcp-dash-badge karmcp-dash-badge--pro"><?php esc_html_e( 'Pro', 'karmcp' ); ?></span>
 						<?php endif; ?>
 					</span>
 				</span>
-				<span class="emcp-dash-ucard-kpis">
-					<span class="emcp-dash-ucard-kpi">
-						<span class="emcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $emcp_usage_local['templates'] ) ); ?></span>
-						<span class="emcp-dash-ucard-sub"><?php esc_html_e( 'templates applied', 'emcp-tools' ); ?></span>
+				<span class="karmcp-dash-ucard-kpis">
+					<span class="karmcp-dash-ucard-kpi">
+						<span class="karmcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $karmcp_usage_local['templates'] ) ); ?></span>
+						<span class="karmcp-dash-ucard-sub"><?php esc_html_e( 'templates applied', 'karmcp' ); ?></span>
 					</span>
-					<span class="emcp-dash-ucard-kpi">
-						<span class="emcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $emcp_usage_local['prompts'] ) ); ?></span>
-						<span class="emcp-dash-ucard-sub"><?php esc_html_e( 'prompts copied', 'emcp-tools' ); ?></span>
+					<span class="karmcp-dash-ucard-kpi">
+						<span class="karmcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $karmcp_usage_local['prompts'] ) ); ?></span>
+						<span class="karmcp-dash-ucard-sub"><?php esc_html_e( 'prompts copied', 'karmcp' ); ?></span>
 					</span>
 				</span>
 			</a>
 
 			<!-- History overview -->
-			<a class="emcp-dash-ucard" href="<?php echo esc_url( $emcp_url_history ); ?>">
-				<span class="emcp-dash-ucard-head">
-					<span class="emcp-dash-ucard-ico emcp-dash-ucard-ico--history"><span class="dashicons dashicons-undo" aria-hidden="true"></span></span>
-					<span class="emcp-dash-ucard-title"><?php esc_html_e( 'History', 'emcp-tools' ); ?></span>
+			<a class="karmcp-dash-ucard" href="<?php echo esc_url( $karmcp_url_history ); ?>">
+				<span class="karmcp-dash-ucard-head">
+					<span class="karmcp-dash-ucard-ico karmcp-dash-ucard-ico--history"><span class="dashicons dashicons-undo" aria-hidden="true"></span></span>
+					<span class="karmcp-dash-ucard-title"><?php esc_html_e( 'History', 'karmcp' ); ?></span>
 				</span>
-				<span class="emcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $emcp_changes ) ); ?></span>
-				<span class="emcp-dash-ucard-sub"><?php esc_html_e( 'changes recorded', 'emcp-tools' ); ?></span>
-				<span class="emcp-dash-ucard-foot">
+				<span class="karmcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $karmcp_changes ) ); ?></span>
+				<span class="karmcp-dash-ucard-sub"><?php esc_html_e( 'changes recorded', 'karmcp' ); ?></span>
+				<span class="karmcp-dash-ucard-foot">
 					<?php
-					if ( $emcp_last_ts > 0 ) {
+					if ( $karmcp_last_ts > 0 ) {
 						printf(
 							/* translators: 1: rolled-back count, 2: human-readable time since last change */
-							esc_html__( '%1$s rolled back · last %2$s ago', 'emcp-tools' ),
-							esc_html( number_format_i18n( $emcp_rolled ) ),
-							esc_html( human_time_diff( $emcp_last_ts, time() ) )
+							esc_html__( '%1$s rolled back · last %2$s ago', 'karmcp' ),
+							esc_html( number_format_i18n( $karmcp_rolled ) ),
+							esc_html( human_time_diff( $karmcp_last_ts, time() ) )
 						);
 					} else {
-						esc_html_e( 'No changes recorded yet', 'emcp-tools' );
+						esc_html_e( 'No changes recorded yet', 'karmcp' );
 					}
 					?>
 				</span>
 			</a>
 
 			<!-- Most used actions -->
-			<a class="emcp-dash-ucard" href="<?php echo esc_url( $emcp_url_history ); ?>">
-				<span class="emcp-dash-ucard-head">
-					<span class="emcp-dash-ucard-ico emcp-dash-ucard-ico--tools"><span class="dashicons dashicons-admin-tools" aria-hidden="true"></span></span>
-					<span class="emcp-dash-ucard-title"><?php esc_html_e( 'Most used', 'emcp-tools' ); ?></span>
+			<a class="karmcp-dash-ucard" href="<?php echo esc_url( $karmcp_url_history ); ?>">
+				<span class="karmcp-dash-ucard-head">
+					<span class="karmcp-dash-ucard-ico karmcp-dash-ucard-ico--tools"><span class="dashicons dashicons-admin-tools" aria-hidden="true"></span></span>
+					<span class="karmcp-dash-ucard-title"><?php esc_html_e( 'Most used', 'karmcp' ); ?></span>
 				</span>
-				<?php if ( ! empty( $emcp_top_actions ) ) : ?>
-					<ul class="emcp-dash-ucard-list">
+				<?php if ( ! empty( $karmcp_top_actions ) ) : ?>
+					<ul class="karmcp-dash-ucard-list">
 						<?php
-						foreach ( $emcp_top_actions as $emcp_key => $emcp_cnt ) :
-							$emcp_parts = explode( '|', $emcp_key, 2 );
-							$emcp_dom   = $emcp_parts[0];
-							$emcp_act   = isset( $emcp_parts[1] ) ? $emcp_parts[1] : '';
+						foreach ( $karmcp_top_actions as $karmcp_key => $karmcp_cnt ) :
+							$karmcp_parts = explode( '|', $karmcp_key, 2 );
+							$karmcp_dom   = $karmcp_parts[0];
+							$karmcp_act   = isset( $karmcp_parts[1] ) ? $karmcp_parts[1] : '';
 							?>
 							<li>
-								<span class="emcp-dash-ucard-act"><?php if ( '' !== $emcp_dom ) : ?><span class="emcp-dash-ucard-dom"><?php echo esc_html( $emcp_dom ); ?> </span><?php endif; ?><?php echo esc_html( $emcp_act ); ?></span>
-								<span class="emcp-dash-ucard-cnt"><?php echo esc_html( number_format_i18n( $emcp_cnt ) ); ?></span>
+								<span class="karmcp-dash-ucard-act"><?php if ( '' !== $karmcp_dom ) : ?><span class="karmcp-dash-ucard-dom"><?php echo esc_html( $karmcp_dom ); ?> </span><?php endif; ?><?php echo esc_html( $karmcp_act ); ?></span>
+								<span class="karmcp-dash-ucard-cnt"><?php echo esc_html( number_format_i18n( $karmcp_cnt ) ); ?></span>
 							</li>
 						<?php endforeach; ?>
 					</ul>
 				<?php else : ?>
-					<span class="emcp-dash-ucard-empty"><?php esc_html_e( 'No activity yet', 'emcp-tools' ); ?></span>
+					<span class="karmcp-dash-ucard-empty"><?php esc_html_e( 'No activity yet', 'karmcp' ); ?></span>
 				<?php endif; ?>
 			</a>
 
 			<!-- Sandbox items -->
-			<a class="emcp-dash-ucard" href="<?php echo esc_url( $emcp_url_sandbox ); ?>">
-				<span class="emcp-dash-ucard-head">
-					<span class="emcp-dash-ucard-ico emcp-dash-ucard-ico--sandbox"><span class="dashicons dashicons-editor-code" aria-hidden="true"></span></span>
-					<span class="emcp-dash-ucard-title"><?php esc_html_e( 'Sandbox', 'emcp-tools' ); ?></span>
+			<a class="karmcp-dash-ucard" href="<?php echo esc_url( $karmcp_url_sandbox ); ?>">
+				<span class="karmcp-dash-ucard-head">
+					<span class="karmcp-dash-ucard-ico karmcp-dash-ucard-ico--sandbox"><span class="dashicons dashicons-editor-code" aria-hidden="true"></span></span>
+					<span class="karmcp-dash-ucard-title"><?php esc_html_e( 'Sandbox', 'karmcp' ); ?></span>
 				</span>
-				<span class="emcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $emcp_snip_total ) ); ?></span>
-				<span class="emcp-dash-ucard-sub"><?php esc_html_e( 'Blocks, widgets & snippets', 'emcp-tools' ); ?></span>
-				<span class="emcp-dash-ucard-foot">
+				<span class="karmcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $karmcp_snip_total ) ); ?></span>
+				<span class="karmcp-dash-ucard-sub"><?php esc_html_e( 'Blocks, widgets & snippets', 'karmcp' ); ?></span>
+				<span class="karmcp-dash-ucard-foot">
 					<?php
 					printf(
 						/* translators: 1: active sandbox-item count, 2: draft sandbox-item count */
-						esc_html__( '%1$s active · %2$s drafts', 'emcp-tools' ),
-						esc_html( number_format_i18n( $emcp_snip_active ) ),
-						esc_html( number_format_i18n( $emcp_snip_draft ) )
+						esc_html__( '%1$s active · %2$s drafts', 'karmcp' ),
+						esc_html( number_format_i18n( $karmcp_snip_active ) ),
+						esc_html( number_format_i18n( $karmcp_snip_draft ) )
 					);
 					?>
 				</span>
@@ -330,188 +313,172 @@ $emcp_videos = array(
 	</section>
 
 	<!-- Feature sneak peek -->
-	<!-- Explore your toolkit + EMCP Cloud banner, side by side (75/25) -->
-	<div class="emcp-dash-row emcp-dash-row--toolkit">
-	<section class="emcp-dash-section emcp-dash-section--toolkit" aria-labelledby="emcp-dash-features-h">
-		<div class="emcp-dash-section-head">
-			<h2 id="emcp-dash-features-h" class="emcp-dash-section-title"><?php esc_html_e( 'Explore your toolkit', 'emcp-tools' ); ?></h2>
-			<p class="emcp-dash-section-sub"><?php esc_html_e( 'Everything this plugin can do, jump straight in.', 'emcp-tools' ); ?></p>
+	<!-- Explore your toolkit + KarMCP Cloud banner, side by side (75/25) -->
+	<div class="karmcp-dash-row karmcp-dash-row--toolkit">
+	<section class="karmcp-dash-section karmcp-dash-section--toolkit" aria-labelledby="karmcp-dash-features-h">
+		<div class="karmcp-dash-section-head">
+			<h2 id="karmcp-dash-features-h" class="karmcp-dash-section-title"><?php esc_html_e( 'Explore your toolkit', 'karmcp' ); ?></h2>
+			<p class="karmcp-dash-section-sub"><?php esc_html_e( 'Everything this plugin can do, jump straight in.', 'karmcp' ); ?></p>
 		</div>
-		<div class="emcp-dash-grid">
+		<div class="karmcp-dash-grid">
 			<?php
-			foreach ( $emcp_features as $emcp_feature ) :
-				if ( empty( $emcp_feature['show'] ) ) {
+			foreach ( $karmcp_features as $karmcp_feature ) :
+				if ( empty( $karmcp_feature['show'] ) ) {
 					continue;
 				}
-				$emcp_is_pro_feature = ! empty( $emcp_feature['pro'] );
 				?>
-				<a class="emcp-dash-card" href="<?php echo esc_url( $emcp_feature['href'] ); ?>">
-					<span class="emcp-dash-card-icon"><span class="dashicons <?php echo esc_attr( $emcp_feature['icon'] ); ?>" aria-hidden="true"></span></span>
-					<span class="emcp-dash-card-body">
-						<span class="emcp-dash-card-title">
-							<?php echo esc_html( $emcp_feature['title'] ); ?>
-							<?php if ( $emcp_is_pro_feature && $emcp_is_free ) : ?>
-								<span class="emcp-dash-badge emcp-dash-badge--pro"><?php esc_html_e( 'Pro', 'emcp-tools' ); ?></span>
-							<?php endif; ?>
+				<a class="karmcp-dash-card" href="<?php echo esc_url( $karmcp_feature['href'] ); ?>">
+					<span class="karmcp-dash-card-icon"><span class="dashicons <?php echo esc_attr( $karmcp_feature['icon'] ); ?>" aria-hidden="true"></span></span>
+					<span class="karmcp-dash-card-body">
+						<span class="karmcp-dash-card-title">
+							<?php echo esc_html( $karmcp_feature['title'] ); ?>
 						</span>
-						<span class="emcp-dash-card-desc"><?php echo esc_html( $emcp_feature['desc'] ); ?></span>
+						<span class="karmcp-dash-card-desc"><?php echo esc_html( $karmcp_feature['desc'] ); ?></span>
 					</span>
-					<span class="emcp-dash-card-arrow dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
+					<span class="karmcp-dash-card-arrow dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
 				</a>
 			<?php endforeach; ?>
 		</div>
 	</section>
 
-		<aside class="emcp-dash-side">
-			<!-- EMCP Cloud -->
-			<div class="emcp-dash-promo emcp-dash-promo--cloud">
-				<span class="emcp-dash-promo-badge"><?php esc_html_e( 'EMCP Cloud', 'emcp-tools' ); ?></span>
-				<span class="emcp-dash-promo-icon dashicons dashicons-cloud" aria-hidden="true"></span>
-				<h3 class="emcp-dash-promo-title"><?php esc_html_e( 'Your artifacts, everywhere', 'emcp-tools' ); ?></h3>
-				<p class="emcp-dash-promo-desc"><?php esc_html_e( 'Back up your blocks, widgets and snippets, sync them across sites, and publish to the marketplace.', 'emcp-tools' ); ?></p>
-				<ul class="emcp-dash-promo-list">
-					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Back up & restore anywhere', 'emcp-tools' ); ?></li>
-					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Sync across all your sites', 'emcp-tools' ); ?></li>
-					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Publish & sell on the marketplace', 'emcp-tools' ); ?></li>
+		<aside class="karmcp-dash-side">
+			<!-- KarMCP Cloud -->
+			<div class="karmcp-dash-promo karmcp-dash-promo--cloud">
+				<span class="karmcp-dash-promo-badge"><?php esc_html_e( 'KarMCP Cloud', 'karmcp' ); ?></span>
+				<span class="karmcp-dash-promo-icon dashicons dashicons-cloud" aria-hidden="true"></span>
+				<h3 class="karmcp-dash-promo-title"><?php esc_html_e( 'Your artifacts, everywhere', 'karmcp' ); ?></h3>
+				<p class="karmcp-dash-promo-desc"><?php esc_html_e( 'Back up your blocks, widgets and snippets, sync them across sites, and publish to the marketplace.', 'karmcp' ); ?></p>
+				<ul class="karmcp-dash-promo-list">
+					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Back up & restore anywhere', 'karmcp' ); ?></li>
+					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Sync across all your sites', 'karmcp' ); ?></li>
+					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Publish & sell on the marketplace', 'karmcp' ); ?></li>
 				</ul>
-				<a class="emcp-dash-promo-cta" href="<?php echo esc_url( admin_url( 'admin.php?page=emcp-tools-connection' ) ); ?>">
-					<?php esc_html_e( 'Explore EMCP Cloud', 'emcp-tools' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
+				<a class="karmcp-dash-promo-cta" href="<?php echo esc_url( admin_url( 'admin.php?page=karmcp-connection' ) ); ?>">
+					<?php esc_html_e( 'Explore KarMCP Cloud', 'karmcp' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
 				</a>
 			</div>
-			<!-- EMCP Pro -->
-			<div class="emcp-dash-promo emcp-dash-promo--pro">
-				<span class="emcp-dash-promo-badge"><?php esc_html_e( 'EMCP Pro', 'emcp-tools' ); ?></span>
-				<?php if ( $emcp_is_free ) : ?>
-					<span class="emcp-dash-promo-icon dashicons dashicons-star-filled" aria-hidden="true"></span>
-					<h3 class="emcp-dash-promo-title"><?php esc_html_e( 'Unlock the full toolkit', 'emcp-tools' ); ?></h3>
-					<p class="emcp-dash-promo-desc"><?php esc_html_e( 'Widget & block builder, AI Chat, SEO & accessibility, Themer, Templates, and more.', 'emcp-tools' ); ?></p>
-					<a class="emcp-dash-promo-cta" href="<?php echo esc_url( function_exists( 'emcp_tools_upgrade_url' ) ? emcp_tools_upgrade_url() : 'https://emcptools.com/pricing' ); ?>" target="_blank" rel="noopener noreferrer">
-						<?php esc_html_e( 'Upgrade to Pro', 'emcp-tools' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
-					</a>
-				<?php else : ?>
-					<span class="emcp-dash-promo-icon dashicons dashicons-yes-alt" aria-hidden="true"></span>
-					<h3 class="emcp-dash-promo-title"><?php esc_html_e( 'You\'re on the Pro plan', 'emcp-tools' ); ?></h3>
-					<p class="emcp-dash-promo-desc"><?php esc_html_e( 'Thanks for going Pro — every premium feature is unlocked on this site.', 'emcp-tools' ); ?></p>
-					<span class="emcp-dash-promo-note"><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Pro plan active', 'emcp-tools' ); ?></span>
-				<?php endif; ?>
-			</div>
 		</aside>
-	</div><!-- .emcp-dash-row--toolkit -->
+	</div><!-- .karmcp-dash-row--toolkit -->
 
 	<!-- Video guides + help, side by side (70/30) -->
-	<div class="emcp-dash-row">
+	<div class="karmcp-dash-row">
 
 	<!-- Featured video guides -->
-	<section class="emcp-dash-section emcp-dash-section--videos" aria-labelledby="emcp-dash-videos-h">
-		<div class="emcp-dash-section-head">
-			<h2 id="emcp-dash-videos-h" class="emcp-dash-section-title"><?php esc_html_e( 'Featured video guides', 'emcp-tools' ); ?></h2>
-			<p class="emcp-dash-section-sub"><?php esc_html_e( 'Watch and learn, from first connection to full-page builds.', 'emcp-tools' ); ?></p>
+	<section class="karmcp-dash-section karmcp-dash-section--videos" aria-labelledby="karmcp-dash-videos-h">
+		<div class="karmcp-dash-section-head">
+			<h2 id="karmcp-dash-videos-h" class="karmcp-dash-section-title"><?php esc_html_e( 'Featured video guides', 'karmcp' ); ?></h2>
+			<p class="karmcp-dash-section-sub"><?php esc_html_e( 'Watch and learn, from first connection to full-page builds.', 'karmcp' ); ?></p>
 		</div>
-		<div class="emcp-dash-videos">
+		<div class="karmcp-dash-videos">
 			<?php
-			foreach ( $emcp_videos as $emcp_video ) :
-				$emcp_video_url = 'https://www.youtube.com/watch?v=' . rawurlencode( $emcp_video['id'] );
-				$emcp_video_img = 'https://i.ytimg.com/vi/' . rawurlencode( $emcp_video['id'] ) . '/hqdefault.jpg';
+			foreach ( $karmcp_videos as $karmcp_video ) :
+				$karmcp_video_url = 'https://www.youtube.com/watch?v=' . rawurlencode( $karmcp_video['id'] );
+				$karmcp_video_img = 'https://i.ytimg.com/vi/' . rawurlencode( $karmcp_video['id'] ) . '/hqdefault.jpg';
 				?>
-				<a class="emcp-dash-video" href="<?php echo esc_url( $emcp_video_url ); ?>" target="_blank" rel="noopener noreferrer">
-					<span class="emcp-dash-video-thumb">
-						<img class="emcp-dash-video-img" src="<?php echo esc_url( $emcp_video_img ); ?>" alt="" loading="lazy" />
-						<span class="emcp-dash-video-play" aria-hidden="true"><span class="dashicons dashicons-controls-play"></span></span>
+				<a class="karmcp-dash-video" href="<?php echo esc_url( $karmcp_video_url ); ?>" target="_blank" rel="noopener noreferrer">
+					<span class="karmcp-dash-video-thumb">
+						<img class="karmcp-dash-video-img" src="<?php echo esc_url( $karmcp_video_img ); ?>" alt="" loading="lazy" />
+						<span class="karmcp-dash-video-play" aria-hidden="true"><span class="dashicons dashicons-controls-play"></span></span>
 					</span>
-					<span class="emcp-dash-video-meta">
-						<span class="emcp-dash-video-title"><?php echo esc_html( $emcp_video['title'] ); ?></span>
-						<span class="emcp-dash-video-channel"><span class="dashicons dashicons-video-alt3" aria-hidden="true"></span><?php echo esc_html( $emcp_video['channel'] ); ?></span>
+					<span class="karmcp-dash-video-meta">
+						<span class="karmcp-dash-video-title"><?php echo esc_html( $karmcp_video['title'] ); ?></span>
+						<span class="karmcp-dash-video-channel"><span class="dashicons dashicons-video-alt3" aria-hidden="true"></span><?php echo esc_html( $karmcp_video['channel'] ); ?></span>
 					</span>
 				</a>
 			<?php endforeach; ?>
-			<a class="emcp-dash-video emcp-dash-video--more" href="https://emcptools.com/tutorials" target="_blank" rel="noopener noreferrer">
-				<span class="emcp-dash-more-inner">
-					<span class="emcp-dash-more-icon"><span class="dashicons dashicons-playlist-video" aria-hidden="true"></span></span>
-					<span class="emcp-dash-more-title"><?php esc_html_e( 'Watch More', 'emcp-tools' ); ?></span>
-					<span class="emcp-dash-more-sub"><?php esc_html_e( 'See all tutorials', 'emcp-tools' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></span>
+			<a class="karmcp-dash-video karmcp-dash-video--more" href="https://example.com/tutorials" target="_blank" rel="noopener noreferrer">
+				<span class="karmcp-dash-more-inner">
+					<span class="karmcp-dash-more-icon"><span class="dashicons dashicons-playlist-video" aria-hidden="true"></span></span>
+					<span class="karmcp-dash-more-title"><?php esc_html_e( 'Watch More', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-more-sub"><?php esc_html_e( 'See all tutorials', 'karmcp' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></span>
 				</span>
 			</a>
 		</div>
 	</section>
 
 	<!-- Help & resources -->
-	<section class="emcp-dash-section emcp-dash-section--help" aria-labelledby="emcp-dash-help-h">
-		<div class="emcp-dash-section-head">
-			<h2 id="emcp-dash-help-h" class="emcp-dash-section-title"><?php esc_html_e( 'Help &amp; resources', 'emcp-tools' ); ?></h2>
-			<p class="emcp-dash-section-sub"><?php esc_html_e( 'Quick links to the free and premium support channels.', 'emcp-tools' ); ?></p>
+	<section class="karmcp-dash-section karmcp-dash-section--help" aria-labelledby="karmcp-dash-help-h">
+		<div class="karmcp-dash-section-head">
+			<h2 id="karmcp-dash-help-h" class="karmcp-dash-section-title"><?php esc_html_e( 'Help &amp; resources', 'karmcp' ); ?></h2>
+			<p class="karmcp-dash-section-sub"><?php esc_html_e( 'Quick links to the free and premium support channels.', 'karmcp' ); ?></p>
 		</div>
 		<?php
-		$emcp_ver = class_exists( 'EMCP_Tools_GitHub_Updater' )
-			? EMCP_Tools_GitHub_Updater::current_update_status()
-			: array( 'current' => EMCP_TOOLS_VERSION, 'latest' => EMCP_TOOLS_VERSION, 'update_available' => false, 'update_url' => admin_url( 'plugins.php' ) );
+		// This build updates manually (no GitHub/Freemius updater), so the
+		// installed version is always "latest" as far as the dashboard knows.
+		$karmcp_ver = array(
+			'current'          => KARMCP_VERSION,
+			'latest'           => KARMCP_VERSION,
+			'update_available' => false,
+			'update_url'       => admin_url( 'plugins.php' ),
+		);
 		?>
-		<?php if ( ! empty( $emcp_ver['update_available'] ) ) : ?>
-			<a class="emcp-dash-version emcp-dash-version--update" href="<?php echo esc_url( $emcp_ver['update_url'] ); ?>">
-				<span class="emcp-dash-version-dot" aria-hidden="true"></span>
-				<span class="emcp-dash-version-text">
-					<span class="emcp-dash-version-title"><?php esc_html_e( 'Update available', 'emcp-tools' ); ?></span>
-					<span class="emcp-dash-version-sub">
+		<?php if ( ! empty( $karmcp_ver['update_available'] ) ) : ?>
+			<a class="karmcp-dash-version karmcp-dash-version--update" href="<?php echo esc_url( $karmcp_ver['update_url'] ); ?>">
+				<span class="karmcp-dash-version-dot" aria-hidden="true"></span>
+				<span class="karmcp-dash-version-text">
+					<span class="karmcp-dash-version-title"><?php esc_html_e( 'Update available', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-version-sub">
 						<?php
 						printf(
 							/* translators: 1: installed version, 2: available version */
-							esc_html__( 'You have v%1$s, v%2$s is ready to install.', 'emcp-tools' ),
-							esc_html( $emcp_ver['current'] ),
-							esc_html( $emcp_ver['latest'] )
+							esc_html__( 'You have v%1$s, v%2$s is ready to install.', 'karmcp' ),
+							esc_html( $karmcp_ver['current'] ),
+							esc_html( $karmcp_ver['latest'] )
 						);
 						?>
 					</span>
 				</span>
-				<span class="emcp-dash-version-cta"><?php esc_html_e( 'Update now', 'emcp-tools' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></span>
+				<span class="karmcp-dash-version-cta"><?php esc_html_e( 'Update now', 'karmcp' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></span>
 			</a>
 		<?php else : ?>
-			<div class="emcp-dash-version emcp-dash-version--ok">
-				<span class="emcp-dash-version-dot" aria-hidden="true"></span>
-				<span class="emcp-dash-version-text">
-					<span class="emcp-dash-version-title"><?php esc_html_e( 'You\'re on the latest version', 'emcp-tools' ); ?></span>
-					<span class="emcp-dash-version-sub">
+			<div class="karmcp-dash-version karmcp-dash-version--ok">
+				<span class="karmcp-dash-version-dot" aria-hidden="true"></span>
+				<span class="karmcp-dash-version-text">
+					<span class="karmcp-dash-version-title"><?php esc_html_e( 'You\'re on the latest version', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-version-sub">
 						<?php
 						printf(
 							/* translators: %s: installed version number */
-							esc_html__( 'EMCP Tools v%s', 'emcp-tools' ),
-							esc_html( $emcp_ver['current'] )
+							esc_html__( 'KarMCP v%s', 'karmcp' ),
+							esc_html( $karmcp_ver['current'] )
 						);
 						?>
 					</span>
 				</span>
 			</div>
 		<?php endif; ?>
-		<div class="emcp-dash-help">
-			<a class="emcp-dash-help-link" href="https://emcptools.com/docs" target="_blank" rel="noopener noreferrer">
+		<div class="karmcp-dash-help">
+			<a class="karmcp-dash-help-link" href="https://example.com/docs" target="_blank" rel="noopener noreferrer">
 				<span class="dashicons dashicons-book" aria-hidden="true"></span>
 				<span>
-					<span class="emcp-dash-help-title"><?php esc_html_e( 'Documentation', 'emcp-tools' ); ?></span>
-					<span class="emcp-dash-help-desc"><?php esc_html_e( 'Guides and reference for every feature.', 'emcp-tools' ); ?></span>
+					<span class="karmcp-dash-help-title"><?php esc_html_e( 'Documentation', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-help-desc"><?php esc_html_e( 'Guides and reference for every feature.', 'karmcp' ); ?></span>
 				</span>
 			</a>
-			<a class="emcp-dash-help-link" href="https://support.msrbuilds.com/" target="_blank" rel="noopener noreferrer">
+			<a class="karmcp-dash-help-link" href="https://support.msrbuilds.com/" target="_blank" rel="noopener noreferrer">
 				<span class="dashicons dashicons-sos" aria-hidden="true"></span>
 				<span>
-					<span class="emcp-dash-help-title"><?php esc_html_e( 'Ticket Support', 'emcp-tools' ); ?></span>
-					<span class="emcp-dash-help-desc"><?php esc_html_e( 'Stuck? Open a ticket with our team.', 'emcp-tools' ); ?></span>
+					<span class="karmcp-dash-help-title"><?php esc_html_e( 'Ticket Support', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-help-desc"><?php esc_html_e( 'Stuck? Open a ticket with our team.', 'karmcp' ); ?></span>
 				</span>
 			</a>
-			<a class="emcp-dash-help-link" href="https://www.facebook.com/groups/emcptools" target="_blank" rel="noopener noreferrer">
+			<a class="karmcp-dash-help-link" href="https://www.facebook.com/groups/karmcptools" target="_blank" rel="noopener noreferrer">
 				<span class="dashicons dashicons-groups" aria-hidden="true"></span>
 				<span>
-					<span class="emcp-dash-help-title"><?php esc_html_e( 'Community', 'emcp-tools' ); ?></span>
-					<span class="emcp-dash-help-desc"><?php esc_html_e( 'Share builds and get tips from other users.', 'emcp-tools' ); ?></span>
+					<span class="karmcp-dash-help-title"><?php esc_html_e( 'Community', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-help-desc"><?php esc_html_e( 'Share builds and get tips from other users.', 'karmcp' ); ?></span>
 				</span>
 			</a>
-			<a class="emcp-dash-help-link" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $emcp_page . '-changelog' ) ); ?>">
+			<a class="karmcp-dash-help-link" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $karmcp_page . '-changelog' ) ); ?>">
 				<span class="dashicons dashicons-backup" aria-hidden="true"></span>
 				<span>
-					<span class="emcp-dash-help-title"><?php esc_html_e( 'Changelog', 'emcp-tools' ); ?></span>
-					<span class="emcp-dash-help-desc"><?php esc_html_e( 'See what\'s new in the latest releases.', 'emcp-tools' ); ?></span>
+					<span class="karmcp-dash-help-title"><?php esc_html_e( 'Changelog', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-help-desc"><?php esc_html_e( 'See what\'s new in the latest releases.', 'karmcp' ); ?></span>
 				</span>
 			</a>
 		</div>
 	</section>
 
-	</div><!-- .emcp-dash-row -->
+	</div><!-- .karmcp-dash-row -->
 
 </div>

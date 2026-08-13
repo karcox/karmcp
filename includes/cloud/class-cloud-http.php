@@ -1,15 +1,15 @@
 <?php
 /**
- * EMCP Cloud HTTP transport (JSON + form POST), with a test-injectable seam.
+ * KarMCP Cloud HTTP transport (JSON + form POST), with a test-injectable seam.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Cloud_Http {
+class KarMCP_Cloud_Http {
 	const TIMEOUT = 20;
 
 	/** @var callable|null Test seam: fn($url,$args) => ['code'=>int,'json'=>array]|WP_Error. */

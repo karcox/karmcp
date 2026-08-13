@@ -5,7 +5,7 @@
  * Registers 3 tools for searching, sideloading, and adding stock images
  * from the configured stock provider (Unsplash, Pexels, or Pixabay).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.1.0
  */
 
@@ -18,15 +18,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.1.0
  */
-class EMCP_Tools_Stock_Image_Abilities {
+class KarMCP_Stock_Image_Abilities {
 
 	/**
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
-	 * @var EMCP_Tools_Element_Factory
+	 * @var KarMCP_Element_Factory
 	 */
 	private $factory;
 
@@ -35,10 +35,10 @@ class EMCP_Tools_Stock_Image_Abilities {
 	 *
 	 * @since 1.1.0
 	 *
-	 * @param EMCP_Tools_Data            $data    The data access layer.
-	 * @param EMCP_Tools_Element_Factory $factory The element factory.
+	 * @param KarMCP_Data            $data    The data access layer.
+	 * @param KarMCP_Element_Factory $factory The element factory.
 	 */
-	public function __construct( EMCP_Tools_Data $data, EMCP_Tools_Element_Factory $factory ) {
+	public function __construct( KarMCP_Data $data, KarMCP_Element_Factory $factory ) {
 		$this->data    = $data;
 		$this->factory = $factory;
 	}
@@ -52,9 +52,9 @@ class EMCP_Tools_Stock_Image_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/search-images',
-			'emcp-tools/sideload-image',
-			'emcp-tools/add-stock-image',
+			'karmcp/search-images',
+			'karmcp/sideload-image',
+			'karmcp/add-stock-image',
 		);
 	}
 
@@ -99,7 +99,7 @@ class EMCP_Tools_Stock_Image_Abilities {
 	 * @return string[]
 	 */
 	public function provider_tool_names(): array {
-		return array( 'emcp-tools/search-images', 'emcp-tools/sideload-image' );
+		return array( 'karmcp/search-images', 'karmcp/sideload-image' );
 	}
 
 	// -------------------------------------------------------------------------
@@ -154,12 +154,12 @@ class EMCP_Tools_Stock_Image_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_search_images(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/search-images',
+		karmcp_register_ability(
+			'karmcp/search-images',
 			array(
-				'label'               => __( 'Search Images', 'emcp-tools' ),
-				'description'         => __( 'Searches a stock-photo provider (Unsplash, Pexels, or Pixabay) for high-quality images. Returns image URLs, thumbnails, dimensions, and attribution. Use the returned URLs with sideload-image or add-stock-image. Requires a free API key for at least one provider (set on EMCP Tools → Connection).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Search Images', 'karmcp' ),
+				'description'         => __( 'Searches a stock-photo provider (Unsplash, Pexels, or Pixabay) for high-quality images. Returns image URLs, thumbnails, dimensions, and attribution. Use the returned URLs with sideload-image or add-stock-image. Requires a free API key for at least one provider (set on KarMCP → Connection).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_search_images' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -167,25 +167,25 @@ class EMCP_Tools_Stock_Image_Abilities {
 					'properties' => array(
 						'query'        => array(
 							'type'        => 'string',
-							'description' => __( 'Search keywords (e.g. "mountain landscape", "modern office").', 'emcp-tools' ),
+							'description' => __( 'Search keywords (e.g. "mountain landscape", "modern office").', 'karmcp' ),
 						),
 						'provider'     => array(
 							'type'        => 'string',
 							'enum'        => array( 'unsplash', 'pexels', 'pixabay' ),
-							'description' => __( 'Which stock provider to search. Omit to use the first one you have connected.', 'emcp-tools' ),
+							'description' => __( 'Which stock provider to search. Omit to use the first one you have connected.', 'karmcp' ),
 						),
 						'page'         => array(
 							'type'        => 'integer',
-							'description' => __( 'Page number. Default: 1.', 'emcp-tools' ),
+							'description' => __( 'Page number. Default: 1.', 'karmcp' ),
 						),
 						'page_size'    => array(
 							'type'        => 'integer',
-							'description' => __( 'Results per page. Default: 5.', 'emcp-tools' ),
+							'description' => __( 'Results per page. Default: 5.', 'karmcp' ),
 						),
 						'aspect_ratio' => array(
 							'type'        => 'string',
 							'enum'        => array( 'tall', 'wide', 'square' ),
-							'description' => __( 'Filter by orientation. Use "wide" (landscape) for hero banners, cards, and most page layouts. Use "tall" (portrait) for sidebar images. Use "square" for avatars and thumbnails.', 'emcp-tools' ),
+							'description' => __( 'Filter by orientation. Use "wide" (landscape) for hero banners, cards, and most page layouts. Use "tall" (portrait) for sidebar images. Use "square" for avatars and thumbnails.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'query' ),
@@ -243,10 +243,10 @@ class EMCP_Tools_Stock_Image_Abilities {
 	public function execute_search_images( $input ) {
 		$query = sanitize_text_field( $input['query'] ?? '' );
 		if ( empty( $query ) ) {
-			return new \WP_Error( 'missing_query', __( 'The query parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_query', __( 'The query parameter is required.', 'karmcp' ) );
 		}
 
-		$resolved = EMCP_Tools_Stock_Image_Providers::resolve( sanitize_key( $input['provider'] ?? '' ) );
+		$resolved = KarMCP_Stock_Image_Providers::resolve( sanitize_key( $input['provider'] ?? '' ) );
 		if ( is_wp_error( $resolved ) ) {
 			return $resolved;
 		}
@@ -320,12 +320,12 @@ class EMCP_Tools_Stock_Image_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_sideload_image(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/sideload-image',
+		karmcp_register_ability(
+			'karmcp/sideload-image',
 			array(
-				'label'               => __( 'Sideload Image', 'emcp-tools' ),
-				'description'         => __( 'Downloads an external image URL into the WordPress Media Library and returns the local attachment ID and URL. Use this after search-images: pass the EXACT `url` from a search result, never construct, guess, or edit an image URL (a made-up URL 404s, and the Unsplash api.unsplash.com/…/download endpoint needs a key). For stock photos, prefer add-stock-image, which searches, sideloads, and places the image in one call.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Sideload Image', 'karmcp' ),
+				'description'         => __( 'Downloads an external image URL into the WordPress Media Library and returns the local attachment ID and URL. Use this after search-images: pass the EXACT `url` from a search result, never construct, guess, or edit an image URL (a made-up URL 404s, and the Unsplash api.unsplash.com/…/download endpoint needs a key). For stock photos, prefer add-stock-image, which searches, sideloads, and places the image in one call.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_sideload_image' ),
 				'permission_callback' => array( $this, 'check_upload_permission' ),
 				'input_schema'        => array(
@@ -333,27 +333,27 @@ class EMCP_Tools_Stock_Image_Abilities {
 					'properties' => array(
 						'url'         => array(
 							'type'        => 'string',
-							'description' => __( 'The external image URL to download.', 'emcp-tools' ),
+							'description' => __( 'The external image URL to download.', 'karmcp' ),
 						),
 						'title'       => array(
 							'type'        => 'string',
-							'description' => __( 'Attachment title. Falls back to the filename.', 'emcp-tools' ),
+							'description' => __( 'Attachment title. Falls back to the filename.', 'karmcp' ),
 						),
 						'alt_text'    => array(
 							'type'        => 'string',
-							'description' => __( 'Alt text for the image.', 'emcp-tools' ),
+							'description' => __( 'Alt text for the image.', 'karmcp' ),
 						),
 						'caption'     => array(
 							'type'        => 'string',
-							'description' => __( 'Image caption.', 'emcp-tools' ),
+							'description' => __( 'Image caption.', 'karmcp' ),
 						),
 						'attribution' => array(
 							'type'        => 'string',
-							'description' => __( 'Attribution text for Creative Commons images. Stored as the attachment caption/excerpt.', 'emcp-tools' ),
+							'description' => __( 'Attribution text for Creative Commons images. Stored as the attachment caption/excerpt.', 'karmcp' ),
 						),
 						'convert_webp' => array(
 							'type'        => 'boolean',
-							'description' => __( 'Convert the uploaded image to WebP (default true). Set false to skip conversion when it is timing out on shared hosting.', 'emcp-tools' ),
+							'description' => __( 'Convert the uploaded image to WebP (default true). Set false to skip conversion when it is timing out on shared hosting.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'url' ),
@@ -392,7 +392,7 @@ class EMCP_Tools_Stock_Image_Abilities {
 		$url = esc_url_raw( $input['url'] ?? '' );
 
 		if ( empty( $url ) ) {
-			return new \WP_Error( 'missing_url', __( 'The url parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_url', __( 'The url parameter is required.', 'karmcp' ) );
 		}
 
 		// Load required WordPress media functions.
@@ -407,11 +407,11 @@ class EMCP_Tools_Stock_Image_Abilities {
 		// instead of the direct image URL; that 401s without the API key.
 		// Resolve it to the real image URL when we have a key.
 		if (
-			class_exists( 'EMCP_Tools_Unsplash_Client' )
+			class_exists( 'KarMCP_Unsplash_Client' )
 			&& false !== strpos( $url, 'api.unsplash.com' )
 			&& false !== strpos( $url, '/download' )
 		) {
-			$resolved = EMCP_Tools_Unsplash_Client::resolve_download( $url );
+			$resolved = KarMCP_Unsplash_Client::resolve_download( $url );
 			if ( ! is_wp_error( $resolved ) && '' !== $resolved ) {
 				$url = esc_url_raw( $resolved );
 			}
@@ -419,7 +419,7 @@ class EMCP_Tools_Stock_Image_Abilities {
 
 		// Download the file to a temp location (SSRF-guarded: blocks private/
 		// reserved/loopback hosts and re-validates each redirect hop).
-		$tmp_file = EMCP_Tools_Url_Guard::safe_download( $url, 30 );
+		$tmp_file = KarMCP_Url_Guard::safe_download( $url, 30 );
 
 		if ( is_wp_error( $tmp_file ) ) {
 			// Make the failure actionable so an agent corrects the URL rather than
@@ -427,17 +427,17 @@ class EMCP_Tools_Stock_Image_Abilities {
 			$msg  = $tmp_file->get_error_message();
 			$hint = '';
 			if ( false !== strpos( $url, 'api.unsplash.com' ) ) {
-				$hint = ' ' . __( 'That is the Unsplash API URL, pass the direct image `url` from search-images instead, or use add-stock-image.', 'emcp-tools' );
+				$hint = ' ' . __( 'That is the Unsplash API URL, pass the direct image `url` from search-images instead, or use add-stock-image.', 'karmcp' );
 			} elseif ( preg_match( '/not found|404/i', $msg ) ) {
-				$hint = ' ' . __( 'Use the exact `url` returned by search-images (do not construct or edit image URLs), or use add-stock-image (search + sideload + place in one call).', 'emcp-tools' );
+				$hint = ' ' . __( 'Use the exact `url` returned by search-images (do not construct or edit image URLs), or use add-stock-image (search + sideload + place in one call).', 'karmcp' );
 			} elseif ( preg_match( '/unauthorized|forbidden|401|403/i', $msg ) ) {
-				$hint = ' ' . __( 'The URL requires authorization, use the direct `url` from search-images, or use add-stock-image.', 'emcp-tools' );
+				$hint = ' ' . __( 'The URL requires authorization, use the direct `url` from search-images, or use add-stock-image.', 'karmcp' );
 			}
 			return new \WP_Error(
 				'download_failed',
 				sprintf(
 					/* translators: %s: error message */
-					__( 'Failed to download image: %s', 'emcp-tools' ),
+					__( 'Failed to download image: %s', 'karmcp' ),
 					$msg
 				) . $hint
 			);
@@ -464,11 +464,11 @@ class EMCP_Tools_Stock_Image_Abilities {
 		// suppress that work for just this upload.
 		$skip_webp = array_key_exists( 'convert_webp', (array) $input ) && false === $input['convert_webp'];
 		if ( $skip_webp ) {
-			add_filter( 'emcp_tools_optimize_attachment', '__return_false', 99 );
+			add_filter( 'karmcp_optimize_attachment', '__return_false', 99 );
 		}
 		$attachment_id = media_handle_sideload( $file_array, 0 );
 		if ( $skip_webp ) {
-			remove_filter( 'emcp_tools_optimize_attachment', '__return_false', 99 );
+			remove_filter( 'karmcp_optimize_attachment', '__return_false', 99 );
 		}
 
 		if ( is_wp_error( $attachment_id ) ) {
@@ -481,7 +481,7 @@ class EMCP_Tools_Stock_Image_Abilities {
 				'sideload_failed',
 				sprintf(
 					/* translators: 1: source URL, 2: error message */
-					__( 'Image download/processing failed or timed out for %1$s: %2$s. Retry, or pass convert_webp:false to skip WebP conversion.', 'emcp-tools' ),
+					__( 'Image download/processing failed or timed out for %1$s: %2$s. Retry, or pass convert_webp:false to skip WebP conversion.', 'karmcp' ),
 					esc_url_raw( (string) ( $input['url'] ?? '' ) ),
 					$attachment_id->get_error_message()
 				)
@@ -531,12 +531,12 @@ class EMCP_Tools_Stock_Image_Abilities {
 	// -------------------------------------------------------------------------
 
 	private function register_add_stock_image(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/add-stock-image',
+		karmcp_register_ability(
+			'karmcp/add-stock-image',
 			array(
-				'label'               => __( 'Add Stock Image', 'emcp-tools' ),
-				'description'         => __( 'Searches a stock provider (Unsplash, Pexels, or Pixabay) for a photo, downloads it to the Media Library, and adds it as an image widget to the page, all in one step. Defaults to landscape (wide) images for consistent layouts. Combines search-images + sideload-image + add-free-widget. Requires a free API key for at least one provider (EMCP Tools → Connection).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Stock Image', 'karmcp' ),
+				'description'         => __( 'Searches a stock provider (Unsplash, Pexels, or Pixabay) for a photo, downloads it to the Media Library, and adds it as an image widget to the page, all in one step. Defaults to landscape (wide) images for consistent layouts. Combines search-images + sideload-image + add-free-widget. Requires a free API key for at least one provider (KarMCP → Connection).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_stock_image' ),
 				'permission_callback' => array( $this, 'check_combined_permission' ),
 				'input_schema'        => array(
@@ -544,60 +544,60 @@ class EMCP_Tools_Stock_Image_Abilities {
 					'properties' => array(
 						'post_id'    => array(
 							'type'        => 'integer',
-							'description' => __( 'The post/page ID.', 'emcp-tools' ),
+							'description' => __( 'The post/page ID.', 'karmcp' ),
 						),
 						'parent_id'  => array(
 							'type'        => 'string',
-							'description' => __( 'Parent container element ID.', 'emcp-tools' ),
+							'description' => __( 'Parent container element ID.', 'karmcp' ),
 						),
 						'query'      => array(
 							'type'        => 'string',
-							'description' => __( 'Image search keywords (e.g. "hero banner technology", "team photo office").', 'emcp-tools' ),
+							'description' => __( 'Image search keywords (e.g. "hero banner technology", "team photo office").', 'karmcp' ),
 						),
 						'provider'   => array(
 							'type'        => 'string',
 							'enum'        => array( 'unsplash', 'pexels', 'pixabay' ),
-							'description' => __( 'Which stock provider to use. Omit to use the first one you have connected.', 'emcp-tools' ),
+							'description' => __( 'Which stock provider to use. Omit to use the first one you have connected.', 'karmcp' ),
 						),
 						'index'      => array(
 							'type'        => 'integer',
-							'description' => __( 'Which search result to use (0 = best match). Default: 0.', 'emcp-tools' ),
+							'description' => __( 'Which search result to use (0 = best match). Default: 0.', 'karmcp' ),
 						),
 						'position'   => array(
 							'type'        => 'integer',
-							'description' => __( 'Insert position within parent. -1 = append (default).', 'emcp-tools' ),
+							'description' => __( 'Insert position within parent. -1 = append (default).', 'karmcp' ),
 						),
 						'image_size' => array(
 							'type'        => 'string',
 							'enum'        => array( 'thumbnail', 'medium', 'medium_large', 'large', 'full' ),
-							'description' => __( 'Image size preset. Default: full.', 'emcp-tools' ),
+							'description' => __( 'Image size preset. Default: full.', 'karmcp' ),
 						),
 						'align'      => array(
 							'type'        => 'string',
 							'enum'        => array( 'left', 'center', 'right' ),
-							'description' => __( 'Image alignment.', 'emcp-tools' ),
+							'description' => __( 'Image alignment.', 'karmcp' ),
 						),
 						'caption'    => array(
 							'type'        => 'string',
-							'description' => __( 'Caption override. Defaults to the Unsplash photographer attribution.', 'emcp-tools' ),
+							'description' => __( 'Caption override. Defaults to the Unsplash photographer attribution.', 'karmcp' ),
 						),
 						'aspect_ratio' => array(
 							'type'        => 'string',
 							'enum'        => array( 'wide', 'tall', 'square', 'any' ),
-							'description' => __( 'Image aspect ratio filter. Default: wide (landscape). Use "wide" for hero banners and card images, "tall" for sidebar/portrait, "square" for thumbnails, "any" for no filter.', 'emcp-tools' ),
+							'description' => __( 'Image aspect ratio filter. Default: wide (landscape). Use "wide" for hero banners and card images, "tall" for sidebar/portrait, "square" for thumbnails, "any" for no filter.', 'karmcp' ),
 						),
 						'alt_text'   => array(
 							'type'        => 'string',
-							'description' => __( 'Alt text override. Defaults to the image title.', 'emcp-tools' ),
+							'description' => __( 'Alt text override. Defaults to the image title.', 'karmcp' ),
 						),
 						'link_to'    => array(
 							'type'        => 'string',
 							'enum'        => array( 'none', 'file', 'custom' ),
-							'description' => __( 'Link behavior. Default: none.', 'emcp-tools' ),
+							'description' => __( 'Link behavior. Default: none.', 'karmcp' ),
 						),
 						'convert_webp' => array(
 							'type'        => 'boolean',
-							'description' => __( 'Convert the uploaded image to WebP (default true). Set false to skip conversion when it is timing out on shared hosting.', 'emcp-tools' ),
+							'description' => __( 'Convert the uploaded image to WebP (default true). Set false to skip conversion when it is timing out on shared hosting.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'post_id', 'parent_id', 'query' ),
@@ -643,11 +643,11 @@ class EMCP_Tools_Stock_Image_Abilities {
 		$position  = intval( $input['position'] ?? -1 );
 
 		if ( ! $post_id || empty( $parent_id ) || empty( $query ) ) {
-			return new \WP_Error( 'missing_params', __( 'post_id, parent_id, and query are required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'post_id, parent_id, and query are required.', 'karmcp' ) );
 		}
 
 		// Resolve the stock provider (requested one, else first connected).
-		$resolved = EMCP_Tools_Stock_Image_Providers::resolve( sanitize_key( $input['provider'] ?? '' ) );
+		$resolved = KarMCP_Stock_Image_Providers::resolve( sanitize_key( $input['provider'] ?? '' ) );
 		if ( is_wp_error( $resolved ) ) {
 			return $resolved;
 		}
@@ -678,7 +678,7 @@ class EMCP_Tools_Stock_Image_Abilities {
 				'no_results',
 				sprintf(
 					/* translators: %s: search query */
-					__( 'No images found for "%s". Try different keywords.', 'emcp-tools' ),
+					__( 'No images found for "%s". Try different keywords.', 'karmcp' ),
 					$query
 				)
 			);
@@ -689,7 +689,7 @@ class EMCP_Tools_Stock_Image_Abilities {
 				'invalid_index',
 				sprintf(
 					/* translators: %1$d: requested index, %2$d: available count */
-					__( 'Requested image index %1$d but only %2$d results were returned.', 'emcp-tools' ),
+					__( 'Requested image index %1$d but only %2$d results were returned.', 'karmcp' ),
 					$index,
 					count( $search_result['results'] )
 				)
@@ -767,7 +767,7 @@ class EMCP_Tools_Stock_Image_Abilities {
 		$inserted = $this->data->insert_element( $page_data, $parent_id, $widget, $position );
 
 		if ( ! $inserted ) {
-			return new \WP_Error( 'parent_not_found', __( 'Parent container not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'parent_not_found', __( 'Parent container not found.', 'karmcp' ) );
 		}
 
 		$result = $this->data->save_page_data( $post_id, $page_data );

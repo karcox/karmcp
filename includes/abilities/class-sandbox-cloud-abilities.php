@@ -3,16 +3,16 @@
  * Sandbox Cloud abilities — export/import any sandbox artifact (block/widget/
  * snippet) as a portable bundle over the cloud contract.
  *
- * This is the single MCP surface a future EMCP Cloud client reuses: it does
+ * This is the single MCP surface a future KarMCP Cloud client reuses: it does
  * not know or care which concrete store backs a given artifact kind, only
- * that the resolved store implements EMCP_Tools_Sandbox_Artifact. Two tools:
+ * that the resolved store implements KarMCP_Sandbox_Artifact. Two tools:
  *
  *   - `export-sandbox-artifact` — { kind, id } -> { bundle }
  *   - `import-sandbox-artifact` — { bundle }   -> { id }
  *
  * Free tree. Unlike the Widget Builder / Widget Generator abilities, this
  * class does NOT self-gate on Pro — the tools always register. The `block`
- * kind is Pro-only via the resolver: `EMCP_Tools_Block_Store` is absent on
+ * kind is Pro-only via the resolver: `KarMCP_Block_Store` is absent on
  * free sites, so `resolve_artifact('block')` returns null there and a block
  * export/import cleanly fails with a `pro_required` WP_Error instead of a
  * fatal. Each resolved artifact's own store still enforces its own
@@ -20,7 +20,7 @@
  * checks Pro + manage_options) — this class only adds the manage_options
  * floor common to both tools.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.7.0
  */
 
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.7.0
  */
-class EMCP_Tools_Sandbox_Cloud_Abilities {
+class KarMCP_Sandbox_Cloud_Abilities {
 
 	/**
 	 * Registered ability names.
@@ -51,8 +51,8 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/export-sandbox-artifact',
-			'emcp-tools/import-sandbox-artifact',
+			'karmcp/export-sandbox-artifact',
+			'karmcp/import-sandbox-artifact',
 		);
 	}
 
@@ -87,25 +87,25 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Resolves an artifact kind to its backing EMCP_Tools_Sandbox_Artifact
+	 * Resolves an artifact kind to its backing KarMCP_Sandbox_Artifact
 	 * store/adapter.
 	 *
 	 * @since 3.7.0
 	 *
 	 * @param string $kind One of 'block', 'widget', 'snippet'.
-	 * @return EMCP_Tools_Sandbox_Artifact|null Null when the kind is unknown,
+	 * @return KarMCP_Sandbox_Artifact|null Null when the kind is unknown,
 	 *                                          or when its backing class is
 	 *                                          unavailable (block store is
 	 *                                          Pro-only).
 	 */
-	public function resolve_artifact( string $kind ): ?EMCP_Tools_Sandbox_Artifact {
+	public function resolve_artifact( string $kind ): ?KarMCP_Sandbox_Artifact {
 		switch ( $kind ) {
 			case 'block':
-				return class_exists( 'EMCP_Tools_Block_Store' ) ? EMCP_Tools_Block_Store::instance() : null;
+				return class_exists( 'KarMCP_Block_Store' ) ? KarMCP_Block_Store::instance() : null;
 			case 'widget':
-				return new EMCP_Tools_Widget_Bundle_Adapter();
+				return new KarMCP_Widget_Bundle_Adapter();
 			case 'snippet':
-				return new EMCP_Tools_Snippet_Bundle_Adapter();
+				return new KarMCP_Snippet_Bundle_Adapter();
 			default:
 				return null;
 		}
@@ -116,18 +116,18 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Registers `emcp-tools/export-sandbox-artifact`.
+	 * Registers `karmcp/export-sandbox-artifact`.
 	 *
 	 * @since 3.7.0
 	 */
 	private function register_export_sandbox_artifact(): void {
-		$this->ability_names[] = 'emcp-tools/export-sandbox-artifact';
-		emcp_tools_register_ability(
-			'emcp-tools/export-sandbox-artifact',
+		$this->ability_names[] = 'karmcp/export-sandbox-artifact';
+		karmcp_register_ability(
+			'karmcp/export-sandbox-artifact',
 			array(
-				'label'               => __( 'Export Sandbox Artifact', 'emcp-tools' ),
-				'description'         => __( 'Exports a sandbox artifact (custom block, custom widget, or PHP snippet) as a portable, checksum-verified bundle suitable for sharing or cloud sync.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Export Sandbox Artifact', 'karmcp' ),
+				'description'         => __( 'Exports a sandbox artifact (custom block, custom widget, or PHP snippet) as a portable, checksum-verified bundle suitable for sharing or cloud sync.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_export' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
@@ -136,11 +136,11 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 						'kind' => array(
 							'type'        => 'string',
 							'enum'        => array( 'block', 'widget', 'snippet' ),
-							'description' => __( 'The kind of sandbox artifact to export.', 'emcp-tools' ),
+							'description' => __( 'The kind of sandbox artifact to export.', 'karmcp' ),
 						),
 						'id'   => array(
 							'type'        => 'integer',
-							'description' => __( 'The artifact\'s local post ID.', 'emcp-tools' ),
+							'description' => __( 'The artifact\'s local post ID.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'kind', 'id' ),
@@ -189,18 +189,18 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Registers `emcp-tools/import-sandbox-artifact`.
+	 * Registers `karmcp/import-sandbox-artifact`.
 	 *
 	 * @since 3.7.0
 	 */
 	private function register_import_sandbox_artifact(): void {
-		$this->ability_names[] = 'emcp-tools/import-sandbox-artifact';
-		emcp_tools_register_ability(
-			'emcp-tools/import-sandbox-artifact',
+		$this->ability_names[] = 'karmcp/import-sandbox-artifact';
+		karmcp_register_ability(
+			'karmcp/import-sandbox-artifact',
 			array(
-				'label'               => __( 'Import Sandbox Artifact', 'emcp-tools' ),
-				'description'         => __( 'Imports a portable sandbox-artifact bundle (custom block, custom widget, or PHP snippet) as a new local draft. The bundle is validated (schema version, checksum) before anything is written.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Import Sandbox Artifact', 'karmcp' ),
+				'description'         => __( 'Imports a portable sandbox-artifact bundle (custom block, custom widget, or PHP snippet) as a new local draft. The bundle is validated (schema version, checksum) before anything is written.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_import' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
@@ -208,7 +208,7 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 					'properties' => array(
 						'bundle' => array(
 							'type'        => 'object',
-							'description' => __( 'A bundle produced by export-sandbox-artifact.', 'emcp-tools' ),
+							'description' => __( 'A bundle produced by export-sandbox-artifact.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'bundle' ),
@@ -238,7 +238,7 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 	public function execute_import( $input ) {
 		$bundle = isset( $input['bundle'] ) && is_array( $input['bundle'] ) ? $input['bundle'] : array();
 
-		$valid = EMCP_Tools_Sandbox_Bundle::validate( $bundle );
+		$valid = KarMCP_Sandbox_Bundle::validate( $bundle );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
 		}
@@ -273,12 +273,12 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 	 * @return WP_Error
 	 */
 	private function unresolved_kind_error( string $kind ): WP_Error {
-		if ( in_array( $kind, EMCP_Tools_Sandbox_Bundle::KINDS, true ) ) {
+		if ( in_array( $kind, KarMCP_Sandbox_Bundle::KINDS, true ) ) {
 			return new WP_Error(
 				'pro_required',
 				sprintf(
 					/* translators: %s: artifact kind (e.g. "block") */
-					__( 'The "%s" artifact kind requires EMCP Tools Pro.', 'emcp-tools' ),
+					__( 'The "%s" artifact kind requires KarMCP Pro.', 'karmcp' ),
 					$kind
 				)
 			);
@@ -288,7 +288,7 @@ class EMCP_Tools_Sandbox_Cloud_Abilities {
 			'unsupported_kind',
 			sprintf(
 				/* translators: %s: artifact kind */
-				__( 'Unsupported sandbox artifact kind "%s".', 'emcp-tools' ),
+				__( 'Unsupported sandbox artifact kind "%s".', 'karmcp' ),
 				$kind
 			)
 		);

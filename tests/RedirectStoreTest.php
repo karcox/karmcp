@@ -1,11 +1,11 @@
 <?php
 /**
- * Public unit tests for EMCP_Tools_Redirect_Store — the DB-free surface:
+ * Public unit tests for KarMCP_Redirect_Store — the DB-free surface:
  * path normalization, loop guarding, target resolution, and create()'s
  * pre-DB validation branches. Persistence (insert/get/all/hit/rollback) is
  * covered by the live wp-cli smoke against a real database.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 require_once dirname( __DIR__ ) . '/includes/redirects/class-redirect-store.php';
@@ -13,11 +13,11 @@ require_once dirname( __DIR__ ) . '/includes/redirects/class-redirect-store.php'
 class RedirectStoreTest extends \PHPUnit\Framework\TestCase {
 
 	protected function setUp(): void {
-		emcp_test_reset();
+		karmcp_test_reset();
 	}
 
 	/** @var string */
-	private $store = 'EMCP_Tools_Redirect_Store';
+	private $store = 'KarMCP_Redirect_Store';
 
 	public function test_normalize_path_strips_scheme_host_query_and_trailing_slash() {
 		$n = $this->store;

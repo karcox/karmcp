@@ -7,7 +7,7 @@
  * Fixed/New/Improved tags, blockquote note callouts, nested sub-items, and
  * inline markdown (bold, `code`, and links) rendered to HTML.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.4.0
  */
 
@@ -23,8 +23,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param string $text Raw markdown text.
  * @return string Sanitized HTML.
  */
-if ( ! function_exists( 'emcp_tools_changelog_inline_md' ) ) {
-	function emcp_tools_changelog_inline_md( string $text ): string {
+if ( ! function_exists( 'karmcp_changelog_inline_md' ) ) {
+	function karmcp_changelog_inline_md( string $text ): string {
 		$html = esc_html( $text );
 
 		// Inline code: `code`.
@@ -73,8 +73,8 @@ if ( ! function_exists( 'emcp_tools_changelog_inline_md' ) ) {
  * @param string $text Item text.
  * @return array{tag:string,rest:string}
  */
-if ( ! function_exists( 'emcp_tools_changelog_tag' ) ) {
-	function emcp_tools_changelog_tag( string $text ): array {
+if ( ! function_exists( 'karmcp_changelog_tag' ) ) {
+	function karmcp_changelog_tag( string $text ): array {
 		if ( preg_match( '/^(Fixed|New|Improved|Changed|Removed|Security|Deprecated|Note):\s*/i', $text, $m ) ) {
 			return array(
 				'tag'  => ucfirst( strtolower( $m[1] ) ),
@@ -85,30 +85,30 @@ if ( ! function_exists( 'emcp_tools_changelog_tag' ) ) {
 	}
 }
 
-$emcp_tools_changelog_file = EMCP_TOOLS_DIR . 'CHANGELOG.md';
+$karmcp_changelog_file = KARMCP_DIR . 'CHANGELOG.md';
 
-if ( ! file_exists( $emcp_tools_changelog_file ) ) {
-	echo '<p>' . esc_html__( 'Changelog file not found.', 'emcp-tools' ) . '</p>';
+if ( ! file_exists( $karmcp_changelog_file ) ) {
+	echo '<p>' . esc_html__( 'Changelog file not found.', 'karmcp' ) . '</p>';
 	return;
 }
 
 // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading local plugin file.
-$emcp_tools_changelog_raw = (string) file_get_contents( $emcp_tools_changelog_file );
+$karmcp_changelog_raw = (string) file_get_contents( $karmcp_changelog_file );
 
 // Parse markdown into version blocks: each has notes[] (blockquotes) and
 // items[] (each item = text + nested children for sub-bullets).
-$emcp_tools_versions = array();
-$emcp_tools_current  = null;
+$karmcp_versions = array();
+$karmcp_current  = null;
 
-foreach ( explode( "\n", $emcp_tools_changelog_raw ) as $emcp_tools_line ) {
-	$emcp_tools_line = rtrim( $emcp_tools_line );
+foreach ( explode( "\n", $karmcp_changelog_raw ) as $karmcp_line ) {
+	$karmcp_line = rtrim( $karmcp_line );
 
 	// Version header: ## [x.y.z]
-	if ( preg_match( '/^##\s+\[([^\]]+)\]/', $emcp_tools_line, $m ) ) {
-		if ( null !== $emcp_tools_current ) {
-			$emcp_tools_versions[] = $emcp_tools_current;
+	if ( preg_match( '/^##\s+\[([^\]]+)\]/', $karmcp_line, $m ) ) {
+		if ( null !== $karmcp_current ) {
+			$karmcp_versions[] = $karmcp_current;
 		}
-		$emcp_tools_current = array(
+		$karmcp_current = array(
 			'version' => $m[1],
 			'notes'   => array(),
 			'items'   => array(),
@@ -116,30 +116,30 @@ foreach ( explode( "\n", $emcp_tools_changelog_raw ) as $emcp_tools_line ) {
 		continue;
 	}
 
-	if ( null === $emcp_tools_current ) {
+	if ( null === $karmcp_current ) {
 		continue;
 	}
 
 	// Blockquote note: > text
-	if ( preg_match( '/^>\s?(.*)/', $emcp_tools_line, $m ) ) {
+	if ( preg_match( '/^>\s?(.*)/', $karmcp_line, $m ) ) {
 		if ( '' !== trim( $m[1] ) ) {
-			$emcp_tools_current['notes'][] = $m[1];
+			$karmcp_current['notes'][] = $m[1];
 		}
 		continue;
 	}
 
 	// Sub-item (indented bullet): "  - text" or tab-indented.
-	if ( preg_match( '/^(?:\t|\s{2,})[-*]\s+(.+)/', $emcp_tools_line, $m ) ) {
-		$emcp_tools_last = count( $emcp_tools_current['items'] ) - 1;
-		if ( $emcp_tools_last >= 0 ) {
-			$emcp_tools_current['items'][ $emcp_tools_last ]['children'][] = $m[1];
+	if ( preg_match( '/^(?:\t|\s{2,})[-*]\s+(.+)/', $karmcp_line, $m ) ) {
+		$karmcp_last = count( $karmcp_current['items'] ) - 1;
+		if ( $karmcp_last >= 0 ) {
+			$karmcp_current['items'][ $karmcp_last ]['children'][] = $m[1];
 		}
 		continue;
 	}
 
 	// Top-level bullet: "- text"
-	if ( preg_match( '/^[-*]\s+(.+)/', $emcp_tools_line, $m ) ) {
-		$emcp_tools_current['items'][] = array(
+	if ( preg_match( '/^[-*]\s+(.+)/', $karmcp_line, $m ) ) {
+		$karmcp_current['items'][] = array(
 			'text'     => $m[1],
 			'children' => array(),
 		);
@@ -147,59 +147,59 @@ foreach ( explode( "\n", $emcp_tools_changelog_raw ) as $emcp_tools_line ) {
 	}
 }
 
-if ( null !== $emcp_tools_current ) {
-	$emcp_tools_versions[] = $emcp_tools_current;
+if ( null !== $karmcp_current ) {
+	$karmcp_versions[] = $karmcp_current;
 }
 
-$emcp_tools_latest_version = isset( $emcp_tools_versions[0]['version'] ) ? $emcp_tools_versions[0]['version'] : '';
+$karmcp_latest_version = isset( $karmcp_versions[0]['version'] ) ? $karmcp_versions[0]['version'] : '';
 ?>
 
 <div class="elementor-mcp-changelog">
 
 	<div class="elementor-mcp-changelog-intro">
-		<h2><?php esc_html_e( 'Changelog', 'emcp-tools' ); ?></h2>
+		<h2><?php esc_html_e( 'Changelog', 'karmcp' ); ?></h2>
 		<p class="description">
-			<?php esc_html_e( 'What changed in each release of EMCP Tools.', 'emcp-tools' ); ?>
+			<?php esc_html_e( 'What changed in each release of KarMCP.', 'karmcp' ); ?>
 		</p>
 	</div>
 
 	<div class="elementor-mcp-changelog-list">
-		<?php foreach ( $emcp_tools_versions as $emcp_tools_entry ) : ?>
-			<?php $emcp_tools_is_latest = ( $emcp_tools_entry['version'] === $emcp_tools_latest_version ); ?>
-			<div class="elementor-mcp-changelog-version <?php echo esc_attr( $emcp_tools_is_latest ? 'is-latest' : '' ); ?>">
+		<?php foreach ( $karmcp_versions as $karmcp_entry ) : ?>
+			<?php $karmcp_is_latest = ( $karmcp_entry['version'] === $karmcp_latest_version ); ?>
+			<div class="elementor-mcp-changelog-version <?php echo esc_attr( $karmcp_is_latest ? 'is-latest' : '' ); ?>">
 				<div class="elementor-mcp-changelog-version-header">
 					<h3>
 						<?php
 						/* translators: %s: version number */
-						printf( esc_html__( 'Version %s', 'emcp-tools' ), esc_html( $emcp_tools_entry['version'] ) );
+						printf( esc_html__( 'Version %s', 'karmcp' ), esc_html( $karmcp_entry['version'] ) );
 						?>
 					</h3>
-					<?php if ( $emcp_tools_is_latest ) : ?>
-						<span class="elementor-mcp-changelog-badge"><?php esc_html_e( 'Latest', 'emcp-tools' ); ?></span>
+					<?php if ( $karmcp_is_latest ) : ?>
+						<span class="elementor-mcp-changelog-badge"><?php esc_html_e( 'Latest', 'karmcp' ); ?></span>
 					<?php endif; ?>
 				</div>
 
-				<?php foreach ( $emcp_tools_entry['notes'] as $emcp_tools_note ) : ?>
+				<?php foreach ( $karmcp_entry['notes'] as $karmcp_note ) : ?>
 					<div class="elementor-mcp-changelog-note">
-						<?php echo emcp_tools_changelog_inline_md( $emcp_tools_note ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?>
+						<?php echo karmcp_changelog_inline_md( $karmcp_note ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?>
 					</div>
 				<?php endforeach; ?>
 
-				<?php if ( ! empty( $emcp_tools_entry['items'] ) ) : ?>
+				<?php if ( ! empty( $karmcp_entry['items'] ) ) : ?>
 					<ul class="elementor-mcp-changelog-items">
 						<?php
-						foreach ( $emcp_tools_entry['items'] as $emcp_tools_item ) :
-							$emcp_tools_parts = emcp_tools_changelog_tag( $emcp_tools_item['text'] );
+						foreach ( $karmcp_entry['items'] as $karmcp_item ) :
+							$karmcp_parts = karmcp_changelog_tag( $karmcp_item['text'] );
 							?>
 							<li>
-								<?php if ( '' !== $emcp_tools_parts['tag'] ) : ?>
-									<span class="elementor-mcp-cl-tag elementor-mcp-cl-tag--<?php echo esc_attr( strtolower( $emcp_tools_parts['tag'] ) ); ?>"><?php echo esc_html( $emcp_tools_parts['tag'] ); ?></span>
+								<?php if ( '' !== $karmcp_parts['tag'] ) : ?>
+									<span class="elementor-mcp-cl-tag elementor-mcp-cl-tag--<?php echo esc_attr( strtolower( $karmcp_parts['tag'] ) ); ?>"><?php echo esc_html( $karmcp_parts['tag'] ); ?></span>
 								<?php endif; ?>
-								<?php echo emcp_tools_changelog_inline_md( $emcp_tools_parts['rest'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?>
-								<?php if ( ! empty( $emcp_tools_item['children'] ) ) : ?>
+								<?php echo karmcp_changelog_inline_md( $karmcp_parts['rest'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?>
+								<?php if ( ! empty( $karmcp_item['children'] ) ) : ?>
 									<ul class="elementor-mcp-changelog-subitems">
-										<?php foreach ( $emcp_tools_item['children'] as $emcp_tools_child ) : ?>
-											<li><?php echo emcp_tools_changelog_inline_md( $emcp_tools_child ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?></li>
+										<?php foreach ( $karmcp_item['children'] as $karmcp_child ) : ?>
+											<li><?php echo karmcp_changelog_inline_md( $karmcp_child ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?></li>
 										<?php endforeach; ?>
 									</ul>
 								<?php endif; ?>

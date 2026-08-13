@@ -6,7 +6,7 @@
  * under vendor/ so users never have to install it as a separate plugin. The
  * Abilities API is core in WordPress 6.9+/7.0, but core does NOT expose
  * abilities over MCP — the adapter is what creates the `/wp-json/mcp/...`
- * server endpoint. Bundling it makes EMCP self-contained.
+ * server endpoint. Bundling it makes KarMCP self-contained.
  *
  * The adapter's Composer dependencies load through the Automattic Jetpack
  * Autoloader (vendor/autoload_packages.php). When several active plugins each
@@ -34,7 +34,7 @@
  * for the whole request. Consistency beats version-maximisation here: a
  * coherent v0.5.0 works, a sheared 0.4.1/0.5.0 mix cannot.
  *
- * Define EMCP_TOOLS_NO_ADAPTER_PRELOAD in wp-config.php to opt out.
+ * Define KARMCP_NO_ADAPTER_PRELOAD in wp-config.php to opt out.
  *
  * "Loadable" is not "booted": a plugin can autoload the WP\MCP classes without
  * instantiating the adapter (WooCommerce does this unless its MCP feature flag
@@ -42,7 +42,7 @@
  * route is never created. So ensure() also boots the adapter itself
  * (idempotent) rather than assuming an external owner did.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.7.4
  */
 
@@ -55,7 +55,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.7.4
  */
-final class EMCP_Tools_Adapter_Bootstrap {
+final class KarMCP_Adapter_Bootstrap {
 
 	/**
 	 * Version of the bundled adapter (keep in sync with the copied source).
@@ -90,7 +90,7 @@ final class EMCP_Tools_Adapter_Bootstrap {
 		// dependencies (php-mcp-schema, …). Requiring it prepends the Jetpack
 		// autoloader, so re-assert our resolver afterwards to keep it
 		// front-most and the WP\MCP namespace single-version.
-		$autoloader = EMCP_TOOLS_DIR . 'vendor/autoload_packages.php';
+		$autoloader = KARMCP_DIR . 'vendor/autoload_packages.php';
 		if ( is_readable( $autoloader ) ) {
 			require_once $autoloader;
 			self::preload_bundled_namespace();
@@ -129,7 +129,7 @@ final class EMCP_Tools_Adapter_Bootstrap {
 	 * @return string Path with a trailing slash.
 	 */
 	private static function bundled_dir(): string {
-		return EMCP_TOOLS_DIR . 'vendor/wordpress/mcp-adapter/includes/';
+		return KARMCP_DIR . 'vendor/wordpress/mcp-adapter/includes/';
 	}
 
 	/**
@@ -169,7 +169,7 @@ final class EMCP_Tools_Adapter_Bootstrap {
 	 * @since 3.5.1
 	 */
 	public static function preload_bundled_namespace(): void {
-		if ( defined( 'EMCP_TOOLS_NO_ADAPTER_PRELOAD' ) && EMCP_TOOLS_NO_ADAPTER_PRELOAD ) {
+		if ( defined( 'KARMCP_NO_ADAPTER_PRELOAD' ) && KARMCP_NO_ADAPTER_PRELOAD ) {
 			return;
 		}
 

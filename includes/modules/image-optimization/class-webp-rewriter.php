@@ -8,7 +8,7 @@
  * frontend `Accept: image/webp` header, or any REST/CLI/cron context (so the
  * MCP media tools always resolve to WebP). Old browsers keep the original.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Webp_Rewriter {
+class KarMCP_Webp_Rewriter {
 
 	/** @var string Uploads base dir. */
 	private $basedir;

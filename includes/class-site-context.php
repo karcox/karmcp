@@ -5,7 +5,7 @@
  * automatically. Loaded unconditionally — the MCP server is registered on
  * non-admin requests.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -16,16 +16,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Site_Context {
+class KarMCP_Site_Context {
 
 	/** Option holding the admin's markdown context. */
-	const OPTION_CONTEXT = 'emcp_tools_site_context';
+	const OPTION_CONTEXT = 'karmcp_site_context';
 
 	/** Option holding the on/off toggle ('1' or '0'). Default on. */
-	const OPTION_ENABLED = 'emcp_tools_site_context_enabled';
+	const OPTION_ENABLED = 'karmcp_site_context_enabled';
 
 	/** Admin override for the reachable public base URL (Connection tab). */
-	const OPTION_BASE_URL = 'emcp_tools_public_base_url';
+	const OPTION_BASE_URL = 'karmcp_public_base_url';
 
 	/** Delimiter that separates the base description from the site context. */
 	const DELIMITER = "\n\n## Site context\n\n";
@@ -40,7 +40,7 @@ class EMCP_Tools_Site_Context {
 	 * @return string
 	 */
 	public static function default_base(): string {
-		return __( 'Exposes Elementor data and design tools as MCP tools for AI agents.', 'emcp-tools' );
+		return __( 'Exposes Elementor data and design tools as MCP tools for AI agents.', 'karmcp' );
 	}
 
 	/**
@@ -52,7 +52,7 @@ class EMCP_Tools_Site_Context {
 	 * not-yet-live production domain) home_url() points at an unreachable URL
 	 * while the REST API answers on the real host; using rest_url() keeps every
 	 * client-facing URL reachable. An admin override (Connection tab "Server
-	 * URL") wins when set, and the `emcp_tools_public_base_url` filter is the
+	 * URL") wins when set, and the `karmcp_public_base_url` filter is the
 	 * fleet-wide override seam (drop a one-line MU-plugin across many sites).
 	 *
 	 * Used for the .mcpb bundle WP_URL, the OAuth issuer + authorization
@@ -71,7 +71,7 @@ class EMCP_Tools_Site_Context {
 		 *
 		 * @param string $base Base URL, no trailing slash.
 		 */
-		$base = (string) apply_filters( 'emcp_tools_public_base_url', $base );
+		$base = (string) apply_filters( 'karmcp_public_base_url', $base );
 		return rtrim( $base, '/' );
 	}
 
@@ -84,7 +84,7 @@ class EMCP_Tools_Site_Context {
 	 * @return string
 	 */
 	public static function mcp_endpoint(): string {
-		return self::rest_endpoint( 'mcp/emcp-tools-server' );
+		return self::rest_endpoint( 'mcp/karmcp-server' );
 	}
 
 	/**
@@ -212,11 +212,11 @@ class EMCP_Tools_Site_Context {
 			$lines[] = '- Active plugins of note: ' . $inventory;
 		}
 
-		// Read the option directly (not EMCP_Tools_Plugin::is_dispatcher_mode())
+		// Read the option directly (not KarMCP_Plugin::is_dispatcher_mode())
 		// so this method has no dependency on the plugin singleton — keeps it
-		// unit-testable without booting EMCP_Tools_Plugin. Option name mirrors
-		// EMCP_Tools_Plugin::OPTION_DISPATCHER_MODE.
-		if ( function_exists( 'get_option' ) && '1' === (string) get_option( 'emcp_tools_dispatcher_mode', '0' ) ) {
+		// unit-testable without booting KarMCP_Plugin. Option name mirrors
+		// KarMCP_Plugin::OPTION_DISPATCHER_MODE.
+		if ( function_exists( 'get_option' ) && '1' === (string) get_option( 'karmcp_dispatcher_mode', '0' ) ) {
 			$lines[] = '';
 			$lines[] = '## Compact tool mode';
 			$lines[] = 'This server exposes a small set of dispatcher tools. Discover tools with `list-tools`, fetch a tool\'s inputs with `get-tool-schema`, then run it with `call-tool` (name + arguments).';
@@ -224,18 +224,18 @@ class EMCP_Tools_Site_Context {
 
 		// Discovery-context skills catalog (Pro hooks this to inject a "## Skills"
 		// block; free ships only the empty seam).
-		$emcp_skills = (string) apply_filters( 'emcp_tools_discovery_skills', '' );
-		if ( '' !== $emcp_skills ) {
+		$karmcp_skills = (string) apply_filters( 'karmcp_discovery_skills', '' );
+		if ( '' !== $karmcp_skills ) {
 			$lines[] = '';
-			$lines[] = $emcp_skills;
+			$lines[] = $karmcp_skills;
 		}
 
 		// Discovery-context project memory (Pro hooks this to inject a
 		// "## Project memory" block of approved guidance; free ships the empty seam).
-		$emcp_memory = (string) apply_filters( 'emcp_tools_discovery_memory', '' );
-		if ( '' !== $emcp_memory ) {
+		$karmcp_memory = (string) apply_filters( 'karmcp_discovery_memory', '' );
+		if ( '' !== $karmcp_memory ) {
 			$lines[] = '';
-			$lines[] = $emcp_memory;
+			$lines[] = $karmcp_memory;
 		}
 
 		return implode( "\n", $lines );

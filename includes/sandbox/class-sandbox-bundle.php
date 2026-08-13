@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-class EMCP_Tools_Sandbox_Bundle {
+class KarMCP_Sandbox_Bundle {
 	const SCHEMA_VERSION = 1;
 	const KINDS = array( 'block', 'widget', 'snippet' );
 
@@ -27,22 +27,22 @@ class EMCP_Tools_Sandbox_Bundle {
 	public static function validate( array $bundle ) {
 		$sv = isset( $bundle['schema_version'] ) ? (int) $bundle['schema_version'] : 0;
 		if ( $sv < 1 || $sv > self::SCHEMA_VERSION ) {
-			return new WP_Error( 'bundle_schema', __( 'Unsupported bundle schema version.', 'emcp-tools' ) );
+			return new WP_Error( 'bundle_schema', __( 'Unsupported bundle schema version.', 'karmcp' ) );
 		}
 		if ( empty( $bundle['kind'] ) || ! in_array( $bundle['kind'], self::KINDS, true ) ) {
-			return new WP_Error( 'bundle_kind', __( 'Unknown or missing bundle kind.', 'emcp-tools' ) );
+			return new WP_Error( 'bundle_kind', __( 'Unknown or missing bundle kind.', 'karmcp' ) );
 		}
 		foreach ( array( 'uuid', 'meta', 'spec', 'assets', 'checksum' ) as $k ) {
 			if ( ! array_key_exists( $k, $bundle ) ) {
 				/* translators: %s: bundle key */
-				return new WP_Error( 'bundle_incomplete', sprintf( __( 'Bundle is missing "%s".', 'emcp-tools' ), $k ) );
+				return new WP_Error( 'bundle_incomplete', sprintf( __( 'Bundle is missing "%s".', 'karmcp' ), $k ) );
 			}
 		}
 		if ( ! is_array( $bundle['assets'] ) ) {
-			return new WP_Error( 'bundle_assets', __( 'Bundle assets must be an object.', 'emcp-tools' ) );
+			return new WP_Error( 'bundle_assets', __( 'Bundle assets must be an object.', 'karmcp' ) );
 		}
 		if ( self::checksum( $bundle['assets'] ) !== (string) $bundle['checksum'] ) {
-			return new WP_Error( 'bundle_checksum', __( 'Bundle checksum does not match its assets (tampered or corrupt).', 'emcp-tools' ) );
+			return new WP_Error( 'bundle_checksum', __( 'Bundle checksum does not match its assets (tampered or corrupt).', 'karmcp' ) );
 		}
 		return true;
 	}

@@ -1,25 +1,25 @@
 <?php
 /**
- * EMCP Cloud module (free, on by default). Boots the OAuth client admin flow.
+ * KarMCP Cloud module (free, on by default). Boots the OAuth client admin flow.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Cloud_Module extends EMCP_Tools_Module {
+class KarMCP_Cloud_Module extends KarMCP_Module {
 	public function id(): string {
 		return 'cloud';
 	}
 
 	public function title(): string {
-		return __( 'EMCP Cloud', 'emcp-tools' );
+		return __( 'KarMCP Cloud', 'karmcp' );
 	}
 
 	public function description(): string {
-		return __( 'Connect this site to your EMCP Cloud account to back up and sync your work.', 'emcp-tools' );
+		return __( 'Connect this site to your KarMCP Cloud account to back up and sync your work.', 'karmcp' );
 	}
 
 	public function tier(): string {
@@ -31,15 +31,15 @@ class EMCP_Tools_Cloud_Module extends EMCP_Tools_Module {
 	}
 
 	public function register(): void {
-		EMCP_Tools_Cloud_Connect::init();
+		KarMCP_Cloud_Connect::init();
 	}
 
 	public function render_settings(): void {
-		echo '<p>' . esc_html__( 'Connect or disconnect on the Connection tab.', 'emcp-tools' ) . '</p>';
+		echo '<p>' . esc_html__( 'Connect or disconnect on the Connection tab.', 'karmcp' ) . '</p>';
 	}
 
 	public function settings_url(): string {
-		return admin_url( 'admin.php?page=emcp-tools-connection#emcp-conn-main' );
+		return admin_url( 'admin.php?page=karmcp-connection#karmcp-conn-main' );
 	}
 
 	/**
@@ -48,7 +48,7 @@ class EMCP_Tools_Cloud_Module extends EMCP_Tools_Module {
 	 * @return bool
 	 */
 	public static function is_enabled(): bool {
-		$active = (array) get_option( EMCP_Tools_Module::OPTION_ACTIVE, array() );
+		$active = (array) get_option( KarMCP_Module::OPTION_ACTIVE, array() );
 		return in_array( 'cloud', $active, true );
 	}
 }

@@ -9,7 +9,7 @@
  *
  * Prefers libsodium (bundled in PHP 7.2+), falling back to OpenSSL AES-256-GCM.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -22,10 +22,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Secret {
+class KarMCP_Secret {
 
-	/** Token prefix marking an EMCP-encrypted value. */
-	const PREFIX = 'emcps1:';
+	/** Token prefix marking an KarMCP-encrypted value. */
+	const PREFIX = 'karmcps1:';
 
 	/**
 	 * The 32-byte site-specific encryption key.
@@ -35,7 +35,7 @@ class EMCP_Tools_Secret {
 	private static function key(): string {
 		$material = ( defined( 'AUTH_KEY' ) ? (string) AUTH_KEY : '' )
 			. ( defined( 'SECURE_AUTH_KEY' ) ? (string) SECURE_AUTH_KEY : '' )
-			. 'emcp-tools-secret-v1';
+			. 'karmcp-secret-v1';
 
 		if ( function_exists( 'sodium_crypto_generichash' ) ) {
 			return sodium_crypto_generichash( $material, '', 32 );
@@ -115,7 +115,7 @@ class EMCP_Tools_Secret {
 
 	/**
 	 * @param string $value Stored value.
-	 * @return bool Whether the value is an EMCP-encrypted token.
+	 * @return bool Whether the value is an KarMCP-encrypted token.
 	 */
 	public static function is_encrypted( string $value ): bool {
 		return 0 === strncmp( $value, self::PREFIX, strlen( self::PREFIX ) );

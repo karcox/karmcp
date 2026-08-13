@@ -1,159 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+	KarMCP test suite.
+
+	Upstream shipped two configs: this root one pointed at the private `pro/tests`
+	submodule (Pro developers only), and `tests/phpunit.xml` ran the public suite.
+	The fork has no private submodule, so this root config now runs the public
+	suite directly — `phpunit` works with no arguments.
+
+	Run from the plugin root:  vendor/bin/phpunit
+-->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
-         bootstrap="pro/tests/bootstrap.php"
-         colors="true"
-         stopOnFailure="false"
-         beStrictAboutOutputDuringTests="true"
-         failOnEmptyTestSuite="false">
+	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+	bootstrap="tests/bootstrap.php"
+	colors="true"
+	cacheDirectory=".phpunit.cache"
+	beStrictAboutOutputDuringTests="true">
 
-    <testsuites>
-        <testsuite name="Root">
-            <file>pro/tests/unit/PhpSnippetValidatorTest.php</file>
-            <file>pro/tests/unit/SiteContextTest.php</file>
-            <file>pro/tests/unit/WidgetGeneratorTest.php</file>
-            <file>pro/tests/unit/StructuredContentNormalizationTest.php</file>
-        </testsuite>
-        <testsuite name="Security">
-            <directory>pro/tests/unit/Security</directory>
-        </testsuite>
-        <testsuite name="Capabilities">
-            <directory>pro/tests/unit/capabilities</directory>
-        </testsuite>
-        <testsuite name="Input">
-            <directory>pro/tests/unit/input</directory>
-        </testsuite>
-        <testsuite name="Functional">
-            <directory>pro/tests/unit/functional</directory>
-        </testsuite>
-        <testsuite name="Regression">
-            <directory>pro/tests/unit/regression</directory>
-        </testsuite>
-        <testsuite name="OAuth">
-            <directory>pro/tests/unit/oauth</directory>
-        </testsuite>
-        <testsuite name="Dispatcher">
-            <directory>pro/tests/unit/dispatcher</directory>
-        </testsuite>
-        <testsuite name="Skills">
-            <directory>pro/tests/unit/skills</directory>
-        </testsuite>
-        <testsuite name="Widgets">
-            <directory>pro/tests/unit/widgets</directory>
-        </testsuite>
-        <testsuite name="Content">
-            <directory>pro/tests/unit/content</directory>
-        </testsuite>
-        <testsuite name="Composite">
-            <directory>pro/tests/unit/composite</directory>
-        </testsuite>
-        <testsuite name="Settings">
-            <directory>pro/tests/unit/settings</directory>
-        </testsuite>
-        <testsuite name="Packages">
-            <directory>pro/tests/unit/packages</directory>
-        </testsuite>
-        <testsuite name="Media">
-            <directory>pro/tests/unit/media</directory>
-        </testsuite>
-        <testsuite name="Users">
-            <directory>pro/tests/unit/users</directory>
-        </testsuite>
-        <testsuite name="Admin">
-            <directory>pro/tests/unit/admin</directory>
-        </testsuite>
-        <testsuite name="Performance">
-            <directory>pro/tests/unit/Performance</directory>
-        </testsuite>
-        <testsuite name="Filesystem">
-            <directory>pro/tests/unit/Filesystem</directory>
-        </testsuite>
-        <testsuite name="Database">
-            <directory>pro/tests/unit/Database</directory>
-        </testsuite>
-        <testsuite name="Bootstrap">
-            <directory>pro/tests/unit/Bootstrap</directory>
-        </testsuite>
-        <testsuite name="AiChat">
-            <directory>pro/tests/unit/AiChat</directory>
-        </testsuite>
-        <testsuite name="Modules">
-            <directory>pro/tests/unit/Modules</directory>
-        </testsuite>
-        <testsuite name="Gutenberg">
-            <directory>pro/tests/unit/Gutenberg</directory>
-        </testsuite>
-        <testsuite name="Themer">
-            <directory>pro/tests/unit/Themer</directory>
-        </testsuite>
-        <testsuite name="Seo">
-            <directory>pro/tests/unit/seo</directory>
-        </testsuite>
-        <testsuite name="Snapshot">
-            <directory>pro/tests/unit/snapshot</directory>
-        </testsuite>
-        <testsuite name="Transactions">
-            <directory>pro/tests/unit/transactions</directory>
-        </testsuite>
-        <testsuite name="Search">
-            <directory>pro/tests/unit/search</directory>
-        </testsuite>
-        <testsuite name="Mirror">
-            <directory>pro/tests/unit/mirror</directory>
-        </testsuite>
-        <testsuite name="Registrar">
-            <directory>pro/tests/unit/registrar</directory>
-        </testsuite>
-        <testsuite name="Snippet">
-            <directory>pro/tests/unit/snippet</directory>
-        </testsuite>
-        <testsuite name="SystemKit">
-            <directory>pro/tests/unit/systemkit</directory>
-        </testsuite>
-        <testsuite name="WidgetBuilder">
-            <directory>pro/tests/unit/widgetbuilder</directory>
-        </testsuite>
-        <testsuite name="Themes">
-            <directory>pro/tests/unit/themes</directory>
-        </testsuite>
-        <testsuite name="Woo">
-            <directory>pro/tests/unit/woo</directory>
-        </testsuite>
-        <testsuite name="Forms">
-            <directory>pro/tests/unit/forms</directory>
-        </testsuite>
-        <testsuite name="Addons">
-            <directory>pro/tests/unit/addons</directory>
-        </testsuite>
-        <testsuite name="SEOPlugins">
-            <directory>pro/tests/unit/seo-plugins</directory>
-        </testsuite>
-        <testsuite name="Sandbox">
-            <directory>pro/tests/unit/sandbox</directory>
-        </testsuite>
-        <testsuite name="Blocks">
-            <directory>pro/tests/unit/blocks</directory>
-        </testsuite>
-        <testsuite name="Memory">
-            <directory>pro/tests/unit/memory</directory>
-        </testsuite>
-        <testsuite name="Cloud">
-            <directory>pro/tests/unit/Cloud</directory>
-        </testsuite>
-        <testsuite name="Migrate">
-            <directory>pro/tests/unit/migrate</directory>
-        </testsuite>
-    </testsuites>
+	<testsuites>
+		<testsuite name="KarMCP">
+			<directory suffix="Test.php">tests</directory>
+		</testsuite>
+	</testsuites>
 
-    <source>
-        <include>
-            <directory suffix=".php">includes</directory>
-            <directory suffix=".php">pro/includes</directory>
-        </include>
-        <exclude>
-            <directory>pro/tests</directory>
-            <directory>vendor</directory>
-        </exclude>
-    </source>
+	<source>
+		<include>
+			<directory suffix=".php">includes</directory>
+		</include>
+		<exclude>
+			<directory>tests</directory>
+			<directory>vendor</directory>
+		</exclude>
+	</source>
 
 </phpunit>

@@ -1,6 +1,6 @@
 <?php
 /**
- * [emcp_menu] shortcode — render a WordPress nav menu into custom HTML.
+ * [karmcp_menu] shortcode — render a WordPress nav menu into custom HTML.
  *
  * Lets an agent-built custom header (e.g. an Elementor Canvas page assembled
  * from an HTML / shortcode widget) embed a LIVE menu: edit the menu in WP or
@@ -9,7 +9,7 @@
  * Separable from the MCP tools by design — safe to drop if a tools-only build
  * is preferred; the menu-read "render" operation covers the agent side.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -18,11 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Front-end [emcp_menu] shortcode.
+ * Front-end [karmcp_menu] shortcode.
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Nav_Menu_Shortcode {
+class KarMCP_Nav_Menu_Shortcode {
 
 	/**
 	 * Registers the shortcode.
@@ -30,11 +30,11 @@ class EMCP_Tools_Nav_Menu_Shortcode {
 	 * @since 3.3.0
 	 */
 	public static function register(): void {
-		add_shortcode( 'emcp_menu', array( __CLASS__, 'render' ) );
+		add_shortcode( 'karmcp_menu', array( __CLASS__, 'render' ) );
 	}
 
 	/**
-	 * Renders [emcp_menu location="…" | id="…" | slug="…" depth="…" class="…"
+	 * Renders [karmcp_menu location="…" | id="…" | slug="…" depth="…" class="…"
 	 * container="nav|div|false" container_class="…" menu_id="…"].
 	 *
 	 * @since 3.3.0
@@ -54,7 +54,7 @@ class EMCP_Tools_Nav_Menu_Shortcode {
 				'menu_id'         => '',
 			),
 			$atts,
-			'emcp_menu'
+			'karmcp_menu'
 		);
 
 		$args = array(

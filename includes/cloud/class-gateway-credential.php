@@ -1,25 +1,25 @@
 <?php
 /**
- * Stable, pre-registered "EMCP Gateway" OAuth client.
+ * Stable, pre-registered "KarMCP Gateway" OAuth client.
  *
  * Phase 1 of the hosted multi-site gateway: each site can self-issue a
  * revocable refresh token against its OWN OAuth server, bound to a single,
  * idempotently-provisioned client — so repeat provisioning never grows the
  * clients table with dead rows. Reuses the existing OAuth persistence layer
- * (EMCP_Tools_OAuth_Store); no second client registry or token table.
+ * (KarMCP_OAuth_Store); no second client registry or token table.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Gateway_Credential {
-	const CLIENT_NAME  = 'EMCP Gateway';
+class KarMCP_Gateway_Credential {
+	const CLIENT_NAME  = 'KarMCP Gateway';
 	const SCOPE        = 'gateway'; // provenance/revocation label.
 	const REFRESH_TTL  = 315360000; // 10y — effectively non-expiring; store computes expires_at = now+ttl (no 0-sentinel), and each gateway refresh rotates a fresh token resetting the clock. 0 would expire immediately (find_token filters expires_at > now).
-	const OPTION_FLAG  = 'emcp_tools_gateway_provisioned';
+	const OPTION_FLAG  = 'karmcp_gateway_provisioned';
 
 	/**
 	 * The gateway client's id if it already exists, else '' — a non-creating
@@ -29,13 +29,13 @@ class EMCP_Tools_Gateway_Credential {
 	 * @return string
 	 */
 	private static function existing_client_id(): string {
-		$uris = array( EMCP_Tools_Cloud::base_url() . '/gateway/callback' ); // registration identity only.
-		$c    = EMCP_Tools_OAuth_Store::find_client_by_registration( self::CLIENT_NAME, $uris );
+		$uris = array( KarMCP_Cloud::base_url() . '/gateway/callback' ); // registration identity only.
+		$c    = KarMCP_OAuth_Store::find_client_by_registration( self::CLIENT_NAME, $uris );
 		return ( $c && ! empty( $c['client_id'] ) ) ? (string) $c['client_id'] : '';
 	}
 
 	/**
-	 * Ensure the stable "EMCP Gateway" OAuth client exists and return its
+	 * Ensure the stable "KarMCP Gateway" OAuth client exists and return its
 	 * client_id. Idempotent: reuses an existing registration (matched by
 	 * name + redirect URIs) instead of minting a new client every call.
 	 *
@@ -47,8 +47,8 @@ class EMCP_Tools_Gateway_Credential {
 			return $id;
 		}
 
-		$uris   = array( EMCP_Tools_Cloud::base_url() . '/gateway/callback' ); // registration identity only.
-		$client = EMCP_Tools_OAuth_Store::create_client( self::CLIENT_NAME, $uris, 0 );
+		$uris   = array( KarMCP_Cloud::base_url() . '/gateway/callback' ); // registration identity only.
+		$client = KarMCP_OAuth_Store::create_client( self::CLIENT_NAME, $uris, 0 );
 		return (string) ( $client['client_id'] ?? '' );
 	}
 
@@ -61,7 +61,7 @@ class EMCP_Tools_Gateway_Credential {
 	 */
 	public static function issue_for_user( int $user_id ): array {
 		$client_id = self::ensure_client();
-		$tok       = EMCP_Tools_OAuth_Store::issue_token( 'refresh', $client_id, $user_id, self::SCOPE, self::REFRESH_TTL );
+		$tok       = KarMCP_OAuth_Store::issue_token( 'refresh', $client_id, $user_id, self::SCOPE, self::REFRESH_TTL );
 		return array(
 			'client_id'     => $client_id,
 			'refresh_token' => (string) ( $tok['token'] ?? '' ),
@@ -81,11 +81,11 @@ class EMCP_Tools_Gateway_Credential {
 		if ( empty( $cred['refresh_token'] ) ) {
 			return false;
 		}
-		$ok = EMCP_Tools_Cloud_Client::put_gateway_credential( $cred['client_id'], $cred['refresh_token'] );
+		$ok = KarMCP_Cloud_Client::put_gateway_credential( $cred['client_id'], $cred['refresh_token'] );
 		if ( ! $ok ) {
-			$row = EMCP_Tools_OAuth_Store::find_token( $cred['refresh_token'], 'refresh' );
+			$row = KarMCP_OAuth_Store::find_token( $cred['refresh_token'], 'refresh' );
 			if ( $row ) {
-				EMCP_Tools_OAuth_Store::revoke_token( (int) $row['id'] );
+				KarMCP_OAuth_Store::revoke_token( (int) $row['id'] );
 			}
 			return false;
 		}
@@ -102,12 +102,12 @@ class EMCP_Tools_Gateway_Credential {
 	 * @return void
 	 */
 	public static function deprovision(): void {
-		if ( class_exists( 'EMCP_Tools_Cloud_Client' ) ) {
-			EMCP_Tools_Cloud_Client::delete_gateway_credential(); // best-effort; needs a live Cloud token.
+		if ( class_exists( 'KarMCP_Cloud_Client' ) ) {
+			KarMCP_Cloud_Client::delete_gateway_credential(); // best-effort; needs a live Cloud token.
 		}
 		$client_id = self::existing_client_id();
 		if ( '' !== $client_id ) {
-			EMCP_Tools_OAuth_Store::revoke_client( $client_id ); // local kill switch.
+			KarMCP_OAuth_Store::revoke_client( $client_id ); // local kill switch.
 		}
 		delete_option( self::OPTION_FLAG );
 	}
@@ -125,8 +125,8 @@ class EMCP_Tools_Gateway_Credential {
 		if ( '' === $client_id || $client_id !== self::existing_client_id() ) {
 			return;
 		}
-		if ( class_exists( 'EMCP_Tools_Cloud_Client' ) ) {
-			EMCP_Tools_Cloud_Client::delete_gateway_credential();
+		if ( class_exists( 'KarMCP_Cloud_Client' ) ) {
+			KarMCP_Cloud_Client::delete_gateway_credential();
 		}
 		delete_option( self::OPTION_FLAG );
 	}

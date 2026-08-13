@@ -1,13 +1,13 @@
 <?php
 /**
- * EMCP Themer PHP Template Store — source of truth + sandbox.
+ * KarMCP Themer PHP Template Store — source of truth + sandbox.
  *
- * A private emcp_theme_php CPT holds each template's raw PHP, region type, and
- * validation report. Modeled on EMCP_Tools_PHP_Snippet_Store but region-oriented:
+ * A private karmcp_theme_php CPT holds each template's raw PHP, region type, and
+ * validation report. Modeled on KarMCP_PHP_Snippet_Store but region-oriented:
  * the executable file is compiled ONLY while a Themer post references the template
  * (see class-themer-php.php + the metabox). A draft has no runnable file on disk.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -18,14 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_PHP_Store {
+class KarMCP_Themer_PHP_Store {
 
-	const POST_TYPE       = 'emcp_theme_php';
-	const META_CODE       = '_emcp_theme_php_code';
-	const META_TYPE       = '_emcp_theme_php_type';
-	const META_VALIDATION = '_emcp_theme_php_validation';
-	const META_HASH       = '_emcp_theme_php_hash';
-	const META_ERROR      = '_emcp_theme_php_error';
+	const POST_TYPE       = 'karmcp_theme_php';
+	const META_CODE       = '_karmcp_theme_php_code';
+	const META_TYPE       = '_karmcp_theme_php_type';
+	const META_VALIDATION = '_karmcp_theme_php_validation';
+	const META_HASH       = '_karmcp_theme_php_hash';
+	const META_ERROR      = '_karmcp_theme_php_error';
 
 	/** Region types a template may target. `any` = attachable to any slot type. */
 	const TYPES = array( 'header', 'footer', 'single', 'archive', 'any' );
@@ -53,7 +53,7 @@ class EMCP_Tools_Themer_PHP_Store {
 				'capability_type'     => 'page',
 				'map_meta_cap'        => true,
 				'supports'            => array( 'title', 'author' ),
-				'labels'              => array( 'name' => __( 'EMCP Theme PHP Templates', 'emcp-tools' ) ),
+				'labels'              => array( 'name' => __( 'KarMCP Theme PHP Templates', 'karmcp' ) ),
 			)
 		);
 	}
@@ -76,7 +76,7 @@ class EMCP_Tools_Themer_PHP_Store {
 	// -------------------------------------------------------------------------
 
 	public static function dir(): string {
-		return EMCP_Tools_PHP_Snippet_Store::sandbox_dir() . '/' . self::SUBDIR;
+		return KarMCP_PHP_Snippet_Store::sandbox_dir() . '/' . self::SUBDIR;
 	}
 
 	public static function relative_php_path( int $id ): string {
@@ -84,15 +84,15 @@ class EMCP_Tools_Themer_PHP_Store {
 	}
 
 	public static function php_path( int $id ): string {
-		return EMCP_Tools_PHP_Snippet_Store::sandbox_dir() . '/' . self::relative_php_path( $id );
+		return KarMCP_PHP_Snippet_Store::sandbox_dir() . '/' . self::relative_php_path( $id );
 	}
 
 	public static function manifest_path(): string {
-		return EMCP_Tools_PHP_Snippet_Store::sandbox_dir() . '/theme-php-manifest.json';
+		return KarMCP_PHP_Snippet_Store::sandbox_dir() . '/theme-php-manifest.json';
 	}
 
 	public static function func_name( int $id ): string {
-		return 'emcp_theme_php_' . $id;
+		return 'karmcp_theme_php_' . $id;
 	}
 
 	// -------------------------------------------------------------------------
@@ -107,20 +107,20 @@ class EMCP_Tools_Themer_PHP_Store {
 	 */
 	public static function create_draft( array $args ) {
 		if ( ! self::can_edit() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to create PHP templates.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to create PHP templates.', 'karmcp' ) );
 		}
 		$code       = isset( $args['code'] ) ? (string) $args['code'] : '';
-		$validation = EMCP_Tools_PHP_Snippet_Validator::validate( $code );
+		$validation = KarMCP_PHP_Snippet_Validator::validate( $code );
 		if ( ! $validation['valid'] ) {
-			return new WP_Error( 'invalid_php', sprintf( /* translators: %s: parse error */ __( 'The template is not valid PHP: %s', 'emcp-tools' ), $validation['parse_error'] ), array( 'validation' => $validation ) );
+			return new WP_Error( 'invalid_php', sprintf( /* translators: %s: parse error */ __( 'The template is not valid PHP: %s', 'karmcp' ), $validation['parse_error'] ), array( 'validation' => $validation ) );
 		}
 		if ( ! $validation['safe'] ) {
-			return new WP_Error( 'unsafe_php', __( 'The template was blocked by the security validator (critical finding).', 'emcp-tools' ), array( 'validation' => $validation ) );
+			return new WP_Error( 'unsafe_php', __( 'The template was blocked by the security validator (critical finding).', 'karmcp' ), array( 'validation' => $validation ) );
 		}
 
 		$title = isset( $args['title'] ) && '' !== trim( (string) $args['title'] )
 			? sanitize_text_field( (string) $args['title'] )
-			: __( 'PHP Template', 'emcp-tools' );
+			: __( 'PHP Template', 'karmcp' );
 
 		$post_id = wp_insert_post(
 			array(
@@ -152,20 +152,20 @@ class EMCP_Tools_Themer_PHP_Store {
 	 */
 	public static function update( int $id, array $args ) {
 		if ( ! self::can_edit() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to update PHP templates.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to update PHP templates.', 'karmcp' ) );
 		}
 		$post = get_post( $id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Template not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Template not found.', 'karmcp' ) );
 		}
 
 		$code       = array_key_exists( 'code', $args ) ? (string) $args['code'] : (string) get_post_meta( $id, self::META_CODE, true );
-		$validation = EMCP_Tools_PHP_Snippet_Validator::validate( $code );
+		$validation = KarMCP_PHP_Snippet_Validator::validate( $code );
 		if ( ! $validation['valid'] ) {
-			return new WP_Error( 'invalid_php', sprintf( /* translators: %s: parse error */ __( 'The template is not valid PHP: %s', 'emcp-tools' ), $validation['parse_error'] ), array( 'validation' => $validation ) );
+			return new WP_Error( 'invalid_php', sprintf( /* translators: %s: parse error */ __( 'The template is not valid PHP: %s', 'karmcp' ), $validation['parse_error'] ), array( 'validation' => $validation ) );
 		}
 		if ( ! $validation['safe'] ) {
-			return new WP_Error( 'unsafe_php', __( 'The template was blocked by the security validator (critical finding).', 'emcp-tools' ), array( 'validation' => $validation ) );
+			return new WP_Error( 'unsafe_php', __( 'The template was blocked by the security validator (critical finding).', 'karmcp' ), array( 'validation' => $validation ) );
 		}
 
 		if ( isset( $args['title'] ) && '' !== trim( (string) $args['title'] ) ) {
@@ -217,7 +217,7 @@ class EMCP_Tools_Themer_PHP_Store {
 	public static function summary( int $id ) {
 		$post = get_post( $id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Template not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Template not found.', 'karmcp' ) );
 		}
 		$compiled = '' !== (string) get_post_meta( $id, self::META_HASH, true );
 		return array(
@@ -279,11 +279,11 @@ class EMCP_Tools_Themer_PHP_Store {
 	 */
 	public static function delete( int $id ) {
 		if ( ! self::can_edit() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to delete PHP templates.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to delete PHP templates.', 'karmcp' ) );
 		}
 		$post = get_post( $id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Template not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Template not found.', 'karmcp' ) );
 		}
 		self::decompile( $id );
 		wp_delete_post( $id, true );
@@ -300,13 +300,13 @@ class EMCP_Tools_Themer_PHP_Store {
 	 * @return true|WP_Error
 	 */
 	private static function ensure_dir() {
-		$ensured = EMCP_Tools_PHP_Snippet_Store::ensure_sandbox();
+		$ensured = KarMCP_PHP_Snippet_Store::ensure_sandbox();
 		if ( is_wp_error( $ensured ) ) {
 			return $ensured;
 		}
 		$dir = self::dir();
 		if ( ! wp_mkdir_p( $dir ) ) {
-			return new WP_Error( 'sandbox_unwritable', __( 'Could not create the PHP-template sandbox directory.', 'emcp-tools' ) );
+			return new WP_Error( 'sandbox_unwritable', __( 'Could not create the PHP-template sandbox directory.', 'karmcp' ) );
 		}
 		self::write_file( $dir . '/index.php', "<?php\n// Silence is golden.\n" );
 		return true;
@@ -341,13 +341,13 @@ class EMCP_Tools_Themer_PHP_Store {
 	public static function ensure_compiled( int $id ) {
 		$post = get_post( $id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Template not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Template not found.', 'karmcp' ) );
 		}
 		$code       = (string) get_post_meta( $id, self::META_CODE, true );
-		$validation = EMCP_Tools_PHP_Snippet_Validator::validate( $code );
+		$validation = KarMCP_PHP_Snippet_Validator::validate( $code );
 		if ( ! $validation['valid'] || ! $validation['safe'] ) {
 			update_post_meta( $id, self::META_VALIDATION, wp_slash( (string) wp_json_encode( $validation ) ) );
-			return new WP_Error( 'compile_blocked', __( 'Cannot compile, the template fails validation.', 'emcp-tools' ), array( 'validation' => $validation ) );
+			return new WP_Error( 'compile_blocked', __( 'Cannot compile, the template fails validation.', 'karmcp' ), array( 'validation' => $validation ) );
 		}
 
 		$ensured = self::ensure_dir();
@@ -355,10 +355,10 @@ class EMCP_Tools_Themer_PHP_Store {
 			return $ensured;
 		}
 
-		$body = EMCP_Tools_PHP_Snippet_Validator::strip_tags( $code );
+		$body = KarMCP_PHP_Snippet_Validator::strip_tags( $code );
 		$func = self::func_name( $id );
 		$php  = "<?php\n"
-			. "// EMCP Theme PHP Template {$id}, generated; edits fail the integrity check.\n"
+			. "// KarMCP Theme PHP Template {$id}, generated; edits fail the integrity check.\n"
 			. "if ( ! function_exists( '{$func}' ) ) {\n"
 			. "\tfunction {$func}() {\n"
 			. $body . "\n"
@@ -373,7 +373,7 @@ class EMCP_Tools_Themer_PHP_Store {
 
 		$path = self::php_path( $id );
 		if ( ! self::write_file( $path, $php ) ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the template file to the sandbox.', 'emcp-tools' ) );
+			return new WP_Error( 'write_failed', __( 'Could not write the template file to the sandbox.', 'karmcp' ) );
 		}
 		update_post_meta( $id, self::META_HASH, hash( 'sha256', $php ) );
 		self::rebuild_manifest();
@@ -400,12 +400,12 @@ class EMCP_Tools_Themer_PHP_Store {
 	public static function reference_count( int $id ): int {
 		$q = new WP_Query(
 			array(
-				'post_type'      => EMCP_Tools_Themer_CPT::POST_TYPE,
+				'post_type'      => KarMCP_Themer_CPT::POST_TYPE,
 				'post_status'    => array( 'publish', 'draft' ),
 				'posts_per_page' => 100,
 				'fields'         => 'ids',
 				'no_found_rows'  => true,
-				'meta_key'       => '_emcp_themer_php_template',
+				'meta_key'       => '_karmcp_themer_php_template',
 				'meta_value'     => (string) $id,
 			)
 		);

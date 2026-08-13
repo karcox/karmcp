@@ -5,7 +5,7 @@
  * Wraps Elementor internals to provide a clean API for reading and writing
  * Elementor page data, widget registrations, and element trees.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Data {
+class KarMCP_Data {
 
 	/** Elementor 4.2's rendered-element cache meta (Document::CACHE_META_KEY). */
 	const ELEMENT_CACHE_META = '_elementor_element_cache';
@@ -96,7 +96,7 @@ class EMCP_Tools_Data {
 		if ( ! self::elementor_documents_ready() ) {
 			return new \WP_Error(
 				'elementor_not_ready',
-				__( 'Elementor is not fully initialized yet.', 'emcp-tools' )
+				__( 'Elementor is not fully initialized yet.', 'karmcp' )
 			);
 		}
 
@@ -107,7 +107,7 @@ class EMCP_Tools_Data {
 				'document_not_found',
 				sprintf(
 					/* translators: %d: post ID */
-					__( 'Elementor document not found for post ID %d.', 'emcp-tools' ),
+					__( 'Elementor document not found for post ID %d.', 'karmcp' ),
 					$post_id
 				)
 			);
@@ -216,7 +216,7 @@ class EMCP_Tools_Data {
 				'widget_not_found',
 				sprintf(
 					/* translators: %s: widget type name */
-					__( 'Widget type "%s" not found.', 'emcp-tools' ),
+					__( 'Widget type "%s" not found.', 'karmcp' ),
 					$widget_type
 				)
 			);
@@ -300,17 +300,17 @@ class EMCP_Tools_Data {
 		//
 		// Sweep the tree on the way out instead. This only ever turns invalid
 		// values into valid ones, so it is a no-op for healthy pages.
-		$data = EMCP_Tools_Atomic_Props::coerce_tree( $data );
+		$data = KarMCP_Atomic_Props::coerce_tree( $data );
 
 		// Capture the prior Elementor data so the change ledger can offer a rollback.
-		$emcp_before_raw = get_post_meta( $post_id, '_elementor_data', true );
+		$karmcp_before_raw = get_post_meta( $post_id, '_elementor_data', true );
 
 		// Safety net: if the current _elementor_data is a non-empty string that
 		// does not decode to an array, it is corrupt/unreadable. get_page_data()
 		// treats that as an empty page, so an edit built on top would overwrite
 		// the original for good — preserve it first so it stays recoverable.
-		if ( is_string( $emcp_before_raw ) && '' !== $emcp_before_raw && ! is_array( json_decode( $emcp_before_raw, true ) ) ) {
-			update_post_meta( $post_id, '_elementor_data_emcp_corrupt', wp_slash( $emcp_before_raw ) );
+		if ( is_string( $karmcp_before_raw ) && '' !== $karmcp_before_raw && ! is_array( json_decode( $karmcp_before_raw, true ) ) ) {
+			update_post_meta( $post_id, '_elementor_data_karmcp_corrupt', wp_slash( $karmcp_before_raw ) );
 		}
 
 		// Attempt native Elementor save (handles CSS regen, cache busting).
@@ -345,7 +345,7 @@ class EMCP_Tools_Data {
 					'save_rejected',
 					sprintf(
 						/* translators: %s: error message from Elementor */
-						__( 'Elementor rejected the element data: %s', 'emcp-tools' ),
+						__( 'Elementor rejected the element data: %s', 'karmcp' ),
 						$e->getMessage()
 					)
 				);
@@ -379,7 +379,7 @@ class EMCP_Tools_Data {
 			if ( false === $json ) {
 				return new \WP_Error(
 					'json_encode_failed',
-					__( 'Failed to encode element data as JSON.', 'emcp-tools' )
+					__( 'Failed to encode element data as JSON.', 'karmcp' )
 				);
 			}
 
@@ -409,29 +409,29 @@ class EMCP_Tools_Data {
 		}
 
 		// Record the edit to the unified change ledger (skipped during rollback).
-		if ( class_exists( 'EMCP_Tools_Change_Log' ) && ! EMCP_Tools_Change_Log::$suppress ) {
-			$emcp_before = array();
-			if ( is_string( $emcp_before_raw ) && '' !== $emcp_before_raw ) {
-				$emcp_decoded = json_decode( $emcp_before_raw, true );
-				if ( is_array( $emcp_decoded ) ) {
-					$emcp_before = $emcp_decoded;
+		if ( class_exists( 'KarMCP_Change_Log' ) && ! KarMCP_Change_Log::$suppress ) {
+			$karmcp_before = array();
+			if ( is_string( $karmcp_before_raw ) && '' !== $karmcp_before_raw ) {
+				$karmcp_decoded = json_decode( $karmcp_before_raw, true );
+				if ( is_array( $karmcp_decoded ) ) {
+					$karmcp_before = $karmcp_decoded;
 				}
 			}
-			$emcp_title = function_exists( 'get_the_title' ) ? (string) get_the_title( $post_id ) : '';
-			if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-				EMCP_Tools_Change_Recorder::record_elementor(
+			$karmcp_title = function_exists( 'get_the_title' ) ? (string) get_the_title( $post_id ) : '';
+			if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+				KarMCP_Change_Recorder::record_elementor(
 					$post_id,
-					$emcp_before,
+					$karmcp_before,
 					sprintf( 'Edited Elementor page #%d', $post_id ),
-					trim( $emcp_title . ' (#' . $post_id . ')' )
+					trim( $karmcp_title . ' (#' . $post_id . ')' )
 				);
 			} else {
-				EMCP_Tools_Change_Log::record( array(
+				KarMCP_Change_Log::record( array(
 					'domain'   => 'elementor',
 					'action'   => 'page-edit',
-					'target'   => trim( $emcp_title . ' (#' . $post_id . ')' ),
+					'target'   => trim( $karmcp_title . ' (#' . $post_id . ')' ),
 					'summary'  => sprintf( 'Edited Elementor page #%d', $post_id ),
-					'rollback' => array( 'type' => 'elementor-data', 'post_id' => $post_id, 'before' => $emcp_before ),
+					'rollback' => array( 'type' => 'elementor-data', 'post_id' => $post_id, 'before' => $karmcp_before ),
 				) );
 			}
 		}
@@ -577,14 +577,14 @@ class EMCP_Tools_Data {
 	 * @return array The element with new IDs.
 	 */
 	public function reassign_element_ids( array $element ): array {
-		$element['id'] = EMCP_Tools_Id_Generator::generate();
+		$element['id'] = KarMCP_Id_Generator::generate();
 
 		// v4 atomic elements: local style classes are named `e-<id>-<hash>` and
 		// belong to a single element. A fresh element id must get fresh local
 		// classes, or the duplicate shares the source's local classes — causing
 		// cross-element style bleed and Style Origin doubling (issue #97).
-		if ( class_exists( 'EMCP_Tools_Atomic_Styles' ) ) {
-			EMCP_Tools_Atomic_Styles::remap_local_classes( $element );
+		if ( class_exists( 'KarMCP_Atomic_Styles' ) ) {
+			KarMCP_Atomic_Styles::remap_local_classes( $element );
 		}
 
 		if ( ! empty( $element['elements'] ) && is_array( $element['elements'] ) ) {
@@ -666,12 +666,12 @@ class EMCP_Tools_Data {
 				// keys before merging. Without this, the values are saved
 				// but never read by Elementor's CSS generator (issue #32).
 				if ( 'container' === ( $item['elType'] ?? '' ) ) {
-					$settings = EMCP_Tools_Element_Factory::normalize_container_settings( $settings );
+					$settings = KarMCP_Element_Factory::normalize_container_settings( $settings );
 				} else {
 					// Widgets/other elTypes: flatten the same background shorthand
 					// so an update-time background applies (containers already
 					// covered by normalize_container_settings above).
-					$settings = EMCP_Tools_Element_Factory::normalize_background_settings( $settings );
+					$settings = KarMCP_Element_Factory::normalize_background_settings( $settings );
 				}
 
 				$item['settings'] = array_merge( $item['settings'], $settings );
@@ -687,7 +687,7 @@ class EMCP_Tools_Data {
 				// values an agent naturally sends AND repairs anything an earlier
 				// version already wrote.
 				if ( 'widget' === ( $item['elType'] ?? '' ) && ! empty( $item['widgetType'] ) ) {
-					$item['settings'] = EMCP_Tools_Atomic_Props::coerce_settings(
+					$item['settings'] = KarMCP_Atomic_Props::coerce_settings(
 						(string) $item['widgetType'],
 						$item['settings']
 					);

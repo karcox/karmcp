@@ -1,16 +1,16 @@
 <?php
 /**
- * Redirect store — the {prefix}emcp_redirects table plus CRUD, path
+ * Redirect store — the {prefix}karmcp_redirects table plus CRUD, path
  * normalization, loop guarding, target resolution, and the ledger-rollback
  * applier for the `redirect-row` change type.
  *
- * Follows the EMCP_Tools_Search_Index storage pattern (version-gated dbDelta,
+ * Follows the KarMCP_Search_Index storage pattern (version-gated dbDelta,
  * a DB_VERSION const + option, maybe_install() on init). The pure methods
  * (normalize_path/would_loop/resolve_target and create()'s validation) are
  * DB-free so they unit-test without a database; persistence is exercised by the
  * live smoke test.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.11.0
  */
 
@@ -23,10 +23,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.11.0
  */
-class EMCP_Tools_Redirect_Store {
+class KarMCP_Redirect_Store {
 
 	const DB_VERSION        = 1;
-	const DB_VERSION_OPTION = 'emcp_tools_redirects_db_version';
+	const DB_VERSION_OPTION = 'karmcp_redirects_db_version';
 	const MAX_SOURCE_LEN    = 191;
 
 	/**
@@ -36,7 +36,7 @@ class EMCP_Tools_Redirect_Store {
 	 */
 	public static function table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'emcp_redirects';
+		return $wpdb->prefix . 'karmcp_redirects';
 	}
 
 	/**
@@ -161,24 +161,24 @@ class EMCP_Tools_Redirect_Store {
 	public static function create( array $data ) {
 		$source = self::normalize_path( (string) ( $data['source'] ?? '' ) );
 		if ( '/' === $source || '' === $source ) {
-			return new \WP_Error( 'invalid_source', __( 'A non-empty source path is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_source', __( 'A non-empty source path is required.', 'karmcp' ) );
 		}
 		if ( strlen( $source ) > self::MAX_SOURCE_LEN ) {
-			return new \WP_Error( 'source_too_long', __( 'Source path exceeds 191 characters.', 'emcp-tools' ) );
+			return new \WP_Error( 'source_too_long', __( 'Source path exceeds 191 characters.', 'karmcp' ) );
 		}
 		$post_id = isset( $data['target_post_id'] ) ? absint( $data['target_post_id'] ) : 0;
 		$target  = isset( $data['target'] ) ? trim( (string) $data['target'] ) : '';
 		if ( $post_id && '' !== $target ) {
-			return new \WP_Error( 'ambiguous_target', __( 'Provide either target or target_post_id, not both.', 'emcp-tools' ) );
+			return new \WP_Error( 'ambiguous_target', __( 'Provide either target or target_post_id, not both.', 'karmcp' ) );
 		}
 		if ( ! $post_id && '' === $target ) {
-			return new \WP_Error( 'missing_target', __( 'A target URL or target_post_id is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_target', __( 'A target URL or target_post_id is required.', 'karmcp' ) );
 		}
 		if ( '' !== $target && self::would_loop( $source, $target ) ) {
-			return new \WP_Error( 'redirect_loop', __( 'A redirect cannot point to itself.', 'emcp-tools' ) );
+			return new \WP_Error( 'redirect_loop', __( 'A redirect cannot point to itself.', 'karmcp' ) );
 		}
 		if ( self::find_by_source( $source ) ) {
-			return new \WP_Error( 'duplicate_source', __( 'A redirect for this source already exists.', 'emcp-tools' ) );
+			return new \WP_Error( 'duplicate_source', __( 'A redirect for this source already exists.', 'karmcp' ) );
 		}
 		$now = function_exists( 'current_time' ) ? current_time( 'mysql' ) : gmdate( 'Y-m-d H:i:s' );
 		global $wpdb;
@@ -213,18 +213,18 @@ class EMCP_Tools_Redirect_Store {
 	public static function update( int $id, array $data ) {
 		$row = self::get( $id );
 		if ( ! $row ) {
-			return new \WP_Error( 'not_found', __( 'Redirect not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_found', __( 'Redirect not found.', 'karmcp' ) );
 		}
 		$set     = array();
 		$formats = array();
 		if ( array_key_exists( 'source', $data ) ) {
 			$source = self::normalize_path( (string) $data['source'] );
 			if ( '/' === $source || strlen( $source ) > self::MAX_SOURCE_LEN ) {
-				return new \WP_Error( 'invalid_source', __( 'Invalid source path.', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_source', __( 'Invalid source path.', 'karmcp' ) );
 			}
 			$dupe = self::find_by_source( $source );
 			if ( $dupe && (int) $dupe['id'] !== $id ) {
-				return new \WP_Error( 'duplicate_source', __( 'Another redirect already uses this source.', 'emcp-tools' ) );
+				return new \WP_Error( 'duplicate_source', __( 'Another redirect already uses this source.', 'karmcp' ) );
 			}
 			$set['source_path'] = $source;
 			$formats[]          = '%s';
@@ -259,7 +259,7 @@ class EMCP_Tools_Redirect_Store {
 		$effective_source = $set['source_path'] ?? $row['source_path'];
 		$effective_target = array_key_exists( 'target', $set ) ? $set['target'] : $row['target'];
 		if ( '' !== (string) $effective_target && self::would_loop( (string) $effective_source, (string) $effective_target ) ) {
-			return new \WP_Error( 'redirect_loop', __( 'A redirect cannot point to itself.', 'emcp-tools' ) );
+			return new \WP_Error( 'redirect_loop', __( 'A redirect cannot point to itself.', 'karmcp' ) );
 		}
 		if ( empty( $set ) ) {
 			return $row;

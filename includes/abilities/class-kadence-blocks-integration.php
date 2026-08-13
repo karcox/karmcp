@@ -15,7 +15,7 @@
  * render_callback that injects CSS from attributes, so a headless-inserted block
  * self-styles.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.9.0
  */
 
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Kadence block catalog + insertion integration.
  */
-class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration {
+class KarMCP_Kadence_Blocks_Integration extends KarMCP_Theme_Integration {
 
 	protected function capabilities(): array {
 		return array( 'supports_patterns' => true, 'supports_preview' => true, 'styles_model' => 'uniqueid' );
@@ -38,11 +38,11 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 	}
 
 	public function label(): string {
-		return __( 'Kadence Blocks', 'emcp-tools' );
+		return __( 'Kadence Blocks', 'karmcp' );
 	}
 
 	public function is_available(): bool {
-		return EMCP_Tools_Kadence_Blocks_Catalog::is_active();
+		return KarMCP_Kadence_Blocks_Catalog::is_active();
 	}
 
 	// Building content, not theme options.
@@ -59,31 +59,31 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_list_blocks' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'Compact catalog of the Kadence blocks on this site (name, title, description, category). Optional { category (layout|content|media|embed|form|dynamic|header), search }. Step 1 of discover -> inspect -> act.', 'emcp-tools' ),
+				'desc' => __( 'Compact catalog of the Kadence blocks on this site (name, title, description, category). Optional { category (layout|content|media|embed|form|dynamic|header), search }. Step 1 of discover -> inspect -> act.', 'karmcp' ),
 			),
 			'get-block-schema' => array(
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_get_block_schema' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'A Kadence block\'s key attributes (real names + defaults from the live registry) + a ready-to-use example ({ name } or { names: [...] }). { full: true } returns the block\'s full attribute set. Notes container children + RichText-content blocks.', 'emcp-tools' ),
+				'desc' => __( 'A Kadence block\'s key attributes (real names + defaults from the live registry) + a ready-to-use example ({ name } or { names: [...] }). { full: true } returns the block\'s full attribute set. Notes container children + RichText-content blocks.', 'karmcp' ),
 			),
 			'add-block'        => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'execute_add_block' ),
 				'perm' => array( $this, 'can_write' ),
-				'desc' => __( 'Insert a Kadence block into a post ({ post_id, block, attributes?, position? }); a uniqueID is generated and container inner blocks (columns, buttons, list items) are scaffolded. position: { mode: append|prepend|before|after|inside, path?: [..] }.', 'emcp-tools' ),
+				'desc' => __( 'Insert a Kadence block into a post ({ post_id, block, attributes?, position? }); a uniqueID is generated and container inner blocks (columns, buttons, list items) are scaffolded. position: { mode: append|prepend|before|after|inside, path?: [..] }.', 'karmcp' ),
 			),
 			'list-patterns'    => array(
 				'mode' => 'read',
 				'run'  => array( $this, 'execute_list_patterns' ),
 				'perm' => array( $this, 'can_read' ),
-				'desc' => __( 'List Kadence Design Library patterns (professionally-designed, editor-VALID sections). Optional { category (e.g. Hero, Testimonials, "Counter or Stats", "Call to Action", "Media and Text"), search, include_pro }. Call { categories: true } to list category names. PREFER a pattern over hand-building a whole section.', 'emcp-tools' ),
+				'desc' => __( 'List Kadence Design Library patterns (professionally-designed, editor-VALID sections). Optional { category (e.g. Hero, Testimonials, "Counter or Stats", "Call to Action", "Media and Text"), search, include_pro }. Call { categories: true } to list category names. PREFER a pattern over hand-building a whole section.', 'karmcp' ),
 			),
 			'insert-pattern'   => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'execute_insert_pattern' ),
 				'perm' => array( $this, 'can_write' ),
-				'desc' => __( 'Insert a Kadence Design Library pattern into a post by id ({ post_id, pattern, position?, localize_images? }). Inserts Kadence\'s own canonical block markup (editor-valid, palette-harmonized). localize_images:true downloads the pattern images into the Media Library (needs upload_files). Patterns ship with placeholder copy — edit the headings/text (RichText) afterward.', 'emcp-tools' ),
+				'desc' => __( 'Insert a Kadence Design Library pattern into a post by id ({ post_id, pattern, position?, localize_images? }). Inserts Kadence\'s own canonical block markup (editor-valid, palette-harmonized). localize_images:true downloads the pattern images into the Media Library (needs upload_files). Patterns ship with placeholder copy — edit the headings/text (RichText) afterward.', 'karmcp' ),
 			),
 		);
 	}
@@ -95,7 +95,7 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 	public function execute_list_blocks( $input ): array {
 		$category = isset( $input['category'] ) ? (string) $input['category'] : '';
 		$search   = isset( $input['search'] ) ? (string) $input['search'] : '';
-		$blocks   = EMCP_Tools_Kadence_Blocks_Catalog::blocks_index( $category, $search );
+		$blocks   = KarMCP_Kadence_Blocks_Catalog::blocks_index( $category, $search );
 		return array(
 			'count'  => count( $blocks ),
 			'blocks' => $blocks,
@@ -114,7 +114,7 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 			$names = array( (string) $input['name'] );
 		}
 		if ( empty( $names ) ) {
-			return new WP_Error( 'missing_name', __( 'Provide a block "name" or "names" array.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_name', __( 'Provide a block "name" or "names" array.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$full = ! empty( $input['full'] );
 
@@ -136,18 +136,18 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 
 		$post = $post_id ? get_post( $post_id ) : null;
 		if ( ! $post ) {
-			return new WP_Error( 'not_found', __( 'Post not found.', 'emcp-tools' ), array( 'status' => 404 ) );
+			return new WP_Error( 'not_found', __( 'Post not found.', 'karmcp' ), array( 'status' => 404 ) );
 		}
-		if ( ! EMCP_Tools_Kadence_Blocks_Catalog::is_known( $name ) ) {
-			return new WP_Error( 'unknown_block', sprintf( __( 'Unknown Kadence block: %s', 'emcp-tools' ), $name ), array( 'status' => 404 ) );
+		if ( ! KarMCP_Kadence_Blocks_Catalog::is_known( $name ) ) {
+			return new WP_Error( 'unknown_block', sprintf( __( 'Unknown Kadence block: %s', 'karmcp' ), $name ), array( 'status' => 404 ) );
 		}
 		$attrs    = ( isset( $input['attributes'] ) && is_array( $input['attributes'] ) ) ? $input['attributes'] : array();
 		$position = ( isset( $input['position'] ) && is_array( $input['position'] ) ) ? $input['position'] : array( 'mode' => 'append' );
 
 		$block  = $this->build_block( $name, $attrs );
-		$tree   = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		$tree   = EMCP_Tools_Block_Tree::insert( $tree, array( $block ), $position );
-		$markup = EMCP_Tools_Block_Tree::to_markup( $tree );
+		$tree   = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		$tree   = KarMCP_Block_Tree::insert( $tree, array( $block ), $position );
+		$markup = KarMCP_Block_Tree::to_markup( $tree );
 
 		$result = wp_update_post( array( 'ID' => $post_id, 'post_content' => wp_slash( $markup ) ), true );
 		if ( is_wp_error( $result ) ) {
@@ -157,7 +157,7 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 			'added'     => $name,
 			'unique_id' => $block['attrs']['uniqueID'],
 			'post_id'   => $post_id,
-			'note'      => __( 'Renders correctly on the front end. Kadence blocks use a static JS save(), so the block editor may show "Attempt recovery" on this block — one click regenerates valid markup and preserves the content.', 'emcp-tools' ),
+			'note'      => __( 'Renders correctly on the front end. Kadence blocks use a static JS save(), so the block editor may show "Attempt recovery" on this block — one click regenerates valid markup and preserves the content.', 'karmcp' ),
 		);
 	}
 
@@ -166,24 +166,24 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 	 * @return array|WP_Error
 	 */
 	public function execute_list_patterns( $input ) {
-		if ( ! EMCP_Tools_Kadence_Pattern_Library::is_available() ) {
-			return new WP_Error( 'kadence_library_unavailable', __( 'The Kadence Prebuilt Library is not available on this site.', 'emcp-tools' ), array( 'status' => 501 ) );
+		if ( ! KarMCP_Kadence_Pattern_Library::is_available() ) {
+			return new WP_Error( 'kadence_library_unavailable', __( 'The Kadence Prebuilt Library is not available on this site.', 'karmcp' ), array( 'status' => 501 ) );
 		}
 		if ( ! empty( $input['categories'] ) ) {
 			// Category discovery lists all category names by default (incl. pro).
 			$include_pro = array_key_exists( 'include_pro', $input ) ? ! empty( $input['include_pro'] ) : true;
-			return array( 'categories' => EMCP_Tools_Kadence_Pattern_Library::categories( $include_pro ) );
+			return array( 'categories' => KarMCP_Kadence_Pattern_Library::categories( $include_pro ) );
 		}
 		$category    = isset( $input['category'] ) ? (string) $input['category'] : '';
 		$search      = isset( $input['search'] ) ? (string) $input['search'] : '';
 		$include_pro = ! empty( $input['include_pro'] );
-		$patterns    = EMCP_Tools_Kadence_Pattern_Library::list_patterns( $category, $search, $include_pro );
+		$patterns    = KarMCP_Kadence_Pattern_Library::list_patterns( $category, $search, $include_pro );
 		$out         = array(
 			'count'    => count( $patterns ),
 			'patterns' => $patterns,
 		);
-		if ( empty( $patterns ) && empty( EMCP_Tools_Kadence_Pattern_Library::raw_catalog() ) ) {
-			$out['note'] = __( 'The pattern catalog is empty. Open Kadence → Design Library once (any block editor) to populate the local pattern cache, then retry.', 'emcp-tools' );
+		if ( empty( $patterns ) && empty( KarMCP_Kadence_Pattern_Library::raw_catalog() ) ) {
+			$out['note'] = __( 'The pattern catalog is empty. Open Kadence → Design Library once (any block editor) to populate the local pattern cache, then retry.', 'karmcp' );
 		}
 		return $out;
 	}
@@ -198,13 +198,13 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 
 		$post = $post_id ? get_post( $post_id ) : null;
 		if ( ! $post ) {
-			return new WP_Error( 'not_found', __( 'Post not found.', 'emcp-tools' ), array( 'status' => 404 ) );
+			return new WP_Error( 'not_found', __( 'Post not found.', 'karmcp' ), array( 'status' => 404 ) );
 		}
 		if ( '' === $pattern ) {
-			return new WP_Error( 'missing_pattern', __( 'Provide a "pattern" id (from list-patterns).', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_pattern', __( 'Provide a "pattern" id (from list-patterns).', 'karmcp' ), array( 'status' => 400 ) );
 		}
 
-		$markup = EMCP_Tools_Kadence_Pattern_Library::get_markup( $pattern, ! empty( $input['localize_images'] ) );
+		$markup = KarMCP_Kadence_Pattern_Library::get_markup( $pattern, ! empty( $input['localize_images'] ) );
 		if ( is_wp_error( $markup ) ) {
 			return $markup;
 		}
@@ -213,13 +213,13 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 			return ! empty( $b['blockName'] );
 		} ) );
 		if ( empty( $new_blocks ) ) {
-			return new WP_Error( 'empty_pattern', __( 'The pattern produced no blocks.', 'emcp-tools' ), array( 'status' => 422 ) );
+			return new WP_Error( 'empty_pattern', __( 'The pattern produced no blocks.', 'karmcp' ), array( 'status' => 422 ) );
 		}
 
 		$position = ( isset( $input['position'] ) && is_array( $input['position'] ) ) ? $input['position'] : array( 'mode' => 'append' );
-		$tree     = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		$tree     = EMCP_Tools_Block_Tree::insert( $tree, $new_blocks, $position );
-		$out      = EMCP_Tools_Block_Tree::to_markup( $tree );
+		$tree     = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		$tree     = KarMCP_Block_Tree::insert( $tree, $new_blocks, $position );
+		$out      = KarMCP_Block_Tree::to_markup( $tree );
 
 		$result = wp_update_post( array( 'ID' => $post_id, 'post_content' => wp_slash( $out ) ), true );
 		if ( is_wp_error( $result ) ) {
@@ -229,7 +229,7 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 			'inserted'     => $pattern,
 			'blocks_added' => count( $new_blocks ),
 			'post_id'      => $post_id,
-			'note'         => __( 'Inserted Kadence canonical markup (editor-valid). Patterns ship with placeholder copy — edit the headings/text (RichText fields) to your content.', 'emcp-tools' ),
+			'note'         => __( 'Inserted Kadence canonical markup (editor-valid). Patterns ship with placeholder copy — edit the headings/text (RichText fields) to your content.', 'karmcp' ),
 		);
 	}
 
@@ -243,7 +243,7 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 	 * @return string[]
 	 */
 	private function source_fields( string $name ): array {
-		$bt = EMCP_Tools_Kadence_Blocks_Catalog::registered( $name );
+		$bt = KarMCP_Kadence_Blocks_Catalog::registered( $name );
 		if ( null === $bt || empty( $bt->attributes ) ) {
 			return array();
 		}
@@ -272,25 +272,25 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 	 * @return array
 	 */
 	private function schema_for( string $name, bool $full ): array {
-		if ( ! EMCP_Tools_Kadence_Blocks_Catalog::is_known( $name ) ) {
+		if ( ! KarMCP_Kadence_Blocks_Catalog::is_known( $name ) ) {
 			return array( 'name' => $name, 'error' => 'unknown_block' );
 		}
 		$slug  = substr( $name, 8 );
-		$title = EMCP_Tools_Kadence_Blocks_Catalog::TITLES[ $slug ]['title'] ?? $name;
-		$desc  = EMCP_Tools_Kadence_Blocks_Catalog::TITLES[ $slug ]['desc'] ?? '';
+		$title = KarMCP_Kadence_Blocks_Catalog::TITLES[ $slug ]['title'] ?? $name;
+		$desc  = KarMCP_Kadence_Blocks_Catalog::TITLES[ $slug ]['desc'] ?? '';
 		$entry = array(
 			'name'        => $name,
 			'title'       => $title,
 			'description' => $desc,
-			'category'    => EMCP_Tools_Kadence_Blocks_Catalog::CATEGORY[ $slug ] ?? 'content',
-			'doc'         => EMCP_Tools_Kadence_Blocks_Catalog::doc_url( $name ),
+			'category'    => KarMCP_Kadence_Blocks_Catalog::CATEGORY[ $slug ] ?? 'content',
+			'doc'         => KarMCP_Kadence_Blocks_Catalog::doc_url( $name ),
 		);
 
-		$real      = EMCP_Tools_Kadence_Blocks_Catalog::real_attributes( $name );
-		$highlight = EMCP_Tools_Kadence_Blocks_Catalog::highlight( $name );
+		$real      = KarMCP_Kadence_Blocks_Catalog::real_attributes( $name );
+		$highlight = KarMCP_Kadence_Blocks_Catalog::highlight( $name );
 		$keys      = ! empty( $highlight )
 			? array_values( array_intersect( $highlight, array_keys( $real ) ) )
-			: array_slice( array_keys( $real ), 0, EMCP_Tools_Kadence_Blocks_Catalog::DEFAULT_CAP );
+			: array_slice( array_keys( $real ), 0, KarMCP_Kadence_Blocks_Catalog::DEFAULT_CAP );
 
 		$params = array();
 		foreach ( $keys as $k ) {
@@ -301,32 +301,32 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 		if ( empty( $highlight ) && count( $real ) > count( $keys ) ) {
 			$entry['note'] = sprintf(
 				/* translators: 1: shown count, 2: total count. */
-				__( 'Showing the first %1$d of %2$d attributes; pass full:true for all.', 'emcp-tools' ),
+				__( 'Showing the first %1$d of %2$d attributes; pass full:true for all.', 'karmcp' ),
 				count( $keys ),
 				count( $real )
 			);
 		}
 
 		// Structural hints (container children, RichText content, editor-only caveats).
-		$structure = EMCP_Tools_Kadence_Blocks_Catalog::structure( $name );
+		$structure = KarMCP_Kadence_Blocks_Catalog::structure( $name );
 		if ( ! empty( $structure['inner'] ) ) {
 			$entry['inner_blocks'] = sprintf(
 				/* translators: 1: child block name. */
-				__( 'Container: add-block scaffolds %1$s children automatically.', 'emcp-tools' ),
+				__( 'Container: add-block scaffolds %1$s children automatically.', 'karmcp' ),
 				$structure['inner']['child']
 			);
 		}
 		$source_fields = $this->source_fields( $name );
 		if ( ! empty( $source_fields ) ) {
 			$entry['content_attributes'] = $source_fields;
-			$entry['content_note']       = __( 'These are RichText/HTML fields — pass them as attributes and add-block renders them into the saved block markup (they are read back from the HTML, not the attrs JSON).', 'emcp-tools' );
+			$entry['content_note']       = __( 'These are RichText/HTML fields — pass them as attributes and add-block renders them into the saved block markup (they are read back from the HTML, not the attrs JSON).', 'karmcp' );
 		}
 		if ( ! empty( $structure['note'] ) ) {
 			$entry['structure_note'] = $structure['note'];
 		}
 
 		$entry['example']     = $this->example_markup( $name );
-		$entry['editor_note'] = __( 'Kadence blocks use a static JS save(), so a headlessly-inserted block renders correctly on the front end but the block editor may flag it "Attempt recovery" (one click regenerates valid markup, content preserved).', 'emcp-tools' );
+		$entry['editor_note'] = __( 'Kadence blocks use a static JS save(), so a headlessly-inserted block renders correctly on the front end but the block editor may flag it "Attempt recovery" (one click regenerates valid markup, content preserved).', 'karmcp' );
 
 		if ( $full ) {
 			$entry['full_attributes'] = $real;
@@ -344,8 +344,8 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 	 * @return array Parsed block array.
 	 */
 	private function build_block( string $name, array $attrs ): array {
-		$attrs['uniqueID'] = $attrs['uniqueID'] ?? EMCP_Tools_Id_Generator::generate();
-		$structure         = EMCP_Tools_Kadence_Blocks_Catalog::structure( $name );
+		$attrs['uniqueID'] = $attrs['uniqueID'] ?? KarMCP_Id_Generator::generate();
+		$structure         = KarMCP_Kadence_Blocks_Catalog::structure( $name );
 
 		// Container defaults the editor requires (e.g. rowlayout colLayout), only
 		// when the caller didn't set them.
@@ -391,7 +391,7 @@ class EMCP_Tools_Kadence_Blocks_Integration extends EMCP_Tools_Theme_Integration
 	 * @return string
 	 */
 	private function render_source_fields( string $name, array &$attrs ): string {
-		$bt = EMCP_Tools_Kadence_Blocks_Catalog::registered( $name );
+		$bt = KarMCP_Kadence_Blocks_Catalog::registered( $name );
 		if ( null === $bt || empty( $bt->attributes ) ) {
 			return '';
 		}

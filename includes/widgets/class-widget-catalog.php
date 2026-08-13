@@ -7,7 +7,7 @@
  * the MCP widget tools (list-widgets, get-widget-schema, add-free-widget,
  * add-pro-widget) serve it instead of carrying 62 fat schemas of their own.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_Widget_Catalog {
+class KarMCP_Widget_Catalog {
 
 	/**
 	 * Merged catalog cache (keyed by widget_type).

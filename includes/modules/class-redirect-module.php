@@ -11,9 +11,9 @@
  *
  * The abilities register on `wp_abilities_api_init` (before this module boots on
  * init:5), so the registrar gates the redirect group on the static is_enabled()
- * rather than on register() below — same pattern as EMCP Themer.
+ * rather than on register() below — same pattern as KarMCP Themer.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.11.0
  */
 
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.11.0
  */
-class EMCP_Tools_Redirect_Module extends EMCP_Tools_Module {
+class KarMCP_Redirect_Module extends KarMCP_Module {
 
 	const ID = 'redirects';
 
@@ -35,11 +35,11 @@ class EMCP_Tools_Redirect_Module extends EMCP_Tools_Module {
 	}
 
 	public function title(): string {
-		return __( 'Redirect Manager', 'emcp-tools' );
+		return __( 'Redirect Manager', 'karmcp' );
 	}
 
 	public function description(): string {
-		return __( 'Create and manage 301/302 redirects so a deleted or renamed page never leaves a dead URL. Suggests a redirect when a page is removed or its slug changes, scans for broken internal links, and every redirect is reversible from History.', 'emcp-tools' );
+		return __( 'Create and manage 301/302 redirects so a deleted or renamed page never leaves a dead URL. Suggests a redirect when a page is removed or its slug changes, scans for broken internal links, and every redirect is reversible from History.', 'karmcp' );
 	}
 
 	public function tier(): string {
@@ -53,7 +53,7 @@ class EMCP_Tools_Redirect_Module extends EMCP_Tools_Module {
 
 	/** The dedicated Redirects admin tab is this module's config surface. */
 	public function settings_url(): string {
-		return admin_url( 'admin.php?page=' . EMCP_Tools_Admin::PAGE_SLUG . '-redirects' );
+		return admin_url( 'admin.php?page=' . KarMCP_Admin::PAGE_SLUG . '-redirects' );
 	}
 
 	/**
@@ -63,7 +63,7 @@ class EMCP_Tools_Redirect_Module extends EMCP_Tools_Module {
 	 * @return bool
 	 */
 	public static function is_enabled(): bool {
-		$active = (array) get_option( EMCP_Tools_Module::OPTION_ACTIVE, array() );
+		$active = (array) get_option( KarMCP_Module::OPTION_ACTIVE, array() );
 		return in_array( self::ID, $active, true );
 	}
 
@@ -72,11 +72,11 @@ class EMCP_Tools_Redirect_Module extends EMCP_Tools_Module {
 	 * Called by the registry only when the module is active.
 	 */
 	public function register(): void {
-		if ( class_exists( 'EMCP_Tools_Redirect_Store' ) ) {
-			EMCP_Tools_Redirect_Store::init();
+		if ( class_exists( 'KarMCP_Redirect_Store' ) ) {
+			KarMCP_Redirect_Store::init();
 		}
-		if ( class_exists( 'EMCP_Tools_Redirect_Handler' ) ) {
-			EMCP_Tools_Redirect_Handler::init();
+		if ( class_exists( 'KarMCP_Redirect_Handler' ) ) {
+			KarMCP_Redirect_Handler::init();
 		}
 	}
 

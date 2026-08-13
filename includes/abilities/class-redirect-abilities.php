@@ -2,13 +2,13 @@
 /**
  * Redirect Manager MCP abilities.
  *
- * CRUD over the {prefix}emcp_redirects store plus a read-only broken-internal-
+ * CRUD over the {prefix}karmcp_redirects store plus a read-only broken-internal-
  * link scan. Reads (list-redirects/find-broken-links) are enabled by default;
  * the three writes ship disabled-by-default. All require manage_options. Every
- * write routes through EMCP_Tools_Change_Recorder so it is reversible in the
+ * write routes through KarMCP_Change_Recorder so it is reversible in the
  * History tab.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.11.0
  */
 
@@ -21,12 +21,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.11.0
  */
-class EMCP_Tools_Redirect_Abilities {
+class KarMCP_Redirect_Abilities {
 
 	/**
 	 * The suggestion queue option + cap.
 	 */
-	const SUGGESTIONS_OPTION = 'emcp_tools_redirect_suggestions';
+	const SUGGESTIONS_OPTION = 'karmcp_redirect_suggestions';
 	const SUGGESTIONS_CAP    = 50;
 
 	/**
@@ -70,22 +70,22 @@ class EMCP_Tools_Redirect_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_list_redirects(): void {
-		$this->ability_names[] = 'emcp-tools/list-redirects';
-		emcp_tools_register_ability(
-			'emcp-tools/list-redirects',
+		$this->ability_names[] = 'karmcp/list-redirects';
+		karmcp_register_ability(
+			'karmcp/list-redirects',
 			array(
-				'label'               => __( 'List Redirects', 'emcp-tools' ),
-				'description'         => __( 'Lists the site\'s managed 301/302 redirects (source path → target, status code, enabled, hit count). Filter by enabled or a search string; paginated. Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Redirects', 'karmcp' ),
+				'description'         => __( 'Lists the site\'s managed 301/302 redirects (source path → target, status code, enabled, hit count). Filter by enabled or a search string; paginated. Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_redirects' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'enabled'  => array( 'type' => 'boolean', 'description' => __( 'Filter by enabled state. Omit for all.', 'emcp-tools' ) ),
-						'search'   => array( 'type' => 'string', 'description' => __( 'Match source or target.', 'emcp-tools' ) ),
-						'per_page' => array( 'type' => 'integer', 'description' => __( '1-500. Default 100.', 'emcp-tools' ) ),
-						'page'     => array( 'type' => 'integer', 'description' => __( 'Default 1.', 'emcp-tools' ) ),
+						'enabled'  => array( 'type' => 'boolean', 'description' => __( 'Filter by enabled state. Omit for all.', 'karmcp' ) ),
+						'search'   => array( 'type' => 'string', 'description' => __( 'Match source or target.', 'karmcp' ) ),
+						'per_page' => array( 'type' => 'integer', 'description' => __( '1-500. Default 100.', 'karmcp' ) ),
+						'page'     => array( 'type' => 'integer', 'description' => __( 'Default 1.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array(
@@ -105,8 +105,8 @@ class EMCP_Tools_Redirect_Abilities {
 	 * @return array|WP_Error
 	 */
 	public function execute_list_redirects( $input ) {
-		if ( ! class_exists( 'EMCP_Tools_Redirect_Store' ) ) {
-			return new \WP_Error( 'unavailable', __( 'Redirect store unavailable.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_Redirect_Store' ) ) {
+			return new \WP_Error( 'unavailable', __( 'Redirect store unavailable.', 'karmcp' ) );
 		}
 		$per_page = max( 1, min( 500, absint( $input['per_page'] ?? 100 ) ) );
 		$page     = max( 1, absint( $input['page'] ?? 1 ) );
@@ -118,8 +118,8 @@ class EMCP_Tools_Redirect_Abilities {
 			$filters['search'] = sanitize_text_field( (string) $input['search'] );
 		}
 		return array(
-			'redirects' => EMCP_Tools_Redirect_Store::all( $filters ),
-			'total'     => EMCP_Tools_Redirect_Store::count( $filters ),
+			'redirects' => KarMCP_Redirect_Store::all( $filters ),
+			'total'     => KarMCP_Redirect_Store::count( $filters ),
 		);
 	}
 
@@ -128,23 +128,23 @@ class EMCP_Tools_Redirect_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_create_redirect(): void {
-		$this->ability_names[] = 'emcp-tools/create-redirect';
-		emcp_tools_register_ability(
-			'emcp-tools/create-redirect',
+		$this->ability_names[] = 'karmcp/create-redirect';
+		karmcp_register_ability(
+			'karmcp/create-redirect',
 			array(
-				'label'               => __( 'Create Redirect', 'emcp-tools' ),
-				'description'         => __( 'Creates a 301/302 redirect from a source path to a target URL or post. Use this after deleting or renaming a page so the old URL still resolves. Warns (but allows) when the source shadows a live published page.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Create Redirect', 'karmcp' ),
+				'description'         => __( 'Creates a 301/302 redirect from a source path to a target URL or post. Use this after deleting or renaming a page so the old URL still resolves. Warns (but allows) when the source shadows a live published page.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_create_redirect' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'source'         => array( 'type' => 'string', 'description' => __( 'The old path to redirect from, e.g. /old-page.', 'emcp-tools' ) ),
-						'target'         => array( 'type' => 'string', 'description' => __( 'Destination URL (absolute or site-relative). Provide this OR target_post_id.', 'emcp-tools' ) ),
-						'target_post_id' => array( 'type' => 'integer', 'description' => __( 'Destination post ID (its permalink is resolved live). Provide this OR target.', 'emcp-tools' ) ),
-						'status_code'    => array( 'type' => 'integer', 'enum' => array( 301, 302 ), 'description' => __( 'Default 301 (permanent).', 'emcp-tools' ) ),
-						'ignore_query'   => array( 'type' => 'boolean', 'description' => __( 'Match regardless of query string. Default true.', 'emcp-tools' ) ),
+						'source'         => array( 'type' => 'string', 'description' => __( 'The old path to redirect from, e.g. /old-page.', 'karmcp' ) ),
+						'target'         => array( 'type' => 'string', 'description' => __( 'Destination URL (absolute or site-relative). Provide this OR target_post_id.', 'karmcp' ) ),
+						'target_post_id' => array( 'type' => 'integer', 'description' => __( 'Destination post ID (its permalink is resolved live). Provide this OR target.', 'karmcp' ) ),
+						'status_code'    => array( 'type' => 'integer', 'enum' => array( 301, 302 ), 'description' => __( 'Default 301 (permanent).', 'karmcp' ) ),
+						'ignore_query'   => array( 'type' => 'boolean', 'description' => __( 'Match regardless of query string. Default true.', 'karmcp' ) ),
 					),
 					'required'   => array( 'source' ),
 				),
@@ -164,10 +164,10 @@ class EMCP_Tools_Redirect_Abilities {
 	 * @return array|WP_Error
 	 */
 	public function execute_create_redirect( $input ) {
-		if ( ! class_exists( 'EMCP_Tools_Redirect_Store' ) ) {
-			return new \WP_Error( 'unavailable', __( 'Redirect store unavailable.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_Redirect_Store' ) ) {
+			return new \WP_Error( 'unavailable', __( 'Redirect store unavailable.', 'karmcp' ) );
 		}
-		$row = EMCP_Tools_Redirect_Store::create( array(
+		$row = KarMCP_Redirect_Store::create( array(
 			'source'         => (string) ( $input['source'] ?? '' ),
 			'target'         => isset( $input['target'] ) ? (string) $input['target'] : null,
 			'target_post_id' => isset( $input['target_post_id'] ) ? absint( $input['target_post_id'] ) : null,
@@ -177,8 +177,8 @@ class EMCP_Tools_Redirect_Abilities {
 		if ( is_wp_error( $row ) ) {
 			return $row;
 		}
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			EMCP_Tools_Change_Recorder::record_redirect(
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			KarMCP_Change_Recorder::record_redirect(
 				'create',
 				array( 'id' => (int) $row['id'] ),
 				sprintf( 'Created redirect %s', $row['source_path'] ),
@@ -208,7 +208,7 @@ class EMCP_Tools_Redirect_Abilities {
 		if ( $post_id && 'publish' === get_post_status( $post_id ) ) {
 			return sprintf(
 				/* translators: %d: post ID. */
-				__( 'Heads up: this source path currently resolves to live published post #%d — the redirect will now take over that URL.', 'emcp-tools' ),
+				__( 'Heads up: this source path currently resolves to live published post #%d — the redirect will now take over that URL.', 'karmcp' ),
 				(int) $post_id
 			);
 		}
@@ -220,19 +220,19 @@ class EMCP_Tools_Redirect_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_update_redirect(): void {
-		$this->ability_names[] = 'emcp-tools/update-redirect';
-		emcp_tools_register_ability(
-			'emcp-tools/update-redirect',
+		$this->ability_names[] = 'karmcp/update-redirect';
+		karmcp_register_ability(
+			'karmcp/update-redirect',
 			array(
-				'label'               => __( 'Update Redirect', 'emcp-tools' ),
-				'description'         => __( 'Updates an existing redirect by id. Only supplied fields change (source, target/target_post_id, status_code, ignore_query, enabled).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Redirect', 'karmcp' ),
+				'description'         => __( 'Updates an existing redirect by id. Only supplied fields change (source, target/target_post_id, status_code, ignore_query, enabled).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_redirect' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id'             => array( 'type' => 'integer', 'description' => __( 'Redirect id.', 'emcp-tools' ) ),
+						'id'             => array( 'type' => 'integer', 'description' => __( 'Redirect id.', 'karmcp' ) ),
 						'source'         => array( 'type' => 'string' ),
 						'target'         => array( 'type' => 'string' ),
 						'target_post_id' => array( 'type' => 'integer' ),
@@ -256,13 +256,13 @@ class EMCP_Tools_Redirect_Abilities {
 	 * @return array|WP_Error
 	 */
 	public function execute_update_redirect( $input ) {
-		if ( ! class_exists( 'EMCP_Tools_Redirect_Store' ) ) {
-			return new \WP_Error( 'unavailable', __( 'Redirect store unavailable.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_Redirect_Store' ) ) {
+			return new \WP_Error( 'unavailable', __( 'Redirect store unavailable.', 'karmcp' ) );
 		}
 		$id    = absint( $input['id'] ?? 0 );
-		$prior = EMCP_Tools_Redirect_Store::get( $id );
+		$prior = KarMCP_Redirect_Store::get( $id );
 		if ( ! $prior ) {
-			return new \WP_Error( 'not_found', __( 'Redirect not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_found', __( 'Redirect not found.', 'karmcp' ) );
 		}
 		$patch = array();
 		foreach ( array( 'source', 'target', 'target_post_id', 'status_code', 'ignore_query', 'enabled' ) as $k ) {
@@ -270,12 +270,12 @@ class EMCP_Tools_Redirect_Abilities {
 				$patch[ $k ] = $input[ $k ];
 			}
 		}
-		$row = EMCP_Tools_Redirect_Store::update( $id, $patch );
+		$row = KarMCP_Redirect_Store::update( $id, $patch );
 		if ( is_wp_error( $row ) ) {
 			return $row;
 		}
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			EMCP_Tools_Change_Recorder::record_redirect(
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			KarMCP_Change_Recorder::record_redirect(
 				'update',
 				array( 'row' => $prior ),
 				sprintf( 'Updated redirect %s', $row['source_path'] ),
@@ -290,18 +290,18 @@ class EMCP_Tools_Redirect_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_delete_redirect(): void {
-		$this->ability_names[] = 'emcp-tools/delete-redirect';
-		emcp_tools_register_ability(
-			'emcp-tools/delete-redirect',
+		$this->ability_names[] = 'karmcp/delete-redirect';
+		karmcp_register_ability(
+			'karmcp/delete-redirect',
 			array(
-				'label'               => __( 'Delete Redirect', 'emcp-tools' ),
-				'description'         => __( 'Deletes a redirect by id. Reversible from the History tab. Destructive.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Delete Redirect', 'karmcp' ),
+				'description'         => __( 'Deletes a redirect by id. Reversible from the History tab. Destructive.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_delete_redirect' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'id' => array( 'type' => 'integer', 'description' => __( 'Redirect id.', 'emcp-tools' ) ) ),
+					'properties' => array( 'id' => array( 'type' => 'integer', 'description' => __( 'Redirect id.', 'karmcp' ) ) ),
 					'required'   => array( 'id' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array(
@@ -320,17 +320,17 @@ class EMCP_Tools_Redirect_Abilities {
 	 * @return array|WP_Error
 	 */
 	public function execute_delete_redirect( $input ) {
-		if ( ! class_exists( 'EMCP_Tools_Redirect_Store' ) ) {
-			return new \WP_Error( 'unavailable', __( 'Redirect store unavailable.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_Redirect_Store' ) ) {
+			return new \WP_Error( 'unavailable', __( 'Redirect store unavailable.', 'karmcp' ) );
 		}
 		$id    = absint( $input['id'] ?? 0 );
-		$prior = EMCP_Tools_Redirect_Store::get( $id );
+		$prior = KarMCP_Redirect_Store::get( $id );
 		if ( ! $prior ) {
-			return new \WP_Error( 'not_found', __( 'Redirect not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_found', __( 'Redirect not found.', 'karmcp' ) );
 		}
-		$ok = EMCP_Tools_Redirect_Store::delete( $id );
-		if ( $ok && class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			EMCP_Tools_Change_Recorder::record_redirect(
+		$ok = KarMCP_Redirect_Store::delete( $id );
+		if ( $ok && class_exists( 'KarMCP_Change_Recorder' ) ) {
+			KarMCP_Change_Recorder::record_redirect(
 				'delete',
 				array( 'row' => $prior ),
 				sprintf( 'Deleted redirect %s', $prior['source_path'] ),
@@ -345,20 +345,20 @@ class EMCP_Tools_Redirect_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_find_broken_links(): void {
-		$this->ability_names[] = 'emcp-tools/find-broken-links';
-		emcp_tools_register_ability(
-			'emcp-tools/find-broken-links',
+		$this->ability_names[] = 'karmcp/find-broken-links';
+		karmcp_register_ability(
+			'karmcp/find-broken-links',
 			array(
-				'label'               => __( 'Find Broken Links', 'emcp-tools' ),
-				'description'         => __( 'Scans published content for internal links that point at trashed/missing pages (dead), or at a path that already has a redirect (should link straight to the target). Read-only — proposes fixes, changes nothing. Bounded by max_posts/max_seconds.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Find Broken Links', 'karmcp' ),
+				'description'         => __( 'Scans published content for internal links that point at trashed/missing pages (dead), or at a path that already has a redirect (should link straight to the target). Read-only — proposes fixes, changes nothing. Bounded by max_posts/max_seconds.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_find_broken_links' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'max_posts'   => array( 'type' => 'integer', 'description' => __( '1-2000. Default 200.', 'emcp-tools' ) ),
-						'max_seconds' => array( 'type' => 'integer', 'description' => __( '1-60. Default 10.', 'emcp-tools' ) ),
+						'max_posts'   => array( 'type' => 'integer', 'description' => __( '1-2000. Default 200.', 'karmcp' ) ),
+						'max_seconds' => array( 'type' => 'integer', 'description' => __( '1-60. Default 10.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array(
@@ -396,8 +396,8 @@ class EMCP_Tools_Redirect_Abilities {
 		$start       = microtime( true );
 
 		$sources = array();
-		if ( class_exists( 'EMCP_Tools_Redirect_Store' ) ) {
-			foreach ( EMCP_Tools_Redirect_Store::all( array( 'enabled' => true, 'limit' => 500 ) ) as $r ) {
+		if ( class_exists( 'KarMCP_Redirect_Store' ) ) {
+			foreach ( KarMCP_Redirect_Store::all( array( 'enabled' => true, 'limit' => 500 ) ) as $r ) {
 				$sources[] = (string) $r['source_path'];
 			}
 		}
@@ -465,15 +465,15 @@ class EMCP_Tools_Redirect_Abilities {
 			return array( 'kind' => 'external' );
 		}
 		if ( in_array( $path, $redirect_sources, true ) ) {
-			return array( 'kind' => 'redirected', 'suggestion' => __( 'This path already has a redirect — link straight to the target instead.', 'emcp-tools' ) );
+			return array( 'kind' => 'redirected', 'suggestion' => __( 'This path already has a redirect — link straight to the target instead.', 'karmcp' ) );
 		}
 		$pid = function_exists( 'url_to_postid' ) ? (int) url_to_postid( home_url( $path ) ) : 0;
 		if ( ! $pid ) {
-			return array( 'kind' => 'dead', 'suggestion' => __( 'Points at a URL with no published content — fix the link or add a redirect.', 'emcp-tools' ) );
+			return array( 'kind' => 'dead', 'suggestion' => __( 'Points at a URL with no published content — fix the link or add a redirect.', 'karmcp' ) );
 		}
 		$status = function_exists( 'get_post_status' ) ? get_post_status( $pid ) : 'publish';
 		if ( ! in_array( $status, array( 'publish', 'inherit' ), true ) ) {
-			return array( 'kind' => 'dead', 'suggestion' => __( 'Points at trashed/unpublished content — fix the link or add a redirect.', 'emcp-tools' ) );
+			return array( 'kind' => 'dead', 'suggestion' => __( 'Points at trashed/unpublished content — fix the link or add a redirect.', 'karmcp' ) );
 		}
 		return array( 'kind' => 'ok' );
 	}
@@ -497,10 +497,10 @@ class EMCP_Tools_Redirect_Abilities {
 				return ''; // External host.
 			}
 		}
-		if ( ! class_exists( 'EMCP_Tools_Redirect_Store' ) ) {
+		if ( ! class_exists( 'KarMCP_Redirect_Store' ) ) {
 			return '';
 		}
-		return EMCP_Tools_Redirect_Store::normalize_path( $href );
+		return KarMCP_Redirect_Store::normalize_path( $href );
 	}
 
 	// ---------------------------------------------------------------------
@@ -517,7 +517,7 @@ class EMCP_Tools_Redirect_Abilities {
 	 */
 	public static function push_suggestion( string $old_path, string $reason, int $source_post_id ): void {
 		try {
-			$old_path = class_exists( 'EMCP_Tools_Redirect_Store' ) ? EMCP_Tools_Redirect_Store::normalize_path( $old_path ) : $old_path;
+			$old_path = class_exists( 'KarMCP_Redirect_Store' ) ? KarMCP_Redirect_Store::normalize_path( $old_path ) : $old_path;
 			if ( '' === $old_path || '/' === $old_path ) {
 				return;
 			}

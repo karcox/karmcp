@@ -3,13 +3,13 @@
  * Durable out-of-band snapshot store for the change ledger.
  *
  * Large rollback before-images (a full Elementor tree, an attachment snapshot,
- * a DB before-image) used to live inline in the single capped `emcp_tools_changelog`
+ * a DB before-image) used to live inline in the single capped `karmcp_changelog`
  * option, so a few big edits evicted older undo points. This class moves those
  * payloads into a dedicated table keyed by a short blob id; the ledger row keeps
  * only the pointer, so the ledger stays light and retention can grow. Blobs are
  * pruned when their ledger entry is evicted and by an age sweep.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.10.0
  */
 
@@ -22,10 +22,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.10.0
  */
-class EMCP_Tools_Change_Blobs {
+class KarMCP_Change_Blobs {
 
 	const DB_VERSION        = 1;
-	const DB_VERSION_OPTION = 'emcp_tools_changelog_db_version';
+	const DB_VERSION_OPTION = 'karmcp_changelog_db_version';
 
 	/**
 	 * The blob table name.
@@ -34,11 +34,11 @@ class EMCP_Tools_Change_Blobs {
 	 */
 	public static function table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'emcp_change_blobs';
+		return $wpdb->prefix . 'karmcp_change_blobs';
 	}
 
 	/**
-	 * Wire the install hook (mirrors EMCP_Tools_Search_Index::init()).
+	 * Wire the install hook (mirrors KarMCP_Search_Index::init()).
 	 */
 	public static function init(): void {
 		add_action( 'init', array( __CLASS__, 'maybe_install' ), 20 );

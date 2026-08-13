@@ -1,6 +1,6 @@
 <?php
 /**
- * Singular preview canvas for a Themer template (`emcp_theme_template`).
+ * Singular preview canvas for a Themer template (`karmcp_theme_tpl`).
  *
  * A blank, full-width document that calls `the_content()`. Two jobs:
  *   1. Elementor's editor loads the post's front-end URL in its preview iframe
@@ -12,7 +12,7 @@
  * (editing/previewing the template itself) — never when applying a template to a
  * real request. The render controller routes to it and skips Themer resolution.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<?php wp_head(); ?>
 </head>
-<body <?php body_class( 'emcp-themer-edit-canvas' ); ?>>
+<body <?php body_class( 'karmcp-themer-edit-canvas' ); ?>>
 <?php
 while ( have_posts() ) :
 	the_post();

@@ -1,32 +1,32 @@
 <?php
 /**
- * EMCP Cloud MCP abilities — status, backup, list, pull, config sync.
+ * KarMCP Cloud MCP abilities — status, backup, list, pull, config sync.
  *
- * Free tree. Registered only when the site is connected to EMCP Cloud (the
+ * Free tree. Registered only when the site is connected to KarMCP Cloud (the
  * Cloud module is active and a token bundle is stored). Each tool delegates to
- * EMCP_Tools_Cloud_Sync and requires manage_options.
+ * KarMCP_Cloud_Sync and requires manage_options.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Cloud_Abilities {
+class KarMCP_Cloud_Abilities {
 
 	/**
 	 * @return string[]
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/cloud-status',
-			'emcp-tools/cloud-backup',
-			'emcp-tools/cloud-list',
-			'emcp-tools/cloud-pull',
-			'emcp-tools/cloud-config-sync',
-			'emcp-tools/cloud-marketplace-list',
-			'emcp-tools/cloud-marketplace-install',
+			'karmcp/cloud-status',
+			'karmcp/cloud-backup',
+			'karmcp/cloud-list',
+			'karmcp/cloud-pull',
+			'karmcp/cloud-config-sync',
+			'karmcp/cloud-marketplace-list',
+			'karmcp/cloud-marketplace-install',
 		);
 	}
 
@@ -41,12 +41,12 @@ class EMCP_Tools_Cloud_Abilities {
 	 * @return void
 	 */
 	public function register(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/cloud-status',
+		karmcp_register_ability(
+			'karmcp/cloud-status',
 			array(
-				'label'               => __( 'Cloud Status', 'emcp-tools' ),
-				'description'         => __( 'Return the EMCP Cloud plan, limits, and usage for the connected account.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Cloud Status', 'karmcp' ),
+				'description'         => __( 'Return the KarMCP Cloud plan, limits, and usage for the connected account.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_status' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array( 'type' => 'object', 'properties' => array( 'description' => array( 'type' => 'string' ) ) ),
@@ -54,12 +54,12 @@ class EMCP_Tools_Cloud_Abilities {
 				'meta'                => array( 'annotations' => array( 'readonly' => true, 'destructive' => false ), 'show_in_rest' => true ),
 			)
 		);
-		emcp_tools_register_ability(
-			'emcp-tools/cloud-backup',
+		karmcp_register_ability(
+			'karmcp/cloud-backup',
 			array(
-				'label'               => __( 'Cloud Backup', 'emcp-tools' ),
-				'description'         => __( 'Back up a local sandbox artifact (block, widget, or PHP snippet) to your EMCP Cloud account.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Cloud Backup', 'karmcp' ),
+				'description'         => __( 'Back up a local sandbox artifact (block, widget, or PHP snippet) to your KarMCP Cloud account.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_backup' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
@@ -74,12 +74,12 @@ class EMCP_Tools_Cloud_Abilities {
 				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => false, 'idempotent' => true ), 'show_in_rest' => true ),
 			)
 		);
-		emcp_tools_register_ability(
-			'emcp-tools/cloud-list',
+		karmcp_register_ability(
+			'karmcp/cloud-list',
 			array(
-				'label'               => __( 'Cloud List', 'emcp-tools' ),
-				'description'         => __( 'List the artifacts backed up to your EMCP Cloud account (optionally filtered by kind).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Cloud List', 'karmcp' ),
+				'description'         => __( 'List the artifacts backed up to your KarMCP Cloud account (optionally filtered by kind).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array( 'type' => 'object', 'properties' => array( 'kind' => array( 'type' => 'string' ) ) ),
@@ -87,12 +87,12 @@ class EMCP_Tools_Cloud_Abilities {
 				'meta'                => array( 'annotations' => array( 'readonly' => true, 'destructive' => false ), 'show_in_rest' => true ),
 			)
 		);
-		emcp_tools_register_ability(
-			'emcp-tools/cloud-pull',
+		karmcp_register_ability(
+			'karmcp/cloud-pull',
 			array(
-				'label'               => __( 'Cloud Pull', 'emcp-tools' ),
-				'description'         => __( 'Pull a cloud artifact into this site by its UUID. It is imported as a new inactive draft.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Cloud Pull', 'karmcp' ),
+				'description'         => __( 'Pull a cloud artifact into this site by its UUID. It is imported as a new inactive draft.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_pull' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
@@ -107,12 +107,12 @@ class EMCP_Tools_Cloud_Abilities {
 				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => false ), 'show_in_rest' => true ),
 			)
 		);
-		emcp_tools_register_ability(
-			'emcp-tools/cloud-config-sync',
+		karmcp_register_ability(
+			'karmcp/cloud-config-sync',
 			array(
-				'label'               => __( 'Cloud Config Sync', 'emcp-tools' ),
-				'description'         => __( 'Push or pull a config blob (settings, brand_kit, tool_toggles) to/from EMCP Cloud.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Cloud Config Sync', 'karmcp' ),
+				'description'         => __( 'Push or pull a config blob (settings, brand_kit, tool_toggles) to/from KarMCP Cloud.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_config_sync' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
@@ -128,12 +128,12 @@ class EMCP_Tools_Cloud_Abilities {
 				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => false ), 'show_in_rest' => true ),
 			)
 		);
-		emcp_tools_register_ability(
-			'emcp-tools/cloud-marketplace-list',
+		karmcp_register_ability(
+			'karmcp/cloud-marketplace-list',
 			array(
-				'label'               => __( 'Cloud Marketplace List', 'emcp-tools' ),
-				'description'         => __( 'Browse published EMCP Cloud marketplace listings (blocks, widgets, snippets).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Cloud Marketplace List', 'karmcp' ),
+				'description'         => __( 'Browse published KarMCP Cloud marketplace listings (blocks, widgets, snippets).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_marketplace_list' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array( 'type' => 'object', 'properties' => array( 'category' => array( 'type' => 'string' ) ) ),
@@ -141,12 +141,12 @@ class EMCP_Tools_Cloud_Abilities {
 				'meta'                => array( 'annotations' => array( 'readonly' => true, 'destructive' => false ), 'show_in_rest' => true ),
 			)
 		);
-		emcp_tools_register_ability(
-			'emcp-tools/cloud-marketplace-install',
+		karmcp_register_ability(
+			'karmcp/cloud-marketplace-install',
 			array(
-				'label'               => __( 'Cloud Marketplace Install', 'emcp-tools' ),
-				'description'         => __( 'Install a marketplace listing by slug. It is imported into this site as a new inactive draft.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Cloud Marketplace Install', 'karmcp' ),
+				'description'         => __( 'Install a marketplace listing by slug. It is imported into this site as a new inactive draft.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_marketplace_install' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
@@ -166,7 +166,7 @@ class EMCP_Tools_Cloud_Abilities {
 	 */
 	public function execute_marketplace_list( $input ) {
 		$category = isset( $input['category'] ) ? sanitize_key( (string) $input['category'] ) : '';
-		$r        = EMCP_Tools_Cloud_Sync::marketplace_list( $category );
+		$r        = KarMCP_Cloud_Sync::marketplace_list( $category );
 		return is_wp_error( $r ) ? $r : (array) $r;
 	}
 
@@ -176,7 +176,7 @@ class EMCP_Tools_Cloud_Abilities {
 	 */
 	public function execute_marketplace_install( $input ) {
 		$slug = isset( $input['slug'] ) ? sanitize_title( (string) $input['slug'] ) : '';
-		$r    = EMCP_Tools_Cloud_Sync::marketplace_install( $slug );
+		$r    = KarMCP_Cloud_Sync::marketplace_install( $slug );
 		return is_wp_error( $r ) ? $r : (array) $r;
 	}
 
@@ -184,7 +184,7 @@ class EMCP_Tools_Cloud_Abilities {
 	 * @return array|WP_Error
 	 */
 	public function execute_status() {
-		$r = EMCP_Tools_Cloud_Sync::status();
+		$r = KarMCP_Cloud_Sync::status();
 		return is_wp_error( $r ) ? $r : (array) $r;
 	}
 
@@ -195,7 +195,7 @@ class EMCP_Tools_Cloud_Abilities {
 	public function execute_backup( $input ) {
 		$kind = isset( $input['kind'] ) ? sanitize_key( (string) $input['kind'] ) : '';
 		$id   = isset( $input['id'] ) ? (int) $input['id'] : 0;
-		$r    = EMCP_Tools_Cloud_Sync::backup( $kind, $id );
+		$r    = KarMCP_Cloud_Sync::backup( $kind, $id );
 		return is_wp_error( $r ) ? $r : (array) $r;
 	}
 
@@ -205,7 +205,7 @@ class EMCP_Tools_Cloud_Abilities {
 	 */
 	public function execute_list( $input ) {
 		$kind = isset( $input['kind'] ) ? sanitize_key( (string) $input['kind'] ) : '';
-		$r    = EMCP_Tools_Cloud_Sync::list_remote( $kind );
+		$r    = KarMCP_Cloud_Sync::list_remote( $kind );
 		return is_wp_error( $r ) ? $r : (array) $r;
 	}
 
@@ -216,7 +216,7 @@ class EMCP_Tools_Cloud_Abilities {
 	public function execute_pull( $input ) {
 		$uuid = isset( $input['artifact_uuid'] ) ? sanitize_text_field( (string) $input['artifact_uuid'] ) : '';
 		$kind = isset( $input['kind'] ) ? sanitize_key( (string) $input['kind'] ) : '';
-		$r    = EMCP_Tools_Cloud_Sync::pull( $uuid, $kind );
+		$r    = KarMCP_Cloud_Sync::pull( $uuid, $kind );
 		return is_wp_error( $r ) ? $r : (array) $r;
 	}
 
@@ -229,9 +229,9 @@ class EMCP_Tools_Cloud_Abilities {
 		$direction = isset( $input['direction'] ) ? sanitize_key( (string) $input['direction'] ) : 'pull';
 		if ( 'push' === $direction ) {
 			$data = isset( $input['data'] ) && is_array( $input['data'] ) ? $input['data'] : array();
-			$r    = EMCP_Tools_Cloud_Sync::push_config( $type, $data );
+			$r    = KarMCP_Cloud_Sync::push_config( $type, $data );
 		} else {
-			$r = EMCP_Tools_Cloud_Sync::pull_config( $type );
+			$r = KarMCP_Cloud_Sync::pull_config( $type );
 		}
 		return is_wp_error( $r ) ? $r : (array) $r;
 	}

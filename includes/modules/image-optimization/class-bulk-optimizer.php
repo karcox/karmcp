@@ -5,9 +5,9 @@
  * Exposes an admin-ajax action that processes a batch of attachment IDs per
  * request (so long libraries never time out) and reports progress. A cursor in
  * an option makes the run resumable across page loads. A companion action
- * restores originals from the `emcp-originals` backups.
+ * restores originals from the `karmcp-originals` backups.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -20,12 +20,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Bulk_Optimizer {
+class KarMCP_Bulk_Optimizer {
 
-	const ACTION_BATCH   = 'emcp_tools_optimize_batch';
-	const ACTION_RESTORE = 'emcp_tools_optimize_restore';
-	const NONCE          = 'emcp_tools_modules';
-	const OPTION_CURSOR  = 'emcp_tools_module_image_optimization_bulk_cursor';
+	const ACTION_BATCH   = 'karmcp_optimize_batch';
+	const ACTION_RESTORE = 'karmcp_optimize_restore';
+	const NONCE          = 'karmcp_modules';
+	const OPTION_CURSOR  = 'karmcp_module_image_optimization_bulk_cursor';
 
 	/** @var array Module settings. */
 	private $settings;
@@ -81,7 +81,7 @@ class EMCP_Tools_Bulk_Optimizer {
 	public function ajax_batch(): void {
 		check_ajax_referer( self::NONCE, 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'emcp-tools' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'karmcp' ) ), 403 );
 		}
 
 		$ids = get_posts(
@@ -100,7 +100,7 @@ class EMCP_Tools_Bulk_Optimizer {
 		$done  = (int) get_option( self::OPTION_CURSOR, 0 );
 
 		$slice     = array_slice( $ids, $done, $batch );
-		$optimizer = new EMCP_Tools_Image_Optimizer( $this->settings );
+		$optimizer = new KarMCP_Image_Optimizer( $this->settings );
 		$upload    = wp_upload_dir();
 		$basedir   = $upload['basedir'] ?? '';
 
@@ -111,7 +111,7 @@ class EMCP_Tools_Bulk_Optimizer {
 			}
 			$files = $optimizer->sizes_to_process( $meta, $basedir );
 			$res   = $optimizer->process_files( $files, $upload, $meta['file'] ?? '', $basedir );
-			update_post_meta( $id, EMCP_Tools_Image_Optimizer::META_KEY, $res );
+			update_post_meta( $id, KarMCP_Image_Optimizer::META_KEY, $res );
 		}
 
 		$done += count( $slice );
@@ -128,11 +128,11 @@ class EMCP_Tools_Bulk_Optimizer {
 	public function ajax_restore(): void {
 		check_ajax_referer( self::NONCE, 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'emcp-tools' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'karmcp' ) ), 403 );
 		}
 		$upload   = wp_upload_dir();
 		$basedir  = rtrim( $upload['basedir'] ?? '', '/\\' );
-		$origin   = $basedir . '/emcp-originals';
+		$origin   = $basedir . '/karmcp-originals';
 		$restored = 0;
 		if ( is_dir( $origin ) ) {
 			$it = new \RecursiveIteratorIterator(

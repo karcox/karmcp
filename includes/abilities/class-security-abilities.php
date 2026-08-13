@@ -6,7 +6,7 @@
  * and outdated-software issues and returns a scored report. manage_options;
  * enabled by default.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -17,16 +17,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Security_Abilities {
+class KarMCP_Security_Abilities {
 
 	/** @var string[] */
 	private $ability_names = array();
 
-	/** @var EMCP_Tools_Security_Scanner */
+	/** @var KarMCP_Security_Scanner */
 	private $scanner;
 
-	public function __construct( ?EMCP_Tools_Security_Scanner $scanner = null ) {
-		$this->scanner = $scanner ?: new EMCP_Tools_Security_Scanner();
+	public function __construct( ?KarMCP_Security_Scanner $scanner = null ) {
+		$this->scanner = $scanner ?: new KarMCP_Security_Scanner();
 	}
 
 	public function get_ability_names(): array {
@@ -42,13 +42,13 @@ class EMCP_Tools_Security_Abilities {
 	}
 
 	private function register_scan_security(): void {
-		$this->ability_names[] = 'emcp-tools/scan-security';
-		emcp_tools_register_ability(
-			'emcp-tools/scan-security',
+		$this->ability_names[] = 'karmcp/scan-security';
+		karmcp_register_ability(
+			'karmcp/scan-security',
 			array(
-				'label'               => __( 'Scan Security', 'emcp-tools' ),
-				'description'         => __( 'Scans this WordPress site for security and malware problems across four areas: PHP malware heuristics (uploads + active plugins/themes; pass deep=true for the whole tree), WordPress core file integrity (vs official wordpress.org checksums), configuration hardening (file editor, debug output, admin username, XML-RPC, version disclosure, HTTPS, security headers), and outdated/abandoned software. Returns a scored report (0-100 + A-F grade) with severities and ranked, actionable recommendations. Read-only; self-contained; scans this site only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Scan Security', 'karmcp' ),
+				'description'         => __( 'Scans this WordPress site for security and malware problems across four areas: PHP malware heuristics (uploads + active plugins/themes; pass deep=true for the whole tree), WordPress core file integrity (vs official wordpress.org checksums), configuration hardening (file editor, debug output, admin username, XML-RPC, version disclosure, HTTPS, security headers), and outdated/abandoned software. Returns a scored report (0-100 + A-F grade) with severities and ranked, actionable recommendations. Read-only; self-contained; scans this site only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_scan_security' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
@@ -57,11 +57,11 @@ class EMCP_Tools_Security_Abilities {
 						'checks'      => array(
 							'type'        => 'array',
 							'items'       => array( 'type' => 'string', 'enum' => array( 'malware', 'integrity', 'hardening', 'software' ) ),
-							'description' => __( 'Subset of audits to run. Omit to run all four.', 'emcp-tools' ),
+							'description' => __( 'Subset of audits to run. Omit to run all four.', 'karmcp' ),
 						),
-						'deep'        => array( 'type' => 'boolean', 'description' => __( 'When true, the malware scan covers ALL plugins/themes and the wider tree (slower). Default false: uploads + active plugins/themes only.', 'emcp-tools' ) ),
-						'max_files'   => array( 'type' => 'integer', 'description' => __( 'Override the malware file-count cap (default 2000, ceiling 20000).', 'emcp-tools' ) ),
-						'max_seconds' => array( 'type' => 'integer', 'description' => __( 'Override the malware scan time budget in seconds (default 20, ceiling 120).', 'emcp-tools' ) ),
+						'deep'        => array( 'type' => 'boolean', 'description' => __( 'When true, the malware scan covers ALL plugins/themes and the wider tree (slower). Default false: uploads + active plugins/themes only.', 'karmcp' ) ),
+						'max_files'   => array( 'type' => 'integer', 'description' => __( 'Override the malware file-count cap (default 2000, ceiling 20000).', 'karmcp' ) ),
+						'max_seconds' => array( 'type' => 'integer', 'description' => __( 'Override the malware scan time budget in seconds (default 20, ceiling 120).', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array(

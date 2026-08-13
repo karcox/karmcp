@@ -7,7 +7,7 @@
  * OAuth sign-in is a free, core connectivity feature. It is available only over
  * HTTPS (localhost exempt) and, by default, enabled wherever it is available.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.1
  */
 
@@ -16,16 +16,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Coordinates the EMCP OAuth 2.1 authorization server.
+ * Coordinates the KarMCP OAuth 2.1 authorization server.
  *
  * @since 3.4.1
  */
-class EMCP_Tools_OAuth_Server {
+class KarMCP_OAuth_Server {
 
-	const OPTION_ENABLED = 'emcp_tools_oauth_enabled';
-	const REST_NAMESPACE = 'emcp-tools/oauth/v1';
+	const OPTION_ENABLED = 'karmcp_oauth_enabled';
+	const REST_NAMESPACE = 'karmcp/oauth/v1';
 	const SCOPE          = 'mcp';
-	const GC_HOOK        = 'emcp_tools_oauth_gc';
+	const GC_HOOK        = 'karmcp_oauth_gc';
 
 	/**
 	 * Wire hooks. Called from the bootstrap.
@@ -42,15 +42,15 @@ class EMCP_Tools_OAuth_Server {
 		if ( ! self::is_available() ) {
 			return;
 		}
-		EMCP_Tools_OAuth_Store::maybe_install();
+		KarMCP_OAuth_Store::maybe_install();
 
 		// Housekeeping: purge expired tokens + orphan client rows. The primary
-		// path is "clean at validation time" — EMCP_Tools_OAuth_Store::gc_throttled()
+		// path is "clean at validation time" — KarMCP_OAuth_Store::gc_throttled()
 		// runs from the bearer callback on OAuth-authenticated MCP traffic (see
-		// EMCP_Tools_OAuth_Bearer), so an active site stays tidy within minutes. A
+		// KarMCP_OAuth_Bearer), so an active site stays tidy within minutes. A
 		// daily WP-Cron is the backstop for sites with traffic but little MCP use.
 		// Runs even when the toggle is off so leftover tokens still get cleaned.
-		add_action( self::GC_HOOK, array( 'EMCP_Tools_OAuth_Store', 'gc' ) );
+		add_action( self::GC_HOOK, array( 'KarMCP_OAuth_Store', 'gc' ) );
 		if ( ! wp_next_scheduled( self::GC_HOOK ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', self::GC_HOOK );
 		}
@@ -59,15 +59,15 @@ class EMCP_Tools_OAuth_Server {
 			return;
 		}
 		// Discovery documents at the site root.
-		EMCP_Tools_OAuth_Metadata::init();
+		KarMCP_OAuth_Metadata::init();
 		// REST routes for the OAuth namespace (register / authorize / token …).
-		add_action( 'rest_api_init', array( 'EMCP_Tools_OAuth_Clients', 'register_routes' ) );
-		add_action( 'rest_api_init', array( 'EMCP_Tools_OAuth_Token', 'register_routes' ) );
+		add_action( 'rest_api_init', array( 'KarMCP_OAuth_Clients', 'register_routes' ) );
+		add_action( 'rest_api_init', array( 'KarMCP_OAuth_Token', 'register_routes' ) );
 		// The authorize + consent endpoint is served as a normal front-end
 		// request (not REST) so WordPress cookie auth works in the browser.
-		EMCP_Tools_OAuth_Authorize::init();
+		KarMCP_OAuth_Authorize::init();
 		// Emit the WWW-Authenticate discovery challenge on unauthorized MCP responses.
-		add_filter( 'rest_post_dispatch', array( 'EMCP_Tools_OAuth_Bearer', 'maybe_challenge' ), 10, 3 );
+		add_filter( 'rest_post_dispatch', array( 'KarMCP_OAuth_Bearer', 'maybe_challenge' ), 10, 3 );
 	}
 
 	/**
@@ -82,12 +82,12 @@ class EMCP_Tools_OAuth_Server {
 
 	/**
 	 * Whether OAuth sign-in can run at all on this site (HTTPS, or local dev).
-	 * Filterable via `emcp_tools_oauth_available` for edge hosting.
+	 * Filterable via `karmcp_oauth_available` for edge hosting.
 	 *
 	 * @return bool
 	 */
 	public static function is_available(): bool {
-		return (bool) apply_filters( 'emcp_tools_oauth_available', self::https_ok() );
+		return (bool) apply_filters( 'karmcp_oauth_available', self::https_ok() );
 	}
 
 	/**
@@ -129,8 +129,8 @@ class EMCP_Tools_OAuth_Server {
 	public static function base_url(): string {
 		// Reachable public base (honors the Server URL override) so the token /
 		// register / revoke endpoints stay consistent with the issuer + resource.
-		if ( class_exists( 'EMCP_Tools_Site_Context' ) ) {
-			return EMCP_Tools_Site_Context::rest_endpoint( self::REST_NAMESPACE );
+		if ( class_exists( 'KarMCP_Site_Context' ) ) {
+			return KarMCP_Site_Context::rest_endpoint( self::REST_NAMESPACE );
 		}
 		return rest_url( self::REST_NAMESPACE );
 	}

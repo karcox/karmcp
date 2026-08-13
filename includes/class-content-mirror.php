@@ -7,7 +7,7 @@
  * Complements AI-safe transactions: transactions are an in-DB recent-change
  * ledger + rollback; the mirror is durable, diffable, file-based history.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -20,10 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Content_Mirror {
+class KarMCP_Content_Mirror {
 
-	const OPTION_ENABLED = 'emcp_tools_content_mirror_enabled';
-	const MIRROR_DIR     = 'emcp-content-mirror';
+	const OPTION_ENABLED = 'karmcp_content_mirror_enabled';
+	const MIRROR_DIR     = 'karmcp-content-mirror';
 
 	/**
 	 * Whether the on-save auto-export is enabled.
@@ -94,14 +94,14 @@ class EMCP_Tools_Content_Mirror {
 	public static function export_post( int $post_id ) {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new WP_Error( 'not_found', __( 'Post not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Post not found.', 'karmcp' ) );
 		}
 		$type = ( 'elementor_library' === $post->post_type ) ? 'template' : 'page';
 
 		$elements = array();
-		if ( class_exists( 'EMCP_Tools_Data' ) ) {
+		if ( class_exists( 'KarMCP_Data' ) ) {
 			try {
-				$data = new EMCP_Tools_Data();
+				$data = new KarMCP_Data();
 				$e    = $data->get_page_data( $post_id );
 				if ( is_array( $e ) ) {
 					$elements = $e;
@@ -123,17 +123,17 @@ class EMCP_Tools_Content_Mirror {
 
 		$dir = self::dir();
 		if ( ! wp_mkdir_p( $dir ) ) {
-			return new WP_Error( 'mkdir_failed', __( 'Could not create the mirror directory.', 'emcp-tools' ) );
+			return new WP_Error( 'mkdir_failed', __( 'Could not create the mirror directory.', 'karmcp' ) );
 		}
 		if ( ! is_file( $dir . '/.gitignore' ) ) {
 			// Do NOT ignore json — this dir is meant to be committed. Keep a README hint.
-			@file_put_contents( $dir . '/README.txt', "EMCP content mirror, commit the .json files to version your page designs.\n" ); // phpcs:ignore
+			@file_put_contents( $dir . '/README.txt', "KarMCP content mirror, commit the .json files to version your page designs.\n" ); // phpcs:ignore
 		}
 
 		$path  = $dir . '/' . self::file_name( $type, $post_id, (string) $post->post_name );
 		$bytes = file_put_contents( $path, wp_json_encode( $payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) );
 		if ( false === $bytes ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the mirror file.', 'emcp-tools' ) );
+			return new WP_Error( 'write_failed', __( 'Could not write the mirror file.', 'karmcp' ) );
 		}
 		return $path;
 	}
@@ -147,21 +147,21 @@ class EMCP_Tools_Content_Mirror {
 	public static function restore_post( int $post_id ) {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new WP_Error( 'not_found', __( 'Post not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Post not found.', 'karmcp' ) );
 		}
 		$type = ( 'elementor_library' === $post->post_type ) ? 'template' : 'page';
 		$path = self::dir() . '/' . self::file_name( $type, $post_id, (string) $post->post_name );
 		if ( ! is_file( $path ) ) {
-			return new WP_Error( 'no_export', __( 'No mirror file exists for this post.', 'emcp-tools' ) );
+			return new WP_Error( 'no_export', __( 'No mirror file exists for this post.', 'karmcp' ) );
 		}
 		$decoded = json_decode( (string) file_get_contents( $path ), true );
 		if ( ! is_array( $decoded ) || ! isset( $decoded['elementor_data'] ) || ! is_array( $decoded['elementor_data'] ) ) {
-			return new WP_Error( 'bad_export', __( 'The mirror file is invalid.', 'emcp-tools' ) );
+			return new WP_Error( 'bad_export', __( 'The mirror file is invalid.', 'karmcp' ) );
 		}
-		if ( ! class_exists( 'EMCP_Tools_Data' ) ) {
-			return new WP_Error( 'no_data_layer', __( 'The Elementor data layer is unavailable.', 'emcp-tools' ) );
+		if ( ! class_exists( 'KarMCP_Data' ) ) {
+			return new WP_Error( 'no_data_layer', __( 'The Elementor data layer is unavailable.', 'karmcp' ) );
 		}
-		$data = new EMCP_Tools_Data();
+		$data = new KarMCP_Data();
 		$res  = $data->save_page_data( $post_id, $decoded['elementor_data'] );
 		return is_wp_error( $res ) ? $res : true;
 	}

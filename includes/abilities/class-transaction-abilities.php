@@ -2,7 +2,7 @@
 /**
  * AI-safe transaction MCP abilities: the change ledger + rollback.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Transaction_Abilities {
+class KarMCP_Transaction_Abilities {
 
 	/**
 	 * Ability names.
@@ -24,9 +24,9 @@ class EMCP_Tools_Transaction_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return array(
-			'emcp-tools/list-changes',
-			'emcp-tools/get-change',
-			'emcp-tools/rollback-change',
+			'karmcp/list-changes',
+			'karmcp/get-change',
+			'karmcp/rollback-change',
 		);
 	}
 
@@ -43,57 +43,57 @@ class EMCP_Tools_Transaction_Abilities {
 	 * Register the three abilities.
 	 */
 	public function register(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/list-changes',
+		karmcp_register_ability(
+			'karmcp/list-changes',
 			array(
-				'label'               => __( 'List Changes', 'emcp-tools' ),
-				'description'         => __( 'Lists recent AI-made changes (Elementor edits, filesystem writes, database writes) recorded in the change ledger, newest first, each with a summary, whether it is reversible, and whether it has already been rolled back. Filter by domain (elementor/filesystem/database), rolled_back, or reversible. Use get-change for full detail and rollback-change to undo one. Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Changes', 'karmcp' ),
+				'description'         => __( 'Lists recent AI-made changes (Elementor edits, filesystem writes, database writes) recorded in the change ledger, newest first, each with a summary, whether it is reversible, and whether it has already been rolled back. Filter by domain (elementor/filesystem/database), rolled_back, or reversible. Use get-change for full detail and rollback-change to undo one. Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list' ),
 				'permission_callback' => array( $this, 'check_manage' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'domain'      => array( 'type' => 'string', 'enum' => array( 'elementor', 'filesystem', 'database' ), 'description' => __( 'Filter by domain.', 'emcp-tools' ) ),
-						'rolled_back' => array( 'type' => 'boolean', 'description' => __( 'Only entries with this rolled-back state.', 'emcp-tools' ) ),
-						'reversible'  => array( 'type' => 'boolean', 'description' => __( 'Only entries that are (or are not) reversible.', 'emcp-tools' ) ),
-						'limit'       => array( 'type' => 'integer', 'description' => __( 'Max entries (default 50).', 'emcp-tools' ) ),
+						'domain'      => array( 'type' => 'string', 'enum' => array( 'elementor', 'filesystem', 'database' ), 'description' => __( 'Filter by domain.', 'karmcp' ) ),
+						'rolled_back' => array( 'type' => 'boolean', 'description' => __( 'Only entries with this rolled-back state.', 'karmcp' ) ),
+						'reversible'  => array( 'type' => 'boolean', 'description' => __( 'Only entries that are (or are not) reversible.', 'karmcp' ) ),
+						'limit'       => array( 'type' => 'integer', 'description' => __( 'Max entries (default 50).', 'karmcp' ) ),
 					),
 				),
 			)
 		);
 
-		emcp_tools_register_ability(
-			'emcp-tools/get-change',
+		karmcp_register_ability(
+			'karmcp/get-change',
 			array(
-				'label'               => __( 'Get Change', 'emcp-tools' ),
-				'description'         => __( 'Returns the full detail of one change-ledger entry by id, including its rollback reference (the before-image / backup pointer). Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Change', 'karmcp' ),
+				'description'         => __( 'Returns the full detail of one change-ledger entry by id, including its rollback reference (the before-image / backup pointer). Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get' ),
 				'permission_callback' => array( $this, 'check_manage' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id' => array( 'type' => 'string', 'description' => __( 'Change id.', 'emcp-tools' ) ),
+						'id' => array( 'type' => 'string', 'description' => __( 'Change id.', 'karmcp' ) ),
 					),
 					'required'   => array( 'id' ),
 				),
 			)
 		);
 
-		emcp_tools_register_ability(
-			'emcp-tools/rollback-change',
+		karmcp_register_ability(
+			'karmcp/rollback-change',
 			array(
-				'label'               => __( 'Roll Back Change', 'emcp-tools' ),
-				'description'         => __( 'Undoes one recorded change by id, restores a page\'s prior Elementor data, restores/removes a file from its backup, or inverses a database write from its before-image. Refuses with a "conflict" error if the target changed since the change was recorded (pass force:true to override and overwrite the newer state). Marks the entry rolled back (no double-rollback) and records a compensating entry. Only reverts changes EMCP itself recorded.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Roll Back Change', 'karmcp' ),
+				'description'         => __( 'Undoes one recorded change by id, restores a page\'s prior Elementor data, restores/removes a file from its backup, or inverses a database write from its before-image. Refuses with a "conflict" error if the target changed since the change was recorded (pass force:true to override and overwrite the newer state). Marks the entry rolled back (no double-rollback) and records a compensating entry. Only reverts changes KarMCP itself recorded.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_rollback' ),
 				'permission_callback' => array( $this, 'check_manage' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id'    => array( 'type' => 'string', 'description' => __( 'Change id to roll back.', 'emcp-tools' ) ),
-						'force' => array( 'type' => 'boolean', 'description' => __( 'Roll back even if the target changed since (overwrites the newer state). Default: false.', 'emcp-tools' ) ),
+						'id'    => array( 'type' => 'string', 'description' => __( 'Change id to roll back.', 'karmcp' ) ),
+						'force' => array( 'type' => 'boolean', 'description' => __( 'Roll back even if the target changed since (overwrites the newer state). Default: false.', 'karmcp' ) ),
 					),
 					'required'   => array( 'id' ),
 				),
@@ -108,7 +108,7 @@ class EMCP_Tools_Transaction_Abilities {
 	 * @return array
 	 */
 	public function execute_list( $input ) {
-		$entries = array_reverse( EMCP_Tools_Change_Log::all() ); // newest first.
+		$entries = array_reverse( KarMCP_Change_Log::all() ); // newest first.
 		$domain  = isset( $input['domain'] ) ? (string) $input['domain'] : '';
 		$limit   = isset( $input['limit'] ) ? max( 1, (int) $input['limit'] ) : 50;
 
@@ -143,7 +143,7 @@ class EMCP_Tools_Transaction_Abilities {
 
 		return array(
 			'changes' => $out,
-			'total'   => count( EMCP_Tools_Change_Log::all() ),
+			'total'   => count( KarMCP_Change_Log::all() ),
 		);
 	}
 
@@ -155,9 +155,9 @@ class EMCP_Tools_Transaction_Abilities {
 	 */
 	public function execute_get( $input ) {
 		$id    = isset( $input['id'] ) ? (string) $input['id'] : '';
-		$entry = EMCP_Tools_Change_Log::get( $id );
+		$entry = KarMCP_Change_Log::get( $id );
 		if ( null === $entry ) {
-			return new WP_Error( 'not_found', __( 'Change not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Change not found.', 'karmcp' ) );
 		}
 		return $entry;
 	}
@@ -171,7 +171,7 @@ class EMCP_Tools_Transaction_Abilities {
 	public function execute_rollback( $input ) {
 		$id    = isset( $input['id'] ) ? (string) $input['id'] : '';
 		$force = ! empty( $input['force'] );
-		return EMCP_Tools_Change_Log::rollback( $id, $force );
+		return KarMCP_Change_Log::rollback( $id, $force );
 	}
 
 	/**

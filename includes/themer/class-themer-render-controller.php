@@ -7,7 +7,7 @@
  * unsupported themes, when the admin enabled it) through a full-page takeover.
  * slots() is memoized per request.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Render_Controller {
+class KarMCP_Themer_Render_Controller {
 
 	/** @var array<string,?int>|null */
 	private static $slots = null;
@@ -41,20 +41,20 @@ class EMCP_Tools_Themer_Render_Controller {
 		if ( null !== self::$slots ) {
 			return self::$slots;
 		}
-		$registry = EMCP_Tools_Themer_Matcher_Registry::fresh();
-		$ctx      = EMCP_Tools_Themer_Context::from_query();
+		$registry = KarMCP_Themer_Matcher_Registry::fresh();
+		$ctx      = KarMCP_Themer_Context::from_query();
 		/**
 		 * Filters the Themer priority ranker (Pro supplies priority; free returns 0).
 		 *
 		 * @param callable $ranker fn(array $row): int.
 		 */
 		$ranker = apply_filters(
-			'emcp_themer_rank',
+			'karmcp_themer_rank',
 			static function ( array $row ): int {
 				return 0;
 			}
 		);
-		self::$slots = EMCP_Tools_Themer_Resolver::resolve( EMCP_Tools_Themer_Index::get(), $ctx, $registry, $ranker );
+		self::$slots = KarMCP_Themer_Resolver::resolve( KarMCP_Themer_Index::get(), $ctx, $registry, $ranker );
 		return self::$slots;
 	}
 
@@ -78,7 +78,7 @@ class EMCP_Tools_Themer_Render_Controller {
 		if ( empty( $slots['body'] ) ) {
 			return 'none';
 		}
-		$force = '1' === (string) get_option( 'emcp_tools_module_themer_force_render', '0' );
+		$force = '1' === (string) get_option( 'karmcp_module_themer_force_render', '0' );
 		if ( ( ! empty( $slots['header'] ) && ! empty( $slots['footer'] ) ) || $force ) {
 			return 'full';
 		}
@@ -95,8 +95,8 @@ class EMCP_Tools_Themer_Render_Controller {
 		// Editing/viewing a Themer template's OWN singular view: serve a blank
 		// the_content canvas so Elementor's editor can attach and the template
 		// renders standalone. Never apply Themer resolution to our own CPT.
-		if ( is_singular( EMCP_Tools_Themer_CPT::POST_TYPE ) ) {
-			$edit = EMCP_TOOLS_DIR . 'includes/themer/templates/template-edit-canvas.php';
+		if ( is_singular( KarMCP_Themer_CPT::POST_TYPE ) ) {
+			$edit = KARMCP_DIR . 'includes/themer/templates/template-edit-canvas.php';
 			return is_readable( $edit ) ? $edit : $template;
 		}
 		// Defer to an existing Elementor Pro Theme Builder body match (avoid double-takeover).
@@ -105,12 +105,12 @@ class EMCP_Tools_Themer_Render_Controller {
 		}
 		$mode = self::render_mode();
 		if ( 'full' === $mode ) {
-			$canvas = EMCP_TOOLS_DIR . 'includes/themer/templates/template-canvas.php';
+			$canvas = KARMCP_DIR . 'includes/themer/templates/template-canvas.php';
 			return is_readable( $canvas ) ? $canvas : $template;
 		}
 		if ( 'body' === $mode ) {
 			// Keep the theme's header/footer; swap only the content area.
-			$body = EMCP_TOOLS_DIR . 'includes/themer/templates/template-body.php';
+			$body = KARMCP_DIR . 'includes/themer/templates/template-body.php';
 			return is_readable( $body ) ? $body : $template;
 		}
 		return $template;
@@ -121,7 +121,7 @@ class EMCP_Tools_Themer_Render_Controller {
 	 */
 	public function maybe_inject_parts(): void {
 		// Don't inject header/footer when previewing a Themer template itself.
-		if ( is_singular( EMCP_Tools_Themer_CPT::POST_TYPE ) ) {
+		if ( is_singular( KarMCP_Themer_CPT::POST_TYPE ) ) {
 			return;
 		}
 		// In 'full' mode the standalone canvas renders the Themer header/footer
@@ -133,22 +133,22 @@ class EMCP_Tools_Themer_Render_Controller {
 		if ( empty( $slots['header'] ) && empty( $slots['footer'] ) ) {
 			return;
 		}
-		$adapter = EMCP_Tools_Themer_Theme_Adapters::current();
+		$adapter = KarMCP_Themer_Theme_Adapters::current();
 		if ( null !== $adapter ) {
 			$this->wire_adapter( $adapter, $slots );
 			return;
 		}
 		// Unsupported theme + admin opted into full-page takeover: swap template.
-		if ( '1' === (string) get_option( 'emcp_tools_module_themer_force_render', '0' ) ) {
+		if ( '1' === (string) get_option( 'karmcp_module_themer_force_render', '0' ) ) {
 			add_filter(
 				'template_include',
 				static function () {
-					return EMCP_TOOLS_DIR . 'includes/themer/templates/template-canvas.php';
+					return KARMCP_DIR . 'includes/themer/templates/template-canvas.php';
 				},
 				100
 			);
 		}
-		// Otherwise: header/footer only render where the theme calls emcp_themer_location().
+		// Otherwise: header/footer only render where the theme calls karmcp_themer_location().
 	}
 
 	/**
@@ -158,11 +158,20 @@ class EMCP_Tools_Themer_Render_Controller {
 	 * @param array  $slots   Resolved slots.
 	 */
 	private function wire_adapter( string $adapter, array $slots ): void {
-		$map = EMCP_Tools_Themer_Theme_Adapters::map();
+		$map = KarMCP_Themer_Theme_Adapters::map();
 		if ( ! isset( $map[ $adapter ] ) ) {
 			return;
 		}
-		if ( ! empty( $slots['header'] ) ) {
+		// Callback adapter: the theme has no per-slot action to hijack, so it owns
+		// its own wiring (suppression, placement, Elementor-Pro deference).
+		if ( ! empty( $map[ $adapter ]['wire'] ) && is_callable( $map[ $adapter ]['wire'] ) ) {
+			call_user_func( $map[ $adapter ]['wire'], $slots );
+			return;
+		}
+		if ( empty( $map[ $adapter ]['header'] ) && empty( $map[ $adapter ]['footer'] ) ) {
+			return;
+		}
+		if ( ! empty( $slots['header'] ) && ! empty( $map[ $adapter ]['header'] ) ) {
 			// Replace the theme's header: drop its callbacks on the render hook,
 			// then print ours in their place (so the theme header doesn't ALSO
 			// render alongside/behind the Themer one).
@@ -170,17 +179,17 @@ class EMCP_Tools_Themer_Render_Controller {
 			add_action(
 				$map[ $adapter ]['header'],
 				static function () use ( $slots ) {
-					echo EMCP_Tools_Themer_Content_Renderer::render( (int) $slots['header'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					echo KarMCP_Themer_Content_Renderer::render( (int) $slots['header'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				},
 				10
 			);
 		}
-		if ( ! empty( $slots['footer'] ) ) {
+		if ( ! empty( $slots['footer'] ) && ! empty( $map[ $adapter ]['footer'] ) ) {
 			remove_all_actions( $map[ $adapter ]['footer'] );
 			add_action(
 				$map[ $adapter ]['footer'],
 				static function () use ( $slots ) {
-					echo EMCP_Tools_Themer_Content_Renderer::render( (int) $slots['footer'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					echo KarMCP_Themer_Content_Renderer::render( (int) $slots['footer'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				},
 				10
 			);
@@ -211,16 +220,16 @@ class EMCP_Tools_Themer_Render_Controller {
 	}
 }
 
-if ( ! function_exists( 'emcp_themer_location' ) ) {
+if ( ! function_exists( 'karmcp_themer_location' ) ) {
 	/**
 	 * Template tag for unsupported themes to place a Themer header/footer manually.
 	 *
 	 * @param string $slot 'header' | 'footer'.
 	 */
-	function emcp_themer_location( string $slot ): void {
-		$slots = EMCP_Tools_Themer_Render_Controller::slots();
+	function karmcp_themer_location( string $slot ): void {
+		$slots = KarMCP_Themer_Render_Controller::slots();
 		if ( ! empty( $slots[ $slot ] ) ) {
-			echo EMCP_Tools_Themer_Content_Renderer::render( (int) $slots[ $slot ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo KarMCP_Themer_Content_Renderer::render( (int) $slots[ $slot ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 	}
 }

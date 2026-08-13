@@ -15,7 +15,7 @@
  * retrieval + image localization to the Kadence controller. Tests seed
  * $GLOBALS['_kadence_pattern_catalog'] and $GLOBALS['_kadence_pattern_content'].
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.9.0
  */
 
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read + fetch Kadence library patterns.
  */
-class EMCP_Tools_Kadence_Pattern_Library {
+class KarMCP_Kadence_Pattern_Library {
 
 	const CONTROLLER = 'Kadence_Blocks_Prebuilt_Library_REST_Controller';
 
@@ -175,14 +175,14 @@ class EMCP_Tools_Kadence_Pattern_Library {
 	public static function get_markup( string $id, bool $localize_images = false ) {
 		$entry = self::entry( $id );
 		if ( null === $entry ) {
-			return new WP_Error( 'unknown_pattern', sprintf( __( 'Unknown pattern: %s', 'emcp-tools' ), $id ), array( 'status' => 404 ) );
+			return new WP_Error( 'unknown_pattern', sprintf( __( 'Unknown pattern: %s', 'karmcp' ), $id ), array( 'status' => 404 ) );
 		}
 		$content = self::fetch_content( $entry );
 		if ( is_wp_error( $content ) ) {
 			return $content;
 		}
 		if ( '' === trim( (string) $content ) ) {
-			return new WP_Error( 'empty_pattern', __( 'The pattern returned no content (it may be a Pro/locked pattern that needs a Kadence connection).', 'emcp-tools' ), array( 'status' => 422 ) );
+			return new WP_Error( 'empty_pattern', __( 'The pattern returned no content (it may be a Pro/locked pattern that needs a Kadence connection).', 'karmcp' ), array( 'status' => 422 ) );
 		}
 		if ( $localize_images ) {
 			$content = self::localize_images( (string) $content );
@@ -203,7 +203,7 @@ class EMCP_Tools_Kadence_Pattern_Library {
 			return (string) $GLOBALS['_kadence_pattern_content'][ $lib_id ];
 		}
 		if ( ! self::is_available() ) {
-			return new WP_Error( 'kadence_library_unavailable', __( 'The Kadence Prebuilt Library is not available on this site.', 'emcp-tools' ), array( 'status' => 501 ) );
+			return new WP_Error( 'kadence_library_unavailable', __( 'The Kadence Prebuilt Library is not available on this site.', 'karmcp' ), array( 'status' => 501 ) );
 		}
 		$cls  = self::CONTROLLER;
 		$ctrl = new $cls();

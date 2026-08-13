@@ -2,11 +2,11 @@
  * Cloud Library — browse + import the workspace's cloud artifacts.
  *
  * Each sandbox screen (Blocks / Widgets / PHP Snippets) renders a
- * `.emcp-cloud-lib` <details> panel carrying its kind + nonce + this-site UUID
+ * `.karmcp-cloud-lib` <details> panel carrying its kind + nonce + this-site UUID
  * and its i18n labels in data-* attributes. On first open the panel fetches the
  * whole workspace's artifacts of that kind (across every connected site) and
  * lists them with a per-row Import button. Import pulls the portable bundle into
- * THIS site as a new inactive draft (EMCP_Tools_Cloud_Sync::pull).
+ * THIS site as a new inactive draft (KarMCP_Cloud_Sync::pull).
  *
  * Self-contained (no localized object) — mirrors sandbox-cloud.js.
  */
@@ -53,7 +53,7 @@
 	}
 
 	function setStatus( panel, text, isErr ) {
-		var status = panel.querySelector( '.emcp-cloud-lib__status' );
+		var status = panel.querySelector( '.karmcp-cloud-lib__status' );
 		if ( ! status ) { return; }
 		status.style.display = '';
 		status.textContent = text;
@@ -63,7 +63,7 @@
 	function showReload( panel ) {
 		if ( panel.__reload ) { return; }
 		panel.__reload = true;
-		var body = panel.querySelector( '.emcp-cloud-lib__body' );
+		var body = panel.querySelector( '.karmcp-cloud-lib__body' );
 		if ( ! body ) { return; }
 		var p = document.createElement( 'p' );
 		p.style.margin = '10px 0 0';
@@ -80,7 +80,7 @@
 	function doImport( panel, a, btn, cell ) {
 		btn.disabled = true;
 		btn.textContent = t( panel, 'importing', 'Importing…' );
-		post( 'emcp_tools_cloud_import', panel, { uuid: a.uuid } ).then( function ( res ) {
+		post( 'karmcp_tools_cloud_import', panel, { uuid: a.uuid } ).then( function ( res ) {
 			if ( res && res.success ) {
 				cell.textContent = '';
 				var ok = document.createElement( 'span' );
@@ -107,8 +107,8 @@
 	}
 
 	function render( panel, arts ) {
-		var status = panel.querySelector( '.emcp-cloud-lib__status' );
-		var table = panel.querySelector( '.emcp-cloud-lib__table' );
+		var status = panel.querySelector( '.karmcp-cloud-lib__status' );
+		var table = panel.querySelector( '.karmcp-cloud-lib__table' );
 		var tbody = table ? table.querySelector( 'tbody' ) : null;
 		if ( ! tbody ) { return; }
 		tbody.innerHTML = '';
@@ -170,7 +170,7 @@
 		if ( panel.__loaded ) { return; }
 		panel.__loaded = true;
 		setStatus( panel, t( panel, 'loading', 'Loading…' ), false );
-		post( 'emcp_tools_cloud_library', panel, null ).then( function ( res ) {
+		post( 'karmcp_tools_cloud_library', panel, null ).then( function ( res ) {
 			if ( res && res.success && res.data ) {
 				render( panel, res.data.artifacts || [] );
 			} else {
@@ -184,7 +184,7 @@
 	}
 
 	function init() {
-		var panels = document.querySelectorAll( '.emcp-cloud-lib' );
+		var panels = document.querySelectorAll( '.karmcp-cloud-lib' );
 		Array.prototype.forEach.call( panels, function ( panel ) {
 			panel.addEventListener( 'toggle', function () { if ( panel.open ) { load( panel ); } } );
 			if ( panel.open ) { load( panel ); }

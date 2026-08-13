@@ -4,7 +4,7 @@
  * the flow: Protected Resource Metadata (RFC 9728) and Authorization Server
  * Metadata (RFC 8414). Both are served at the site root under `/.well-known/`.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.1
  */
 
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.1
  */
-class EMCP_Tools_OAuth_Metadata {
+class KarMCP_OAuth_Metadata {
 
 	const PATH_PROTECTED_RESOURCE = '/.well-known/oauth-protected-resource';
 	const PATH_AUTH_SERVER        = '/.well-known/oauth-authorization-server';
@@ -39,8 +39,8 @@ class EMCP_Tools_OAuth_Metadata {
 		// home_url() — a host that pins the Site Address to a not-yet-live domain
 		// would otherwise advertise an unreachable issuer and break OAuth
 		// discovery. Matches resource()/base_url(), which already use rest_url().
-		if ( class_exists( 'EMCP_Tools_Site_Context' ) ) {
-			return EMCP_Tools_Site_Context::public_base_url();
+		if ( class_exists( 'KarMCP_Site_Context' ) ) {
+			return KarMCP_Site_Context::public_base_url();
 		}
 		return rtrim( (string) home_url(), '/' );
 	}
@@ -55,10 +55,10 @@ class EMCP_Tools_OAuth_Metadata {
 		// governs the whole OAuth flow (resource + token + issuer), not just the
 		// issuer — otherwise a host that differs from rest_url() would produce an
 		// inconsistent discovery document.
-		if ( class_exists( 'EMCP_Tools_Site_Context' ) ) {
-			return EMCP_Tools_Site_Context::rest_endpoint( 'mcp/emcp-tools-server' );
+		if ( class_exists( 'KarMCP_Site_Context' ) ) {
+			return KarMCP_Site_Context::rest_endpoint( 'mcp/karmcp-server' );
 		}
-		return rest_url( 'mcp/emcp-tools-server' );
+		return rest_url( 'mcp/karmcp-server' );
 	}
 
 	/**
@@ -71,8 +71,8 @@ class EMCP_Tools_OAuth_Metadata {
 			'resource'                 => self::resource(),
 			'authorization_servers'    => array( self::issuer() ),
 			'bearer_methods_supported' => array( 'header' ),
-			'scopes_supported'         => array( EMCP_Tools_OAuth_Server::SCOPE ),
-			'resource_documentation'   => 'https://emcptools.com/docs/',
+			'scopes_supported'         => array( KarMCP_OAuth_Server::SCOPE ),
+			'resource_documentation'   => 'https://example.com/docs/',
 		);
 	}
 
@@ -82,14 +82,14 @@ class EMCP_Tools_OAuth_Metadata {
 	 * @return array
 	 */
 	public static function authorization_server_document(): array {
-		$base = EMCP_Tools_OAuth_Server::base_url();
+		$base = KarMCP_OAuth_Server::base_url();
 		return array(
 			'issuer'                                => self::issuer(),
-			'authorization_endpoint'                => EMCP_Tools_OAuth_Authorize::endpoint_url(),
+			'authorization_endpoint'                => KarMCP_OAuth_Authorize::endpoint_url(),
 			'token_endpoint'                        => $base . '/token',
 			'registration_endpoint'                 => $base . '/register',
 			'revocation_endpoint'                   => $base . '/revoke',
-			'scopes_supported'                      => array( EMCP_Tools_OAuth_Server::SCOPE ),
+			'scopes_supported'                      => array( KarMCP_OAuth_Server::SCOPE ),
 			'response_types_supported'              => array( 'code' ),
 			'grant_types_supported'                 => array( 'authorization_code', 'refresh_token' ),
 			'code_challenge_methods_supported'      => array( 'S256' ),
@@ -104,14 +104,14 @@ class EMCP_Tools_OAuth_Metadata {
 	 * @param WP $wp Current WordPress environment (unused).
 	 */
 	public static function maybe_serve( $wp = null ): void {
-		if ( ! EMCP_Tools_OAuth_Server::is_enabled() ) {
+		if ( ! KarMCP_OAuth_Server::is_enabled() ) {
 			return;
 		}
 		$path = self::request_path();
 
 		// Match both the root well-known path and the resource-scoped variant
 		// clients build by appending the resource path, e.g.
-		// /.well-known/oauth-protected-resource/wp-json/mcp/emcp-tools-server
+		// /.well-known/oauth-protected-resource/wp-json/mcp/karmcp-server
 		// (RFC 9728 §3.1). Exact-match-only 404s the request real MCP clients
 		// actually make, which silently breaks OAuth discovery.
 		if ( self::path_matches( $path, self::PATH_PROTECTED_RESOURCE ) ) {

@@ -2,23 +2,23 @@
 use PHPUnit\Framework\TestCase;
 
 final class MetaBoxAbilitiesTest extends TestCase {
-    private EMCP_Tools_Meta_Box_Abilities $mb;
+    private KarMCP_Meta_Box_Abilities $mb;
 
     protected function setUp(): void {
-        emcp_test_reset();
-        $GLOBALS['emcp_test']['caps'] = array( 'edit_posts', 'manage_options' );
-        $this->mb = new EMCP_Tools_Meta_Box_Abilities();
+        karmcp_test_reset();
+        $GLOBALS['karmcp_test']['caps'] = array( 'edit_posts', 'manage_options' );
+        $this->mb = new KarMCP_Meta_Box_Abilities();
     }
 
     public function test_metabox_active_true_when_rwmb_ver_defined(): void {
-        $this->assertTrue( EMCP_Tools_Meta_Box_Abilities::metabox_active() );
+        $this->assertTrue( KarMCP_Meta_Box_Abilities::metabox_active() );
     }
 
     public function test_register_adds_two_dispatchers(): void {
         $this->mb->register();
         $names = $this->mb->get_ability_names();
-        $this->assertContains( 'emcp-tools/metabox-read', $names );
-        $this->assertContains( 'emcp-tools/metabox-write', $names );
+        $this->assertContains( 'karmcp/metabox-read', $names );
+        $this->assertContains( 'karmcp/metabox-write', $names );
     }
 
     public function test_read_dispatcher_no_operation_returns_catalog(): void {
@@ -50,8 +50,8 @@ final class MetaBoxAbilitiesTest extends TestCase {
     }
 
     private function seed_boxes(): void {
-        $GLOBALS['emcp_test']['metabox']['boxes'] = array(
-            new EMCP_Test_MB( array(
+        $GLOBALS['karmcp_test']['metabox']['boxes'] = array(
+            new KarMCP_Test_MB( array(
                 'id'         => 'event_details',
                 'title'      => 'Event Details',
                 'post_types' => array( 'event' ),
@@ -63,7 +63,7 @@ final class MetaBoxAbilitiesTest extends TestCase {
                     ) ),
                 ),
             ), 'post' ),
-            new EMCP_Test_MB( array(
+            new KarMCP_Test_MB( array(
                 'id' => 'seo_meta', 'title' => 'SEO', 'post_types' => array( 'post', 'page' ),
                 'fields' => array( array( 'id' => 'seo_title', 'name' => 'SEO Title', 'type' => 'text' ) ),
             ), 'post' ),
@@ -114,8 +114,8 @@ final class MetaBoxAbilitiesTest extends TestCase {
 
     public function test_get_fields_reads_values_for_post(): void {
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
-        $GLOBALS['emcp_test']['metabox']['values']['post']['10'] = array(
+        $GLOBALS['karmcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['metabox']['values']['post']['10'] = array(
             'event_date' => '2026-08-01', 'venue' => 'The Roxy',
         );
         $out = $this->mb->run_metabox_read( array( 'operation' => 'get-fields', 'arguments' => array( 'post_id' => 10 ) ) );
@@ -128,8 +128,8 @@ final class MetaBoxAbilitiesTest extends TestCase {
 
     public function test_get_fields_filter_subset(): void {
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
-        $GLOBALS['emcp_test']['metabox']['values']['post']['10'] = array( 'event_date' => 'x', 'venue' => 'y' );
+        $GLOBALS['karmcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['metabox']['values']['post']['10'] = array( 'event_date' => 'x', 'venue' => 'y' );
         $out = $this->mb->run_metabox_read( array( 'operation' => 'get-fields', 'arguments' => array( 'post_id' => 10, 'fields' => array( 'venue' ) ) ) );
         $this->assertSame( array( 'venue' => 'y' ), $out['fields'] );
     }
@@ -148,8 +148,8 @@ final class MetaBoxAbilitiesTest extends TestCase {
 
     public function test_get_fields_normalizes_image_value(): void {
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
-        $GLOBALS['emcp_test']['metabox']['values']['post']['10'] = array(
+        $GLOBALS['karmcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['metabox']['values']['post']['10'] = array(
             'venue' => array( 'ID' => 55, 'url' => 'http://x/p.jpg', 'full_url' => 'http://x/p.jpg', 'alt' => 'hall', 'title' => 'Hall', 'width' => 800 ),
         );
         $out = $this->mb->run_metabox_read( array( 'operation' => 'get-fields', 'arguments' => array( 'post_id' => 10, 'fields' => array( 'venue' ) ) ) );
@@ -158,7 +158,7 @@ final class MetaBoxAbilitiesTest extends TestCase {
 
     public function test_update_fields_writes_and_rereads(): void {
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
         $out = $this->mb->run_metabox_write( array(
             'operation' => 'update-fields',
             'arguments' => array( 'post_id' => 10, 'fields' => array( 'venue' => 'Wembley' ) ),
@@ -167,12 +167,12 @@ final class MetaBoxAbilitiesTest extends TestCase {
         $this->assertSame( array(), $out['skipped'] );
         $this->assertSame( 'Wembley', $out['values']['venue'] );
         // Confirm it actually persisted to the fixture store.
-        $this->assertSame( 'Wembley', $GLOBALS['emcp_test']['metabox']['values']['post']['10']['venue'] );
+        $this->assertSame( 'Wembley', $GLOBALS['karmcp_test']['metabox']['values']['post']['10']['venue'] );
     }
 
     public function test_update_fields_skips_unknown_field(): void {
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
         $out = $this->mb->run_metabox_write( array(
             'operation' => 'update-fields',
             'arguments' => array( 'post_id' => 10, 'fields' => array( 'not_a_field' => 'x' ) ),
@@ -183,7 +183,7 @@ final class MetaBoxAbilitiesTest extends TestCase {
 
     public function test_update_fields_requires_fields_map(): void {
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['posts'][10] = (object) array( 'ID' => 10, 'post_type' => 'event' );
         $out = $this->mb->run_metabox_write( array( 'operation' => 'update-fields', 'arguments' => array( 'post_id' => 10 ) ) );
         $this->assertInstanceOf( WP_Error::class, $out );
         $this->assertSame( 'missing_params', $out->get_error_code() );
@@ -191,8 +191,8 @@ final class MetaBoxAbilitiesTest extends TestCase {
 
     public function test_get_fields_forbidden_via_post_id_when_no_edit_post_cap(): void {
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10]          = (object) array( 'ID' => 10, 'post_type' => 'event' );
-        $GLOBALS['emcp_test']['post_caps'][10]       = false; // edit_posts yes, edit_post(10) no.
+        $GLOBALS['karmcp_test']['posts'][10]          = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['post_caps'][10]       = false; // edit_posts yes, edit_post(10) no.
         $out = $this->mb->run_metabox_read( array( 'operation' => 'get-fields', 'arguments' => array( 'post_id' => 10 ) ) );
         $this->assertInstanceOf( WP_Error::class, $out );
         $this->assertSame( 'forbidden', $out->get_error_code() );
@@ -201,8 +201,8 @@ final class MetaBoxAbilitiesTest extends TestCase {
     public function test_get_fields_forbidden_via_object_type_post_when_no_edit_post_cap(): void {
         // Regression for I-1: object_type=post + object_id must be gated identically to post_id.
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10]          = (object) array( 'ID' => 10, 'post_type' => 'event' );
-        $GLOBALS['emcp_test']['post_caps'][10]       = false; // edit_posts yes, edit_post(10) no.
+        $GLOBALS['karmcp_test']['posts'][10]          = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['post_caps'][10]       = false; // edit_posts yes, edit_post(10) no.
         $out = $this->mb->run_metabox_read( array(
             'operation' => 'get-fields',
             'arguments' => array( 'object_type' => 'post', 'object_id' => 10 ),
@@ -214,8 +214,8 @@ final class MetaBoxAbilitiesTest extends TestCase {
     public function test_update_fields_forbidden_via_object_type_post_when_no_edit_post_cap(): void {
         // Same hole on the write path.
         $this->seed_boxes();
-        $GLOBALS['emcp_test']['posts'][10]          = (object) array( 'ID' => 10, 'post_type' => 'event' );
-        $GLOBALS['emcp_test']['post_caps'][10]       = false; // edit_posts yes, edit_post(10) no.
+        $GLOBALS['karmcp_test']['posts'][10]          = (object) array( 'ID' => 10, 'post_type' => 'event' );
+        $GLOBALS['karmcp_test']['post_caps'][10]       = false; // edit_posts yes, edit_post(10) no.
         $out = $this->mb->run_metabox_write( array(
             'operation' => 'update-fields',
             'arguments' => array( 'object_type' => 'post', 'object_id' => 10, 'fields' => array( 'venue' => 'Wembley' ) ),

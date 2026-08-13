@@ -3,13 +3,13 @@
  * Shared safety helper for the Plugins & Themes MCP tools.
  *
  * Centralizes the guardrails that protect a site from an AI agent (or a buggy
- * caller) breaking it: a protected-plugin list (never disable/delete EMCP Tools,
+ * caller) breaking it: a protected-plugin list (never disable/delete KarMCP,
  * Elementor, or Elementor Pro), active-target checks, a direct-filesystem gate
  * (so a headless MCP request never hangs on an FTP-credential prompt), on-demand
  * loading of the wp-admin upgrader includes (absent on REST/WP-CLI requests),
  * and a quiet upgrader skin so installer output is captured, not echoed.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -22,13 +22,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_Package_Guard {
+class KarMCP_Package_Guard {
 
 	/**
 	 * Plugin files that must never be deactivated or deleted via MCP.
 	 *
-	 * EMCP Tools itself (disabling it kills the MCP server mid-session) and
-	 * Elementor / Elementor Pro (EMCP's hard dependency). The EMCP basename is
+	 * KarMCP itself (disabling it kills the MCP server mid-session) and
+	 * Elementor / Elementor Pro (KarMCP's hard dependency). The KarMCP basename is
 	 * self-resolved from the constant, never hardcoded.
 	 *
 	 * @since 3.0.0
@@ -37,10 +37,10 @@ class EMCP_Tools_Package_Guard {
 	public static function protected_plugin_files(): array {
 		// Hardcoded core list — ALWAYS enforced. The filter can only ADD to it,
 		// never remove an entry (a malicious plugin must not be able to empty the
-		// list and then deactivate/delete Elementor or EMCP Tools itself).
+		// list and then deactivate/delete Elementor or KarMCP itself).
 		$core = array( 'elementor/elementor.php', 'elementor-pro/elementor-pro.php' );
-		if ( defined( 'EMCP_TOOLS_BASENAME' ) ) {
-			$core[] = EMCP_TOOLS_BASENAME;
+		if ( defined( 'KARMCP_BASENAME' ) ) {
+			$core[] = KARMCP_BASENAME;
 		}
 		/**
 		 * Filter ADDITIONAL MCP-protected plugin basenames. The hardcoded core
@@ -49,7 +49,7 @@ class EMCP_Tools_Package_Guard {
 		 * @since 3.0.0
 		 * @param string[] $extra Extra protected plugin basenames (added to the core list).
 		 */
-		$extra = (array) apply_filters( 'emcp_tools_protected_plugins', array() );
+		$extra = (array) apply_filters( 'karmcp_protected_plugins', array() );
 		return array_values( array_unique( array_merge( $core, $extra ) ) );
 	}
 
@@ -111,11 +111,11 @@ class EMCP_Tools_Package_Guard {
 		if ( 'direct' !== $method ) {
 			return new \WP_Error(
 				'filesystem_unavailable',
-				__( 'The WordPress filesystem is not directly writable on this host (it needs FTP/SSH credentials), so plugin/theme install, update, and delete cannot run over MCP. Use SFTP or set the FS_METHOD/credentials in wp-config.php.', 'emcp-tools' )
+				__( 'The WordPress filesystem is not directly writable on this host (it needs FTP/SSH credentials), so plugin/theme install, update, and delete cannot run over MCP. Use SFTP or set the FS_METHOD/credentials in wp-config.php.', 'karmcp' )
 			);
 		}
 		if ( function_exists( 'WP_Filesystem' ) && ! WP_Filesystem() ) {
-			return new \WP_Error( 'filesystem_unavailable', __( 'Could not initialise the WordPress filesystem.', 'emcp-tools' ) );
+			return new \WP_Error( 'filesystem_unavailable', __( 'Could not initialise the WordPress filesystem.', 'karmcp' ) );
 		}
 		return true;
 	}

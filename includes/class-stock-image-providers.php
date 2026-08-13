@@ -9,7 +9,7 @@
  * Each client exposes: `const OPTION`, static `has_key()` / `access_key()`, and
  * instance `search_images( array )` / `trigger_download( string )`.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Stock_Image_Providers {
+class KarMCP_Stock_Image_Providers {
 
 	/**
 	 * Provider id => { label, class }. Order is the fallback priority when no
@@ -33,9 +33,9 @@ class EMCP_Tools_Stock_Image_Providers {
 	 */
 	public static function map(): array {
 		return array(
-			'unsplash' => array( 'label' => 'Unsplash', 'class' => 'EMCP_Tools_Unsplash_Client' ),
-			'pexels'   => array( 'label' => 'Pexels', 'class' => 'EMCP_Tools_Pexels_Client' ),
-			'pixabay'  => array( 'label' => 'Pixabay', 'class' => 'EMCP_Tools_Pixabay_Client' ),
+			'unsplash' => array( 'label' => 'Unsplash', 'class' => 'KarMCP_Unsplash_Client' ),
+			'pexels'   => array( 'label' => 'Pexels', 'class' => 'KarMCP_Pexels_Client' ),
+			'pixabay'  => array( 'label' => 'Pixabay', 'class' => 'KarMCP_Pixabay_Client' ),
 		);
 	}
 
@@ -109,7 +109,7 @@ class EMCP_Tools_Stock_Image_Providers {
 					'unknown_provider',
 					sprintf(
 						/* translators: %s: provider id */
-						__( 'Unknown stock-image provider "%s". Use one of: unsplash, pexels, pixabay.', 'emcp-tools' ),
+						__( 'Unknown stock-image provider "%s". Use one of: unsplash, pexels, pixabay.', 'karmcp' ),
 						$requested
 					)
 				);
@@ -119,7 +119,7 @@ class EMCP_Tools_Stock_Image_Providers {
 					'no_api_key',
 					sprintf(
 						/* translators: %s: provider label */
-						__( 'No %s API key is configured. Add one on EMCP Tools → Connection, or use a provider you have connected.', 'emcp-tools' ),
+						__( 'No %s API key is configured. Add one on KarMCP → Connection, or use a provider you have connected.', 'karmcp' ),
 						self::label( $requested )
 					)
 				);
@@ -131,7 +131,7 @@ class EMCP_Tools_Stock_Image_Providers {
 		if ( empty( $available ) ) {
 			return new \WP_Error(
 				'no_api_key',
-				__( 'No stock-image provider is configured. Add a free Unsplash, Pexels, or Pixabay API key on EMCP Tools → Connection.', 'emcp-tools' )
+				__( 'No stock-image provider is configured. Add a free Unsplash, Pexels, or Pixabay API key on KarMCP → Connection.', 'karmcp' )
 			);
 		}
 		$id = $available[0];

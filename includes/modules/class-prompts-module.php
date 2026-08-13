@@ -7,7 +7,7 @@
  * no-op — the admin class reads the module's active state to show/hide the tab.
  * Free tier; on by default.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -20,18 +20,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Prompts_Module extends EMCP_Tools_Module {
+class KarMCP_Prompts_Module extends KarMCP_Module {
 
 	public function id(): string {
 		return 'prompts';
 	}
 
 	public function title(): string {
-		return __( 'Prompts', 'emcp-tools' );
+		return __( 'Prompts', 'karmcp' );
 	}
 
 	public function description(): string {
-		return __( 'Ready-to-use AI prompt blueprints for building pages, bundled samples plus the premium library.', 'emcp-tools' );
+		return __( 'Ready-to-use AI prompt blueprints for building pages, bundled samples plus the premium library.', 'karmcp' );
 	}
 
 	public function tier(): string {
@@ -44,7 +44,7 @@ class EMCP_Tools_Prompts_Module extends EMCP_Tools_Module {
 
 	/** The dedicated Prompts admin tab is the config surface. */
 	public function settings_url(): string {
-		return admin_url( 'admin.php?page=' . EMCP_Tools_Admin::PAGE_SLUG . '-prompts' );
+		return admin_url( 'admin.php?page=' . KarMCP_Admin::PAGE_SLUG . '-prompts' );
 	}
 
 	/** No overlay settings; the feature lives on its admin tab. */

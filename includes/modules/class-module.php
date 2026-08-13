@@ -1,12 +1,12 @@
 <?php
 /**
- * Base class for EMCP Tools modules.
+ * Base class for KarMCP modules.
  *
  * A module is a substantial, self-contained feature an admin turns on/off from
- * the Modules tab. Active module IDs live in the single `emcp_tools_active_modules`
- * option; each module owns its own `emcp_tools_module_<id>_*` option keys.
+ * the Modules tab. Active module IDs live in the single `karmcp_active_modules`
+ * option; each module owns its own `karmcp_module_<id>_*` option keys.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -19,10 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-abstract class EMCP_Tools_Module {
+abstract class KarMCP_Module {
 
 	/** Option holding the array of active module IDs. */
-	const OPTION_ACTIVE = 'emcp_tools_active_modules';
+	const OPTION_ACTIVE = 'karmcp_active_modules';
 
 	/** Stable module id (a-z0-9-). Used as the option-key infix and toggle value. */
 	abstract public function id(): string;
@@ -79,7 +79,7 @@ abstract class EMCP_Tools_Module {
 	 * @return string
 	 */
 	public function settings_group(): string {
-		return 'emcp_tools_module_' . str_replace( '-', '_', $this->id() ) . '_settings';
+		return 'karmcp_module_' . str_replace( '-', '_', $this->id() ) . '_settings';
 	}
 
 	/** Whether this module exposes any settings (drives the "Show Settings" UI). */

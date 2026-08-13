@@ -7,7 +7,7 @@
  * request. build() is pure (records -> grouped index); rebuild() is the WP glue
  * that queries the CPT and writes the option (hooked on save/delete).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -18,16 +18,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Index {
+class KarMCP_Themer_Index {
 
-	const OPTION = 'emcp_tools_themer_index';
+	const OPTION = 'karmcp_themer_index';
 
 	/** Post type storing templates. */
-	const POST_TYPE = 'emcp_theme_template';
+	const POST_TYPE = 'karmcp_theme_tpl';
 
 	/** Meta keys. */
-	const META_TYPE       = '_emcp_themer_type';
-	const META_CONDITIONS = '_emcp_themer_conditions';
+	const META_TYPE       = '_karmcp_themer_type';
+	const META_CONDITIONS = '_karmcp_themer_conditions';
 
 	/**
 	 * Build the grouped index from flat records.

@@ -14,7 +14,7 @@
  * is pure apart from `e-image`, which also writes an attachment's alt meta —
  * the one place Elementor reads alt for a media-library image.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.6.2
  */
 
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.6.2
  */
-class EMCP_Tools_Atomic_Widget_Map {
+class KarMCP_Atomic_Widget_Map {
 
 	/**
 	 * Widget types this class knows how to build from convenience params.
@@ -98,13 +98,13 @@ class EMCP_Tools_Atomic_Widget_Map {
 	private static function finish( array $settings, array $params, bool $link_target_blank = false ): array {
 		if ( ! empty( $params['link'] ) ) {
 			$target = $link_target_blank && ! empty( $params['target_blank'] );
-			$settings['link'] = EMCP_Tools_Atomic_Props::link( esc_url_raw( $params['link'] ), $target );
+			$settings['link'] = KarMCP_Atomic_Props::link( esc_url_raw( $params['link'] ), $target );
 		}
 		if ( ! empty( $params['css_id'] ) ) {
-			$settings['_cssid'] = EMCP_Tools_Atomic_Props::string( sanitize_text_field( $params['css_id'] ) );
+			$settings['_cssid'] = KarMCP_Atomic_Props::string( sanitize_text_field( $params['css_id'] ) );
 		}
 
-		$settings['classes'] = EMCP_Tools_Atomic_Props::classes();
+		$settings['classes'] = KarMCP_Atomic_Props::classes();
 		return $settings;
 	}
 
@@ -114,8 +114,8 @@ class EMCP_Tools_Atomic_Widget_Map {
 	 */
 	private static function heading( array $params ): array {
 		$settings = array(
-			'title' => EMCP_Tools_Atomic_Props::html( sanitize_text_field( $params['title'] ?? 'Heading' ) ),
-			'tag'   => EMCP_Tools_Atomic_Props::string( sanitize_text_field( $params['tag'] ?? 'h2' ) ),
+			'title' => KarMCP_Atomic_Props::html( sanitize_text_field( $params['title'] ?? 'Heading' ) ),
+			'tag'   => KarMCP_Atomic_Props::string( sanitize_text_field( $params['tag'] ?? 'h2' ) ),
 		);
 		return self::finish( $settings, $params );
 	}
@@ -128,7 +128,7 @@ class EMCP_Tools_Atomic_Widget_Map {
 		// The e-paragraph content prop is named `paragraph` (Html_V3), not
 		// `text`. Writing `text` silently dropped the content (issue #56).
 		$settings = array(
-			'paragraph' => EMCP_Tools_Atomic_Props::html( sanitize_text_field( $params['content'] ?? 'Paragraph text' ) ),
+			'paragraph' => KarMCP_Atomic_Props::html( sanitize_text_field( $params['content'] ?? 'Paragraph text' ) ),
 		);
 		return self::finish( $settings, $params );
 	}
@@ -139,7 +139,7 @@ class EMCP_Tools_Atomic_Widget_Map {
 	 */
 	private static function button( array $params ): array {
 		$settings = array(
-			'text' => EMCP_Tools_Atomic_Props::html( sanitize_text_field( $params['text'] ?? 'Click Here' ) ),
+			'text' => KarMCP_Atomic_Props::html( sanitize_text_field( $params['text'] ?? 'Click Here' ) ),
 		);
 		return self::finish( $settings, $params, true );
 	}
@@ -156,7 +156,7 @@ class EMCP_Tools_Atomic_Widget_Map {
 		$alt       = isset( $params['alt'] ) ? sanitize_text_field( $params['alt'] ) : '';
 
 		if ( $image_id ) {
-			$settings['image'] = EMCP_Tools_Atomic_Props::image( $image_id, '', $alt );
+			$settings['image'] = KarMCP_Atomic_Props::image( $image_id, '', $alt );
 
 			// For an attachment Elementor renders the media library's own alt
 			// text, so that is the only place setting it has any effect.
@@ -165,7 +165,7 @@ class EMCP_Tools_Atomic_Widget_Map {
 				update_post_meta( $image_id, '_wp_attachment_image_alt', $alt );
 			}
 		} elseif ( $image_url ) {
-			$settings['image'] = EMCP_Tools_Atomic_Props::image( 0, $image_url, $alt );
+			$settings['image'] = KarMCP_Atomic_Props::image( 0, $image_url, $alt );
 		}
 
 		return self::finish( $settings, $params );
@@ -182,9 +182,9 @@ class EMCP_Tools_Atomic_Widget_Map {
 		$svg_url = esc_url_raw( $params['svg_url'] ?? '' );
 
 		if ( $svg_id ) {
-			$settings['svg'] = EMCP_Tools_Atomic_Props::svg( $svg_id );
+			$settings['svg'] = KarMCP_Atomic_Props::svg( $svg_id );
 		} elseif ( $svg_url ) {
-			$settings['svg'] = EMCP_Tools_Atomic_Props::svg( 0, $svg_url );
+			$settings['svg'] = KarMCP_Atomic_Props::svg( 0, $svg_url );
 		}
 
 		return self::finish( $settings, $params );
@@ -198,7 +198,7 @@ class EMCP_Tools_Atomic_Widget_Map {
 		// e-youtube's video prop is `source`, a plain string (union), NOT the
 		// video-src shape the self-hosted video widget uses.
 		$settings = array(
-			'source' => EMCP_Tools_Atomic_Props::string( esc_url_raw( $params['video_url'] ?? '' ) ),
+			'source' => KarMCP_Atomic_Props::string( esc_url_raw( $params['video_url'] ?? '' ) ),
 		);
 		return self::finish( $settings, $params );
 	}
@@ -216,9 +216,9 @@ class EMCP_Tools_Atomic_Widget_Map {
 		// `source` is a video-src shape, not a plain url. A url envelope made
 		// Elementor refuse the element outright.
 		if ( $video_id ) {
-			$settings['source'] = EMCP_Tools_Atomic_Props::video_src( $video_id );
+			$settings['source'] = KarMCP_Atomic_Props::video_src( $video_id );
 		} elseif ( $video_url ) {
-			$settings['source'] = EMCP_Tools_Atomic_Props::video_src( 0, $video_url );
+			$settings['source'] = KarMCP_Atomic_Props::video_src( 0, $video_url );
 		}
 
 		return self::finish( $settings, $params );

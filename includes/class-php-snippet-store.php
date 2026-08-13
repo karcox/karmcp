@@ -2,10 +2,10 @@
 /**
  * PHP Snippet Store — source-of-truth + sandbox for admin/AI PHP snippets.
  *
- * The canonical record is a private `emcp_php_snippet` CPT whose meta holds the
+ * The canonical record is a private `karmcp_php_snippet` CPT whose meta holds the
  * raw code, run context, validation report, and a sha256 integrity hash. An
  * executable file is written to the sandbox ONLY while a snippet is active
- * (`wp-content/emcp-sandbox/snippets/{id}.php`, already `.htaccess`-blocked); a
+ * (`wp-content/karmcp-sandbox/snippets/{id}.php`, already `.htaccess`-blocked); a
  * draft has no runnable artifact on disk at all. Post status is the activation
  * flag: `publish` = active, `draft` = inactive.
  *
@@ -13,7 +13,7 @@
  * (the MCP tools cannot reach set_status), and set_status('active') re-runs the
  * validator and refuses anything with a critical finding.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   2.1.0
  */
 
@@ -26,16 +26,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.1.0
  */
-class EMCP_Tools_PHP_Snippet_Store {
+class KarMCP_PHP_Snippet_Store {
 
-	const POST_TYPE       = 'emcp_php_snippet';
-	const META_CODE       = '_emcp_snippet_code';
-	const META_CONTEXT    = '_emcp_snippet_context';
-	const META_HOOK       = '_emcp_snippet_hook';
-	const META_PRIORITY   = '_emcp_snippet_priority';
-	const META_VALIDATION = '_emcp_snippet_validation';
-	const META_HASH       = '_emcp_snippet_hash';
-	const META_ERROR      = '_emcp_snippet_error';
+	const POST_TYPE       = 'karmcp_php_snippet';
+	const META_CODE       = '_karmcp_snippet_code';
+	const META_CONTEXT    = '_karmcp_snippet_context';
+	const META_HOOK       = '_karmcp_snippet_hook';
+	const META_PRIORITY   = '_karmcp_snippet_priority';
+	const META_VALIDATION = '_karmcp_snippet_validation';
+	const META_HASH       = '_karmcp_snippet_hash';
+	const META_ERROR      = '_karmcp_snippet_error';
 
 	/** Allowed run contexts. */
 	const CONTEXTS = array( 'shortcode', 'hook', 'both' );
@@ -65,7 +65,7 @@ class EMCP_Tools_PHP_Snippet_Store {
 				'capability_type'     => 'page',
 				'map_meta_cap'        => true,
 				'supports'            => array( 'title', 'author' ),
-				'labels'              => array( 'name' => __( 'EMCP PHP Snippets', 'emcp-tools' ) ),
+				'labels'              => array( 'name' => __( 'KarMCP PHP Snippets', 'karmcp' ) ),
 			)
 		);
 	}
@@ -99,7 +99,7 @@ class EMCP_Tools_PHP_Snippet_Store {
 	// -------------------------------------------------------------------------
 
 	public static function sandbox_dir(): string {
-		return EMCP_Tools_Sandbox_Paths::base_dir();
+		return KarMCP_Sandbox_Paths::base_dir();
 	}
 
 	public static function snippets_dir(): string {
@@ -119,7 +119,7 @@ class EMCP_Tools_PHP_Snippet_Store {
 	}
 
 	public static function func_name( int $post_id ): string {
-		return 'emcp_php_snippet_' . $post_id;
+		return 'karmcp_php_snippet_' . $post_id;
 	}
 
 	/**
@@ -132,10 +132,10 @@ class EMCP_Tools_PHP_Snippet_Store {
 	public static function ensure_sandbox() {
 		$dir = self::snippets_dir();
 		if ( ! wp_mkdir_p( $dir ) ) {
-			return new WP_Error( 'sandbox_unwritable', __( 'Could not create the snippet sandbox directory under wp-content. Check filesystem permissions.', 'emcp-tools' ) );
+			return new WP_Error( 'sandbox_unwritable', __( 'Could not create the snippet sandbox directory under wp-content. Check filesystem permissions.', 'karmcp' ) );
 		}
-		EMCP_Tools_Sandbox_Paths::harden();
-		EMCP_Tools_Sandbox_Paths::guard_subdir( $dir );
+		KarMCP_Sandbox_Paths::harden();
+		KarMCP_Sandbox_Paths::guard_subdir( $dir );
 		return true;
 	}
 
@@ -174,21 +174,21 @@ class EMCP_Tools_PHP_Snippet_Store {
 	 */
 	public static function create_draft( array $args ) {
 		if ( ! self::can_edit() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to create PHP snippets (requires manage_options and unfiltered_html).', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to create PHP snippets (requires manage_options and unfiltered_html).', 'karmcp' ) );
 		}
 
 		$code       = isset( $args['code'] ) ? (string) $args['code'] : '';
-		$validation = EMCP_Tools_PHP_Snippet_Validator::validate( $code );
+		$validation = KarMCP_PHP_Snippet_Validator::validate( $code );
 		if ( ! $validation['valid'] ) {
-			return new WP_Error( 'invalid_php', sprintf( /* translators: %s: parse error */ __( 'The snippet is not valid PHP: %s', 'emcp-tools' ), $validation['parse_error'] ), array( 'validation' => $validation ) );
+			return new WP_Error( 'invalid_php', sprintf( /* translators: %s: parse error */ __( 'The snippet is not valid PHP: %s', 'karmcp' ), $validation['parse_error'] ), array( 'validation' => $validation ) );
 		}
 		if ( ! $validation['safe'] ) {
-			return new WP_Error( 'unsafe_php', __( 'The snippet was blocked by the security validator (critical finding). See the validation report.', 'emcp-tools' ), array( 'validation' => $validation ) );
+			return new WP_Error( 'unsafe_php', __( 'The snippet was blocked by the security validator (critical finding). See the validation report.', 'karmcp' ), array( 'validation' => $validation ) );
 		}
 
 		$title = isset( $args['title'] ) && '' !== trim( (string) $args['title'] )
 			? sanitize_text_field( (string) $args['title'] )
-			: __( 'PHP Snippet', 'emcp-tools' );
+			: __( 'PHP Snippet', 'karmcp' );
 
 		$post_id = wp_insert_post(
 			array(
@@ -220,21 +220,21 @@ class EMCP_Tools_PHP_Snippet_Store {
 	 */
 	public static function update( int $post_id, array $args ) {
 		if ( ! self::can_edit() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to update PHP snippets.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to update PHP snippets.', 'karmcp' ) );
 		}
 		$post = get_post( $post_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Snippet not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Snippet not found.', 'karmcp' ) );
 		}
 
 		// Merge code: new code if given, else the stored code.
 		$code       = array_key_exists( 'code', $args ) ? (string) $args['code'] : (string) get_post_meta( $post_id, self::META_CODE, true );
-		$validation = EMCP_Tools_PHP_Snippet_Validator::validate( $code );
+		$validation = KarMCP_PHP_Snippet_Validator::validate( $code );
 		if ( ! $validation['valid'] ) {
-			return new WP_Error( 'invalid_php', sprintf( /* translators: %s: parse error */ __( 'The snippet is not valid PHP: %s', 'emcp-tools' ), $validation['parse_error'] ), array( 'validation' => $validation ) );
+			return new WP_Error( 'invalid_php', sprintf( /* translators: %s: parse error */ __( 'The snippet is not valid PHP: %s', 'karmcp' ), $validation['parse_error'] ), array( 'validation' => $validation ) );
 		}
 		if ( ! $validation['safe'] ) {
-			return new WP_Error( 'unsafe_php', __( 'The snippet was blocked by the security validator (critical finding). See the validation report.', 'emcp-tools' ), array( 'validation' => $validation ) );
+			return new WP_Error( 'unsafe_php', __( 'The snippet was blocked by the security validator (critical finding). See the validation report.', 'karmcp' ), array( 'validation' => $validation ) );
 		}
 
 		if ( isset( $args['title'] ) && '' !== trim( (string) $args['title'] ) ) {
@@ -305,10 +305,10 @@ class EMCP_Tools_PHP_Snippet_Store {
 		if ( is_wp_error( $ensured ) ) {
 			return $ensured;
 		}
-		$body = EMCP_Tools_PHP_Snippet_Validator::strip_tags( $code );
+		$body = KarMCP_PHP_Snippet_Validator::strip_tags( $code );
 		$func = self::func_name( $post_id );
 		$php  = "<?php\n"
-			. "// EMCP PHP Snippet {$post_id}, generated from the snippet stored in the database.\n"
+			. "// KarMCP PHP Snippet {$post_id}, generated from the snippet stored in the database.\n"
 			. "// Do not edit: edits are ignored and fail the integrity check.\n"
 			. "if ( ! function_exists( '{$func}' ) ) {\n"
 			. "\tfunction {$func}() {\n"
@@ -325,7 +325,7 @@ class EMCP_Tools_PHP_Snippet_Store {
 
 		$path = self::php_path( $post_id );
 		if ( ! self::write_file( $path, $php ) ) {
-			return new WP_Error( 'write_failed', __( 'Could not write the snippet file to the sandbox.', 'emcp-tools' ) );
+			return new WP_Error( 'write_failed', __( 'Could not write the snippet file to the sandbox.', 'karmcp' ) );
 		}
 		update_post_meta( $post_id, self::META_HASH, hash( 'sha256', $php ) );
 		return true;
@@ -344,19 +344,19 @@ class EMCP_Tools_PHP_Snippet_Store {
 	 */
 	public static function set_status( int $post_id, string $status ) {
 		if ( ! self::can_edit() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to change snippet status.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to change snippet status.', 'karmcp' ) );
 		}
 		$post = get_post( $post_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Snippet not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Snippet not found.', 'karmcp' ) );
 		}
 
 		if ( 'active' === $status ) {
 			$code       = (string) get_post_meta( $post_id, self::META_CODE, true );
-			$validation = EMCP_Tools_PHP_Snippet_Validator::validate( $code );
+			$validation = KarMCP_PHP_Snippet_Validator::validate( $code );
 			if ( ! $validation['valid'] || ! $validation['safe'] ) {
 				update_post_meta( $post_id, self::META_VALIDATION, wp_slash( (string) wp_json_encode( $validation ) ) );
-				return new WP_Error( 'activation_blocked', __( 'Cannot activate, the snippet fails validation. Fix the flagged code and try again.', 'emcp-tools' ), array( 'validation' => $validation ) );
+				return new WP_Error( 'activation_blocked', __( 'Cannot activate, the snippet fails validation. Fix the flagged code and try again.', 'karmcp' ), array( 'validation' => $validation ) );
 			}
 			$written = self::write_executable( $post_id, $code );
 			if ( is_wp_error( $written ) ) {
@@ -384,11 +384,11 @@ class EMCP_Tools_PHP_Snippet_Store {
 	 */
 	public static function delete( int $post_id ) {
 		if ( ! self::can_edit() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to delete PHP snippets.', 'emcp-tools' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to delete PHP snippets.', 'karmcp' ) );
 		}
 		$post = get_post( $post_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Snippet not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Snippet not found.', 'karmcp' ) );
 		}
 		self::delete_file( self::php_path( $post_id ) );
 		wp_delete_post( $post_id, true );
@@ -446,7 +446,7 @@ class EMCP_Tools_PHP_Snippet_Store {
 	public static function summary( int $post_id ) {
 		$post = get_post( $post_id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Snippet not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Snippet not found.', 'karmcp' ) );
 		}
 		$context = (string) get_post_meta( $post_id, self::META_CONTEXT, true );
 		return array(
@@ -456,7 +456,7 @@ class EMCP_Tools_PHP_Snippet_Store {
 			'context'    => '' !== $context ? $context : 'shortcode',
 			'hook'       => (string) get_post_meta( $post_id, self::META_HOOK, true ),
 			'priority'   => (int) get_post_meta( $post_id, self::META_PRIORITY, true ),
-			'shortcode'  => '[emcp_snippet id="' . (int) $post_id . '"]',
+			'shortcode'  => '[karmcp_snippet id="' . (int) $post_id . '"]',
 			'last_error' => (string) get_post_meta( $post_id, self::META_ERROR, true ),
 			'updated'    => (string) $post->post_modified,
 		);

@@ -1,8 +1,8 @@
 <?php
 /**
- * EMCP Cloud config + encrypted connection store.
+ * KarMCP Cloud config + encrypted connection store.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,27 +13,38 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Static helpers for the Cloud base URL, the stable per-site UUID, and the
  * encrypted OAuth token bundle. No network here.
  */
-class EMCP_Tools_Cloud {
-	const OPTION_CONNECTION = 'emcp_tools_cloud_connection';
-	const OPTION_BASE_URL   = 'emcp_tools_cloud_base_url';
-	const OPTION_SITE_UUID  = 'emcp_tools_site_uuid';
-	const DEFAULT_BASE_URL  = 'https://emcptools.com';
+class KarMCP_Cloud {
+	const OPTION_CONNECTION = 'karmcp_cloud_connection';
+	const OPTION_BASE_URL   = 'karmcp_cloud_base_url';
+	const OPTION_SITE_UUID  = 'karmcp_site_uuid';
+	/**
+	 * Cloud base URL default.
+	 *
+	 * Upstream pointed this at its own hosted service. KarMCP has no such
+	 * service, and leaving a live host here would mean the plugin could make
+	 * outbound calls to a third party. Empty = Cloud is off.
+	 *
+	 * To enable a Cloud backend later, set it per-site without touching this
+	 * file: define `KARMCP_CLOUD_URL`, store the `karmcp_cloud_base_url`
+	 * option, or hook the `karmcp_cloud_base_url` filter — see base_url().
+	 */
+	const DEFAULT_BASE_URL  = '';
 	const SCOPES            = 'openid cloud offline_access';
 
 	/**
-	 * The EMCP Cloud base URL. Constant overrides option overrides default;
+	 * The KarMCP Cloud base URL. Constant overrides option overrides default;
 	 * filterable for staging/self-host.
 	 *
 	 * @return string No trailing slash.
 	 */
 	public static function base_url(): string {
-		if ( defined( 'EMCP_TOOLS_CLOUD_URL' ) && '' !== (string) EMCP_TOOLS_CLOUD_URL ) {
-			$url = (string) EMCP_TOOLS_CLOUD_URL;
+		if ( defined( 'KARMCP_CLOUD_URL' ) && '' !== (string) KARMCP_CLOUD_URL ) {
+			$url = (string) KARMCP_CLOUD_URL;
 		} else {
 			$stored = (string) get_option( self::OPTION_BASE_URL, '' );
 			$url    = '' !== $stored ? $stored : self::DEFAULT_BASE_URL;
 		}
-		return rtrim( (string) apply_filters( 'emcp_tools_cloud_base_url', $url ), '/' );
+		return rtrim( (string) apply_filters( 'karmcp_cloud_base_url', $url ), '/' );
 	}
 
 	/**
@@ -57,7 +68,7 @@ class EMCP_Tools_Cloud {
 	 * @return void
 	 */
 	public static function save_connection( array $bundle ): void {
-		update_option( self::OPTION_CONNECTION, EMCP_Tools_Secret::encrypt( (string) wp_json_encode( $bundle ) ), false );
+		update_option( self::OPTION_CONNECTION, KarMCP_Secret::encrypt( (string) wp_json_encode( $bundle ) ), false );
 	}
 
 	/**
@@ -70,7 +81,7 @@ class EMCP_Tools_Cloud {
 		if ( '' === $raw ) {
 			return array();
 		}
-		$json = json_decode( EMCP_Tools_Secret::decrypt_if_needed( $raw ), true );
+		$json = json_decode( KarMCP_Secret::decrypt_if_needed( $raw ), true );
 		return is_array( $json ) ? $json : array();
 	}
 

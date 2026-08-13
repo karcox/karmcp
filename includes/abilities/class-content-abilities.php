@@ -8,7 +8,7 @@
  * operate on post_content (classic HTML or block markup) and never touch
  * `_elementor_data`. To edit an Elementor-built page, use the Elementor tools.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_Content_Abilities {
+class KarMCP_Content_Abilities {
 
 	/**
 	 * Names of the abilities actually registered by register().
@@ -124,19 +124,19 @@ class EMCP_Tools_Content_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_list_post_types(): void {
-		$this->ability_names[] = 'emcp-tools/list-post-types';
-		emcp_tools_register_ability(
-			'emcp-tools/list-post-types',
+		$this->ability_names[] = 'karmcp/list-post-types';
+		karmcp_register_ability(
+			'karmcp/list-post-types',
 			array(
-				'label'               => __( 'List Post Types', 'emcp-tools' ),
-				'description'         => __( 'Lists registered WordPress post types (posts, pages, and any custom post type) so you can target the right one with create-post / list-posts. Returns name, label, whether it is hierarchical, and its taxonomies.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Post Types', 'karmcp' ),
+				'description'         => __( 'Lists registered WordPress post types (posts, pages, and any custom post type) so you can target the right one with create-post / list-posts. Returns name, label, whether it is hierarchical, and its taxonomies.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_post_types' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'public_only' => array( 'type' => 'boolean', 'description' => __( 'Only public, non-internal types. Default: true.', 'emcp-tools' ) ),
+						'public_only' => array( 'type' => 'boolean', 'description' => __( 'Only public, non-internal types. Default: true.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array(
@@ -185,21 +185,21 @@ class EMCP_Tools_Content_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_list_taxonomies(): void {
-		$this->ability_names[] = 'emcp-tools/list-taxonomies';
-		emcp_tools_register_ability(
-			'emcp-tools/list-taxonomies',
+		$this->ability_names[] = 'karmcp/list-taxonomies';
+		karmcp_register_ability(
+			'karmcp/list-taxonomies',
 			array(
-				'label'               => __( 'List Taxonomies', 'emcp-tools' ),
-				'description'         => __( 'Lists registered taxonomies (categories, tags, custom taxonomies) and optionally their terms, so you can categorize content with set-post-terms or the create-post "terms" param.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Taxonomies', 'karmcp' ),
+				'description'         => __( 'Lists registered taxonomies (categories, tags, custom taxonomies) and optionally their terms, so you can categorize content with set-post-terms or the create-post "terms" param.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_taxonomies' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_type'     => array( 'type' => 'string', 'description' => __( 'Only taxonomies attached to this post type.', 'emcp-tools' ) ),
-						'include_terms' => array( 'type' => 'boolean', 'description' => __( 'Embed each taxonomy\'s terms (capped). Default: false.', 'emcp-tools' ) ),
-						'terms_limit'   => array( 'type' => 'integer', 'description' => __( 'Max terms per taxonomy when include_terms. Default: 100.', 'emcp-tools' ) ),
+						'post_type'     => array( 'type' => 'string', 'description' => __( 'Only taxonomies attached to this post type.', 'karmcp' ) ),
+						'include_terms' => array( 'type' => 'boolean', 'description' => __( 'Embed each taxonomy\'s terms (capped). Default: false.', 'karmcp' ) ),
+						'terms_limit'   => array( 'type' => 'integer', 'description' => __( 'Max terms per taxonomy when include_terms. Default: 100.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array(
@@ -281,14 +281,14 @@ class EMCP_Tools_Content_Abilities {
 	 * @return true|\WP_Error
 	 */
 	private function reject_protected_meta( array $meta ) {
-		$allowed = (array) apply_filters( 'emcp_tools_content_allowed_protected_meta', array() );
+		$allowed = (array) apply_filters( 'karmcp_content_allowed_protected_meta', array() );
 		foreach ( array_keys( $meta ) as $key ) {
 			$key = (string) $key;
 			if ( in_array( $key, $allowed, true ) ) {
 				continue;
 			}
 			if ( '_' === substr( $key, 0, 1 ) || is_protected_meta( $key, 'post' ) ) {
-				return new \WP_Error( 'protected_meta', sprintf( /* translators: %s: meta key */ __( 'Refusing to write protected meta key "%s". Use the featured_image param for thumbnails; Elementor data is never writable here.', 'emcp-tools' ), $key ) );
+				return new \WP_Error( 'protected_meta', sprintf( /* translators: %s: meta key */ __( 'Refusing to write protected meta key "%s". Use the featured_image param for thumbnails; Elementor data is never writable here.', 'karmcp' ), $key ) );
 			}
 		}
 		return true;
@@ -335,12 +335,12 @@ class EMCP_Tools_Content_Abilities {
 						require_once ABSPATH . 'wp-admin/includes/media.php';
 						require_once ABSPATH . 'wp-admin/includes/image.php';
 					}
-					// SSRF-guarded download: EMCP_Tools_Url_Guard::safe_download blocks
+					// SSRF-guarded download: KarMCP_Url_Guard::safe_download blocks
 					// private/reserved/loopback hosts (e.g. cloud metadata
 					// 169.254.169.254) and re-validates every redirect hop, which
 					// plain media_sideload_image()/download_url() do not.
 					$fi_url   = esc_url_raw( (string) $fi['url'] );
-					$tmp_file = $fi_url ? EMCP_Tools_Url_Guard::safe_download( $fi_url, 30 ) : new \WP_Error( 'invalid_url', 'empty url' );
+					$tmp_file = $fi_url ? KarMCP_Url_Guard::safe_download( $fi_url, 30 ) : new \WP_Error( 'invalid_url', 'empty url' );
 					if ( is_wp_error( $tmp_file ) ) {
 						$warnings[] = 'featured_image: URL rejected or download failed (' . $tmp_file->get_error_message() . ').';
 					} else {
@@ -377,32 +377,32 @@ class EMCP_Tools_Content_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_create_post(): void {
-		$this->ability_names[] = 'emcp-tools/create-post';
-		emcp_tools_register_ability(
-			'emcp-tools/create-post',
+		$this->ability_names[] = 'karmcp/create-post';
+		karmcp_register_ability(
+			'karmcp/create-post',
 			array(
-				'label'               => __( 'Create Post', 'emcp-tools' ),
-				'description'         => __( 'Creates a post, page, or any custom post type. Sets title, content (classic HTML or Gutenberg block markup), excerpt, status, slug, author, date, parent/menu_order, plus optional taxonomy terms, custom-field meta, and a featured image, in one call. This writes post_content; to build an Elementor page use the Elementor tools instead.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Create Post', 'karmcp' ),
+				'description'         => __( 'Creates a post, page, or any custom post type. Sets title, content (classic HTML or Gutenberg block markup), excerpt, status, slug, author, date, parent/menu_order, plus optional taxonomy terms, custom-field meta, and a featured image, in one call. This writes post_content; to build an Elementor page use the Elementor tools instead.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_create_post' ),
 				'permission_callback' => array( $this, 'check_create_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_type'      => array( 'type' => 'string', 'description' => __( 'Target type (post, page, or a CPT from list-post-types). Default: post.', 'emcp-tools' ) ),
-						'title'          => array( 'type' => 'string', 'description' => __( 'Post title.', 'emcp-tools' ) ),
-						'content'        => array( 'type' => 'string', 'description' => __( 'post_content, classic HTML or Gutenberg block markup, stored verbatim.', 'emcp-tools' ) ),
+						'post_type'      => array( 'type' => 'string', 'description' => __( 'Target type (post, page, or a CPT from list-post-types). Default: post.', 'karmcp' ) ),
+						'title'          => array( 'type' => 'string', 'description' => __( 'Post title.', 'karmcp' ) ),
+						'content'        => array( 'type' => 'string', 'description' => __( 'post_content, classic HTML or Gutenberg block markup, stored verbatim.', 'karmcp' ) ),
 						'excerpt'        => array( 'type' => 'string' ),
-						'status'         => array( 'type' => 'string', 'enum' => array( 'draft', 'publish', 'pending', 'private', 'future' ), 'description' => __( 'Default: draft.', 'emcp-tools' ) ),
+						'status'         => array( 'type' => 'string', 'enum' => array( 'draft', 'publish', 'pending', 'private', 'future' ), 'description' => __( 'Default: draft.', 'karmcp' ) ),
 						'slug'           => array( 'type' => 'string' ),
-						'author'         => array( 'type' => 'integer', 'description' => __( 'User ID. Default: current user.', 'emcp-tools' ) ),
-						'date'           => array( 'type' => 'string', 'description' => __( 'Y-m-d H:i:s. Required for status=future.', 'emcp-tools' ) ),
-						'parent'         => array( 'type' => 'integer', 'description' => __( 'Parent ID (hierarchical types).', 'emcp-tools' ) ),
+						'author'         => array( 'type' => 'integer', 'description' => __( 'User ID. Default: current user.', 'karmcp' ) ),
+						'date'           => array( 'type' => 'string', 'description' => __( 'Y-m-d H:i:s. Required for status=future.', 'karmcp' ) ),
+						'parent'         => array( 'type' => 'integer', 'description' => __( 'Parent ID (hierarchical types).', 'karmcp' ) ),
 						'menu_order'     => array( 'type' => 'integer' ),
 						'comment_status' => array( 'type' => 'string', 'enum' => array( 'open', 'closed' ) ),
-						'terms'          => array( 'type' => 'object', 'description' => __( 'Map of taxonomy → array of term IDs or names. Names are created if missing.', 'emcp-tools' ) ),
-						'meta'           => array( 'type' => 'object', 'description' => __( 'Custom fields. Protected/underscore-prefixed keys are rejected.', 'emcp-tools' ) ),
-						'featured_image' => array( 'type' => 'object', 'description' => __( 'Featured image: { id } (attachment) or { url } (sideloaded). null clears.', 'emcp-tools' ) ),
+						'terms'          => array( 'type' => 'object', 'description' => __( 'Map of taxonomy → array of term IDs or names. Names are created if missing.', 'karmcp' ) ),
+						'meta'           => array( 'type' => 'object', 'description' => __( 'Custom fields. Protected/underscore-prefixed keys are rejected.', 'karmcp' ) ),
+						'featured_image' => array( 'type' => 'object', 'description' => __( 'Featured image: { id } (attachment) or { url } (sideloaded). null clears.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array(
@@ -433,15 +433,15 @@ class EMCP_Tools_Content_Abilities {
 			$post_type = 'post';
 		}
 		if ( ! $this->is_writable_post_type( $post_type ) ) {
-			return new \WP_Error( 'invalid_post_type', sprintf( /* translators: %s: type */ __( '"%s" is not a writable post type.', 'emcp-tools' ), $post_type ) );
+			return new \WP_Error( 'invalid_post_type', sprintf( /* translators: %s: type */ __( '"%s" is not a writable post type.', 'karmcp' ), $post_type ) );
 		}
 
 		$status = sanitize_key( $input['status'] ?? 'draft' );
 		if ( ! in_array( $status, $this->valid_statuses(), true ) ) {
-			return new \WP_Error( 'invalid_status', __( 'Invalid status.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_status', __( 'Invalid status.', 'karmcp' ) );
 		}
 		if ( 'publish' === $status && ! current_user_can( 'publish_posts' ) ) {
-			return new \WP_Error( 'cannot_publish', __( 'You do not have permission to publish.', 'emcp-tools' ) );
+			return new \WP_Error( 'cannot_publish', __( 'You do not have permission to publish.', 'karmcp' ) );
 		}
 
 		if ( isset( $input['meta'] ) && is_array( $input['meta'] ) ) {
@@ -453,7 +453,7 @@ class EMCP_Tools_Content_Abilities {
 
 		$author = absint( $input['author'] ?? 0 );
 		if ( $author && (int) $author !== get_current_user_id() && ! current_user_can( 'edit_others_posts' ) ) {
-			return new \WP_Error( 'cannot_set_author', __( 'You cannot assign another author.', 'emcp-tools' ) );
+			return new \WP_Error( 'cannot_set_author', __( 'You cannot assign another author.', 'karmcp' ) );
 		}
 
 		$postarr = array(
@@ -491,12 +491,12 @@ class EMCP_Tools_Content_Abilities {
 		$warnings = array();
 		$this->apply_write_extras( $post_id, $input, $warnings, false );
 
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			$emcp_title = sanitize_text_field( (string) ( $input['title'] ?? '' ) );
-			EMCP_Tools_Change_Recorder::record_post_create(
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			$karmcp_title = sanitize_text_field( (string) ( $input['title'] ?? '' ) );
+			KarMCP_Change_Recorder::record_post_create(
 				$post_id,
 				sprintf( 'Created %s #%d', (string) ( $postarr['post_type'] ?? 'post' ), $post_id ),
-				trim( $emcp_title . ' (#' . $post_id . ')' )
+				trim( $karmcp_title . ' (#' . $post_id . ')' )
 			);
 		}
 
@@ -517,18 +517,18 @@ class EMCP_Tools_Content_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_get_post(): void {
-		$this->ability_names[] = 'emcp-tools/get-post';
-		emcp_tools_register_ability(
-			'emcp-tools/get-post',
+		$this->ability_names[] = 'karmcp/get-post';
+		karmcp_register_ability(
+			'karmcp/get-post',
 			array(
-				'label'               => __( 'Get Post', 'emcp-tools' ),
-				'description'         => __( 'Returns a single post/page/CPT: title, content, status, author, dates, terms, non-protected meta, and featured image. The is_elementor flag tells you whether the page is built with Elementor (edit those with the Elementor tools, not update-post).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Post', 'karmcp' ),
+				'description'         => __( 'Returns a single post/page/CPT: title, content, status, author, dates, terms, non-protected meta, and featured image. The is_elementor flag tells you whether the page is built with Elementor (edit those with the Elementor tools, not update-post).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_post' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'post_id' => array( 'type' => 'integer', 'description' => __( 'The post ID.', 'emcp-tools' ) ) ),
+					'properties' => array( 'post_id' => array( 'type' => 'integer', 'description' => __( 'The post ID.', 'karmcp' ) ) ),
 					'required'   => array( 'post_id' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array(
@@ -559,11 +559,11 @@ class EMCP_Tools_Content_Abilities {
 	public function execute_get_post( $input ) {
 		$post_id = absint( $input['post_id'] ?? 0 );
 		if ( ! $post_id ) {
-			return new \WP_Error( 'missing_post_id', __( 'post_id is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_post_id', __( 'post_id is required.', 'karmcp' ) );
 		}
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'karmcp' ) );
 		}
 		return $this->format_post( $post );
 	}
@@ -591,7 +591,7 @@ class EMCP_Tools_Content_Abilities {
 		$meta_raw = get_post_meta( $post_id );
 		$meta     = array();
 		if ( is_array( $meta_raw ) ) {
-			$allowed = (array) apply_filters( 'emcp_tools_content_allowed_protected_meta', array() );
+			$allowed = (array) apply_filters( 'karmcp_content_allowed_protected_meta', array() );
 			foreach ( $meta_raw as $key => $vals ) {
 				$key = (string) $key;
 				if ( ! in_array( $key, $allowed, true ) && ( '_' === substr( $key, 0, 1 ) || is_protected_meta( $key, 'post' ) ) ) {
@@ -639,21 +639,21 @@ class EMCP_Tools_Content_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_update_post(): void {
-		$this->ability_names[] = 'emcp-tools/update-post';
-		emcp_tools_register_ability(
-			'emcp-tools/update-post',
+		$this->ability_names[] = 'karmcp/update-post';
+		karmcp_register_ability(
+			'karmcp/update-post',
 			array(
-				'label'               => __( 'Update Post', 'emcp-tools' ),
-				'description'         => __( 'Partial update of a post/page/CPT. Only the fields you pass change. terms_mode controls replace/append; meta upserts the given keys; featured_image:null clears it. Does not touch Elementor data, use the Elementor tools for builder pages.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Post', 'karmcp' ),
+				'description'         => __( 'Partial update of a post/page/CPT. Only the fields you pass change. terms_mode controls replace/append; meta upserts the given keys; featured_image:null clears it. Does not touch Elementor data, use the Elementor tools for builder pages.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_post' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id'        => array( 'type' => 'integer', 'description' => __( 'The post ID.', 'emcp-tools' ) ),
+						'post_id'        => array( 'type' => 'integer', 'description' => __( 'The post ID.', 'karmcp' ) ),
 						'title'          => array( 'type' => 'string' ),
-						'content'        => array( 'type' => 'string', 'description' => __( 'post_content, classic HTML or block markup.', 'emcp-tools' ) ),
+						'content'        => array( 'type' => 'string', 'description' => __( 'post_content, classic HTML or block markup.', 'karmcp' ) ),
 						'excerpt'        => array( 'type' => 'string' ),
 						'status'         => array( 'type' => 'string', 'enum' => array( 'draft', 'publish', 'pending', 'private', 'future' ) ),
 						'slug'           => array( 'type' => 'string' ),
@@ -663,7 +663,7 @@ class EMCP_Tools_Content_Abilities {
 						'menu_order'     => array( 'type' => 'integer' ),
 						'comment_status' => array( 'type' => 'string', 'enum' => array( 'open', 'closed' ) ),
 						'terms'          => array( 'type' => 'object' ),
-						'terms_mode'     => array( 'type' => 'string', 'enum' => array( 'replace', 'append' ), 'description' => __( 'Default: replace.', 'emcp-tools' ) ),
+						'terms_mode'     => array( 'type' => 'string', 'enum' => array( 'replace', 'append' ), 'description' => __( 'Default: replace.', 'karmcp' ) ),
 						'meta'           => array( 'type' => 'object' ),
 						'featured_image' => array( 'type' => array( 'object', 'null' ) ),
 					),
@@ -689,14 +689,14 @@ class EMCP_Tools_Content_Abilities {
 	public function execute_update_post( $input ) {
 		$post_id = absint( $input['post_id'] ?? 0 );
 		if ( ! $post_id ) {
-			return new \WP_Error( 'missing_post_id', __( 'post_id is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_post_id', __( 'post_id is required.', 'karmcp' ) );
 		}
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'karmcp' ) );
 		}
 		if ( ! $this->is_writable_post_type( (string) $post->post_type ) ) {
-			return new \WP_Error( 'invalid_post_type', __( 'That post type is not writable here.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_post_type', __( 'That post type is not writable here.', 'karmcp' ) );
 		}
 
 		if ( isset( $input['meta'] ) && is_array( $input['meta'] ) ) {
@@ -719,58 +719,58 @@ class EMCP_Tools_Content_Abilities {
 		if ( ! empty( $input['status'] ) ) {
 			$status = sanitize_key( $input['status'] );
 			if ( ! in_array( $status, $this->valid_statuses(), true ) ) {
-				return new \WP_Error( 'invalid_status', __( 'Invalid status.', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_status', __( 'Invalid status.', 'karmcp' ) );
 			}
 			if ( 'publish' === $status && ! current_user_can( 'publish_posts' ) ) {
-				return new \WP_Error( 'cannot_publish', __( 'You do not have permission to publish.', 'emcp-tools' ) );
+				return new \WP_Error( 'cannot_publish', __( 'You do not have permission to publish.', 'karmcp' ) );
 			}
 			$postarr['post_status'] = $status;
 		}
 		if ( ! empty( $input['author'] ) ) {
 			$author = absint( $input['author'] );
 			if ( (int) $author !== get_current_user_id() && ! current_user_can( 'edit_others_posts' ) ) {
-				return new \WP_Error( 'cannot_set_author', __( 'You cannot assign another author.', 'emcp-tools' ) );
+				return new \WP_Error( 'cannot_set_author', __( 'You cannot assign another author.', 'karmcp' ) );
 			}
 			$postarr['post_author'] = $author;
 		}
 
 		// Capture the before-image of everything this update can change, so the
 		// change ledger can offer a rollback.
-		$emcp_before = null;
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			$emcp_bf = array();
-			foreach ( array( 'post_title', 'post_content', 'post_excerpt', 'post_status', 'post_name', 'post_parent', 'menu_order', 'post_date', 'comment_status', 'post_author' ) as $emcp_col ) {
-				if ( array_key_exists( $emcp_col, $postarr ) ) {
-					$emcp_bf[ $emcp_col ] = $post->$emcp_col;
+		$karmcp_before = null;
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			$karmcp_bf = array();
+			foreach ( array( 'post_title', 'post_content', 'post_excerpt', 'post_status', 'post_name', 'post_parent', 'menu_order', 'post_date', 'comment_status', 'post_author' ) as $karmcp_col ) {
+				if ( array_key_exists( $karmcp_col, $postarr ) ) {
+					$karmcp_bf[ $karmcp_col ] = $post->$karmcp_col;
 				}
 			}
-			$emcp_bm = array();
+			$karmcp_bm = array();
 			if ( isset( $input['meta'] ) && is_array( $input['meta'] ) ) {
-				foreach ( array_keys( $input['meta'] ) as $emcp_mk ) {
-					$emcp_mk   = sanitize_key( $emcp_mk );
-					$emcp_cur  = get_post_meta( $post_id, $emcp_mk, true );
-					$emcp_bm[ $emcp_mk ] = ( '' === $emcp_cur || array() === $emcp_cur ) ? '__DELETE__' : $emcp_cur;
+				foreach ( array_keys( $input['meta'] ) as $karmcp_mk ) {
+					$karmcp_mk   = sanitize_key( $karmcp_mk );
+					$karmcp_cur  = get_post_meta( $post_id, $karmcp_mk, true );
+					$karmcp_bm[ $karmcp_mk ] = ( '' === $karmcp_cur || array() === $karmcp_cur ) ? '__DELETE__' : $karmcp_cur;
 				}
 			}
-			$emcp_bt = array();
+			$karmcp_bt = array();
 			if ( isset( $input['terms'] ) && is_array( $input['terms'] ) ) {
-				foreach ( array_keys( $input['terms'] ) as $emcp_tax ) {
-					$emcp_tax  = sanitize_key( $emcp_tax );
-					$emcp_ids  = wp_get_object_terms( $post_id, $emcp_tax, array( 'fields' => 'ids' ) );
-					$emcp_bt[ $emcp_tax ] = is_wp_error( $emcp_ids ) ? array() : array_map( 'intval', $emcp_ids );
+				foreach ( array_keys( $input['terms'] ) as $karmcp_tax ) {
+					$karmcp_tax  = sanitize_key( $karmcp_tax );
+					$karmcp_ids  = wp_get_object_terms( $post_id, $karmcp_tax, array( 'fields' => 'ids' ) );
+					$karmcp_bt[ $karmcp_tax ] = is_wp_error( $karmcp_ids ) ? array() : array_map( 'intval', $karmcp_ids );
 				}
 			}
-			$emcp_before = array( 'fields' => $emcp_bf, 'meta' => $emcp_bm, 'terms' => $emcp_bt );
+			$karmcp_before = array( 'fields' => $karmcp_bf, 'meta' => $karmcp_bm, 'terms' => $karmcp_bt );
 		}
 
 		// A slug change on a published post kills its old permalink — capture it
 		// (before the update) for a suggested redirect.
-		$emcp_slug_old_url = '';
+		$karmcp_slug_old_url = '';
 		if ( ! empty( $input['slug'] )
 			&& isset( $postarr['post_name'] )
 			&& $postarr['post_name'] !== $post->post_name
 			&& 'publish' === $post->post_status ) {
-			$emcp_slug_old_url = (string) get_permalink( $post_id );
+			$karmcp_slug_old_url = (string) get_permalink( $post_id );
 		}
 
 		$res = wp_update_post( wp_slash( $postarr ), true );
@@ -782,10 +782,10 @@ class EMCP_Tools_Content_Abilities {
 		$append   = isset( $input['terms_mode'] ) && 'append' === $input['terms_mode'];
 		$this->apply_write_extras( $post_id, $input, $warnings, $append );
 
-		if ( null !== $emcp_before ) {
-			EMCP_Tools_Change_Recorder::record_post_fields(
+		if ( null !== $karmcp_before ) {
+			KarMCP_Change_Recorder::record_post_fields(
 				$post_id,
-				$emcp_before,
+				$karmcp_before,
 				sprintf( 'Updated post #%d', $post_id ),
 				trim( (string) get_the_title( $post_id ) . ' (#' . $post_id . ')' )
 			);
@@ -799,8 +799,8 @@ class EMCP_Tools_Content_Abilities {
 		if ( $warnings ) {
 			$result['warnings'] = $warnings;
 		}
-		if ( '' !== $emcp_slug_old_url ) {
-			$result = $this->with_redirect_suggestion( $result, $emcp_slug_old_url, 'slug-changed', $post_id );
+		if ( '' !== $karmcp_slug_old_url ) {
+			$result = $this->with_redirect_suggestion( $result, $karmcp_slug_old_url, 'slug-changed', $post_id );
 		}
 		return $result;
 	}
@@ -810,20 +810,20 @@ class EMCP_Tools_Content_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_delete_post(): void {
-		$this->ability_names[] = 'emcp-tools/delete-post';
-		emcp_tools_register_ability(
-			'emcp-tools/delete-post',
+		$this->ability_names[] = 'karmcp/delete-post';
+		karmcp_register_ability(
+			'karmcp/delete-post',
 			array(
-				'label'               => __( 'Delete Post', 'emcp-tools' ),
-				'description'         => __( 'Deletes a post/page/CPT. By default it is moved to Trash (recoverable); pass force:true to permanently delete. Destructive.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Delete Post', 'karmcp' ),
+				'description'         => __( 'Deletes a post/page/CPT. By default it is moved to Trash (recoverable); pass force:true to permanently delete. Destructive.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_delete_post' ),
 				'permission_callback' => array( $this, 'check_delete_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id' => array( 'type' => 'integer', 'description' => __( 'The post ID.', 'emcp-tools' ) ),
-						'force'   => array( 'type' => 'boolean', 'description' => __( 'Permanently delete instead of trashing. Default: false.', 'emcp-tools' ) ),
+						'post_id' => array( 'type' => 'integer', 'description' => __( 'The post ID.', 'karmcp' ) ),
+						'force'   => array( 'type' => 'boolean', 'description' => __( 'Permanently delete instead of trashing. Default: false.', 'karmcp' ) ),
 					),
 					'required'   => array( 'post_id' ),
 				),
@@ -846,31 +846,31 @@ class EMCP_Tools_Content_Abilities {
 	public function execute_delete_post( $input ) {
 		$post_id = absint( $input['post_id'] ?? 0 );
 		if ( ! $post_id ) {
-			return new \WP_Error( 'missing_post_id', __( 'post_id is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_post_id', __( 'post_id is required.', 'karmcp' ) );
 		}
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'karmcp' ) );
 		}
 		$force   = ! empty( $input['force'] );
-		$has_rec = class_exists( 'EMCP_Tools_Change_Recorder' );
+		$has_rec = class_exists( 'KarMCP_Change_Recorder' );
 		$target  = trim( (string) get_the_title( $post_id ) . ' (#' . $post_id . ')' );
 		// The now-dead URL, captured before deletion, for a suggested redirect.
 		$old_url = (string) get_permalink( $post_id );
 
 		if ( $force ) {
 			// Snapshot the whole post BEFORE deleting so it can be re-inserted.
-			$snapshot = $has_rec ? EMCP_Tools_Change_Recorder::snapshot_post( $post_id ) : array();
+			$snapshot = $has_rec ? KarMCP_Change_Recorder::snapshot_post( $post_id ) : array();
 			$res      = wp_delete_post( $post_id, true );
 			if ( $has_rec && $res ) {
-				EMCP_Tools_Change_Recorder::record_post_delete( $post_id, $snapshot, true, sprintf( 'Deleted post #%d', $post_id ), $target );
+				KarMCP_Change_Recorder::record_post_delete( $post_id, $snapshot, true, sprintf( 'Deleted post #%d', $post_id ), $target );
 			}
 			$out = array( 'success' => (bool) $res, 'post_id' => $post_id, 'deleted' => 'deleted' );
 			return $res ? $this->with_redirect_suggestion( $out, $old_url, 'post-deleted', $post_id ) : $out;
 		}
 		$res = wp_trash_post( $post_id );
 		if ( $has_rec && $res ) {
-			EMCP_Tools_Change_Recorder::record_post_delete( $post_id, array(), false, sprintf( 'Trashed post #%d', $post_id ), $target );
+			KarMCP_Change_Recorder::record_post_delete( $post_id, array(), false, sprintf( 'Trashed post #%d', $post_id ), $target );
 		}
 		$out = array( 'success' => (bool) $res, 'post_id' => $post_id, 'deleted' => 'trashed' );
 		return $res ? $this->with_redirect_suggestion( $out, $old_url, 'post-deleted', $post_id ) : $out;
@@ -888,17 +888,17 @@ class EMCP_Tools_Content_Abilities {
 	 * @return array
 	 */
 	private function with_redirect_suggestion( array $out, string $old_url, string $reason, int $post_id ): array {
-		if ( '' === $old_url || ! class_exists( 'EMCP_Tools_Redirect_Abilities' ) ) {
+		if ( '' === $old_url || ! class_exists( 'KarMCP_Redirect_Abilities' ) ) {
 			return $out;
 		}
 		// Only suggest when the Redirect Manager module is active.
-		if ( class_exists( 'EMCP_Tools_Redirect_Module' ) && ! EMCP_Tools_Redirect_Module::is_enabled() ) {
+		if ( class_exists( 'KarMCP_Redirect_Module' ) && ! KarMCP_Redirect_Module::is_enabled() ) {
 			return $out;
 		}
-		EMCP_Tools_Redirect_Abilities::push_suggestion( $old_url, $reason, $post_id );
+		KarMCP_Redirect_Abilities::push_suggestion( $old_url, $reason, $post_id );
 		$out['redirect_suggestion'] = array(
 			'old_url' => $old_url,
-			'message' => __( 'This URL is now dead — call create-redirect to point it somewhere so visitors and search engines do not hit a 404.', 'emcp-tools' ),
+			'message' => __( 'This URL is now dead — call create-redirect to point it somewhere so visitors and search engines do not hit a 404.', 'karmcp' ),
 		);
 		return $out;
 	}
@@ -908,26 +908,26 @@ class EMCP_Tools_Content_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_list_posts(): void {
-		$this->ability_names[] = 'emcp-tools/list-posts';
-		emcp_tools_register_ability(
-			'emcp-tools/list-posts',
+		$this->ability_names[] = 'karmcp/list-posts';
+		karmcp_register_ability(
+			'karmcp/list-posts',
 			array(
-				'label'               => __( 'List Posts', 'emcp-tools' ),
-				'description'         => __( 'Lists/searches posts, pages, or any CPT. Filter by type, status, search text, taxonomy term, author, or parent; paginated. Returns compact rows (no content body), call get-post for the full content. The is_elementor flag flags builder pages.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Posts', 'karmcp' ),
+				'description'         => __( 'Lists/searches posts, pages, or any CPT. Filter by type, status, search text, taxonomy term, author, or parent; paginated. Returns compact rows (no content body), call get-post for the full content. The is_elementor flag flags builder pages.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_posts' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_type' => array( 'type' => array( 'string', 'array' ), 'description' => __( 'Type(s) to query. Default: post.', 'emcp-tools' ) ),
-						'status'    => array( 'type' => array( 'string', 'array' ), 'description' => __( 'Status(es). Default: any.', 'emcp-tools' ) ),
+						'post_type' => array( 'type' => array( 'string', 'array' ), 'description' => __( 'Type(s) to query. Default: post.', 'karmcp' ) ),
+						'status'    => array( 'type' => array( 'string', 'array' ), 'description' => __( 'Status(es). Default: any.', 'karmcp' ) ),
 						'search'    => array( 'type' => 'string' ),
-						'taxonomy'  => array( 'type' => 'object', 'description' => __( 'Map of taxonomy → array of term IDs or slugs (AND).', 'emcp-tools' ) ),
+						'taxonomy'  => array( 'type' => 'object', 'description' => __( 'Map of taxonomy → array of term IDs or slugs (AND).', 'karmcp' ) ),
 						'author'    => array( 'type' => 'integer' ),
 						'parent'    => array( 'type' => 'integer' ),
-						'per_page'  => array( 'type' => 'integer', 'description' => __( '1-100. Default: 20.', 'emcp-tools' ) ),
-						'page'      => array( 'type' => 'integer', 'description' => __( 'Default: 1.', 'emcp-tools' ) ),
+						'per_page'  => array( 'type' => 'integer', 'description' => __( '1-100. Default: 20.', 'karmcp' ) ),
+						'page'      => array( 'type' => 'integer', 'description' => __( 'Default: 1.', 'karmcp' ) ),
 						'orderby'   => array( 'type' => 'string', 'enum' => array( 'date', 'modified', 'title', 'menu_order', 'ID' ) ),
 						'order'     => array( 'type' => 'string', 'enum' => array( 'ASC', 'DESC' ) ),
 					),
@@ -1029,23 +1029,23 @@ class EMCP_Tools_Content_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_set_post_terms(): void {
-		$this->ability_names[] = 'emcp-tools/set-post-terms';
-		emcp_tools_register_ability(
-			'emcp-tools/set-post-terms',
+		$this->ability_names[] = 'karmcp/set-post-terms';
+		karmcp_register_ability(
+			'karmcp/set-post-terms',
 			array(
-				'label'               => __( 'Set Post Terms', 'emcp-tools' ),
-				'description'         => __( 'Assigns taxonomy terms (categories, tags, custom) to a post. mode controls replace (default), append, or remove. Terms may be IDs or names; missing names are created when create_missing is true and you can manage that taxonomy.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Set Post Terms', 'karmcp' ),
+				'description'         => __( 'Assigns taxonomy terms (categories, tags, custom) to a post. mode controls replace (default), append, or remove. Terms may be IDs or names; missing names are created when create_missing is true and you can manage that taxonomy.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_set_post_terms' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id'        => array( 'type' => 'integer', 'description' => __( 'The post ID.', 'emcp-tools' ) ),
-						'taxonomy'       => array( 'type' => 'string', 'description' => __( 'Taxonomy name (e.g. category, post_tag).', 'emcp-tools' ) ),
-						'terms'          => array( 'type' => 'array', 'items' => array( 'type' => array( 'integer', 'string' ) ), 'description' => __( 'Term IDs or names.', 'emcp-tools' ) ),
-						'mode'           => array( 'type' => 'string', 'enum' => array( 'replace', 'append', 'remove' ), 'description' => __( 'Default: replace.', 'emcp-tools' ) ),
-						'create_missing' => array( 'type' => 'boolean', 'description' => __( 'Create term names that do not exist. Default: true.', 'emcp-tools' ) ),
+						'post_id'        => array( 'type' => 'integer', 'description' => __( 'The post ID.', 'karmcp' ) ),
+						'taxonomy'       => array( 'type' => 'string', 'description' => __( 'Taxonomy name (e.g. category, post_tag).', 'karmcp' ) ),
+						'terms'          => array( 'type' => 'array', 'items' => array( 'type' => array( 'integer', 'string' ) ), 'description' => __( 'Term IDs or names.', 'karmcp' ) ),
+						'mode'           => array( 'type' => 'string', 'enum' => array( 'replace', 'append', 'remove' ), 'description' => __( 'Default: replace.', 'karmcp' ) ),
+						'create_missing' => array( 'type' => 'boolean', 'description' => __( 'Create term names that do not exist. Default: true.', 'karmcp' ) ),
 					),
 					'required'   => array( 'post_id', 'taxonomy', 'terms' ),
 				),
@@ -1070,11 +1070,11 @@ class EMCP_Tools_Content_Abilities {
 		$post_id  = absint( $input['post_id'] ?? 0 );
 		$taxonomy = sanitize_key( $input['taxonomy'] ?? '' );
 		if ( ! $post_id || '' === $taxonomy ) {
-			return new \WP_Error( 'missing_params', __( 'post_id and taxonomy are required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'post_id and taxonomy are required.', 'karmcp' ) );
 		}
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'karmcp' ) );
 		}
 		$mode  = $input['mode'] ?? 'replace';
 		$mode  = in_array( $mode, array( 'replace', 'append', 'remove' ), true ) ? $mode : 'replace';

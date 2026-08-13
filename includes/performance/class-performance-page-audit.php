@@ -6,7 +6,7 @@
  * struct into findings. No JS execution — this is HTML/header analysis, not
  * Core Web Vitals.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Performance_Page_Audit {
+class KarMCP_Performance_Page_Audit {
 
 	const FETCH_TIMEOUT     = 10;
 	const MAX_HTML_BYTES    = 2097152; // 2 MB cap for parsing.
@@ -49,7 +49,7 @@ class EMCP_Tools_Performance_Page_Audit {
 				array(
 					'timeout'     => $timeout,
 					'redirection' => 0,
-					'user-agent'  => 'EMCP-Performance-Analyzer/' . ( defined( 'EMCP_TOOLS_VERSION' ) ? EMCP_TOOLS_VERSION : '0' ),
+					'user-agent'  => 'KarMCP-Performance-Analyzer/' . ( defined( 'KARMCP_VERSION' ) ? KARMCP_VERSION : '0' ),
 				)
 			);
 
@@ -155,7 +155,7 @@ class EMCP_Tools_Performance_Page_Audit {
 
 		if ( empty( $fetched['ok'] ) ) {
 			$findings = array(
-				EMCP_Tools_Performance_Finding::make( 'page_fetch', 'page', 'Page fetch', 'warning', false, sprintf( 'Could not fetch the page: %s', (string) ( $fetched['error'] ?? 'unknown error' ) ), 'The loopback request failed (often a local firewall, DNS, or self-SSL issue). Server and database checks are still reported.' ),
+				KarMCP_Performance_Finding::make( 'page_fetch', 'page', 'Page fetch', 'warning', false, sprintf( 'Could not fetch the page: %s', (string) ( $fetched['error'] ?? 'unknown error' ) ), 'The loopback request failed (often a local firewall, DNS, or self-SSL issue). Server and database checks are still reported.' ),
 			);
 			return array( 'findings' => $findings, 'page_fetch' => $page_fetch );
 		}
@@ -170,30 +170,30 @@ class EMCP_Tools_Performance_Page_Audit {
 
 		// HTTP status.
 		$findings[] = ( 200 === $status )
-			? EMCP_Tools_Performance_Finding::make( 'http_status', 'page', 'HTTP status', 'pass', $status, 'Page returned HTTP 200.' )
-			: EMCP_Tools_Performance_Finding::make( 'http_status', 'page', 'HTTP status', 'warning', $status, sprintf( 'Page returned HTTP %d.', $status ), 'A non-200 status means the analyzed URL is redirecting or erroring; verify the target.' );
+			? KarMCP_Performance_Finding::make( 'http_status', 'page', 'HTTP status', 'pass', $status, 'Page returned HTTP 200.' )
+			: KarMCP_Performance_Finding::make( 'http_status', 'page', 'HTTP status', 'warning', $status, sprintf( 'Page returned HTTP %d.', $status ), 'A non-200 status means the analyzed URL is redirecting or erroring; verify the target.' );
 
 		// Response time.
 		$findings[] = ( $ms > self::RESPONSE_WARN_MS )
-			? EMCP_Tools_Performance_Finding::make( 'response_time', 'page', 'Server response time', 'warning', $ms, sprintf( 'Full HTML response took %d ms.', $ms ), 'Add page caching (a cache plugin or server cache) so HTML is served without a full PHP/DB render.' )
-			: EMCP_Tools_Performance_Finding::make( 'response_time', 'page', 'Server response time', 'pass', $ms, sprintf( 'Full HTML response took %d ms.', $ms ) );
+			? KarMCP_Performance_Finding::make( 'response_time', 'page', 'Server response time', 'warning', $ms, sprintf( 'Full HTML response took %d ms.', $ms ), 'Add page caching (a cache plugin or server cache) so HTML is served without a full PHP/DB render.' )
+			: KarMCP_Performance_Finding::make( 'response_time', 'page', 'Server response time', 'pass', $ms, sprintf( 'Full HTML response took %d ms.', $ms ) );
 
 		// HTML weight.
 		$findings[] = ( $bytes > self::HTML_WARN_BYTES )
-			? EMCP_Tools_Performance_Finding::make( 'html_size', 'page', 'HTML size', 'warning', $bytes, sprintf( 'The HTML document is %d KB.', (int) round( $bytes / 1024 ) ), 'Large HTML often means inlined data or huge page builders; trim markup and avoid inlining big payloads.' )
-			: EMCP_Tools_Performance_Finding::make( 'html_size', 'page', 'HTML size', 'pass', $bytes, sprintf( 'The HTML document is %d KB.', (int) round( $bytes / 1024 ) ) );
+			? KarMCP_Performance_Finding::make( 'html_size', 'page', 'HTML size', 'warning', $bytes, sprintf( 'The HTML document is %d KB.', (int) round( $bytes / 1024 ) ), 'Large HTML often means inlined data or huge page builders; trim markup and avoid inlining big payloads.' )
+			: KarMCP_Performance_Finding::make( 'html_size', 'page', 'HTML size', 'pass', $bytes, sprintf( 'The HTML document is %d KB.', (int) round( $bytes / 1024 ) ) );
 
 		// Compression.
 		$encoding   = strtolower( (string) ( $headers['content-encoding'] ?? '' ) );
 		$findings[] = ( false !== strpos( $encoding, 'gzip' ) || false !== strpos( $encoding, 'br' ) )
-			? EMCP_Tools_Performance_Finding::make( 'compression', 'page', 'Compression', 'pass', $encoding, sprintf( 'Response is compressed (%s).', $encoding ) )
-			: EMCP_Tools_Performance_Finding::make( 'compression', 'page', 'Compression', 'warning', $encoding ?: 'none', 'Response is not gzip/brotli compressed.', 'Enable gzip or brotli at the server (or via a cache plugin) to cut transfer size.' );
+			? KarMCP_Performance_Finding::make( 'compression', 'page', 'Compression', 'pass', $encoding, sprintf( 'Response is compressed (%s).', $encoding ) )
+			: KarMCP_Performance_Finding::make( 'compression', 'page', 'Compression', 'warning', $encoding ?: 'none', 'Response is not gzip/brotli compressed.', 'Enable gzip or brotli at the server (or via a cache plugin) to cut transfer size.' );
 
 		// Cache headers.
 		$has_cache  = ! empty( $headers['cache-control'] ) || ! empty( $headers['expires'] ) || ! empty( $headers['x-cache'] );
 		$findings[] = $has_cache
-			? EMCP_Tools_Performance_Finding::make( 'cache_headers', 'page', 'Cache headers', 'pass', true, 'The page sends caching headers.' )
-			: EMCP_Tools_Performance_Finding::make( 'cache_headers', 'page', 'Cache headers', 'warning', false, 'No Cache-Control / Expires headers on the HTML.', 'A page cache that emits Cache-Control lets browsers and CDNs reuse the response.' );
+			? KarMCP_Performance_Finding::make( 'cache_headers', 'page', 'Cache headers', 'pass', true, 'The page sends caching headers.' )
+			: KarMCP_Performance_Finding::make( 'cache_headers', 'page', 'Cache headers', 'warning', false, 'No Cache-Control / Expires headers on the HTML.', 'A page cache that emits Cache-Control lets browsers and CDNs reuse the response.' );
 
 		// Asset / DOM analysis.
 		$dom = $this->parse_dom( $body );
@@ -267,19 +267,19 @@ class EMCP_Tools_Performance_Page_Audit {
 
 		$findings   = array();
 		$findings[] = ( $render_blocking > self::RENDER_BLOCK_WARN )
-			? EMCP_Tools_Performance_Finding::make( 'render_blocking', 'assets', 'Render-blocking resources', 'warning', $render_blocking, sprintf( '%d render-blocking resources in <head> (%d CSS, %d sync JS).', $render_blocking, $head_css, $sync_head ), 'Defer non-critical JS (async/defer) and combine or inline critical CSS to unblock first paint.' )
-			: EMCP_Tools_Performance_Finding::make( 'render_blocking', 'assets', 'Render-blocking resources', 'info', $render_blocking, sprintf( '%d render-blocking resources in <head> (%d CSS, %d sync JS).', $render_blocking, $head_css, $sync_head ) );
+			? KarMCP_Performance_Finding::make( 'render_blocking', 'assets', 'Render-blocking resources', 'warning', $render_blocking, sprintf( '%d render-blocking resources in <head> (%d CSS, %d sync JS).', $render_blocking, $head_css, $sync_head ), 'Defer non-critical JS (async/defer) and combine or inline critical CSS to unblock first paint.' )
+			: KarMCP_Performance_Finding::make( 'render_blocking', 'assets', 'Render-blocking resources', 'info', $render_blocking, sprintf( '%d render-blocking resources in <head> (%d CSS, %d sync JS).', $render_blocking, $head_css, $sync_head ) );
 
-		$findings[] = EMCP_Tools_Performance_Finding::make( 'asset_counts', 'assets', 'Asset counts', 'info', array( 'css' => $css_total, 'js' => $js_total, 'images' => $img_total ), sprintf( '%d CSS, %d JS, %d images referenced.', $css_total, $js_total, $img_total ) );
+		$findings[] = KarMCP_Performance_Finding::make( 'asset_counts', 'assets', 'Asset counts', 'info', array( 'css' => $css_total, 'js' => $js_total, 'images' => $img_total ), sprintf( '%d CSS, %d JS, %d images referenced.', $css_total, $js_total, $img_total ) );
 
 		$findings[] = ( $not_lazy > 0 )
-			? EMCP_Tools_Performance_Finding::make( 'image_lazy_loading', 'assets', 'Image lazy-loading', 'info', $not_lazy, sprintf( '%d of %d images lack loading="lazy".', $not_lazy, $img_total ), 'Add loading="lazy" to below-the-fold images to defer offscreen downloads.' )
-			: EMCP_Tools_Performance_Finding::make( 'image_lazy_loading', 'assets', 'Image lazy-loading', 'pass', 0, 'All images use lazy-loading (or there are none).' );
+			? KarMCP_Performance_Finding::make( 'image_lazy_loading', 'assets', 'Image lazy-loading', 'info', $not_lazy, sprintf( '%d of %d images lack loading="lazy".', $not_lazy, $img_total ), 'Add loading="lazy" to below-the-fold images to defer offscreen downloads.' )
+			: KarMCP_Performance_Finding::make( 'image_lazy_loading', 'assets', 'Image lazy-loading', 'pass', 0, 'All images use lazy-loading (or there are none).' );
 
 		$tp         = array_keys( $third_parties );
 		$findings[] = ( count( $tp ) > 0 )
-			? EMCP_Tools_Performance_Finding::make( 'third_party', 'assets', 'Third-party domains', 'info', $tp, sprintf( '%d third-party domain(s) referenced.', count( $tp ) ), 'Each extra domain adds DNS + connection cost; self-host fonts/scripts where practical.' )
-			: EMCP_Tools_Performance_Finding::make( 'third_party', 'assets', 'Third-party domains', 'pass', array(), 'No third-party asset domains referenced.' );
+			? KarMCP_Performance_Finding::make( 'third_party', 'assets', 'Third-party domains', 'info', $tp, sprintf( '%d third-party domain(s) referenced.', count( $tp ) ), 'Each extra domain adds DNS + connection cost; self-host fonts/scripts where practical.' )
+			: KarMCP_Performance_Finding::make( 'third_party', 'assets', 'Third-party domains', 'pass', array(), 'No third-party asset domains referenced.' );
 
 		return $findings;
 	}

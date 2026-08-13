@@ -7,7 +7,7 @@
  * returned value is the highest specificity among the matched include rules (used
  * by the resolver to pick the most specific winner), or null when it does not apply.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -18,17 +18,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Conditions {
+class KarMCP_Themer_Conditions {
 
 	/**
 	 * Evaluate a condition set against a request context.
 	 *
 	 * @param array                              $conditions { include: Rule[], exclude: Rule[] }.
 	 * @param array                              $ctx        Request context.
-	 * @param EMCP_Tools_Themer_Matcher_Registry $registry   Matcher registry.
+	 * @param KarMCP_Themer_Matcher_Registry $registry   Matcher registry.
 	 * @return int|null Highest matched-include specificity, or null if it does not apply.
 	 */
-	public static function evaluate( array $conditions, array $ctx, EMCP_Tools_Themer_Matcher_Registry $registry ): ?int {
+	public static function evaluate( array $conditions, array $ctx, KarMCP_Themer_Matcher_Registry $registry ): ?int {
 		$include = isset( $conditions['include'] ) && is_array( $conditions['include'] ) ? $conditions['include'] : array();
 		$exclude = isset( $conditions['exclude'] ) && is_array( $conditions['exclude'] ) ? $conditions['exclude'] : array();
 

@@ -7,7 +7,7 @@
  * via the right mechanism (re-save prior Elementor data, restore/delete a file
  * backup, or inverse a $wpdb write from a before-image).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -20,9 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Change_Log {
+class KarMCP_Change_Log {
 
-	const OPTION    = 'emcp_tools_changelog';
+	const OPTION    = 'karmcp_changelog';
 	const MAX_COUNT = 500;     // Rows are light now (before-images live out-of-band).
 	const MAX_BYTES = 2097152; // ~2 MB safety ceiling for the light rows.
 
@@ -180,13 +180,13 @@ class EMCP_Tools_Change_Log {
 	 * @param array $rows Ledger rows being removed.
 	 */
 	private static function forget_blobs( array $rows ): void {
-		if ( ! class_exists( 'EMCP_Tools_Change_Blobs' ) ) {
+		if ( ! class_exists( 'KarMCP_Change_Blobs' ) ) {
 			return;
 		}
 		foreach ( $rows as $r ) {
 			$bid = ( isset( $r['rollback']['blob_id'] ) ) ? (string) $r['rollback']['blob_id'] : '';
 			if ( '' !== $bid ) {
-				EMCP_Tools_Change_Blobs::delete( $bid );
+				KarMCP_Change_Blobs::delete( $bid );
 			}
 		}
 	}
@@ -202,14 +202,14 @@ class EMCP_Tools_Change_Log {
 	public static function rollback( string $id, bool $force = false ) {
 		$entry = self::get( $id );
 		if ( null === $entry ) {
-			return new WP_Error( 'not_found', __( 'Change not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Change not found.', 'karmcp' ) );
 		}
 		if ( ! empty( $entry['rolled_back'] ) ) {
-			return new WP_Error( 'already_rolled_back', __( 'This change has already been rolled back.', 'emcp-tools' ) );
+			return new WP_Error( 'already_rolled_back', __( 'This change has already been rolled back.', 'karmcp' ) );
 		}
 		$rb = ( isset( $entry['rollback'] ) && is_array( $entry['rollback'] ) ) ? $entry['rollback'] : null;
 		if ( null === $rb ) {
-			return new WP_Error( 'not_reversible', __( 'This change is not reversible.', 'emcp-tools' ) );
+			return new WP_Error( 'not_reversible', __( 'This change is not reversible.', 'karmcp' ) );
 		}
 
 		// Conflict guard: refuse if the target changed after we recorded it,
@@ -249,7 +249,7 @@ class EMCP_Tools_Change_Log {
 		// reversible — flag it so the caller knows the restore is incomplete.
 		if ( ! empty( $rb['partial'] ) ) {
 			$out['partial']  = true;
-			$out['warning']  = __( 'Only part of this change was reversible: the before-image was capped, so some rows were not restored.', 'emcp-tools' );
+			$out['warning']  = __( 'Only part of this change was reversible: the before-image was capped, so some rows were not restored.', 'karmcp' );
 		}
 		return $out;
 	}
@@ -265,7 +265,7 @@ class EMCP_Tools_Change_Log {
 	 */
 	private static function detect_conflict( array $rb ) {
 		$expected = isset( $rb['after_hash'] ) ? (string) $rb['after_hash'] : '';
-		if ( '' === $expected || ! class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
+		if ( '' === $expected || ! class_exists( 'KarMCP_Change_Recorder' ) ) {
 			return true;
 		}
 		$current = self::current_hash( $rb );
@@ -273,7 +273,7 @@ class EMCP_Tools_Change_Log {
 			return true; // Cannot recompute — do not block.
 		}
 		if ( ! hash_equals( $expected, $current ) ) {
-			return new WP_Error( 'conflict', __( 'This target has changed since the recorded change. Roll back anyway with force to overwrite the newer state.', 'emcp-tools' ) );
+			return new WP_Error( 'conflict', __( 'This target has changed since the recorded change. Roll back anyway with force to overwrite the newer state.', 'karmcp' ) );
 		}
 		return true;
 	}
@@ -287,19 +287,19 @@ class EMCP_Tools_Change_Log {
 	private static function current_hash( array $rb ): string {
 		switch ( $rb['type'] ?? '' ) {
 			case 'elementor-data':
-				return EMCP_Tools_Change_Recorder::hash_elementor( (int) ( $rb['post_id'] ?? 0 ) );
+				return KarMCP_Change_Recorder::hash_elementor( (int) ( $rb['post_id'] ?? 0 ) );
 			case 'file-backup':
 			case 'file-create':
-				return EMCP_Tools_Change_Recorder::hash_file( (string) ( $rb['target_path'] ?? '' ) );
+				return KarMCP_Change_Recorder::hash_file( (string) ( $rb['target_path'] ?? '' ) );
 			case 'option':
 				if ( isset( $rb['option_keys'] ) && is_array( $rb['option_keys'] ) ) {
-					return EMCP_Tools_Change_Recorder::hash_options( $rb['option_keys'] );
+					return KarMCP_Change_Recorder::hash_options( $rb['option_keys'] );
 				}
-				return EMCP_Tools_Change_Recorder::hash_option( (string) ( $rb['option'] ?? '' ) );
+				return KarMCP_Change_Recorder::hash_option( (string) ( $rb['option'] ?? '' ) );
 			case 'post-fields':
-				return EMCP_Tools_Change_Recorder::hash_post( (int) ( $rb['post_id'] ?? 0 ) );
+				return KarMCP_Change_Recorder::hash_post( (int) ( $rb['post_id'] ?? 0 ) );
 			case 'meta-before-image':
-				return EMCP_Tools_Change_Recorder::hash_meta( (string) ( $rb['object'] ?? 'post' ), (int) ( $rb['id'] ?? 0 ), (array) ( $rb['meta_keys'] ?? array() ) );
+				return KarMCP_Change_Recorder::hash_meta( (string) ( $rb['object'] ?? 'post' ), (int) ( $rb['id'] ?? 0 ), (array) ( $rb['meta_keys'] ?? array() ) );
 			default:
 				return '';
 		}
@@ -314,10 +314,10 @@ class EMCP_Tools_Change_Log {
 	private static function apply_rollback( array $rb ) {
 		// Resolve an out-of-band before-image (large snapshots live in the blob
 		// store; the row carries only a blob_id pointer).
-		if ( ! empty( $rb['blob_id'] ) && class_exists( 'EMCP_Tools_Change_Blobs' ) ) {
-			$heavy = EMCP_Tools_Change_Blobs::get( (string) $rb['blob_id'] );
+		if ( ! empty( $rb['blob_id'] ) && class_exists( 'KarMCP_Change_Blobs' ) ) {
+			$heavy = KarMCP_Change_Blobs::get( (string) $rb['blob_id'] );
 			if ( ! is_array( $heavy ) ) {
-				return new WP_Error( 'blob_missing', __( 'The saved snapshot for this change is no longer available.', 'emcp-tools' ) );
+				return new WP_Error( 'blob_missing', __( 'The saved snapshot for this change is no longer available.', 'karmcp' ) );
 			}
 			$rb = array_merge( $rb, $heavy );
 		}
@@ -349,12 +349,12 @@ class EMCP_Tools_Change_Log {
 			case 'acf-fields':
 				return self::rollback_acf_fields( $rb );
 			case 'redirect-row':
-				if ( class_exists( 'EMCP_Tools_Redirect_Store' ) && EMCP_Tools_Redirect_Store::rollback( $rb ) ) {
+				if ( class_exists( 'KarMCP_Redirect_Store' ) && KarMCP_Redirect_Store::rollback( $rb ) ) {
 					return true;
 				}
-				return new WP_Error( 'rollback_failed', __( 'Could not reverse the redirect change.', 'emcp-tools' ) );
+				return new WP_Error( 'rollback_failed', __( 'Could not reverse the redirect change.', 'karmcp' ) );
 			default:
-				return new WP_Error( 'unknown_rollback', __( 'Unknown rollback type.', 'emcp-tools' ) );
+				return new WP_Error( 'unknown_rollback', __( 'Unknown rollback type.', 'karmcp' ) );
 		}
 	}
 
@@ -367,10 +367,10 @@ class EMCP_Tools_Change_Log {
 	private static function rollback_elementor( array $rb ) {
 		$post_id = (int) ( $rb['post_id'] ?? 0 );
 		$before  = ( isset( $rb['before'] ) && is_array( $rb['before'] ) ) ? $rb['before'] : array();
-		if ( $post_id <= 0 || ! class_exists( 'EMCP_Tools_Data' ) ) {
-			return new WP_Error( 'rollback_failed', __( 'Cannot restore this page.', 'emcp-tools' ) );
+		if ( $post_id <= 0 || ! class_exists( 'KarMCP_Data' ) ) {
+			return new WP_Error( 'rollback_failed', __( 'Cannot restore this page.', 'karmcp' ) );
 		}
-		$data = new EMCP_Tools_Data();
+		$data = new KarMCP_Data();
 		$res  = $data->save_page_data( $post_id, $before );
 		return is_wp_error( $res ) ? $res : true;
 	}
@@ -385,13 +385,13 @@ class EMCP_Tools_Change_Log {
 		$target = (string) ( $rb['target_path'] ?? '' );
 		$backup = (string) ( $rb['backup_path'] ?? '' );
 		if ( '' === $target || '' === $backup || ! is_file( $backup ) ) {
-			return new WP_Error( 'rollback_failed', __( 'Backup is unavailable.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'Backup is unavailable.', 'karmcp' ) );
 		}
 		$safe = self::guard_target( $target );
 		if ( is_wp_error( $safe ) ) {
 			return $safe;
 		}
-		return copy( $backup, $safe ) ? true : new WP_Error( 'rollback_failed', __( 'Could not restore the file.', 'emcp-tools' ) );
+		return copy( $backup, $safe ) ? true : new WP_Error( 'rollback_failed', __( 'Could not restore the file.', 'karmcp' ) );
 	}
 
 	/**
@@ -409,7 +409,7 @@ class EMCP_Tools_Change_Log {
 		if ( is_wp_error( $safe ) ) {
 			return $safe;
 		}
-		return @unlink( $safe ) ? true : new WP_Error( 'rollback_failed', __( 'Could not delete the created file.', 'emcp-tools' ) );
+		return @unlink( $safe ) ? true : new WP_Error( 'rollback_failed', __( 'Could not delete the created file.', 'karmcp' ) );
 	}
 
 	/**
@@ -423,7 +423,7 @@ class EMCP_Tools_Change_Log {
 		$table = (string) ( $rb['table'] ?? '' );
 		$op    = (string) ( $rb['op'] ?? '' );
 		if ( '' === $table ) {
-			return new WP_Error( 'rollback_failed', __( 'Missing table.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'Missing table.', 'karmcp' ) );
 		}
 		$keys = (array) ( $rb['key_cols'] ?? array() );
 		switch ( $op ) {
@@ -431,7 +431,7 @@ class EMCP_Tools_Change_Log {
 				// A row update MUST be scoped by key columns. Without them we would
 				// run an unscoped $wpdb->update touching every row — refuse instead.
 				if ( empty( $keys ) ) {
-					return new WP_Error( 'rollback_failed', __( 'Cannot roll back this update: no key columns were recorded to scope it safely.', 'emcp-tools' ) );
+					return new WP_Error( 'rollback_failed', __( 'Cannot roll back this update: no key columns were recorded to scope it safely.', 'karmcp' ) );
 				}
 				foreach ( (array) ( $rb['before_rows'] ?? array() ) as $row ) {
 					$where = array();
@@ -455,7 +455,7 @@ class EMCP_Tools_Change_Log {
 				$wpdb->delete( $table, (array) ( $rb['inserted_key'] ?? array() ) );
 				return true;
 			default:
-				return new WP_Error( 'rollback_failed', __( 'Unknown DB operation.', 'emcp-tools' ) );
+				return new WP_Error( 'rollback_failed', __( 'Unknown DB operation.', 'karmcp' ) );
 		}
 	}
 
@@ -470,7 +470,7 @@ class EMCP_Tools_Change_Log {
 		$snap = ( isset( $rb['snapshot'] ) && is_array( $rb['snapshot'] ) ) ? $rb['snapshot'] : array();
 		$post = ( isset( $snap['post'] ) && is_array( $snap['post'] ) ) ? $snap['post'] : array();
 		if ( empty( $post ) ) {
-			return new WP_Error( 'rollback_failed', __( 'No attachment snapshot to restore.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'No attachment snapshot to restore.', 'karmcp' ) );
 		}
 		$old_id = (int) ( $post['ID'] ?? 0 );
 		unset( $post['ID'] );
@@ -511,16 +511,16 @@ class EMCP_Tools_Change_Log {
 	private static function rollback_user_create( array $rb ) {
 		$user_id = (int) ( $rb['user_id'] ?? 0 );
 		if ( $user_id <= 0 ) {
-			return new WP_Error( 'rollback_failed', __( 'Missing user id.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'Missing user id.', 'karmcp' ) );
 		}
 		if ( function_exists( 'get_userdata' ) && ! get_userdata( $user_id ) ) {
 			return true; // Already gone.
 		}
 		if ( function_exists( 'user_can' ) && user_can( $user_id, 'manage_options' ) ) {
-			return new WP_Error( 'rollback_refused', __( 'This user now has administrator capabilities and will not be deleted by a rollback.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_refused', __( 'This user now has administrator capabilities and will not be deleted by a rollback.', 'karmcp' ) );
 		}
 		if ( ! function_exists( 'wp_delete_user' ) ) {
-			return new WP_Error( 'rollback_failed', __( 'User deletion is unavailable.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'User deletion is unavailable.', 'karmcp' ) );
 		}
 		wp_delete_user( $user_id );
 		return true;
@@ -536,7 +536,7 @@ class EMCP_Tools_Change_Log {
 		$user_id = (int) ( $rb['user_id'] ?? 0 );
 		$before  = ( isset( $rb['before'] ) && is_array( $rb['before'] ) ) ? $rb['before'] : array();
 		if ( $user_id <= 0 || empty( $before ) || ! function_exists( 'wp_update_user' ) ) {
-			return new WP_Error( 'rollback_failed', __( 'Cannot restore this user.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'Cannot restore this user.', 'karmcp' ) );
 		}
 		$res = wp_update_user( array_merge( array( 'ID' => $user_id ), $before ) );
 		return is_wp_error( $res ) ? $res : true;
@@ -551,12 +551,12 @@ class EMCP_Tools_Change_Log {
 	 */
 	private static function rollback_acf_fields( array $rb ) {
 		if ( ! function_exists( 'update_field' ) ) {
-			return new WP_Error( 'rollback_failed', __( 'ACF is not available to restore these fields.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'ACF is not available to restore these fields.', 'karmcp' ) );
 		}
 		$target = $rb['acf_target'] ?? 0;
 		$before = ( isset( $rb['before'] ) && is_array( $rb['before'] ) ) ? $rb['before'] : array();
 		if ( empty( $before ) ) {
-			return new WP_Error( 'rollback_failed', __( 'No ACF values to restore.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'No ACF values to restore.', 'karmcp' ) );
 		}
 		foreach ( $before as $key => $value ) {
 			update_field( (string) $key, $value, $target );
@@ -574,7 +574,7 @@ class EMCP_Tools_Change_Log {
 	private static function rollback_option( array $rb ) {
 		$values = ( isset( $rb['values'] ) && is_array( $rb['values'] ) ) ? $rb['values'] : array();
 		if ( empty( $values ) ) {
-			return new WP_Error( 'rollback_failed', __( 'No option values to restore.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'No option values to restore.', 'karmcp' ) );
 		}
 		foreach ( $values as $name => $value ) {
 			$name = (string) $name;
@@ -601,7 +601,7 @@ class EMCP_Tools_Change_Log {
 		$id     = (int) ( $rb['id'] ?? 0 );
 		$before = ( isset( $rb['before'] ) && is_array( $rb['before'] ) ) ? $rb['before'] : array();
 		if ( $id <= 0 ) {
-			return new WP_Error( 'rollback_failed', __( 'Missing object id.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'Missing object id.', 'karmcp' ) );
 		}
 		foreach ( $before as $key => $value ) {
 			$key   = (string) $key;
@@ -625,7 +625,7 @@ class EMCP_Tools_Change_Log {
 		$post_id = (int) ( $rb['post_id'] ?? 0 );
 		$before  = ( isset( $rb['before'] ) && is_array( $rb['before'] ) ) ? $rb['before'] : array();
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return new WP_Error( 'rollback_failed', __( 'The post no longer exists.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'The post no longer exists.', 'karmcp' ) );
 		}
 		$fields = ( isset( $before['fields'] ) && is_array( $before['fields'] ) ) ? $before['fields'] : array();
 		if ( ! empty( $fields ) ) {
@@ -655,7 +655,7 @@ class EMCP_Tools_Change_Log {
 	private static function rollback_post_create( array $rb ) {
 		$post_id = (int) ( $rb['post_id'] ?? 0 );
 		if ( $post_id <= 0 ) {
-			return new WP_Error( 'rollback_failed', __( 'Missing post id.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'Missing post id.', 'karmcp' ) );
 		}
 		if ( ! get_post( $post_id ) ) {
 			return true; // Already gone.
@@ -675,7 +675,7 @@ class EMCP_Tools_Change_Log {
 		if ( 'untrash' === ( $rb['mode'] ?? '' ) ) {
 			$post_id = (int) ( $rb['post_id'] ?? 0 );
 			if ( $post_id <= 0 ) {
-				return new WP_Error( 'rollback_failed', __( 'Missing post id.', 'emcp-tools' ) );
+				return new WP_Error( 'rollback_failed', __( 'Missing post id.', 'karmcp' ) );
 			}
 			wp_untrash_post( $post_id );
 			return true;
@@ -683,7 +683,7 @@ class EMCP_Tools_Change_Log {
 		$snap = ( isset( $rb['snapshot'] ) && is_array( $rb['snapshot'] ) ) ? $rb['snapshot'] : array();
 		$post = ( isset( $snap['post'] ) && is_array( $snap['post'] ) ) ? $snap['post'] : array();
 		if ( empty( $post ) ) {
-			return new WP_Error( 'rollback_failed', __( 'No snapshot to restore.', 'emcp-tools' ) );
+			return new WP_Error( 'rollback_failed', __( 'No snapshot to restore.', 'karmcp' ) );
 		}
 		$old_id = (int) ( $post['ID'] ?? 0 );
 		unset( $post['ID'] );
@@ -713,8 +713,8 @@ class EMCP_Tools_Change_Log {
 	 * @return string|WP_Error Canonical path or error.
 	 */
 	private static function guard_target( string $target ) {
-		if ( class_exists( 'EMCP_Tools_Filesystem_Guard' ) ) {
-			return EMCP_Tools_Filesystem_Guard::resolve_path( $target );
+		if ( class_exists( 'KarMCP_Filesystem_Guard' ) ) {
+			return KarMCP_Filesystem_Guard::resolve_path( $target );
 		}
 		return $target;
 	}

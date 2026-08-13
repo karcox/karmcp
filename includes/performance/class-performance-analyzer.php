@@ -5,7 +5,7 @@
  * Resolves the target page, runs the server audit and (optionally) the page
  * audit, and scores the merged findings. Read-only.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -16,21 +16,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Performance_Analyzer {
+class KarMCP_Performance_Analyzer {
 
 	const CRITICAL_WEIGHT = 15;
 	const WARNING_WEIGHT  = 4;
 	const TOP_RECS        = 8;
 
-	/** @var EMCP_Tools_Performance_Server_Audit */
+	/** @var KarMCP_Performance_Server_Audit */
 	private $server;
 
-	/** @var EMCP_Tools_Performance_Page_Audit */
+	/** @var KarMCP_Performance_Page_Audit */
 	private $page;
 
-	public function __construct( ?EMCP_Tools_Performance_Server_Audit $server = null, ?EMCP_Tools_Performance_Page_Audit $page = null ) {
-		$this->server = $server ?: new EMCP_Tools_Performance_Server_Audit();
-		$this->page   = $page ?: new EMCP_Tools_Performance_Page_Audit();
+	public function __construct( ?KarMCP_Performance_Server_Audit $server = null, ?KarMCP_Performance_Page_Audit $page = null ) {
+		$this->server = $server ?: new KarMCP_Performance_Server_Audit();
+		$this->page   = $page ?: new KarMCP_Performance_Page_Audit();
 	}
 
 	/**
@@ -82,7 +82,7 @@ class EMCP_Tools_Performance_Analyzer {
 		if ( ! empty( $input['url'] ) ) {
 			$url = esc_url_raw( (string) $input['url'] );
 			if ( '' === $url || ! $this->validate_same_host( $url, $site_host ) ) {
-				return new \WP_Error( 'invalid_target', __( 'The url must be a page on this site.', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_target', __( 'The url must be a page on this site.', 'karmcp' ) );
 			}
 			return array( 'resolved_url' => $url, 'post_id' => null, 'is_front_page' => false );
 		}
@@ -91,7 +91,7 @@ class EMCP_Tools_Performance_Analyzer {
 			$post_id = (int) $input['post_id'];
 			$link    = get_permalink( $post_id );
 			if ( ! $link ) {
-				return new \WP_Error( 'invalid_target', __( 'No published page found for that post_id.', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_target', __( 'No published page found for that post_id.', 'karmcp' ) );
 			}
 			return array( 'resolved_url' => $link, 'post_id' => $post_id, 'is_front_page' => false );
 		}

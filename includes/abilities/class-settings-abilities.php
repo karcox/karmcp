@@ -10,10 +10,10 @@
  * users_can_register/default_role (registration escalation) are absent;
  * admin_email is read-only. Both tools require manage_options.
  *
- * Naming: distinct from EMCP_Tools_Settings_Validator (which validates Elementor
+ * Naming: distinct from KarMCP_Settings_Validator (which validates Elementor
  * widget settings) — unrelated class, no collision.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_Settings_Abilities {
+class KarMCP_Settings_Abilities {
 
 	/**
 	 * Names of the abilities actually registered by register().
@@ -142,20 +142,20 @@ class EMCP_Tools_Settings_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_get_settings(): void {
-		$this->ability_names[] = 'emcp-tools/get-settings';
-		emcp_tools_register_ability(
-			'emcp-tools/get-settings',
+		$this->ability_names[] = 'karmcp/get-settings';
+		karmcp_register_ability(
+			'karmcp/get-settings',
 			array(
-				'label'               => __( 'Get Settings', 'emcp-tools' ),
-				'description'         => __( 'Reads curated WordPress site settings (General, Reading, Writing, Discussion, Media, Permalinks). With no args returns every allowlisted setting; pass "group" to filter to one screen or "keys" for specific settings. Each row carries the value plus metadata (type, label, writable, enum options) so this doubles as discovery for update-settings.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Settings', 'karmcp' ),
+				'description'         => __( 'Reads curated WordPress site settings (General, Reading, Writing, Discussion, Media, Permalinks). With no args returns every allowlisted setting; pass "group" to filter to one screen or "keys" for specific settings. Each row carries the value plus metadata (type, label, writable, enum options) so this doubles as discovery for update-settings.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_settings' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'group' => array( 'type' => 'string', 'enum' => self::groups(), 'description' => __( 'Filter to one Settings screen.', 'emcp-tools' ) ),
-						'keys'  => array( 'type' => 'array', 'items' => array( 'type' => 'string' ), 'description' => __( 'Return only these allowlisted keys.', 'emcp-tools' ) ),
+						'group' => array( 'type' => 'string', 'enum' => self::groups(), 'description' => __( 'Filter to one Settings screen.', 'karmcp' ) ),
+						'keys'  => array( 'type' => 'array', 'items' => array( 'type' => 'string' ), 'description' => __( 'Return only these allowlisted keys.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array(
@@ -243,7 +243,7 @@ class EMCP_Tools_Settings_Abilities {
 	public function execute_update_settings( $input ) {
 		$settings = ( isset( $input['settings'] ) && is_array( $input['settings'] ) ) ? $input['settings'] : array();
 		if ( empty( $settings ) ) {
-			return new \WP_Error( 'missing_params', __( 'A non-empty "settings" map is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A non-empty "settings" map is required.', 'karmcp' ) );
 		}
 
 		$map              = self::allowlist();
@@ -269,8 +269,8 @@ class EMCP_Tools_Settings_Abilities {
 				continue;
 			}
 			$stored = $coerced['store'];
-			$prior  = get_option( $key, '__EMCP_ABSENT__' );
-			$before_map[ $key ] = ( '__EMCP_ABSENT__' === $prior ) ? '__ABSENT__' : $prior;
+			$prior  = get_option( $key, '__KARMCP_ABSENT__' );
+			$before_map[ $key ] = ( '__KARMCP_ABSENT__' === $prior ) ? '__ABSENT__' : $prior;
 			update_option( $key, $stored );
 			$updated[ $key ] = $coerced['report'];
 			if ( $this->is_permalink_key( $key ) ) {
@@ -278,8 +278,8 @@ class EMCP_Tools_Settings_Abilities {
 			}
 		}
 
-		if ( ! empty( $updated ) && class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			EMCP_Tools_Change_Recorder::record_options(
+		if ( ! empty( $updated ) && class_exists( 'KarMCP_Change_Recorder' ) ) {
+			KarMCP_Change_Recorder::record_options(
 				$before_map,
 				sprintf( 'Updated %d site setting(s)', count( $updated ) ),
 				implode( ', ', array_keys( $updated ) )
@@ -356,19 +356,19 @@ class EMCP_Tools_Settings_Abilities {
 	// ---------------------------------------------------------------------
 
 	private function register_update_settings(): void {
-		$this->ability_names[] = 'emcp-tools/update-settings';
-		emcp_tools_register_ability(
-			'emcp-tools/update-settings',
+		$this->ability_names[] = 'karmcp/update-settings';
+		karmcp_register_ability(
+			'karmcp/update-settings',
 			array(
-				'label'               => __( 'Update Settings', 'emcp-tools' ),
-				'description'         => __( 'Updates curated WordPress site settings from a map of key → value. Only allowlisted, writable keys are changed; non-allowlisted, read-only (admin_email), or invalid values are returned in "skipped" with a reason, one bad key never aborts the batch. Changing a permalink setting (permalink_structure, category_base, tag_base) flushes rewrite rules automatically.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Settings', 'karmcp' ),
+				'description'         => __( 'Updates curated WordPress site settings from a map of key → value. Only allowlisted, writable keys are changed; non-allowlisted, read-only (admin_email), or invalid values are returned in "skipped" with a reason, one bad key never aborts the batch. Changing a permalink setting (permalink_structure, category_base, tag_base) flushes rewrite rules automatically.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_settings' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'settings' => array( 'type' => 'object', 'description' => __( 'Map of allowlisted setting key → new value.', 'emcp-tools' ) ),
+						'settings' => array( 'type' => 'object', 'description' => __( 'Map of allowlisted setting key → new value.', 'karmcp' ) ),
 					),
 					'required'   => array( 'settings' ),
 				),

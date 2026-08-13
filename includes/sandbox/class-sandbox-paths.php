@@ -1,10 +1,10 @@
 <?php
 /**
- * Central storage location for every EMCP sandbox artifact — PHP snippets,
+ * Central storage location for every KarMCP sandbox artifact — PHP snippets,
  * generated widgets, custom blocks, and PHP theme templates.
  *
- * Historically these were scattered inside `wp-content/uploads/emcp-widgets/`.
- * They now live in a single dedicated `wp-content/emcp-sandbox/` directory
+ * Historically these were scattered inside `wp-content/uploads/karmcp-widgets/`.
+ * They now live in a single dedicated `wp-content/karmcp-sandbox/` directory
  * (subdirs: snippets/ widgets/ blocks/ theme-php/). Every store resolves its
  * paths through this one class so the location is defined in a single place.
  *
@@ -12,20 +12,20 @@
  * each file against the current base — so the directory can be relocated
  * without rebuilding a single manifest (every hash still matches).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Sandbox_Paths {
+class KarMCP_Sandbox_Paths {
 	/** Default folder name, directly under wp-content. */
-	const DEFAULT_FOLDER = 'emcp-sandbox';
+	const DEFAULT_FOLDER = 'karmcp-sandbox';
 	/** Previous location: this folder under the uploads basedir. */
-	const LEGACY_FOLDER = 'emcp-widgets';
+	const LEGACY_FOLDER = 'karmcp-widgets';
 	/** Option flag recording that the one-time relocation has run. */
-	const MIGRATED_OPTION = 'emcp_tools_sandbox_location';
+	const MIGRATED_OPTION = 'karmcp_sandbox_location';
 
 	/**
 	 * Folder name under wp-content. Filterable, sanitized to a single safe path
@@ -34,13 +34,13 @@ class EMCP_Tools_Sandbox_Paths {
 	 * @return string
 	 */
 	public static function folder(): string {
-		$f = (string) apply_filters( 'emcp_tools_sandbox_folder', self::DEFAULT_FOLDER );
+		$f = (string) apply_filters( 'karmcp_sandbox_folder', self::DEFAULT_FOLDER );
 		$f = (string) preg_replace( '/[^A-Za-z0-9\-_]/', '', $f );
 		return '' !== $f ? $f : self::DEFAULT_FOLDER;
 	}
 
 	/**
-	 * Absolute base directory, e.g. `/…/wp-content/emcp-sandbox` (no trailing slash).
+	 * Absolute base directory, e.g. `/…/wp-content/karmcp-sandbox` (no trailing slash).
 	 *
 	 * @return string
 	 */
@@ -48,32 +48,32 @@ class EMCP_Tools_Sandbox_Paths {
 		$dir = rtrim( WP_CONTENT_DIR, '/\\' ) . '/' . self::folder();
 		/**
 		 * Filter the absolute sandbox base directory. Pair with
-		 * `emcp_tools_sandbox_url` to keep the served URL consistent when
+		 * `karmcp_sandbox_url` to keep the served URL consistent when
 		 * relocating outside wp-content.
 		 *
 		 * @param string $dir Absolute directory path (no trailing slash).
 		 */
-		return rtrim( (string) apply_filters( 'emcp_tools_sandbox_dir', $dir ), '/\\' );
+		return rtrim( (string) apply_filters( 'karmcp_sandbox_dir', $dir ), '/\\' );
 	}
 
 	/**
-	 * Public base URL, e.g. `https://site/wp-content/emcp-sandbox` (no trailing slash).
+	 * Public base URL, e.g. `https://site/wp-content/karmcp-sandbox` (no trailing slash).
 	 *
 	 * @return string
 	 */
 	public static function base_url(): string {
 		$url = rtrim( content_url( self::folder() ), '/' );
 		/**
-		 * Filter the public sandbox base URL. Pair with `emcp_tools_sandbox_dir`
+		 * Filter the public sandbox base URL. Pair with `karmcp_sandbox_dir`
 		 * so a relocated directory is still served from the right URL.
 		 *
 		 * @param string $url Base URL (no trailing slash).
 		 */
-		return rtrim( (string) apply_filters( 'emcp_tools_sandbox_url', $url ), '/' );
+		return rtrim( (string) apply_filters( 'karmcp_sandbox_url', $url ), '/' );
 	}
 
 	/**
-	 * ABSPATH-relative base path, e.g. `wp-content/emcp-sandbox` — used by the
+	 * ABSPATH-relative base path, e.g. `wp-content/karmcp-sandbox` — used by the
 	 * malware scanner to exclude the plugin's own sandboxed PHP.
 	 *
 	 * @return string
@@ -88,7 +88,7 @@ class EMCP_Tools_Sandbox_Paths {
 	}
 
 	/**
-	 * The old scattered location (uploads/emcp-widgets), for migration.
+	 * The old scattered location (uploads/karmcp-widgets), for migration.
 	 *
 	 * @return string
 	 */
@@ -126,8 +126,8 @@ class EMCP_Tools_Sandbox_Paths {
 	}
 
 	/**
-	 * One-time relocation of the legacy uploads/emcp-widgets tree to the new
-	 * wp-content/emcp-sandbox base. Runs during bootstrap (plugins_loaded),
+	 * One-time relocation of the legacy uploads/karmcp-widgets tree to the new
+	 * wp-content/karmcp-sandbox base. Runs during bootstrap (plugins_loaded),
 	 * before the artifact loaders fire on `init`. Manifests carry relative
 	 * paths + content hashes, so no rebuild is required — the loaders resolve
 	 * against the new base and every hash still verifies. Short-circuits after

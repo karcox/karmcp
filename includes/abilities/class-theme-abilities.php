@@ -4,10 +4,10 @@
  *
  * Six tools to discover, install (wordpress.org only), switch (activate),
  * update, and delete themes. Built on WP core's theme + upgrader APIs and
- * guarded by EMCP_Tools_Package_Guard. Reads ship enabled; the four mutation
+ * guarded by KarMCP_Package_Guard. Reads ship enabled; the four mutation
  * tools ship disabled-by-default.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_Theme_Abilities {
+class KarMCP_Theme_Abilities {
 
 	/** @since 3.0.0 @var string[] */
 	private $ability_names = array();
@@ -51,13 +51,13 @@ class EMCP_Tools_Theme_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_list_themes(): void {
-		$this->ability_names[] = 'emcp-tools/list-themes';
-		emcp_tools_register_ability(
-			'emcp-tools/list-themes',
+		$this->ability_names[] = 'karmcp/list-themes';
+		karmcp_register_ability(
+			'karmcp/list-themes',
 			array(
-				'label'               => __( 'List Themes', 'emcp-tools' ),
-				'description'         => __( 'Lists installed themes with version, active status, parent (for child themes), and whether an update is available.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Themes', 'karmcp' ),
+				'description'         => __( 'Lists installed themes with version, active status, parent (for child themes), and whether an update is available.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_themes' ),
 				'permission_callback' => array( $this, 'can_list' ),
 				'input_schema'        => array( 'type' => 'object', 'properties' => new \stdClass() ),
@@ -72,7 +72,7 @@ class EMCP_Tools_Theme_Abilities {
 	 * @return array
 	 */
 	public function execute_list_themes( $input ): array {
-		EMCP_Tools_Package_Guard::load_upgrader_deps();
+		KarMCP_Package_Guard::load_upgrader_deps();
 		$active  = function_exists( 'get_stylesheet' ) ? (string) get_stylesheet() : '';
 		$updates = get_site_transient( 'update_themes' );
 		$resp    = ( is_object( $updates ) && isset( $updates->response ) && is_array( $updates->response ) ) ? $updates->response : array();
@@ -100,20 +100,20 @@ class EMCP_Tools_Theme_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_search_themes(): void {
-		$this->ability_names[] = 'emcp-tools/search-themes';
-		emcp_tools_register_ability(
-			'emcp-tools/search-themes',
+		$this->ability_names[] = 'karmcp/search-themes';
+		karmcp_register_ability(
+			'karmcp/search-themes',
 			array(
-				'label'               => __( 'Search Themes', 'emcp-tools' ),
-				'description'         => __( 'Searches the wordpress.org theme directory by keyword. Returns slug, name, version, rating, and requirements. Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Search Themes', 'karmcp' ),
+				'description'         => __( 'Searches the wordpress.org theme directory by keyword. Returns slug, name, version, rating, and requirements. Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_search_themes' ),
 				'permission_callback' => array( $this, 'can_install' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'search'   => array( 'type' => 'string', 'description' => __( 'Keyword(s) to search the .org directory.', 'emcp-tools' ) ),
-						'per_page' => array( 'type' => 'integer', 'description' => __( '1-50. Default: 10.', 'emcp-tools' ) ),
+						'search'   => array( 'type' => 'string', 'description' => __( 'Keyword(s) to search the .org directory.', 'karmcp' ) ),
+						'per_page' => array( 'type' => 'integer', 'description' => __( '1-50. Default: 10.', 'karmcp' ) ),
 					),
 					'required'   => array( 'search' ),
 				),
@@ -130,9 +130,9 @@ class EMCP_Tools_Theme_Abilities {
 	public function execute_search_themes( $input ) {
 		$search = sanitize_text_field( $input['search'] ?? '' );
 		if ( '' === $search ) {
-			return new \WP_Error( 'missing_params', __( 'A "search" keyword is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A "search" keyword is required.', 'karmcp' ) );
 		}
-		EMCP_Tools_Package_Guard::load_upgrader_deps();
+		KarMCP_Package_Guard::load_upgrader_deps();
 		$per_page = max( 1, min( 50, absint( $input['per_page'] ?? 10 ) ) );
 		$api      = themes_api( 'query_themes', array( 'search' => $search, 'per_page' => $per_page, 'fields' => array( 'description' => false ) ) );
 		if ( is_wp_error( $api ) ) {
@@ -157,20 +157,20 @@ class EMCP_Tools_Theme_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_install_theme(): void {
-		$this->ability_names[] = 'emcp-tools/install-theme';
-		emcp_tools_register_ability(
-			'emcp-tools/install-theme',
+		$this->ability_names[] = 'karmcp/install-theme';
+		karmcp_register_ability(
+			'karmcp/install-theme',
 			array(
-				'label'               => __( 'Install Theme', 'emcp-tools' ),
-				'description'         => __( 'Installs a theme from the wordpress.org directory by slug. Optionally activates it. Source is always wordpress.org.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Install Theme', 'karmcp' ),
+				'description'         => __( 'Installs a theme from the wordpress.org directory by slug. Optionally activates it. Source is always wordpress.org.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_install_theme' ),
 				'permission_callback' => array( $this, 'can_install' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'slug'     => array( 'type' => 'string', 'description' => __( 'wordpress.org theme slug.', 'emcp-tools' ) ),
-						'activate' => array( 'type' => 'boolean', 'description' => __( 'Activate after install. Default: false.', 'emcp-tools' ) ),
+						'slug'     => array( 'type' => 'string', 'description' => __( 'wordpress.org theme slug.', 'karmcp' ) ),
+						'activate' => array( 'type' => 'boolean', 'description' => __( 'Activate after install. Default: false.', 'karmcp' ) ),
 					),
 					'required'   => array( 'slug' ),
 				),
@@ -190,13 +190,13 @@ class EMCP_Tools_Theme_Abilities {
 	public function execute_install_theme( $input ) {
 		$slug = sanitize_key( $input['slug'] ?? '' );
 		if ( '' === $slug ) {
-			return new \WP_Error( 'missing_params', __( 'A theme "slug" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A theme "slug" is required.', 'karmcp' ) );
 		}
 		$activate = ! empty( $input['activate'] );
 		if ( $activate && ! current_user_can( 'switch_themes' ) ) {
-			return new \WP_Error( 'cannot_switch', __( 'You cannot switch themes.', 'emcp-tools' ) );
+			return new \WP_Error( 'cannot_switch', __( 'You cannot switch themes.', 'karmcp' ) );
 		}
-		$ready = EMCP_Tools_Package_Guard::filesystem_ready();
+		$ready = KarMCP_Package_Guard::filesystem_ready();
 		if ( is_wp_error( $ready ) ) {
 			return $ready;
 		}
@@ -204,14 +204,14 @@ class EMCP_Tools_Theme_Abilities {
 		if ( is_wp_error( $api ) ) {
 			return $api;
 		}
-		$skin     = EMCP_Tools_Package_Guard::make_skin();
+		$skin     = KarMCP_Package_Guard::make_skin();
 		$upgrader = new \Theme_Upgrader( $skin );
 		$result   = $upgrader->install( $api->download_link );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 		if ( false === $result || null === $result ) {
-			return new \WP_Error( 'install_failed', __( 'Theme installation failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'install_failed', __( 'Theme installation failed.', 'karmcp' ) );
 		}
 		$activated = false;
 		if ( $activate ) {
@@ -222,7 +222,7 @@ class EMCP_Tools_Theme_Abilities {
 			'installed'  => true,
 			'activated'  => $activated,
 			'stylesheet' => $slug,
-			'messages'   => EMCP_Tools_Package_Guard::skin_messages( $skin ),
+			'messages'   => KarMCP_Package_Guard::skin_messages( $skin ),
 		);
 	}
 
@@ -231,18 +231,18 @@ class EMCP_Tools_Theme_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_switch_theme(): void {
-		$this->ability_names[] = 'emcp-tools/switch-theme';
-		emcp_tools_register_ability(
-			'emcp-tools/switch-theme',
+		$this->ability_names[] = 'karmcp/switch-theme';
+		karmcp_register_ability(
+			'karmcp/switch-theme',
 			array(
-				'label'               => __( 'Switch Theme', 'emcp-tools' ),
-				'description'         => __( 'Activates an installed theme by its stylesheet (folder) name. Refuses a theme that is missing or has load errors.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Switch Theme', 'karmcp' ),
+				'description'         => __( 'Activates an installed theme by its stylesheet (folder) name. Refuses a theme that is missing or has load errors.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_switch_theme' ),
 				'permission_callback' => array( $this, 'can_switch' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'stylesheet' => array( 'type' => 'string', 'description' => __( 'Theme stylesheet/folder name.', 'emcp-tools' ) ) ),
+					'properties' => array( 'stylesheet' => array( 'type' => 'string', 'description' => __( 'Theme stylesheet/folder name.', 'karmcp' ) ) ),
 					'required'   => array( 'stylesheet' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'success' => array( 'type' => 'boolean' ), 'stylesheet' => array( 'type' => 'string' ) ) ),
@@ -262,7 +262,7 @@ class EMCP_Tools_Theme_Abilities {
 		}
 		$stylesheet = $theme->get_stylesheet();
 		if ( $theme->errors() ) {
-			return new \WP_Error( 'theme_broken', __( 'That theme has load errors and cannot be activated.', 'emcp-tools' ) );
+			return new \WP_Error( 'theme_broken', __( 'That theme has load errors and cannot be activated.', 'karmcp' ) );
 		}
 		switch_theme( $stylesheet );
 		return array( 'success' => true, 'stylesheet' => $stylesheet );
@@ -273,18 +273,18 @@ class EMCP_Tools_Theme_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_update_theme(): void {
-		$this->ability_names[] = 'emcp-tools/update-theme';
-		emcp_tools_register_ability(
-			'emcp-tools/update-theme',
+		$this->ability_names[] = 'karmcp/update-theme';
+		karmcp_register_ability(
+			'karmcp/update-theme',
 			array(
-				'label'               => __( 'Update Theme', 'emcp-tools' ),
-				'description'         => __( 'Updates an installed theme to the latest wordpress.org version. Reports up_to_date when no update is pending.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Theme', 'karmcp' ),
+				'description'         => __( 'Updates an installed theme to the latest wordpress.org version. Reports up_to_date when no update is pending.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_theme' ),
 				'permission_callback' => array( $this, 'can_update' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'stylesheet' => array( 'type' => 'string', 'description' => __( 'Theme stylesheet/folder name.', 'emcp-tools' ) ) ),
+					'properties' => array( 'stylesheet' => array( 'type' => 'string', 'description' => __( 'Theme stylesheet/folder name.', 'karmcp' ) ) ),
 					'required'   => array( 'stylesheet' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array(
@@ -307,7 +307,7 @@ class EMCP_Tools_Theme_Abilities {
 			return $theme;
 		}
 		$stylesheet = $theme->get_stylesheet();
-		$ready      = EMCP_Tools_Package_Guard::filesystem_ready();
+		$ready      = KarMCP_Package_Guard::filesystem_ready();
 		if ( is_wp_error( $ready ) ) {
 			return $ready;
 		}
@@ -320,14 +320,14 @@ class EMCP_Tools_Theme_Abilities {
 		if ( ! isset( $resp[ $stylesheet ] ) ) {
 			return array( 'success' => true, 'up_to_date' => true, 'stylesheet' => $stylesheet, 'old_version' => $old, 'new_version' => $old, 'messages' => array() );
 		}
-		$skin     = EMCP_Tools_Package_Guard::make_skin();
+		$skin     = KarMCP_Package_Guard::make_skin();
 		$upgrader = new \Theme_Upgrader( $skin );
 		$result   = $upgrader->upgrade( $stylesheet );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 		if ( false === $result ) {
-			return new \WP_Error( 'update_failed', __( 'Theme update failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'update_failed', __( 'Theme update failed.', 'karmcp' ) );
 		}
 		return array(
 			'success'     => true,
@@ -335,7 +335,7 @@ class EMCP_Tools_Theme_Abilities {
 			'stylesheet'  => $stylesheet,
 			'old_version' => $old,
 			'new_version' => (string) ( $resp[ $stylesheet ]['new_version'] ?? '' ),
-			'messages'    => EMCP_Tools_Package_Guard::skin_messages( $skin ),
+			'messages'    => KarMCP_Package_Guard::skin_messages( $skin ),
 		);
 	}
 
@@ -344,18 +344,18 @@ class EMCP_Tools_Theme_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_delete_theme(): void {
-		$this->ability_names[] = 'emcp-tools/delete-theme';
-		emcp_tools_register_ability(
-			'emcp-tools/delete-theme',
+		$this->ability_names[] = 'karmcp/delete-theme';
+		karmcp_register_ability(
+			'karmcp/delete-theme',
 			array(
-				'label'               => __( 'Delete Theme', 'emcp-tools' ),
-				'description'         => __( 'Permanently deletes an installed theme. Destructive. Refuses the active theme and the parent of the active theme.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Delete Theme', 'karmcp' ),
+				'description'         => __( 'Permanently deletes an installed theme. Destructive. Refuses the active theme and the parent of the active theme.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_delete_theme' ),
 				'permission_callback' => array( $this, 'can_delete' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'stylesheet' => array( 'type' => 'string', 'description' => __( 'Theme stylesheet/folder name.', 'emcp-tools' ) ) ),
+					'properties' => array( 'stylesheet' => array( 'type' => 'string', 'description' => __( 'Theme stylesheet/folder name.', 'karmcp' ) ) ),
 					'required'   => array( 'stylesheet' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'deleted' => array( 'type' => 'boolean' ), 'stylesheet' => array( 'type' => 'string' ) ) ),
@@ -374,10 +374,10 @@ class EMCP_Tools_Theme_Abilities {
 			return $theme;
 		}
 		$stylesheet = $theme->get_stylesheet();
-		if ( in_array( $stylesheet, EMCP_Tools_Package_Guard::active_theme_stylesheets(), true ) ) {
-			return new \WP_Error( 'theme_active', __( 'Cannot delete the active theme or the parent of the active theme. Switch themes first.', 'emcp-tools' ) );
+		if ( in_array( $stylesheet, KarMCP_Package_Guard::active_theme_stylesheets(), true ) ) {
+			return new \WP_Error( 'theme_active', __( 'Cannot delete the active theme or the parent of the active theme. Switch themes first.', 'karmcp' ) );
 		}
-		$ready = EMCP_Tools_Package_Guard::filesystem_ready();
+		$ready = KarMCP_Package_Guard::filesystem_ready();
 		if ( is_wp_error( $ready ) ) {
 			return $ready;
 		}
@@ -386,7 +386,7 @@ class EMCP_Tools_Theme_Abilities {
 			return $res;
 		}
 		if ( ! $res ) {
-			return new \WP_Error( 'delete_failed', __( 'Theme deletion failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'delete_failed', __( 'Theme deletion failed.', 'karmcp' ) );
 		}
 		return array( 'deleted' => (bool) $res, 'stylesheet' => $stylesheet );
 	}
@@ -404,12 +404,12 @@ class EMCP_Tools_Theme_Abilities {
 	private function resolve_theme( $stylesheet ) {
 		$stylesheet = sanitize_key( (string) $stylesheet );
 		if ( '' === $stylesheet ) {
-			return new \WP_Error( 'missing_params', __( 'A "stylesheet" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A "stylesheet" is required.', 'karmcp' ) );
 		}
-		EMCP_Tools_Package_Guard::load_upgrader_deps();
+		KarMCP_Package_Guard::load_upgrader_deps();
 		$theme = function_exists( 'wp_get_theme' ) ? wp_get_theme( $stylesheet ) : null;
 		if ( ! $theme || ! ( is_object( $theme ) && method_exists( $theme, 'exists' ) ? $theme->exists() : false ) ) {
-			return new \WP_Error( 'theme_not_found', sprintf( /* translators: %s: stylesheet */ __( 'No installed theme named "%s".', 'emcp-tools' ), $stylesheet ) );
+			return new \WP_Error( 'theme_not_found', sprintf( /* translators: %s: stylesheet */ __( 'No installed theme named "%s".', 'karmcp' ), $stylesheet ) );
 		}
 		return $theme;
 	}

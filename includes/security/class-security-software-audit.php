@@ -5,7 +5,7 @@
  * Every evaluate_*() is pure (unit-tested). run() gathers live update transients
  * + bounded plugins_api lookups (verified live). Read-only. No external CVE DB.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -16,15 +16,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.0.0
  */
-class EMCP_Tools_Security_Software_Audit {
+class KarMCP_Security_Software_Audit {
 
 	const MAX_ABANDONED_LOOKUPS = 30;
 	const ABANDONED_CACHE_TTL   = 43200;  // 12 hours, cache per-slug closed/open status.
 
 	public function evaluate_core_update( bool $available, string $current, string $new ): array {
 		return $available
-			? EMCP_Tools_Security_Finding::make( 'software_core_update', 'software', 'WordPress core', 'warning', array( 'current' => $current, 'new' => $new ), sprintf( 'WordPress core is outdated (%s → %s).', $current, $new ), 'Update WordPress core; releases include security fixes.' )
-			: EMCP_Tools_Security_Finding::make( 'software_core_update', 'software', 'WordPress core', 'pass', $current, sprintf( 'WordPress core is up to date (%s).', $current ) );
+			? KarMCP_Security_Finding::make( 'software_core_update', 'software', 'WordPress core', 'warning', array( 'current' => $current, 'new' => $new ), sprintf( 'WordPress core is outdated (%s → %s).', $current, $new ), 'Update WordPress core; releases include security fixes.' )
+			: KarMCP_Security_Finding::make( 'software_core_update', 'software', 'WordPress core', 'pass', $current, sprintf( 'WordPress core is up to date (%s).', $current ) );
 	}
 
 	/**
@@ -40,7 +40,7 @@ class EMCP_Tools_Security_Software_Audit {
 			$name    = (string) ( $u['name'] ?? 'unknown' );
 			$current = (string) ( $u['current'] ?? '?' );
 			$new     = (string) ( $u['new'] ?? '?' );
-			$out[]   = EMCP_Tools_Security_Finding::make(
+			$out[]   = KarMCP_Security_Finding::make(
 				$id, 'software', $label, 'warning',
 				array( 'name' => $name, 'current' => $current, 'new' => $new ),
 				sprintf( '%s "%s" is outdated (%s → %s).', ucfirst( $kind ), $name, $current, $new ),
@@ -57,7 +57,7 @@ class EMCP_Tools_Security_Software_Audit {
 	public function evaluate_abandoned( array $slugs ): array {
 		$out = array();
 		foreach ( $slugs as $slug ) {
-			$out[] = EMCP_Tools_Security_Finding::make(
+			$out[] = KarMCP_Security_Finding::make(
 				'software_abandoned', 'software', 'Abandoned plugin', 'warning', (string) $slug,
 				sprintf( 'Plugin "%s" appears closed or removed from the wordpress.org directory.', $slug ),
 				'Plugins removed from the directory often have unpatched security issues. Replace it with a maintained alternative.'
@@ -68,8 +68,8 @@ class EMCP_Tools_Security_Software_Audit {
 
 	public function evaluate_inactive( int $count ): array {
 		return $count > 0
-			? EMCP_Tools_Security_Finding::make( 'software_inactive', 'software', 'Inactive components', 'info', $count, sprintf( '%d inactive plugin(s)/theme(s) installed.', $count ), 'Delete plugins and themes you do not use; inactive code can still be exploited if reachable.' )
-			: EMCP_Tools_Security_Finding::make( 'software_inactive', 'software', 'Inactive components', 'pass', 0, 'No inactive plugins or themes.' );
+			? KarMCP_Security_Finding::make( 'software_inactive', 'software', 'Inactive components', 'info', $count, sprintf( '%d inactive plugin(s)/theme(s) installed.', $count ), 'Delete plugins and themes you do not use; inactive code can still be exploited if reachable.' )
+			: KarMCP_Security_Finding::make( 'software_inactive', 'software', 'Inactive components', 'pass', 0, 'No inactive plugins or themes.' );
 	}
 
 	/**
@@ -151,7 +151,7 @@ class EMCP_Tools_Security_Software_Audit {
 				continue;
 			}
 
-			$cache_key = 'emcp_sec_abandoned_' . md5( $slug );
+			$cache_key = 'karmcp_sec_abandoned_' . md5( $slug );
 			$cached    = get_transient( $cache_key );
 			if ( false !== $cached ) {
 				if ( 'closed' === $cached ) {

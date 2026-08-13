@@ -6,7 +6,7 @@
  * resize an existing Media Library attachment in place (during a build, or any
  * library image), reusing the module's backup + compress + WebP machinery.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.1
  */
 
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.1
  */
-class EMCP_Tools_Image_Resize_Abilities {
+class KarMCP_Image_Resize_Abilities {
 
 	/** @var string[] */
 	private $ability_names = array();
@@ -28,22 +28,22 @@ class EMCP_Tools_Image_Resize_Abilities {
 	}
 
 	public function register(): void {
-		$this->ability_names[] = 'emcp-tools/resize-media';
-		emcp_tools_register_ability(
-			'emcp-tools/resize-media',
+		$this->ability_names[] = 'karmcp/resize-media';
+		karmcp_register_ability(
+			'karmcp/resize-media',
 			array(
-				'label'               => __( 'Resize Media', 'emcp-tools' ),
-				'description'         => __( 'Resize an existing Media Library image in place (the attachment ID and its URLs stay the same). Scales to fit the given width and/or height, preserving aspect ratio; pass crop:true to hard-crop to exactly width×height. The original is backed up (reversible), all sub-sizes + WebP are regenerated, and, if the module\'s max-dimension cap is smaller than your target, the cap applies. JPEG/PNG/WebP/GIF.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Resize Media', 'karmcp' ),
+				'description'         => __( 'Resize an existing Media Library image in place (the attachment ID and its URLs stay the same). Scales to fit the given width and/or height, preserving aspect ratio; pass crop:true to hard-crop to exactly width×height. The original is backed up (reversible), all sub-sizes + WebP are regenerated, and, if the module\'s max-dimension cap is smaller than your target, the cap applies. JPEG/PNG/WebP/GIF.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_resize' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'attachment_id' => array( 'type' => 'integer', 'description' => __( 'Media Library attachment ID.', 'emcp-tools' ) ),
-						'width'         => array( 'type' => 'integer', 'description' => __( 'Target width in px. Omit to scale by height only.', 'emcp-tools' ) ),
-						'height'        => array( 'type' => 'integer', 'description' => __( 'Target height in px. Omit to scale by width only.', 'emcp-tools' ) ),
-						'crop'          => array( 'type' => 'boolean', 'description' => __( 'Hard-crop to exactly width×height (requires both). Default false = scale to fit.', 'emcp-tools' ) ),
+						'attachment_id' => array( 'type' => 'integer', 'description' => __( 'Media Library attachment ID.', 'karmcp' ) ),
+						'width'         => array( 'type' => 'integer', 'description' => __( 'Target width in px. Omit to scale by height only.', 'karmcp' ) ),
+						'height'        => array( 'type' => 'integer', 'description' => __( 'Target height in px. Omit to scale by width only.', 'karmcp' ) ),
+						'crop'          => array( 'type' => 'boolean', 'description' => __( 'Hard-crop to exactly width×height (requires both). Default false = scale to fit.', 'karmcp' ) ),
 					),
 					'required'   => array( 'attachment_id' ),
 				),
@@ -69,10 +69,10 @@ class EMCP_Tools_Image_Resize_Abilities {
 		$height = isset( $input['height'] ) ? (int) $input['height'] : null;
 		$crop   = ! empty( $input['crop'] );
 
-		$result = EMCP_Tools_Image_Resizer::resize( $id, $width, $height, $crop );
+		$result = KarMCP_Image_Resizer::resize( $id, $width, $height, $crop );
 		if ( is_wp_error( $result ) ) {
 			return array( 'error' => $result->get_error_message() );
 		}
-		return is_array( $result ) ? $result : array( 'error' => __( 'Unexpected result.', 'emcp-tools' ) );
+		return is_array( $result ) ? $result : array( 'error' => __( 'Unexpected result.', 'karmcp' ) );
 	}
 }

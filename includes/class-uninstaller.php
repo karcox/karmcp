@@ -7,8 +7,8 @@
  * executable PHP (custom widgets + PHP snippets) which must never survive an
  * uninstall.
  *
- * @package EMCP_Tools
- * @since   2.1.0 (extracted from emcp_tools_after_uninstall, since 1.6.1)
+ * @package KarMCP
+ * @since   2.1.0 (extracted from karmcp_after_uninstall, since 1.6.1)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.1.0
  */
-class EMCP_Tools_Uninstaller {
+class KarMCP_Uninstaller {
 
 	/**
 	 * Runs the uninstall cleanup.
@@ -28,91 +28,45 @@ class EMCP_Tools_Uninstaller {
 	 * @since 2.1.0
 	 */
 	public static function run(): void {
-		delete_option( 'emcp_tools_disabled_tools' );
-		delete_option( 'emcp_tools_low_tool_mode' );
-		delete_option( 'emcp_tools_defaults_applied' );
-		delete_option( 'emcp_tools_cloud_connection' );
-		delete_option( 'emcp_tools_site_uuid' );
-		delete_option( 'emcp_tools_cloud_base_url' );
-		delete_transient( 'emcp_tools_cloud_pending' );
-		delete_transient( 'emcp_tools_pro_prompts_bundle' );
-		delete_transient( 'emcp_tools_pro_templates_bundle' );
-		delete_transient( 'emcp_tools_pro_brand_kits_bundle' );
+		delete_option( 'karmcp_disabled_tools' );
+		delete_option( 'karmcp_low_tool_mode' );
+		delete_option( 'karmcp_defaults_applied' );
+		delete_option( 'karmcp_cloud_connection' );
+		delete_option( 'karmcp_site_uuid' );
+		delete_option( 'karmcp_cloud_base_url' );
+		delete_transient( 'karmcp_cloud_pending' );
+		delete_transient( 'karmcp_pro_prompts_bundle' );
+		delete_transient( 'karmcp_pro_templates_bundle' );
+		delete_transient( 'karmcp_pro_brand_kits_bundle' );
 		// Drop the dismissal flags from every user.
-		delete_metadata( 'user', 0, 'emcp_tools_upgrade_notice_dismissed', '', true );
-		delete_metadata( 'user', 0, 'emcp_tools_community_notice_dismissed', '', true );
-		// Brand-kit backups (emcp_kit_backup CPT) are intentionally LEFT in place
+		delete_metadata( 'user', 0, 'karmcp_upgrade_notice_dismissed', '', true );
+		delete_metadata( 'user', 0, 'karmcp_community_notice_dismissed', '', true );
+		// Brand-kit backups (karmcp_kit_backup CPT) are intentionally LEFT in place
 		// on uninstall — treated as recoverable user content so a user who removes
 		// the plugin can still roll back their pre-kit brand after reinstalling.
 
 		// Widget Builder: generated executable PHP must NOT survive uninstall —
-		// delete every emcp_widget post and remove the uploads sandbox tree.
-		if ( ! class_exists( 'EMCP_Tools_Widget_Store' ) ) {
-			require_once EMCP_TOOLS_DIR . 'includes/class-widget-store.php';
+		// delete every karmcp_widget post and remove the uploads sandbox tree.
+		if ( ! class_exists( 'KarMCP_Widget_Store' ) ) {
+			require_once KARMCP_DIR . 'includes/class-widget-store.php';
 		}
-		if ( class_exists( 'EMCP_Tools_Widget_Store' ) ) {
-			EMCP_Tools_Widget_Store::uninstall_cleanup();
+		if ( class_exists( 'KarMCP_Widget_Store' ) ) {
+			KarMCP_Widget_Store::uninstall_cleanup();
 		}
 
 		// PHP Snippets: generated executable PHP must NOT survive uninstall either.
-		if ( ! class_exists( 'EMCP_Tools_PHP_Snippet_Store' ) ) {
-			require_once EMCP_TOOLS_DIR . 'includes/class-php-snippet-store.php';
+		if ( ! class_exists( 'KarMCP_PHP_Snippet_Store' ) ) {
+			require_once KARMCP_DIR . 'includes/class-php-snippet-store.php';
 		}
-		if ( class_exists( 'EMCP_Tools_PHP_Snippet_Store' ) ) {
-			EMCP_Tools_PHP_Snippet_Store::uninstall_cleanup();
-		}
-
-		// Block Builder: generated block source + registry must NOT survive
-		// uninstall either. The store class ships in the private Pro overlay; on
-		// a free install the file is absent, so resolve it defensively
-		// (dual-root, same pattern as AI Chat below) instead of a hard require
-		// that would fatal uninstall.
-		if ( ! class_exists( 'EMCP_Tools_Block_Store' ) && class_exists( 'EMCP_Tools_Pro_Loader' ) ) {
-			$emcp_block_store = EMCP_Tools_Pro_Loader::path( 'includes/class-block-store.php' );
-			if ( '' !== $emcp_block_store ) {
-				require_once $emcp_block_store;
-			}
-		}
-		if ( class_exists( 'EMCP_Tools_Block_Store' ) ) {
-			EMCP_Tools_Block_Store::uninstall_cleanup();
+		if ( class_exists( 'KarMCP_PHP_Snippet_Store' ) ) {
+			KarMCP_PHP_Snippet_Store::uninstall_cleanup();
 		}
 
-		// Project Memory: guidance CPT + session/injection options + the rollup cron.
-		if ( ! class_exists( 'EMCP_Tools_Memory_Store' ) && class_exists( 'EMCP_Tools_Pro_Loader' ) ) {
-			$emcp_memory_store = EMCP_Tools_Pro_Loader::path( 'includes/memory/class-memory-store.php' );
-			if ( '' !== $emcp_memory_store ) {
-				require_once $emcp_memory_store;
-			}
-		}
-		if ( class_exists( 'EMCP_Tools_Memory_Store' ) ) {
-			EMCP_Tools_Memory_Store::uninstall_cleanup();
-		}
-		if ( ! class_exists( 'EMCP_Tools_Memory_Summarizer' ) && class_exists( 'EMCP_Tools_Pro_Loader' ) ) {
-			$emcp_memory_sz = EMCP_Tools_Pro_Loader::path( 'includes/memory/class-memory-summarizer.php' );
-			if ( '' !== $emcp_memory_sz ) {
-				require_once $emcp_memory_sz;
-			}
-		}
-		if ( class_exists( 'EMCP_Tools_Memory_Summarizer' ) ) {
-			( new EMCP_Tools_Memory_Summarizer() )->unschedule();
-		}
-
-		// AI Chat: saved conversations + per-user API keys + cached model lists.
-		// The store class ships in the private Pro overlay; on a free install the
-		// file is absent, so resolve it defensively (dual-root) instead of a hard
-		// require that would fatal uninstall. The option/meta deletes below still
-		// clean up regardless.
-		if ( ! class_exists( 'EMCP_Tools_AI_Chat_Store' ) && class_exists( 'EMCP_Tools_Pro_Loader' ) ) {
-			$emcp_store = EMCP_Tools_Pro_Loader::path( 'includes/ai-chat/class-ai-chat-store.php' );
-			if ( '' !== $emcp_store ) {
-				require_once $emcp_store;
-			}
-		}
-		if ( class_exists( 'EMCP_Tools_AI_Chat_Store' ) ) {
-			EMCP_Tools_AI_Chat_Store::uninstall_cleanup();
-		}
-		delete_option( 'emcp_tools_ai_models' );
-		delete_metadata( 'user', 0, 'emcp_tools_ai_keys', '', true );
-		delete_metadata( 'user', 0, 'emcp_tools_ai_defaults', '', true );
+		// Leftovers from the upstream Pro overlay. Those features are not part of
+		// this build, but an install that once ran the upstream plugin may still
+		// carry their options and user meta, so the deletes stay.
+		delete_option( 'karmcp_ai_models' );
+		delete_metadata( 'user', 0, 'karmcp_ai_keys', '', true );
+		delete_metadata( 'user', 0, 'karmcp_ai_defaults', '', true );
 	}
 }

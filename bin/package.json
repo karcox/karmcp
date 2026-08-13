@@ -1,10 +1,10 @@
 {
-  "name": "@msrbuilds/emcp-proxy",
+  "name": "@msrbuilds/karmcp-proxy",
   "version": "1.10.0",
-  "description": "stdio↔HTTP proxy that connects MCP clients (Claude Desktop, Claude Code, etc.) to one or many remote WordPress sites running the MCP Tools for Elementor (EMCP) plugin.",
+  "description": "stdio↔HTTP proxy that connects MCP clients (Claude Desktop, Claude Code, etc.) to one or many remote WordPress sites running the MCP Tools for Elementor (KarMCP) plugin.",
   "type": "module",
   "bin": {
-    "emcp-proxy": "mcp-proxy.mjs"
+    "karmcp-proxy": "mcp-proxy.mjs"
   },
   "main": "./mcp-proxy.mjs",
   "files": [
@@ -16,7 +16,7 @@
   },
   "license": "GPL-2.0-or-later",
   "author": "MSR Builds",
-  "homepage": "https://emcptools.com/docs/connecting/claude-desktop/",
+  "homepage": "https://example.com/docs/connecting/claude-desktop/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/msrbuilds/elementor-mcp.git",

@@ -2,11 +2,11 @@
 /**
  * Themer template CPT + quota gate.
  *
- * Registers `emcp_theme_template` (editable by any builder), enables Elementor on
+ * Registers `karmcp_theme_tpl` (editable by any builder), enables Elementor on
  * it, and enforces the free 1-per-type quota. The cap is a seam: the Pro overlay
- * raises `emcp_themer_quota` to PHP_INT_MAX. register() runs on `init`.
+ * raises `karmcp_themer_quota` to PHP_INT_MAX. register() runs on `init`.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -17,9 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_CPT {
+class KarMCP_Themer_CPT {
 
-	const POST_TYPE = 'emcp_theme_template';
+	const POST_TYPE = 'karmcp_theme_tpl';
 
 	/** Valid template types. */
 	const TYPES = array( 'header', 'footer', 'single', 'archive', 'search', '404' );
@@ -40,7 +40,7 @@ class EMCP_Tools_Themer_CPT {
 				// search, and archives via the flags below.
 				'publicly_queryable'  => true,
 				'show_ui'             => true,
-				// Its own top-level dashboard menu (not buried in the EMCP Tools page).
+				// Its own top-level dashboard menu (not buried in the KarMCP page).
 				'show_in_menu'        => true,
 				'menu_icon'           => 'dashicons-layout',
 				'menu_position'       => 21, // just below Pages, in the content cluster.
@@ -54,18 +54,18 @@ class EMCP_Tools_Themer_CPT {
 				'map_meta_cap'        => true,
 				'supports'            => array( 'title', 'editor', 'author', 'custom-fields' ),
 				'labels'              => array(
-					'name'               => __( 'EMCP Themer', 'emcp-tools' ),
-					'singular_name'      => __( 'Theme Template', 'emcp-tools' ),
-					'menu_name'          => __( 'EMCP Themer', 'emcp-tools' ),
-					'all_items'          => __( 'All Templates', 'emcp-tools' ),
-					'add_new'            => __( 'Add New', 'emcp-tools' ),
-					'add_new_item'       => __( 'Add Theme Template', 'emcp-tools' ),
-					'new_item'           => __( 'New Theme Template', 'emcp-tools' ),
-					'edit_item'          => __( 'Edit Theme Template', 'emcp-tools' ),
-					'view_item'          => __( 'View Theme Template', 'emcp-tools' ),
-					'search_items'       => __( 'Search Theme Templates', 'emcp-tools' ),
-					'not_found'          => __( 'No theme templates yet.', 'emcp-tools' ),
-					'not_found_in_trash' => __( 'No theme templates in Trash.', 'emcp-tools' ),
+					'name'               => __( 'KarMCP Themer', 'karmcp' ),
+					'singular_name'      => __( 'Theme Template', 'karmcp' ),
+					'menu_name'          => __( 'KarMCP Themer', 'karmcp' ),
+					'all_items'          => __( 'All Templates', 'karmcp' ),
+					'add_new'            => __( 'Add New', 'karmcp' ),
+					'add_new_item'       => __( 'Add Theme Template', 'karmcp' ),
+					'new_item'           => __( 'New Theme Template', 'karmcp' ),
+					'edit_item'          => __( 'Edit Theme Template', 'karmcp' ),
+					'view_item'          => __( 'View Theme Template', 'karmcp' ),
+					'search_items'       => __( 'Search Theme Templates', 'karmcp' ),
+					'not_found'          => __( 'No theme templates yet.', 'karmcp' ),
+					'not_found_in_trash' => __( 'No theme templates in Trash.', 'karmcp' ),
 				),
 			)
 		);
@@ -95,7 +95,7 @@ class EMCP_Tools_Themer_CPT {
 			'elementor/utils/get_public_post_types',
 			static function ( $types ) {
 				if ( is_array( $types ) && ! isset( $types[ self::POST_TYPE ] ) ) {
-					$types[ self::POST_TYPE ] = __( 'Theme Template', 'emcp-tools' );
+					$types[ self::POST_TYPE ] = __( 'Theme Template', 'karmcp' );
 				}
 				return $types;
 			}
@@ -113,7 +113,7 @@ class EMCP_Tools_Themer_CPT {
 		foreach ( $columns as $key => $label ) {
 			$out[ $key ] = $label;
 			if ( 'title' === $key ) {
-				$out['emcp_themer_type'] = __( 'Type', 'emcp-tools' );
+				$out['karmcp_themer_type'] = __( 'Type', 'karmcp' );
 			}
 		}
 		return $out;
@@ -126,21 +126,28 @@ class EMCP_Tools_Themer_CPT {
 	 * @param int    $post_id Post id.
 	 */
 	public function render_admin_column( $column, $post_id ): void {
-		if ( 'emcp_themer_type' !== $column ) {
+		if ( 'karmcp_themer_type' !== $column ) {
 			return;
 		}
-		$type = (string) get_post_meta( (int) $post_id, EMCP_Tools_Themer_Index::META_TYPE, true );
+		$type = (string) get_post_meta( (int) $post_id, KarMCP_Themer_Index::META_TYPE, true );
 		echo $type ? '<strong>' . esc_html( ucfirst( $type ) ) . '</strong>' : '&mdash;';
 	}
 
 	/**
-	 * Whether this install can use Pro code (Themer unlimited templates + granular
-	 * conditions). Free installs get the quota gate and the upsell banner.
+	 * Whether the extended Themer tier is active (unlimited templates per type +
+	 * granular display conditions).
+	 *
+	 * The upstream implementation shipped in the private Pro overlay and is not
+	 * part of this build, so this is false. It stays as a named seam because
+	 * KarMCP intends to implement this tier itself — see
+	 * docs/ROADMAP-SEO-A11Y-THEMER.md. The real extension points are the
+	 * `karmcp_themer_quota`, `karmcp_themer_matchers`, `karmcp_themer_selectors`
+	 * and `karmcp_themer_rank` filters; this flag only drives the admin notice.
 	 *
 	 * @return bool
 	 */
 	private static function is_premium(): bool {
-		return function_exists( 'emcp_tools_fs' ) && emcp_tools_fs()->can_use_premium_code();
+		return (bool) apply_filters( 'karmcp_themer_extended_tier', false );
 	}
 
 	/**
@@ -160,12 +167,12 @@ class EMCP_Tools_Themer_CPT {
 
 		// Human labels for each slot type, in display order.
 		$labels = array(
-			'header'  => __( 'Header', 'emcp-tools' ),
-			'footer'  => __( 'Footer', 'emcp-tools' ),
-			'single'  => __( 'Single', 'emcp-tools' ),
-			'archive' => __( 'Archive', 'emcp-tools' ),
-			'search'  => __( 'Search', 'emcp-tools' ),
-			'404'     => __( '404', 'emcp-tools' ),
+			'header'  => __( 'Header', 'karmcp' ),
+			'footer'  => __( 'Footer', 'karmcp' ),
+			'single'  => __( 'Single', 'karmcp' ),
+			'archive' => __( 'Archive', 'karmcp' ),
+			'search'  => __( 'Search', 'karmcp' ),
+			'404'     => __( '404', 'karmcp' ),
 		);
 
 		$purple = '#8b5cf6';
@@ -189,25 +196,14 @@ class EMCP_Tools_Themer_CPT {
 
 		printf(
 			'<div class="notice" style="border-left:4px solid %1$s;padding:14px 16px;background:#fff;">'
-				. '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">'
-					. '<div style="flex:1 1 420px;min-width:280px;">'
-						. '<p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1d2327;">%2$s</p>'
-						. '<p style="margin:0 0 10px;color:#50575e;">%3$s</p>'
-						. '<div style="display:flex;flex-wrap:wrap;gap:6px;">%4$s</div>'
-					. '</div>'
-					. '<div style="flex:0 0 auto;text-align:right;">'
-						. '<a href="%5$s" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:%1$s;color:#fff;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;"><span class="dashicons dashicons-star-filled" style="font-size:15px;width:15px;height:15px;"></span>%6$s</a>'
-						. '<p style="margin:8px 0 0;font-size:12px;color:#787c82;">%7$s</p>'
-					. '</div>'
-				. '</div>'
+				. '<p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1d2327;">%2$s</p>'
+				. '<p style="margin:0 0 10px;color:#50575e;">%3$s</p>'
+				. '<div style="display:flex;flex-wrap:wrap;gap:6px;">%4$s</div>'
 			. '</div>',
 			$purple,
-			esc_html__( 'You\'re on EMCP Themer Free', 'emcp-tools' ),
-			esc_html__( 'Free includes 1 template per type with site-wide / post-type / archive conditions. Upgrade to Pro for unlimited templates per type, granular display conditions (specific pages, terms, authors, dates), Exclude rules, and priority ordering.', 'emcp-tools' ),
-			$chips, // Already escaped above.
-			esc_url( function_exists( 'emcp_tools_upgrade_url' ) ? emcp_tools_upgrade_url() : 'https://emcptools.com/pricing' ),
-			esc_html__( 'Upgrade to Pro', 'emcp-tools' ),
-			esc_html__( 'Unlimited templates + conditions', 'emcp-tools' )
+			esc_html__( 'Themer template usage', 'karmcp' ),
+			esc_html__( 'This build allows 1 template per type, with site-wide, post-type and archive conditions.', 'karmcp' ),
+			$chips // Already escaped above.
 		);
 	}
 
@@ -219,16 +215,16 @@ class EMCP_Tools_Themer_CPT {
 		if ( ! $screen || 'edit-' . self::POST_TYPE !== $screen->id ) {
 			return;
 		}
-		$supported = class_exists( 'EMCP_Tools_Themer_Theme_Adapters' ) && null !== EMCP_Tools_Themer_Theme_Adapters::current();
+		$supported = class_exists( 'KarMCP_Themer_Theme_Adapters' ) && null !== KarMCP_Themer_Theme_Adapters::current();
 		if ( $supported ) {
 			$theme = function_exists( 'wp_get_theme' ) ? wp_get_theme()->get( 'Name' ) : '';
 			echo '<div class="notice notice-success"><p>' . sprintf(
 				/* translators: %s: theme name */
-				esc_html__( 'EMCP Themer: your theme (%s) is directly supported, standalone headers & footers inject cleanly. Body templates (single/archive/search/404) work on every theme.', 'emcp-tools' ),
+				esc_html__( 'KarMCP Themer: your theme (%s) is directly supported, standalone headers & footers inject cleanly. Body templates (single/archive/search/404) work on every theme.', 'karmcp' ),
 				esc_html( (string) $theme )
 			) . '</p></div>';
 		} else {
-			echo '<div class="notice notice-warning"><p>' . esc_html__( 'EMCP Themer: body templates (single/archive/search/404) work on every theme. For standalone header/footer replacement your theme is not directly supported, add emcp_themer_location( \'header\' ) / emcp_themer_location( \'footer\' ) to your theme, or enable the full-page-takeover fallback (set the emcp_tools_module_themer_force_render option to 1).', 'emcp-tools' ) . '</p></div>';
+			echo '<div class="notice notice-warning"><p>' . esc_html__( 'KarMCP Themer: body templates (single/archive/search/404) work on every theme. For standalone header/footer replacement your theme is not directly supported, add karmcp_themer_location( \'header\' ) / karmcp_themer_location( \'footer\' ) to your theme, or enable the full-page-takeover fallback (set the karmcp_module_themer_force_render option to 1).', 'karmcp' ) . '</p></div>';
 		}
 	}
 
@@ -258,7 +254,7 @@ class EMCP_Tools_Themer_CPT {
 		$flagged = array();
 		foreach ( $query->posts as $id ) {
 			$id     = (int) $id;
-			$type   = (string) get_post_meta( $id, EMCP_Tools_Themer_Index::META_TYPE, true );
+			$type   = (string) get_post_meta( $id, KarMCP_Themer_Index::META_TYPE, true );
 			$reason = self::type_mismatch_reason( $id, $type );
 			if ( null !== $reason ) {
 				$title             = get_the_title( $id );
@@ -272,7 +268,7 @@ class EMCP_Tools_Themer_CPT {
 			return;
 		}
 
-		echo '<div class="notice notice-warning"><p><strong>' . esc_html__( 'EMCP Themer: some templates may have the wrong type', 'emcp-tools' ) . '</strong></p><ul style="list-style:disc;margin-left:22px;">';
+		echo '<div class="notice notice-warning"><p><strong>' . esc_html__( 'KarMCP Themer: some templates may have the wrong type', 'karmcp' ) . '</strong></p><ul style="list-style:disc;margin-left:22px;">';
 		foreach ( $flagged as $id => $f ) {
 			printf(
 				'<li><a href="%1$s"><strong>%2$s</strong></a>, %3$s</li>',
@@ -281,7 +277,7 @@ class EMCP_Tools_Themer_CPT {
 				esc_html( $f['reason'] )
 			);
 		}
-		echo '</ul><p class="description">' . esc_html__( 'A template\'s "Template type" controls where it renders: a Single/Archive template fills the content area (keeping your theme header/footer), while a Header/Footer template replaces the theme\'s header/footer. Open the template to fix its type.', 'emcp-tools' ) . '</p></div>';
+		echo '</ul><p class="description">' . esc_html__( 'A template\'s "Template type" controls where it renders: a Single/Archive template fills the content area (keeping your theme header/footer), while a Header/Footer template replaces the theme\'s header/footer. Open the template to fix its type.', 'karmcp' ) . '</p></div>';
 	}
 
 	/**
@@ -293,18 +289,18 @@ class EMCP_Tools_Themer_CPT {
 	 */
 	private static function type_mismatch_reason( int $id, string $type ): ?string {
 		if ( '' === $type ) {
-			return __( 'no template type is set, so it will not render, open it and choose a type', 'emcp-tools' );
+			return __( 'no template type is set, so it will not render, open it and choose a type', 'karmcp' );
 		}
 		// Content signal: a header/footer holding body-only dynamic elements.
 		if ( in_array( $type, array( 'header', 'footer' ), true ) && self::has_body_elements( $id ) ) {
 			/* translators: %s: template type label (Header / Footer) */
-			return sprintf( __( 'this %s template contains post/archive content elements (title, content, or a posts loop), those belong in a Single or Archive template', 'emcp-tools' ), ucfirst( $type ) );
+			return sprintf( __( 'this %s template contains post/archive content elements (title, content, or a posts loop), those belong in a Single or Archive template', 'karmcp' ), ucfirst( $type ) );
 		}
 		// Title signal: the name names a different type than the one assigned.
 		$expected = self::type_hint_from_title( (string) get_the_title( $id ) );
 		if ( null !== $expected && $expected !== $type ) {
 			/* translators: 1: type suggested by the name, 2: assigned type */
-			return sprintf( __( 'its name suggests a "%1$s" template, but the type is set to "%2$s"', 'emcp-tools' ), $expected, $type );
+			return sprintf( __( 'its name suggests a "%1$s" template, but the type is set to "%2$s"', 'karmcp' ), $expected, $type );
 		}
 		return null;
 	}
@@ -320,7 +316,7 @@ class EMCP_Tools_Themer_CPT {
 		$post = get_post( $id );
 		$hay  = ( $post ? (string) $post->post_content : '' ) . ' ' . (string) get_post_meta( $id, '_elementor_data', true );
 		foreach ( array( 'post-title', 'post-content', 'archive-title', 'archive-loop', 'post-meta', 'description' ) as $el ) {
-			if ( false !== strpos( $hay, 'emcp/' . $el ) || false !== strpos( $hay, 'emcp-' . $el ) ) {
+			if ( false !== strpos( $hay, 'karmcp/' . $el ) || false !== strpos( $hay, 'karmcp-' . $el ) ) {
 				return true;
 			}
 		}
@@ -370,7 +366,7 @@ class EMCP_Tools_Themer_CPT {
 		 * @param int    $cap  Default 1 (free).
 		 * @param string $type Template type.
 		 */
-		return (int) apply_filters( 'emcp_themer_quota', 1, $type );
+		return (int) apply_filters( 'karmcp_themer_quota', 1, $type );
 	}
 
 	/**
@@ -397,7 +393,7 @@ class EMCP_Tools_Themer_CPT {
 				'post_status'    => array( 'publish', 'draft' ),
 				'posts_per_page' => 1,
 				'fields'         => 'ids',
-				'meta_key'       => EMCP_Tools_Themer_Index::META_TYPE,
+				'meta_key'       => KarMCP_Themer_Index::META_TYPE,
 				'meta_value'     => $type,
 			)
 		);

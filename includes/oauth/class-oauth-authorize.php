@@ -9,7 +9,7 @@
  * redirected, so a bad client can never be used as an open redirect. All other
  * errors are returned to the (validated) redirect URI per RFC 6749 §4.1.2.1.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.4.1
  */
 
@@ -22,9 +22,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.4.1
  */
-class EMCP_Tools_OAuth_Authorize {
+class KarMCP_OAuth_Authorize {
 
-	const NONCE_ACTION = 'emcp_oauth_consent';
+	const NONCE_ACTION = 'karmcp_oauth_consent';
 
 	/**
 	 * The browser-facing authorize path. This is served as a normal front-end
@@ -32,7 +32,7 @@ class EMCP_Tools_OAuth_Authorize {
 	 * endpoint would require a nonce the client's browser navigation can't
 	 * provide, and cookie sessions would never be recognized.
 	 */
-	const PATH = '/emcp-oauth/authorize';
+	const PATH = '/karmcp-oauth/authorize';
 
 	/**
 	 * Wire the root-level request interception for the authorize endpoint.
@@ -48,10 +48,10 @@ class EMCP_Tools_OAuth_Authorize {
 	 */
 	public static function endpoint_url(): string {
 		// Reachable public base (rest_url-derived / admin-overridable), NOT
-		// home_url() — see EMCP_Tools_Site_Context::public_base_url(). Keeps the
+		// home_url() — see KarMCP_Site_Context::public_base_url(). Keeps the
 		// advertised authorize URL on the host clients can actually reach.
-		if ( class_exists( 'EMCP_Tools_Site_Context' ) ) {
-			return EMCP_Tools_Site_Context::public_base_url() . self::PATH;
+		if ( class_exists( 'KarMCP_Site_Context' ) ) {
+			return KarMCP_Site_Context::public_base_url() . self::PATH;
 		}
 		return home_url( self::PATH );
 	}
@@ -71,8 +71,8 @@ class EMCP_Tools_OAuth_Authorize {
 		if ( self::PATH !== $path ) {
 			return;
 		}
-		if ( ! EMCP_Tools_OAuth_Server::is_enabled() ) {
-			self::error_page( __( 'OAuth sign-in is not enabled on this site.', 'emcp-tools' ) );
+		if ( ! KarMCP_OAuth_Server::is_enabled() ) {
+			self::error_page( __( 'OAuth sign-in is not enabled on this site.', 'karmcp' ) );
 		}
 
 		if ( 'POST' === strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) ) ) {
@@ -105,7 +105,7 @@ class EMCP_Tools_OAuth_Authorize {
 	 * @return string
 	 */
 	public static function required_cap(): string {
-		return (string) apply_filters( 'emcp_tools_oauth_authorize_cap', 'manage_options' );
+		return (string) apply_filters( 'karmcp_oauth_authorize_cap', 'manage_options' );
 	}
 
 	// ---------------------------------------------------------------------
@@ -120,7 +120,7 @@ class EMCP_Tools_OAuth_Authorize {
 
 		// Client + redirect must be valid before we trust redirect_uri as a target.
 		if ( '' === $client_id || null === $client || '' === $redirect_uri || ! self::redirect_registered( $client, $redirect_uri ) ) {
-			self::error_page( __( 'Invalid client or redirect URI for this connection request.', 'emcp-tools' ) );
+			self::error_page( __( 'Invalid client or redirect URI for this connection request.', 'karmcp' ) );
 		}
 
 		$state = (string) ( $params['state'] ?? '' );
@@ -134,7 +134,7 @@ class EMCP_Tools_OAuth_Authorize {
 			exit;
 		}
 		if ( ! current_user_can( self::required_cap() ) ) {
-			self::error_page( __( 'Only administrators can authorize an MCP connection on this site.', 'emcp-tools' ) );
+			self::error_page( __( 'Only administrators can authorize an MCP connection on this site.', 'karmcp' ) );
 		}
 
 		echo self::render_consent( array_merge( $valid, array( 'client_name' => $client['client_name'] ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_consent escapes.
@@ -147,20 +147,20 @@ class EMCP_Tools_OAuth_Authorize {
 
 	private static function handle_post(): void {
 		if ( ! is_user_logged_in() || ! current_user_can( self::required_cap() ) ) {
-			self::error_page( __( 'You are not allowed to authorize this connection.', 'emcp-tools' ) );
+			self::error_page( __( 'You are not allowed to authorize this connection.', 'karmcp' ) );
 		}
 
 		$p     = self::request_params( $_POST ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified immediately below.
-		$nonce = (string) ( $p['_emcp_oauth_nonce'] ?? '' );
+		$nonce = (string) ( $p['_karmcp_oauth_nonce'] ?? '' );
 		if ( ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
-			self::error_page( __( 'Security check failed. Please start the connection again.', 'emcp-tools' ) );
+			self::error_page( __( 'Security check failed. Please start the connection again.', 'karmcp' ) );
 		}
 
 		$client_id    = (string) ( $p['client_id'] ?? '' );
 		$redirect_uri = (string) ( $p['redirect_uri'] ?? '' );
 		$client       = self::lookup_client( $client_id );
 		if ( null === $client || ! self::redirect_registered( $client, $redirect_uri ) ) {
-			self::error_page( __( 'Invalid client or redirect URI for this connection request.', 'emcp-tools' ) );
+			self::error_page( __( 'Invalid client or redirect URI for this connection request.', 'karmcp' ) );
 		}
 
 		$state = (string) ( $p['state'] ?? '' );
@@ -173,13 +173,13 @@ class EMCP_Tools_OAuth_Authorize {
 			self::redirect_error( $redirect_uri, 'invalid_request', $state );
 		}
 
-		$code = EMCP_Tools_OAuth_Store::issue_code(
+		$code = KarMCP_OAuth_Store::issue_code(
 			array(
 				'client_id'      => $client['client_id'],
 				'user_id'        => get_current_user_id(),
 				'redirect_uri'   => $redirect_uri,
 				'code_challenge' => $challenge,
-				'scopes'         => (string) ( $p['scope'] ?? EMCP_Tools_OAuth_Server::SCOPE ),
+				'scopes'         => (string) ( $p['scope'] ?? KarMCP_OAuth_Server::SCOPE ),
 			)
 		);
 
@@ -214,7 +214,7 @@ class EMCP_Tools_OAuth_Authorize {
 			'redirect_uri'   => (string) ( $params['redirect_uri'] ?? '' ),
 			'code_challenge' => (string) $params['code_challenge'],
 			'state'          => (string) ( $params['state'] ?? '' ),
-			'scope'          => (string) ( $params['scope'] ?? EMCP_Tools_OAuth_Server::SCOPE ),
+			'scope'          => (string) ( $params['scope'] ?? KarMCP_OAuth_Server::SCOPE ),
 		);
 	}
 
@@ -227,7 +227,7 @@ class EMCP_Tools_OAuth_Authorize {
 	 */
 	public static function redirect_registered( array $client, string $redirect_uri ): bool {
 		foreach ( (array) ( $client['redirect_uris'] ?? array() ) as $registered ) {
-			if ( is_string( $registered ) && EMCP_Tools_OAuth_Util::redirect_uri_matches( $registered, $redirect_uri ) ) {
+			if ( is_string( $registered ) && KarMCP_OAuth_Util::redirect_uri_matches( $registered, $redirect_uri ) ) {
 				return true;
 			}
 		}
@@ -266,20 +266,20 @@ class EMCP_Tools_OAuth_Authorize {
 		$site       = get_bloginfo( 'name' );
 		$client     = (string) ( $ctx['client_name'] ?? 'An MCP client' );
 		$nonce      = wp_create_nonce( self::NONCE_ACTION );
-		$deny_label = __( 'Deny', 'emcp-tools' );
+		$deny_label = __( 'Deny', 'karmcp' );
 
 		$hidden = '';
 		foreach ( array( 'client_id', 'redirect_uri', 'code_challenge', 'state', 'scope' ) as $k ) {
 			$hidden .= '<input type="hidden" name="' . esc_attr( $k ) . '" value="' . esc_attr( (string) ( $ctx[ $k ] ?? '' ) ) . '" />';
 		}
-		$hidden .= '<input type="hidden" name="_emcp_oauth_nonce" value="' . esc_attr( $nonce ) . '" />';
+		$hidden .= '<input type="hidden" name="_karmcp_oauth_nonce" value="' . esc_attr( $nonce ) . '" />';
 
 		$action = esc_url( self::endpoint_url() );
 
 		return '<!doctype html><html><head><meta charset="utf-8" />'
 			. '<meta name="viewport" content="width=device-width, initial-scale=1" />'
 			. '<meta name="robots" content="noindex" />'
-			. '<title>' . esc_html__( 'Authorize connection', 'emcp-tools' ) . '</title>'
+			. '<title>' . esc_html__( 'Authorize connection', 'karmcp' ) . '</title>'
 			. '<style>'
 			. 'body{margin:0;background:#f5f6fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#0a0a14}'
 			. '.wrap{max-width:460px;margin:8vh auto;padding:0 20px}'
@@ -295,25 +295,25 @@ class EMCP_Tools_OAuth_Authorize {
 			. '.approve{background:#4f46e5;color:#fff}'
 			. '.deny{background:#fff;border-color:#0a0a1428;color:#3a3b52}'
 			. '</style></head><body><div class="wrap"><div class="card">'
-			. '<div class="eyebrow">' . esc_html__( 'Authorize MCP connection', 'emcp-tools' ) . '</div>'
+			. '<div class="eyebrow">' . esc_html__( 'Authorize MCP connection', 'karmcp' ) . '</div>'
 			. '<h1>' . sprintf(
 				/* translators: 1: client name, 2: site name */
-				esc_html__( '%1$s wants to connect to %2$s', 'emcp-tools' ),
+				esc_html__( '%1$s wants to connect to %2$s', 'karmcp' ),
 				'<b>' . esc_html( $client ) . '</b>',
 				esc_html( $site )
 			) . '</h1>'
-			. '<p>' . esc_html__( 'It will connect as your WordPress account and can do anything you can through the MCP tools you have enabled.', 'emcp-tools' ) . '</p>'
+			. '<p>' . esc_html__( 'It will connect as your WordPress account and can do anything you can through the MCP tools you have enabled.', 'karmcp' ) . '</p>'
 			. '<div class="who">' . sprintf(
 				/* translators: 1: display name, 2: user login */
-				esc_html__( 'Signed in as %1$s (%2$s)', 'emcp-tools' ),
+				esc_html__( 'Signed in as %1$s (%2$s)', 'karmcp' ),
 				'<b>' . esc_html( $user->display_name ) . '</b>',
 				esc_html( $user->user_login )
 			) . '</div>'
-			. '<p class="warn">' . esc_html__( 'Only approve connections you started yourself. You can revoke access anytime from EMCP Tools → Connection.', 'emcp-tools' ) . '</p>'
+			. '<p class="warn">' . esc_html__( 'Only approve connections you started yourself. You can revoke access anytime from KarMCP → Connection.', 'karmcp' ) . '</p>'
 			. '<form method="post" action="' . $action . '">' . $hidden
 			. '<div class="row">'
 			. '<button class="deny" type="submit" name="action" value="deny">' . esc_html( $deny_label ) . '</button>'
-			. '<button class="approve" type="submit" name="action" value="approve">' . esc_html__( 'Approve', 'emcp-tools' ) . '</button>'
+			. '<button class="approve" type="submit" name="action" value="approve">' . esc_html__( 'Approve', 'karmcp' ) . '</button>'
 			. '</div></form></div></div></body></html>';
 	}
 
@@ -326,7 +326,7 @@ class EMCP_Tools_OAuth_Authorize {
 	 * @return array|null
 	 */
 	private static function lookup_client( string $client_id ): ?array {
-		return '' === $client_id ? null : EMCP_Tools_OAuth_Store::get_client( $client_id );
+		return '' === $client_id ? null : KarMCP_OAuth_Store::get_client( $client_id );
 	}
 
 	/**
@@ -352,9 +352,9 @@ class EMCP_Tools_OAuth_Authorize {
 			status_header( 400 );
 			header( 'Content-Type: text/html; charset=utf-8' );
 		}
-		echo '<!doctype html><meta charset="utf-8" /><title>' . esc_html__( 'Connection error', 'emcp-tools' ) . '</title>'
+		echo '<!doctype html><meta charset="utf-8" /><title>' . esc_html__( 'Connection error', 'karmcp' ) . '</title>'
 			. '<div style="max-width:460px;margin:12vh auto;font-family:sans-serif;text-align:center;color:#0a0a14">'
-			. '<h1 style="font-size:20px">' . esc_html__( 'Connection error', 'emcp-tools' ) . '</h1>'
+			. '<h1 style="font-size:20px">' . esc_html__( 'Connection error', 'karmcp' ) . '</h1>'
 			. '<p style="color:#3a3b52">' . esc_html( $message ) . '</p></div>';
 		exit;
 	}

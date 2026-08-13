@@ -7,7 +7,7 @@
  * no-op — the admin class reads the module's active state to show/hide the tab.
  * Free tier; on by default.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -20,18 +20,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Brand_Kits_Module extends EMCP_Tools_Module {
+class KarMCP_Brand_Kits_Module extends KarMCP_Module {
 
 	public function id(): string {
 		return 'brand-kits';
 	}
 
 	public function title(): string {
-		return __( 'Brand Kits', 'emcp-tools' );
+		return __( 'Brand Kits', 'karmcp' );
 	}
 
 	public function description(): string {
-		return __( 'One-click color + typography kits for your site, bundled free kits plus the premium library.', 'emcp-tools' );
+		return __( 'One-click color + typography kits for your site, bundled free kits plus the premium library.', 'karmcp' );
 	}
 
 	public function tier(): string {
@@ -44,7 +44,7 @@ class EMCP_Tools_Brand_Kits_Module extends EMCP_Tools_Module {
 
 	/** The dedicated Brand Kits admin tab is the config surface. */
 	public function settings_url(): string {
-		return admin_url( 'admin.php?page=' . EMCP_Tools_Admin::PAGE_SLUG . '-brand-kits' );
+		return admin_url( 'admin.php?page=' . KarMCP_Admin::PAGE_SLUG . '-brand-kits' );
 	}
 
 	/** No overlay settings; the feature lives on its admin tab. */

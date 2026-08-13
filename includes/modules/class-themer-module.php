@@ -1,6 +1,6 @@
 <?php
 /**
- * EMCP Themer as a free module.
+ * KarMCP Themer as a free module.
  *
  * On by default. register() owns ALL front-end wiring: the CPT, the condition-index
  * rebuild hooks, the render controller, and the metabox. The MCP ability group is
@@ -9,7 +9,7 @@
  * stops the CPT, the front-end takeover, and the tab; the registrar then omits the
  * tools too — a true kill switch.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -20,18 +20,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Themer_Module extends EMCP_Tools_Module {
+class KarMCP_Themer_Module extends KarMCP_Module {
 
 	public function id(): string {
 		return 'themer';
 	}
 
 	public function title(): string {
-		return __( 'Themer', 'emcp-tools' );
+		return __( 'Themer', 'karmcp' );
 	}
 
 	public function description(): string {
-		return __( 'Build your site\'s header, footer, single, archive, search & 404 layouts with any page builder, and control where each applies.', 'emcp-tools' );
+		return __( 'Build your site\'s header, footer, single, archive, search & 404 layouts with any page builder, and control where each applies.', 'karmcp' );
 	}
 
 	public function tier(): string {
@@ -44,7 +44,7 @@ class EMCP_Tools_Themer_Module extends EMCP_Tools_Module {
 
 	/** The native CPT screen (its own dashboard menu) is the config surface. */
 	public function settings_url(): string {
-		return admin_url( 'edit.php?post_type=' . EMCP_Tools_Themer_CPT::POST_TYPE );
+		return admin_url( 'edit.php?post_type=' . KarMCP_Themer_CPT::POST_TYPE );
 	}
 
 	public function render_settings(): void {}
@@ -56,53 +56,60 @@ class EMCP_Tools_Themer_Module extends EMCP_Tools_Module {
 	 * @return bool
 	 */
 	public static function is_enabled(): bool {
-		$active = (array) get_option( EMCP_Tools_Module::OPTION_ACTIVE, array() );
+		$active = (array) get_option( KarMCP_Module::OPTION_ACTIVE, array() );
 		return in_array( 'themer', $active, true );
 	}
 
 	/** Option marker: the condition index was healed after the save-order fix. */
-	const OPTION_INDEX_HEALED = 'emcp_tools_themer_index_healed';
+	const OPTION_INDEX_HEALED = 'karmcp_themer_index_healed';
 
 	/** Wire everything. Booted by the registry on init:5 only when active. */
 	public function register(): void {
-		$cpt = new EMCP_Tools_Themer_CPT();
+		// Granular condition layer (unlimited templates, per-object targeting,
+		// Exclude rules, priority). Wired FIRST so the quota, matcher, selector
+		// and schema filters are in place before the CPT or metabox read them.
+		if ( class_exists( 'KarMCP_Themer_Extended' ) ) {
+			KarMCP_Themer_Extended::init();
+		}
+
+		$cpt = new KarMCP_Themer_CPT();
 		$cpt->register();
 
 		// Header Footer Elementor builds the same header/footer slots. Warn the
 		// admin and, until they pick one system, let Themer win deterministically.
-		if ( class_exists( 'EMCP_Tools_Themer_HFE_Conflict' ) ) {
-			EMCP_Tools_Themer_HFE_Conflict::init();
+		if ( class_exists( 'KarMCP_Themer_HFE_Conflict' ) ) {
+			KarMCP_Themer_HFE_Conflict::init();
 		}
 
-		EMCP_Tools_Themer_Index::register_hooks();
+		KarMCP_Themer_Index::register_hooks();
 
 		// One-time heal: a prior build could leave the condition index empty (the
 		// rebuild raced the metabox meta writes), so existing templates silently
 		// stopped applying. Rebuild once on upgrade so they resolve again without
 		// the admin re-saving each template.
 		if ( '1' !== (string) get_option( self::OPTION_INDEX_HEALED, '' ) ) {
-			EMCP_Tools_Themer_Index::rebuild();
+			KarMCP_Themer_Index::rebuild();
 			update_option( self::OPTION_INDEX_HEALED, '1', true );
 		}
 
 		if ( ! is_admin() ) {
-			( new EMCP_Tools_Themer_Render_Controller() )->init();
+			( new KarMCP_Themer_Render_Controller() )->init();
 		}
 
-		if ( is_admin() && class_exists( 'EMCP_Tools_Themer_Metabox' ) ) {
-			( new EMCP_Tools_Themer_Metabox() )->init();
+		if ( is_admin() && class_exists( 'KarMCP_Themer_Metabox' ) ) {
+			( new KarMCP_Themer_Metabox() )->init();
 		}
 
 		// Dynamic content blocks (Gutenberg) — register on both front end (render)
 		// and admin (editor). Elementor dynamic widgets self-gate on Elementor.
-		if ( class_exists( 'EMCP_Tools_Themer_Blocks' ) ) {
-			( new EMCP_Tools_Themer_Blocks() )->init();
+		if ( class_exists( 'KarMCP_Themer_Blocks' ) ) {
+			( new KarMCP_Themer_Blocks() )->init();
 		}
-		if ( class_exists( 'EMCP_Tools_Themer_Widgets' ) ) {
-			( new EMCP_Tools_Themer_Widgets() )->init();
+		if ( class_exists( 'KarMCP_Themer_Widgets' ) ) {
+			( new KarMCP_Themer_Widgets() )->init();
 		}
-		if ( class_exists( 'EMCP_Tools_Themer_PHP' ) ) {
-			( new EMCP_Tools_Themer_PHP() )->init();
+		if ( class_exists( 'KarMCP_Themer_PHP' ) ) {
+			( new KarMCP_Themer_PHP() )->init();
 		}
 	}
 }

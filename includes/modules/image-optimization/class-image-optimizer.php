@@ -4,11 +4,11 @@
  *
  * Runs on `wp_generate_attachment_metadata`: preserves the full-size (only
  * trimmed when a max-dimension cap is set), backs up each file it touches under
- * `uploads/emcp-originals/`, re-compresses the generated sub-sizes in place, and
+ * `uploads/karmcp-originals/`, re-compresses the generated sub-sizes in place, and
  * (when enabled) generates a `.webp` sibling per size. Records per-attachment
- * results in `_emcp_optim` meta and is idempotent (status=done short-circuits).
+ * results in `_karmcp_optim` meta and is idempotent (status=done short-circuits).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -21,9 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Image_Optimizer {
+class KarMCP_Image_Optimizer {
 
-	const META_KEY = '_emcp_optim';
+	const META_KEY = '_karmcp_optim';
 
 	/** @var array{compress:bool,webp:bool,quality:int,max_dimension:int,keep_originals:bool} */
 	private $settings;
@@ -82,7 +82,7 @@ class EMCP_Tools_Image_Optimizer {
 
 	/**
 	 * Backup path for a file, mirroring its uploads-relative path under
-	 * `uploads/emcp-originals/`.
+	 * `uploads/karmcp-originals/`.
 	 *
 	 * @param string $file   Absolute file inside uploads.
 	 * @param array  $upload wp_upload_dir() array (needs `basedir`).
@@ -91,11 +91,11 @@ class EMCP_Tools_Image_Optimizer {
 	public static function backup_path( string $file, array $upload ): string {
 		$basedir = rtrim( $upload['basedir'] ?? '', '/\\' );
 		$rel     = ltrim( str_replace( $basedir, '', $file ), '/\\' );
-		return $basedir . '/emcp-originals/' . $rel;
+		return $basedir . '/karmcp-originals/' . $rel;
 	}
 
 	/**
-	 * @param array $optim Existing `_emcp_optim` meta.
+	 * @param array $optim Existing `_karmcp_optim` meta.
 	 * @return bool Whether processing should be skipped (already done).
 	 */
 	public function should_skip( array $optim ): bool {
@@ -124,7 +124,7 @@ class EMCP_Tools_Image_Optimizer {
 		 * @param bool $do            Whether to optimise (default true).
 		 * @param int  $attachment_id The attachment being processed.
 		 */
-		if ( ! apply_filters( 'emcp_tools_optimize_attachment', true, (int) $attachment_id ) ) {
+		if ( ! apply_filters( 'karmcp_optimize_attachment', true, (int) $attachment_id ) ) {
 			return $metadata;
 		}
 		$mime = get_post_mime_type( (int) $attachment_id );
@@ -155,7 +155,7 @@ class EMCP_Tools_Image_Optimizer {
 	 * @return array Result meta.
 	 */
 	public function process_files( array $files, array $upload, string $full_rel, string $basedir ): array {
-		$generator  = new EMCP_Tools_Webp_Generator( $this->settings['quality'] );
+		$generator  = new KarMCP_Webp_Generator( $this->settings['quality'] );
 		$webp_ok    = $this->settings['webp'] && $generator->is_available();
 		$full_abs   = '' !== $full_rel ? rtrim( $basedir, '/\\' ) . '/' . $full_rel : '';
 		$before     = 0;

@@ -1,17 +1,17 @@
 /**
- * EMCP Themer — cascading condition builder styling.
+ * KarMCP Themer — cascading condition builder styling.
  * Flat, WordPress-admin-native. No gradients.
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 /* ---- Metabox shell ------------------------------------------------------- */
 
-#emcp-themer-conditions .inside,
-.emcp-themer-conditions {
+#karmcp-themer-conditions .inside,
+.karmcp-themer-conditions {
 	margin-top: 4px;
 }
 
-.emcp-themer-type-select {
+.karmcp-themer-type-select {
 	min-width: 180px;
 	height: 34px;
 	border-radius: 4px;
@@ -19,14 +19,14 @@
 
 /* ---- Rows ---------------------------------------------------------------- */
 
-.emcp-cond-rows {
+.karmcp-cond-rows {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 	margin: 12px 0;
 }
 
-.emcp-cond-row {
+.karmcp-cond-row {
 	position: relative;
 	display: flex;
 	align-items: center;
@@ -41,17 +41,17 @@
 	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.emcp-cond-row:hover {
+.karmcp-cond-row:hover {
 	box-shadow: 0 2px 6px rgba( 0, 0, 0, 0.07 );
 }
 
-.emcp-cond-cell {
+.karmcp-cond-cell {
 	display: inline-flex;
 	align-items: center;
 }
 
 /* Little "→" separators between the cascade steps. */
-.emcp-cond-cell + .emcp-cond-cell::before {
+.karmcp-cond-cell + .karmcp-cond-cell::before {
 	content: "";
 	width: 14px;
 	height: 1px;
@@ -62,7 +62,7 @@
 
 /* ---- Selects ------------------------------------------------------------- */
 
-.emcp-cond-row select {
+.karmcp-cond-row select {
 	height: 34px;
 	max-width: 240px;
 	padding: 0 26px 0 10px;
@@ -74,18 +74,18 @@
 	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.emcp-cond-row select:hover {
+.karmcp-cond-row select:hover {
 	border-color: #646970;
 }
 
-.emcp-cond-row select:focus {
+.karmcp-cond-row select:focus {
 	border-color: #2271b1;
 	box-shadow: 0 0 0 1px #2271b1;
 	outline: 2px solid transparent;
 }
 
 /* Relation gets the emphasis (its own accented chip). */
-.emcp-cond-relation {
+.karmcp-cond-relation {
 	font-weight: 600;
 	min-width: 104px;
 	color: #0a4b78 !important;
@@ -95,20 +95,20 @@
 
 /* ---- Object (Pro) search ------------------------------------------------- */
 
-.emcp-cond-object {
+.karmcp-cond-object {
 	display: inline-flex;
 	flex-direction: column;
 	gap: 4px;
 	position: relative;
 }
 
-.emcp-cond-object-search {
+.karmcp-cond-object-search {
 	min-width: 210px;
 	height: 32px;
 	border-radius: 4px;
 }
 
-.emcp-cond-object-results {
+.karmcp-cond-object-results {
 	position: absolute;
 	top: 100%;
 	left: 0;
@@ -123,11 +123,11 @@
 	box-shadow: 0 6px 16px rgba( 0, 0, 0, 0.12 );
 }
 
-.emcp-cond-object-results:empty {
+.karmcp-cond-object-results:empty {
 	display: none;
 }
 
-.emcp-cond-result {
+.karmcp-cond-result {
 	display: block;
 	padding: 7px 12px;
 	text-decoration: none;
@@ -135,17 +135,17 @@
 	border-bottom: 1px solid #f0f0f1;
 }
 
-.emcp-cond-result:last-child {
+.karmcp-cond-result:last-child {
 	border-bottom: 0;
 }
 
-.emcp-cond-result:hover,
-.emcp-cond-result:focus {
+.karmcp-cond-result:hover,
+.karmcp-cond-result:focus {
 	background: #2271b1;
 	color: #fff;
 }
 
-.emcp-cond-searching {
+.karmcp-cond-searching {
 	display: block;
 	padding: 7px 12px;
 	color: #646970;
@@ -153,7 +153,7 @@
 
 /* ---- Remove button ------------------------------------------------------- */
 
-.emcp-cond-remove {
+.karmcp-cond-remove {
 	margin-left: auto;
 	display: inline-flex;
 	align-items: center;
@@ -172,8 +172,8 @@
 	transition: background 0.15s ease, color 0.15s ease;
 }
 
-.emcp-cond-remove:hover,
-.emcp-cond-remove:focus {
+.karmcp-cond-remove:hover,
+.karmcp-cond-remove:focus {
 	background: #b32d2e;
 	border-color: #b32d2e;
 	color: #fff;
@@ -183,7 +183,7 @@
 
 /* ---- Add condition ------------------------------------------------------- */
 
-.emcp-cond-add.button {
+.karmcp-cond-add.button {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
@@ -197,8 +197,8 @@
 	box-shadow: none;
 }
 
-.emcp-cond-add.button:hover,
-.emcp-cond-add.button:focus {
+.karmcp-cond-add.button:hover,
+.karmcp-cond-add.button:focus {
 	color: #fff;
 	background: #2271b1;
 	border-style: solid;
@@ -207,7 +207,7 @@
 
 /* ---- Priority ------------------------------------------------------------ */
 
-.emcp-cond-priority {
+.karmcp-cond-priority {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
@@ -217,12 +217,12 @@
 	border-radius: 5px;
 }
 
-.emcp-cond-priority label {
+.karmcp-cond-priority label {
 	font-weight: 600;
 	color: #1d2327;
 }
 
-.emcp-cond-priority-input {
+.karmcp-cond-priority-input {
 	width: 72px;
 	height: 30px;
 	border-radius: 4px;
@@ -230,7 +230,7 @@
 
 /* ---- Pro hint ------------------------------------------------------------ */
 
-.emcp-themer-pro-hint {
+.karmcp-themer-pro-hint {
 	margin-top: 12px;
 	padding: 10px 14px;
 	background: #fcf9e8;
@@ -242,7 +242,7 @@
 
 /* ---- Empty / note state -------------------------------------------------- */
 
-.emcp-themer-conditions > .description {
+.karmcp-themer-conditions > .description {
 	margin: 14px 0;
 	padding: 12px 14px;
 	background: #f6f7f7;
@@ -253,21 +253,21 @@
 /* ---- Small screens ------------------------------------------------------- */
 
 @media screen and ( max-width: 782px ) {
-	.emcp-cond-row select,
-	.emcp-cond-object-search {
+	.karmcp-cond-row select,
+	.karmcp-cond-object-search {
 		max-width: 100%;
 		width: 100%;
 	}
 
-	.emcp-cond-cell {
+	.karmcp-cond-cell {
 		width: 100%;
 	}
 
-	.emcp-cond-cell + .emcp-cond-cell::before {
+	.karmcp-cond-cell + .karmcp-cond-cell::before {
 		display: none;
 	}
 
-	.emcp-cond-remove {
+	.karmcp-cond-remove {
 		margin-left: 0;
 		position: absolute;
 		top: 8px;

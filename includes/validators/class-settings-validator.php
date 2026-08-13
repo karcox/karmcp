@@ -2,7 +2,7 @@
 /**
  * Validates widget settings against Elementor control schemas.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -15,12 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Settings_Validator {
+class KarMCP_Settings_Validator {
 
 	/**
 	 * The schema generator instance.
 	 *
-	 * @var EMCP_Tools_Schema_Generator
+	 * @var KarMCP_Schema_Generator
 	 */
 	private $schema_generator;
 
@@ -29,9 +29,9 @@ class EMCP_Tools_Settings_Validator {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param EMCP_Tools_Schema_Generator $schema_generator The schema generator.
+	 * @param KarMCP_Schema_Generator $schema_generator The schema generator.
 	 */
-	public function __construct( EMCP_Tools_Schema_Generator $schema_generator ) {
+	public function __construct( KarMCP_Schema_Generator $schema_generator ) {
 		$this->schema_generator = $schema_generator;
 	}
 
@@ -176,7 +176,7 @@ class EMCP_Tools_Settings_Validator {
 		if ( ! empty( $unknown ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log(
 				sprintf(
-					'[EMCP Tools] Passing through %1$d unrecognised setting(s) for widget "%2$s" (absent from the headless control schema): %3$s',
+					'[KarMCP] Passing through %1$d unrecognised setting(s) for widget "%2$s" (absent from the headless control schema): %3$s',
 					count( $unknown ),
 					$widget_type,
 					implode( ', ', $unknown )

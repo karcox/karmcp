@@ -4,9 +4,9 @@
  *
  * Ten tools to discover WordPress blocks/patterns and build/edit a post's block
  * tree incrementally with raw block markup + index-path addressing. Pure WP core
- * (no Elementor); operates on any post's post_content via EMCP_Tools_Block_Tree.
+ * (no Elementor); operates on any post's post_content via KarMCP_Block_Tree.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.1.0
  */
-class EMCP_Tools_Gutenberg_Abilities {
+class KarMCP_Gutenberg_Abilities {
 
 	/** @var string[] */
 	private $ability_names = array();
@@ -74,7 +74,7 @@ class EMCP_Tools_Gutenberg_Abilities {
 	private function position_schema(): array {
 		return array(
 			'type'        => 'object',
-			'description' => __( 'Where to place the block(s). mode: append (top end) | prepend (top start) | before | after | inside. before/after/inside need "path".', 'emcp-tools' ),
+			'description' => __( 'Where to place the block(s). mode: append (top end) | prepend (top start) | before | after | inside. before/after/inside need "path".', 'karmcp' ),
 			'properties'  => array(
 				'mode' => array( 'type' => 'string', 'enum' => array( 'append', 'prepend', 'before', 'after', 'inside' ) ),
 				'path' => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ) ),
@@ -85,20 +85,20 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- list-blocks -------------------------------------------------------
 
 	private function register_list_blocks(): void {
-		$this->ability_names[] = 'emcp-tools/list-blocks';
-		emcp_tools_register_ability(
-			'emcp-tools/list-blocks',
+		$this->ability_names[] = 'karmcp/list-blocks';
+		karmcp_register_ability(
+			'karmcp/list-blocks',
 			array(
-				'label'               => __( 'List Blocks', 'emcp-tools' ),
-				'description'         => __( 'Lists registered Gutenberg block types (name, title, category). Filter by category or search. Step 1 of build a block page: list-blocks -> get-block-schema -> add-block.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Blocks', 'karmcp' ),
+				'description'         => __( 'Lists registered Gutenberg block types (name, title, category). Filter by category or search. Step 1 of build a block page: list-blocks -> get-block-schema -> add-block.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_blocks' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'category' => array( 'type' => 'string', 'description' => __( 'Only blocks in this category (e.g. text, media, design).', 'emcp-tools' ) ),
-						'search'   => array( 'type' => 'string', 'description' => __( 'Substring match on block name or title.', 'emcp-tools' ) ),
+						'category' => array( 'type' => 'string', 'description' => __( 'Only blocks in this category (e.g. text, media, design).', 'karmcp' ) ),
+						'search'   => array( 'type' => 'string', 'description' => __( 'Substring match on block name or title.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'blocks' => array( 'type' => 'array', 'items' => array( 'type' => 'object' ) ) ) ),
@@ -132,20 +132,20 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- get-block-schema --------------------------------------------------
 
 	private function register_get_block_schema(): void {
-		$this->ability_names[] = 'emcp-tools/get-block-schema';
-		emcp_tools_register_ability(
-			'emcp-tools/get-block-schema',
+		$this->ability_names[] = 'karmcp/get-block-schema';
+		karmcp_register_ability(
+			'karmcp/get-block-schema',
 			array(
-				'label'               => __( 'Get Block Schema', 'emcp-tools' ),
-				'description'         => __( 'Returns a block type\'s attributes, supports, and a minimal markup example. Pass "name" for one or "names" for a batch. Step 2 before add-block.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Block Schema', 'karmcp' ),
+				'description'         => __( 'Returns a block type\'s attributes, supports, and a minimal markup example. Pass "name" for one or "names" for a batch. Step 2 before add-block.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_block_schema' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'name'  => array( 'type' => 'string', 'description' => __( 'Block type name, e.g. core/heading.', 'emcp-tools' ) ),
-						'names' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ), 'description' => __( 'Batch of block type names.', 'emcp-tools' ) ),
+						'name'  => array( 'type' => 'string', 'description' => __( 'Block type name, e.g. core/heading.', 'karmcp' ) ),
+						'names' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ), 'description' => __( 'Batch of block type names.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'blocks' => array( 'type' => 'array', 'items' => array( 'type' => 'object' ) ) ) ),
@@ -170,7 +170,7 @@ class EMCP_Tools_Gutenberg_Abilities {
 		foreach ( $names as $name ) {
 			$type = $registry->get_registered( $name );
 			if ( ! $type ) {
-				$rows[] = array( 'name' => $name, 'error' => __( 'Block type not registered.', 'emcp-tools' ) );
+				$rows[] = array( 'name' => $name, 'error' => __( 'Block type not registered.', 'karmcp' ) );
 				continue;
 			}
 			$short  = ( 0 === strpos( $name, 'core/' ) ) ? substr( $name, 5 ) : $name;
@@ -189,20 +189,20 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- get-post-blocks ---------------------------------------------------
 
 	private function register_get_post_blocks(): void {
-		$this->ability_names[] = 'emcp-tools/get-post-blocks';
-		emcp_tools_register_ability(
-			'emcp-tools/get-post-blocks',
+		$this->ability_names[] = 'karmcp/get-post-blocks';
+		karmcp_register_ability(
+			'karmcp/get-post-blocks',
 			array(
-				'label'               => __( 'Get Post Blocks', 'emcp-tools' ),
-				'description'         => __( 'Returns a post\'s parsed block tree with an index PATH per block (e.g. [2,1]). Call this immediately before update-block/remove-block/move-block to get current paths.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Post Blocks', 'karmcp' ),
+				'description'         => __( 'Returns a post\'s parsed block tree with an index PATH per block (e.g. [2,1]). Call this immediately before update-block/remove-block/move-block to get current paths.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_post_blocks' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id' => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'emcp-tools' ) ),
-						'depth'   => array( 'type' => 'integer', 'description' => __( 'Max nesting depth to return. Omit for full tree.', 'emcp-tools' ) ),
+						'post_id' => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'karmcp' ) ),
+						'depth'   => array( 'type' => 'integer', 'description' => __( 'Max nesting depth to return. Omit for full tree.', 'karmcp' ) ),
 					),
 					'required'   => array( 'post_id' ),
 				),
@@ -220,30 +220,30 @@ class EMCP_Tools_Gutenberg_Abilities {
 		$post_id = absint( $input['post_id'] ?? 0 );
 		$post    = $post_id ? get_post( $post_id ) : null;
 		if ( ! $post ) {
-			return array( 'error' => __( 'Post not found.', 'emcp-tools' ) );
+			return array( 'error' => __( 'Post not found.', 'karmcp' ) );
 		}
 		$depth  = isset( $input['depth'] ) ? max( 1, (int) $input['depth'] ) : null;
-		$tree   = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		return array( 'blocks' => EMCP_Tools_Block_Tree::summarize( $tree, $depth ) );
+		$tree   = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		return array( 'blocks' => KarMCP_Block_Tree::summarize( $tree, $depth ) );
 	}
 
 	// ---- list-patterns -----------------------------------------------------
 
 	private function register_list_patterns(): void {
-		$this->ability_names[] = 'emcp-tools/list-patterns';
-		emcp_tools_register_ability(
-			'emcp-tools/list-patterns',
+		$this->ability_names[] = 'karmcp/list-patterns';
+		karmcp_register_ability(
+			'karmcp/list-patterns',
 			array(
-				'label'               => __( 'List Patterns', 'emcp-tools' ),
-				'description'         => __( 'Lists registered block patterns (prebuilt block compositions), name, title, categories, description. Use insert-pattern to drop one into a post.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Patterns', 'karmcp' ),
+				'description'         => __( 'Lists registered block patterns (prebuilt block compositions), name, title, categories, description. Use insert-pattern to drop one into a post.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_patterns' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'search'   => array( 'type' => 'string', 'description' => __( 'Substring match on pattern name or title.', 'emcp-tools' ) ),
-						'category' => array( 'type' => 'string', 'description' => __( 'Only patterns in this category.', 'emcp-tools' ) ),
+						'search'   => array( 'type' => 'string', 'description' => __( 'Substring match on pattern name or title.', 'karmcp' ) ),
+						'category' => array( 'type' => 'string', 'description' => __( 'Only patterns in this category.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'patterns' => array( 'type' => 'array', 'items' => array( 'type' => 'object' ) ) ) ),
@@ -292,7 +292,7 @@ class EMCP_Tools_Gutenberg_Abilities {
 		$post_id = absint( $input['post_id'] ?? 0 );
 		$post    = $post_id ? get_post( $post_id ) : null;
 		if ( ! $post ) {
-			return array( null, array( 'error' => __( 'Post not found.', 'emcp-tools' ) ) );
+			return array( null, array( 'error' => __( 'Post not found.', 'karmcp' ) ) );
 		}
 		return array( $post, null );
 	}
@@ -312,14 +312,14 @@ class EMCP_Tools_Gutenberg_Abilities {
 		wp_update_post(
 			array(
 				'ID'           => (int) $post->ID,
-				'post_content' => wp_slash( EMCP_Tools_Block_Tree::to_markup( $tree ) ),
+				'post_content' => wp_slash( KarMCP_Block_Tree::to_markup( $tree ) ),
 			),
 			true
 		);
 		// Record the block edit so it can be rolled back (post_content only).
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
 			$post_id = (int) $post->ID;
-			EMCP_Tools_Change_Recorder::record_post_fields(
+			KarMCP_Change_Recorder::record_post_fields(
 				$post_id,
 				array( 'fields' => array( 'post_content' => $before_content ), 'meta' => array(), 'terms' => array() ),
 				sprintf( 'Edited blocks on post #%d', $post_id ),
@@ -346,20 +346,20 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- add-block ---------------------------------------------------------
 
 	private function register_add_block(): void {
-		$this->ability_names[] = 'emcp-tools/add-block';
-		emcp_tools_register_ability(
-			'emcp-tools/add-block',
+		$this->ability_names[] = 'karmcp/add-block';
+		karmcp_register_ability(
+			'karmcp/add-block',
 			array(
-				'label'               => __( 'Add Block', 'emcp-tools' ),
-				'description'         => __( 'Inserts raw Gutenberg block markup into a post at a position. markup may contain one or more blocks. position.mode = append|prepend|before|after|inside (before/after/inside need position.path from get-post-blocks).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Add Block', 'karmcp' ),
+				'description'         => __( 'Inserts raw Gutenberg block markup into a post at a position. markup may contain one or more blocks. position.mode = append|prepend|before|after|inside (before/after/inside need position.path from get-post-blocks).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_block' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id'  => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'emcp-tools' ) ),
-						'markup'   => array( 'type' => 'string', 'description' => __( 'Gutenberg block markup, e.g. <!-- wp:heading --><h2>Hi</h2><!-- /wp:heading -->.', 'emcp-tools' ) ),
+						'post_id'  => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'karmcp' ) ),
+						'markup'   => array( 'type' => 'string', 'description' => __( 'Gutenberg block markup, e.g. <!-- wp:heading --><h2>Hi</h2><!-- /wp:heading -->.', 'karmcp' ) ),
 						'position' => $this->position_schema(),
 					),
 					'required'   => array( 'post_id', 'markup' ),
@@ -379,16 +379,16 @@ class EMCP_Tools_Gutenberg_Abilities {
 		if ( $err ) {
 			return $err;
 		}
-		$new = EMCP_Tools_Block_Tree::strip_separators( parse_blocks( (string) ( $input['markup'] ?? '' ) ) );
+		$new = KarMCP_Block_Tree::strip_separators( parse_blocks( (string) ( $input['markup'] ?? '' ) ) );
 		if ( ! $new ) {
-			return array( 'error' => __( 'markup did not parse to any block.', 'emcp-tools' ) );
+			return array( 'error' => __( 'markup did not parse to any block.', 'karmcp' ) );
 		}
 		$position = $this->position_from_input( $input );
-		$tree     = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === EMCP_Tools_Block_Tree::at( $tree, $position['path'] ) ) {
-			return array( 'error' => __( 'position.path does not resolve to a block. Call get-post-blocks first.', 'emcp-tools' ) );
+		$tree     = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === KarMCP_Block_Tree::at( $tree, $position['path'] ) ) {
+			return array( 'error' => __( 'position.path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
 		}
-		$tree = EMCP_Tools_Block_Tree::insert( $tree, $new, $position );
+		$tree = KarMCP_Block_Tree::insert( $tree, $new, $position );
 		$this->save_tree( $post, $tree );
 		return array( 'post_id' => (int) $post->ID, 'added' => count( $new ), 'path' => $position['path'] );
 	}
@@ -396,21 +396,21 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- update-block ------------------------------------------------------
 
 	private function register_update_block(): void {
-		$this->ability_names[] = 'emcp-tools/update-block';
-		emcp_tools_register_ability(
-			'emcp-tools/update-block',
+		$this->ability_names[] = 'karmcp/update-block';
+		karmcp_register_ability(
+			'karmcp/update-block',
 			array(
-				'label'               => __( 'Update Block', 'emcp-tools' ),
-				'description'         => __( 'Replaces the block at an index path with new block markup. Get the path from get-post-blocks first.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Block', 'karmcp' ),
+				'description'         => __( 'Replaces the block at an index path with new block markup. Get the path from get-post-blocks first.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_block' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id' => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'emcp-tools' ) ),
-						'path'    => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ), 'description' => __( 'Index path of the block to replace, e.g. [2,1].', 'emcp-tools' ) ),
-						'markup'  => array( 'type' => 'string', 'description' => __( 'Replacement block markup.', 'emcp-tools' ) ),
+						'post_id' => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'karmcp' ) ),
+						'path'    => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ), 'description' => __( 'Index path of the block to replace, e.g. [2,1].', 'karmcp' ) ),
+						'markup'  => array( 'type' => 'string', 'description' => __( 'Replacement block markup.', 'karmcp' ) ),
 					),
 					'required'   => array( 'post_id', 'path', 'markup' ),
 				),
@@ -430,15 +430,15 @@ class EMCP_Tools_Gutenberg_Abilities {
 			return $err;
 		}
 		$path = isset( $input['path'] ) && is_array( $input['path'] ) ? array_map( 'intval', $input['path'] ) : array();
-		$tree = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		if ( ! $path || null === EMCP_Tools_Block_Tree::at( $tree, $path ) ) {
-			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'emcp-tools' ) );
+		$tree = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		if ( ! $path || null === KarMCP_Block_Tree::at( $tree, $path ) ) {
+			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
 		}
-		$new = EMCP_Tools_Block_Tree::strip_separators( parse_blocks( (string) ( $input['markup'] ?? '' ) ) );
+		$new = KarMCP_Block_Tree::strip_separators( parse_blocks( (string) ( $input['markup'] ?? '' ) ) );
 		if ( ! $new ) {
-			return array( 'error' => __( 'markup did not parse to any block.', 'emcp-tools' ) );
+			return array( 'error' => __( 'markup did not parse to any block.', 'karmcp' ) );
 		}
-		$tree = EMCP_Tools_Block_Tree::replace( $tree, $path, $new );
+		$tree = KarMCP_Block_Tree::replace( $tree, $path, $new );
 		$this->save_tree( $post, $tree );
 		return array( 'post_id' => (int) $post->ID, 'path' => $path );
 	}
@@ -446,20 +446,20 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- remove-block ------------------------------------------------------
 
 	private function register_remove_block(): void {
-		$this->ability_names[] = 'emcp-tools/remove-block';
-		emcp_tools_register_ability(
-			'emcp-tools/remove-block',
+		$this->ability_names[] = 'karmcp/remove-block';
+		karmcp_register_ability(
+			'karmcp/remove-block',
 			array(
-				'label'               => __( 'Remove Block', 'emcp-tools' ),
-				'description'         => __( 'Deletes the block at an index path (and its inner blocks). Destructive. Get the path from get-post-blocks first.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Remove Block', 'karmcp' ),
+				'description'         => __( 'Deletes the block at an index path (and its inner blocks). Destructive. Get the path from get-post-blocks first.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_remove_block' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id' => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'emcp-tools' ) ),
-						'path'    => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ), 'description' => __( 'Index path of the block to remove.', 'emcp-tools' ) ),
+						'post_id' => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'karmcp' ) ),
+						'path'    => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ), 'description' => __( 'Index path of the block to remove.', 'karmcp' ) ),
 					),
 					'required'   => array( 'post_id', 'path' ),
 				),
@@ -479,11 +479,11 @@ class EMCP_Tools_Gutenberg_Abilities {
 			return $err;
 		}
 		$path = isset( $input['path'] ) && is_array( $input['path'] ) ? array_map( 'intval', $input['path'] ) : array();
-		$tree = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		if ( ! $path || null === EMCP_Tools_Block_Tree::at( $tree, $path ) ) {
-			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'emcp-tools' ) );
+		$tree = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		if ( ! $path || null === KarMCP_Block_Tree::at( $tree, $path ) ) {
+			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
 		}
-		$tree = EMCP_Tools_Block_Tree::remove( $tree, $path );
+		$tree = KarMCP_Block_Tree::remove( $tree, $path );
 		$this->save_tree( $post, $tree );
 		return array( 'post_id' => (int) $post->ID, 'removed' => true );
 	}
@@ -491,20 +491,20 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- move-block --------------------------------------------------------
 
 	private function register_move_block(): void {
-		$this->ability_names[] = 'emcp-tools/move-block';
-		emcp_tools_register_ability(
-			'emcp-tools/move-block',
+		$this->ability_names[] = 'karmcp/move-block';
+		karmcp_register_ability(
+			'karmcp/move-block',
 			array(
-				'label'               => __( 'Move Block', 'emcp-tools' ),
-				'description'         => __( 'Moves the block at "path" to a target position ({mode,path}). Get paths from get-post-blocks first.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Move Block', 'karmcp' ),
+				'description'         => __( 'Moves the block at "path" to a target position ({mode,path}). Get paths from get-post-blocks first.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_move_block' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id'  => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'emcp-tools' ) ),
-						'path'     => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ), 'description' => __( 'Index path of the block to move.', 'emcp-tools' ) ),
+						'post_id'  => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'karmcp' ) ),
+						'path'     => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ), 'description' => __( 'Index path of the block to move.', 'karmcp' ) ),
 						'position' => $this->position_schema(),
 					),
 					'required'   => array( 'post_id', 'path', 'position' ),
@@ -525,15 +525,15 @@ class EMCP_Tools_Gutenberg_Abilities {
 			return $err;
 		}
 		$from = isset( $input['path'] ) && is_array( $input['path'] ) ? array_map( 'intval', $input['path'] ) : array();
-		$tree = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		if ( ! $from || null === EMCP_Tools_Block_Tree::at( $tree, $from ) ) {
-			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'emcp-tools' ) );
+		$tree = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		if ( ! $from || null === KarMCP_Block_Tree::at( $tree, $from ) ) {
+			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
 		}
 		$position = $this->position_from_input( $input );
-		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === EMCP_Tools_Block_Tree::at( $tree, $position['path'] ) ) {
-			return array( 'error' => __( 'target position.path does not resolve to a block.', 'emcp-tools' ) );
+		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === KarMCP_Block_Tree::at( $tree, $position['path'] ) ) {
+			return array( 'error' => __( 'target position.path does not resolve to a block.', 'karmcp' ) );
 		}
-		$tree = EMCP_Tools_Block_Tree::move( $tree, $from, $position );
+		$tree = KarMCP_Block_Tree::move( $tree, $from, $position );
 		$this->save_tree( $post, $tree );
 		return array( 'post_id' => (int) $post->ID, 'path' => $position['path'] );
 	}
@@ -541,20 +541,20 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- duplicate-block ---------------------------------------------------
 
 	private function register_duplicate_block(): void {
-		$this->ability_names[] = 'emcp-tools/duplicate-block';
-		emcp_tools_register_ability(
-			'emcp-tools/duplicate-block',
+		$this->ability_names[] = 'karmcp/duplicate-block';
+		karmcp_register_ability(
+			'karmcp/duplicate-block',
 			array(
-				'label'               => __( 'Duplicate Block', 'emcp-tools' ),
-				'description'         => __( 'Clones the block at an index path and inserts the copy immediately after it. Get the path from get-post-blocks first.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Duplicate Block', 'karmcp' ),
+				'description'         => __( 'Clones the block at an index path and inserts the copy immediately after it. Get the path from get-post-blocks first.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_duplicate_block' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id' => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'emcp-tools' ) ),
-						'path'    => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ), 'description' => __( 'Index path of the block to duplicate.', 'emcp-tools' ) ),
+						'post_id' => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'karmcp' ) ),
+						'path'    => array( 'type' => 'array', 'items' => array( 'type' => 'integer' ), 'description' => __( 'Index path of the block to duplicate.', 'karmcp' ) ),
 					),
 					'required'   => array( 'post_id', 'path' ),
 				),
@@ -574,11 +574,11 @@ class EMCP_Tools_Gutenberg_Abilities {
 			return $err;
 		}
 		$path = isset( $input['path'] ) && is_array( $input['path'] ) ? array_map( 'intval', $input['path'] ) : array();
-		$tree = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		if ( ! $path || null === EMCP_Tools_Block_Tree::at( $tree, $path ) ) {
-			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'emcp-tools' ) );
+		$tree = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		if ( ! $path || null === KarMCP_Block_Tree::at( $tree, $path ) ) {
+			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
 		}
-		$tree = EMCP_Tools_Block_Tree::duplicate( $tree, $path );
+		$tree = KarMCP_Block_Tree::duplicate( $tree, $path );
 		$this->save_tree( $post, $tree );
 		$copy_path                            = $path;
 		$copy_path[ count( $copy_path ) - 1 ] = (int) end( $path ) + 1;
@@ -588,20 +588,20 @@ class EMCP_Tools_Gutenberg_Abilities {
 	// ---- insert-pattern ----------------------------------------------------
 
 	private function register_insert_pattern(): void {
-		$this->ability_names[] = 'emcp-tools/insert-pattern';
-		emcp_tools_register_ability(
-			'emcp-tools/insert-pattern',
+		$this->ability_names[] = 'karmcp/insert-pattern';
+		karmcp_register_ability(
+			'karmcp/insert-pattern',
 			array(
-				'label'               => __( 'Insert Pattern', 'emcp-tools' ),
-				'description'         => __( 'Inserts a registered block pattern (by name from list-patterns) into a post at a position.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Insert Pattern', 'karmcp' ),
+				'description'         => __( 'Inserts a registered block pattern (by name from list-patterns) into a post at a position.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_insert_pattern' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'post_id'      => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'emcp-tools' ) ),
-						'pattern_name' => array( 'type' => 'string', 'description' => __( 'Pattern name from list-patterns, e.g. core/two-columns.', 'emcp-tools' ) ),
+						'post_id'      => array( 'type' => 'integer', 'description' => __( 'Post ID.', 'karmcp' ) ),
+						'pattern_name' => array( 'type' => 'string', 'description' => __( 'Pattern name from list-patterns, e.g. core/two-columns.', 'karmcp' ) ),
 						'position'     => $this->position_schema(),
 					),
 					'required'   => array( 'post_id', 'pattern_name' ),
@@ -624,18 +624,18 @@ class EMCP_Tools_Gutenberg_Abilities {
 		$name    = (string) ( $input['pattern_name'] ?? '' );
 		$pattern = $name ? WP_Block_Patterns_Registry::get_instance()->get_registered( $name ) : null;
 		if ( ! $pattern || empty( $pattern['content'] ) ) {
-			return array( 'error' => __( 'Pattern not registered. Use list-patterns for valid names.', 'emcp-tools' ) );
+			return array( 'error' => __( 'Pattern not registered. Use list-patterns for valid names.', 'karmcp' ) );
 		}
-		$new = EMCP_Tools_Block_Tree::strip_separators( parse_blocks( (string) $pattern['content'] ) );
+		$new = KarMCP_Block_Tree::strip_separators( parse_blocks( (string) $pattern['content'] ) );
 		if ( ! $new ) {
-			return array( 'error' => __( 'Pattern produced no blocks.', 'emcp-tools' ) );
+			return array( 'error' => __( 'Pattern produced no blocks.', 'karmcp' ) );
 		}
 		$position = $this->position_from_input( $input );
-		$tree     = EMCP_Tools_Block_Tree::from_markup( (string) $post->post_content );
-		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === EMCP_Tools_Block_Tree::at( $tree, $position['path'] ) ) {
-			return array( 'error' => __( 'position.path does not resolve to a block. Call get-post-blocks first.', 'emcp-tools' ) );
+		$tree     = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === KarMCP_Block_Tree::at( $tree, $position['path'] ) ) {
+			return array( 'error' => __( 'position.path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
 		}
-		$tree = EMCP_Tools_Block_Tree::insert( $tree, $new, $position );
+		$tree = KarMCP_Block_Tree::insert( $tree, $new, $position );
 		$this->save_tree( $post, $tree );
 		return array( 'post_id' => (int) $post->ID, 'added' => count( $new ), 'path' => $position['path'] );
 	}

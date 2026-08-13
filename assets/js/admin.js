@@ -1,7 +1,7 @@
 /**
  * MCP Tools for Elementor — Admin Settings Scripts
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -52,7 +52,7 @@
 		// Per-category enable/disable + collapsible section headers.
 		// (cat scopes to .elementor-mcp-category, which never contains the
 		// low-tools-mode toggle, so the bulk selects below are safe.)
-		var COLLAPSE_KEY = 'emcpToolsCollapsed:';
+		var COLLAPSE_KEY = 'karmcpToolsCollapsed:';
 		form.querySelectorAll( '.elementor-mcp-category' ).forEach( function ( cat ) {
 			var catEnableAll = cat.querySelector( '.elementor-mcp-cat-enable-all' );
 			var catDisableAll = cat.querySelector( '.elementor-mcp-cat-disable-all' );
@@ -182,7 +182,7 @@
 		// don't overwrite each other's remembered tab. Falls back to the legacy
 		// key when the tablist doesn't declare one.
 		var tablist = document.querySelector( '.elementor-mcp-subtabs' );
-		var STORAGE_KEY = ( tablist && tablist.getAttribute( 'data-subtab-key' ) ) || 'emcpToolsActiveTab';
+		var STORAGE_KEY = ( tablist && tablist.getAttribute( 'data-subtab-key' ) ) || 'karmcpToolsActiveTab';
 
 		function activate( tabId ) {
 			var matched = false;
@@ -249,36 +249,36 @@
 		}
 
 		// Endpoint is available without generating credentials (OAuth mode needs it).
-		if ( typeof emcpToolsAdmin !== 'undefined' && emcpToolsAdmin.mcpEndpoint && ! window.emcpConn ) {
-			window.emcpConn = { endpoint: emcpToolsAdmin.mcpEndpoint, siteUrl: emcpToolsAdmin.siteUrl || '' };
+		if ( typeof karmcpToolsAdmin !== 'undefined' && karmcpToolsAdmin.mcpEndpoint && ! window.karmcpConn ) {
+			window.karmcpConn = { endpoint: karmcpToolsAdmin.mcpEndpoint, siteUrl: karmcpToolsAdmin.siteUrl || '' };
 		}
 
 		// Authentication-method chooser: toggle the flow + re-render the selected
 		// client for the chosen method (OAuth = sign-in, app-password = configs).
-		var authRadios = document.querySelectorAll( 'input[name="emcp_auth_method"]' );
-		function emcpApplyAuthMethod() {
-			document.body.setAttribute( 'data-emcp-auth', emcpAuthMethod() );
+		var authRadios = document.querySelectorAll( 'input[name="karmcp_auth_method"]' );
+		function karmcpApplyAuthMethod() {
+			document.body.setAttribute( 'data-karmcp-auth', karmcpAuthMethod() );
 			var sel = document.querySelector( '.elementor-mcp-client-card.is-selected' );
-			if ( sel ) { emcpSelectClient( sel.getAttribute( 'data-client' ) ); }
+			if ( sel ) { karmcpSelectClient( sel.getAttribute( 'data-client' ) ); }
 		}
 		for ( var ai = 0; ai < authRadios.length; ai++ ) {
-			authRadios[ ai ].addEventListener( 'change', emcpApplyAuthMethod );
+			authRadios[ ai ].addEventListener( 'change', karmcpApplyAuthMethod );
 		}
-		document.body.setAttribute( 'data-emcp-auth', emcpAuthMethod() );
+		document.body.setAttribute( 'data-karmcp-auth', karmcpAuthMethod() );
 
 		// The client picker is always visible now; auto-select so steps show.
 		var picker = document.getElementById( 'elementor-mcp-client-picker' );
 		if ( picker ) {
 			picker.style.display = '';
-			var savedClient = window.localStorage.getItem( 'emcpConnClient' );
+			var savedClient = window.localStorage.getItem( 'karmcpConnClient' );
 			var firstCard = document.querySelector( '.elementor-mcp-client-card' );
 			var pick = savedClient || ( firstCard ? firstCard.getAttribute( 'data-client' ) : '' );
-			if ( pick ) { emcpSelectClient( pick ); }
+			if ( pick ) { karmcpSelectClient( pick ); }
 		}
 
 		// The Basic Authorization header from the last generated credentials,
 		// used by the auth self-test (#41).
-		var emcpAuthHeader = '';
+		var karmcpAuthHeader = '';
 
 		// Connection auth self-test (#41): proves whether the Authorization
 		// header actually reaches WordPress. Servers like Plesk/Apache/IIS often
@@ -289,7 +289,7 @@
 		var authBtn = document.getElementById( 'elementor-mcp-authtest-btn' );
 		if ( authBtn ) {
 			authBtn.addEventListener( 'click', function () {
-				if ( ! emcpAuthHeader || typeof emcpToolsAdmin === 'undefined' || ! emcpToolsAdmin.restMeUrl ) {
+				if ( ! karmcpAuthHeader || typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.restMeUrl ) {
 					return;
 				}
 				var statusEl = document.getElementById( 'elementor-mcp-authtest-status' );
@@ -297,7 +297,7 @@
 				if ( statusEl ) {
 					statusEl.style.display = '';
 					statusEl.className = 'description';
-					statusEl.textContent = emcpToolsAdmin.authTesting || 'Testing…';
+					statusEl.textContent = karmcpToolsAdmin.authTesting || 'Testing…';
 				}
 				if ( fixEl ) {
 					fixEl.style.display = 'none';
@@ -305,10 +305,10 @@
 				authBtn.disabled = true;
 
 				/* global fetch */
-				fetch( emcpToolsAdmin.restMeUrl + '?_=' + ( new Date() ).getTime(), {
+				fetch( karmcpToolsAdmin.restMeUrl + '?_=' + ( new Date() ).getTime(), {
 					method: 'GET',
 					credentials: 'omit',
-					headers: { Authorization: emcpAuthHeader }
+					headers: { Authorization: karmcpAuthHeader }
 				} ).then( function ( response ) {
 					authBtn.disabled = false;
 					if ( ! statusEl ) {
@@ -316,13 +316,13 @@
 					}
 					if ( response.ok ) {
 						statusEl.className = 'description elementor-mcp-authtest-ok';
-						statusEl.textContent = emcpToolsAdmin.authOk || 'Authentication works.';
+						statusEl.textContent = karmcpToolsAdmin.authOk || 'Authentication works.';
 						if ( fixEl ) {
 							fixEl.style.display = 'none';
 						}
 					} else {
 						statusEl.className = 'description elementor-mcp-authtest-bad';
-						statusEl.textContent = ( emcpToolsAdmin.authFail || 'Authentication failed (HTTP %d).' ).replace( '%d', response.status );
+						statusEl.textContent = ( karmcpToolsAdmin.authFail || 'Authentication failed (HTTP %d).' ).replace( '%d', response.status );
 						if ( fixEl ) {
 							fixEl.style.display = '';
 						}
@@ -331,7 +331,7 @@
 					authBtn.disabled = false;
 					if ( statusEl ) {
 						statusEl.className = 'description elementor-mcp-authtest-bad';
-						statusEl.textContent = emcpToolsAdmin.authError || 'Could not reach the REST API.';
+						statusEl.textContent = karmcpToolsAdmin.authError || 'Could not reach the REST API.';
 					}
 					if ( fixEl ) {
 						fixEl.style.display = '';
@@ -359,23 +359,23 @@
 				return;
 			}
 
-			if ( typeof emcpToolsAdmin === 'undefined' || ! emcpToolsAdmin.ajaxUrl || ! emcpToolsAdmin.createPwNonce ) {
+			if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl || ! karmcpToolsAdmin.createPwNonce ) {
 				setCredStatus( 'Cannot create an application password automatically. Enter one manually below.', true );
 				return;
 			}
 
 			var origLabel = generateBtn.textContent;
 			generateBtn.disabled = true;
-			generateBtn.textContent = emcpToolsAdmin.generating || 'Generating…';
+			generateBtn.textContent = karmcpToolsAdmin.generating || 'Generating…';
 			setCredStatus( '', false );
 
 			var payload = new FormData();
-			payload.append( 'action', 'emcp_tools_create_app_password' );
-			payload.append( 'nonce', emcpToolsAdmin.createPwNonce );
+			payload.append( 'action', 'karmcp_tools_create_app_password' );
+			payload.append( 'nonce', karmcpToolsAdmin.createPwNonce );
 			payload.append( 'user_id', usernameEl.value );
 
 			/* global fetch */
-			fetch( emcpToolsAdmin.ajaxUrl, {
+			fetch( karmcpToolsAdmin.ajaxUrl, {
 				method: 'POST',
 				credentials: 'same-origin',
 				body: payload
@@ -391,7 +391,7 @@
 					return;
 				}
 
-				setCredStatus( emcpToolsAdmin.pwCreated || 'Application password created — save it below, it is shown only once.', false );
+				setCredStatus( karmcpToolsAdmin.pwCreated || 'Application password created — save it below, it is shown only once.', false );
 				renderGeneratedPassword( result.data.password );
 				renderConfigs( result.data.username, result.data.password );
 			} ).catch( function () {
@@ -454,20 +454,20 @@
 			}
 
 			// Arm the auth self-test (#41) with these credentials.
-			emcpAuthHeader = headerValue;
+			karmcpAuthHeader = headerValue;
 			var authRow = document.getElementById( 'elementor-mcp-authtest-row' );
 			if ( authRow ) {
 				authRow.style.display = '';
 			}
 
-			if ( typeof emcpToolsAdmin === 'undefined' || ! emcpToolsAdmin.mcpEndpoint ) {
+			if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.mcpEndpoint ) {
 				return;
 			}
 
 			// Stash for the client picker (Step 2/3).
-			window.emcpConn = {
-				endpoint: emcpToolsAdmin.mcpEndpoint,
-				siteUrl: emcpToolsAdmin.siteUrl || '',
+			window.karmcpConn = {
+				endpoint: karmcpToolsAdmin.mcpEndpoint,
+				siteUrl: karmcpToolsAdmin.siteUrl || '',
 				username: rawUsername,
 				appPassword: rawAppPassword,
 				userId: ( document.getElementById( 'elementor-mcp-b64-username' ) || {} ).value || '',
@@ -476,8 +476,8 @@
 			var picker = document.getElementById( 'elementor-mcp-client-picker' );
 			if ( picker ) { picker.style.display = ''; }
 			// Re-select a remembered client if any.
-			var saved = window.localStorage.getItem( 'emcpConnClient' );
-			if ( saved ) { emcpSelectClient( saved ); }
+			var saved = window.localStorage.getItem( 'karmcpConnClient' );
+			if ( saved ) { karmcpSelectClient( saved ); }
 		}
 	}
 
@@ -524,7 +524,7 @@
 				return;
 			}
 
-			var copiedText = ( typeof emcpToolsAdmin !== 'undefined' && emcpToolsAdmin.copied ) ? emcpToolsAdmin.copied : 'Copied!';
+			var copiedText = ( typeof karmcpToolsAdmin !== 'undefined' && karmcpToolsAdmin.copied ) ? karmcpToolsAdmin.copied : 'Copied!';
 
 			copyToClipboard( source.value ).then( function () {
 				var original = btn.textContent;
@@ -544,7 +544,7 @@
 	 * No-ops for free/bundled prompts (no card / no slug) or missing nonce.
 	 */
 	function trackProPromptCopy( card ) {
-		if ( ! card || typeof emcpToolsAdmin === 'undefined' || ! emcpToolsAdmin.trackPromptNonce ) {
+		if ( ! card || typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.trackPromptNonce ) {
 			return;
 		}
 		var slug = card.getAttribute( 'data-prompt-slug' );
@@ -553,11 +553,11 @@
 			return;
 		}
 		var body = new FormData();
-		body.append( 'action', 'emcp_tools_track_prompt_copy' );
-		body.append( 'nonce', emcpToolsAdmin.trackPromptNonce );
+		body.append( 'action', 'karmcp_tools_track_prompt_copy' );
+		body.append( 'nonce', karmcpToolsAdmin.trackPromptNonce );
 		body.append( 'prompt_slug', slug );
 		body.append( 'category_slug', category );
-		fetch( emcpToolsAdmin.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } ).catch( function () {} );
+		fetch( karmcpToolsAdmin.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } ).catch( function () {} );
 	}
 
 	/**
@@ -723,22 +723,22 @@
 	function initProSync() {
 		document.querySelectorAll( '.elementor-mcp-pro-sync-btn' ).forEach( function ( btn ) {
 			btn.addEventListener( 'click', function () {
-				if ( typeof emcpToolsAdmin === 'undefined' || ! emcpToolsAdmin.ajaxUrl ) {
+				if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) {
 					return;
 				}
 				var original = btn.innerHTML;
 				btn.disabled = true;
-				btn.innerHTML = '<span class="dashicons dashicons-update spin" aria-hidden="true"></span> ' + ( emcpToolsAdmin.syncing || 'Syncing…' );
+				btn.innerHTML = '<span class="dashicons dashicons-update spin" aria-hidden="true"></span> ' + ( karmcpToolsAdmin.syncing || 'Syncing…' );
 
 				// Action override via data-sync-action lets the same button
 				// pattern work for prompts and templates. Falls back to the
 				// prompts action for backwards compat with the existing UI.
-				var action = btn.getAttribute( 'data-sync-action' ) || 'emcp_tools_sync_pro_prompts';
+				var action = btn.getAttribute( 'data-sync-action' ) || 'karmcp_tools_sync_pro_prompts';
 				var body = new URLSearchParams();
 				body.append( 'action', action );
 				body.append( 'nonce', btn.getAttribute( 'data-nonce' ) || '' );
 
-				fetch( emcpToolsAdmin.ajaxUrl, {
+				fetch( karmcpToolsAdmin.ajaxUrl, {
 					method: 'POST',
 					credentials: 'same-origin',
 					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -784,12 +784,12 @@
 			if ( ! btn ) {
 				return;
 			}
-			if ( typeof emcpToolsAdmin === 'undefined' || ! emcpToolsAdmin.ajaxUrl ) {
+			if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) {
 				return;
 			}
 
 			var isApply = !! applyBtn;
-			var action  = isApply ? 'emcp_tools_apply_pro_template' : 'emcp_tools_import_pro_template';
+			var action  = isApply ? 'karmcp_tools_apply_pro_template' : 'karmcp_tools_import_pro_template';
 			var nonce   = isApply ? applyNonce : importNonce;
 			var pending = isApply ? 'Creating…' : 'Importing…';
 			var failMsg = isApply ? 'Create failed.' : 'Import failed.';
@@ -809,7 +809,7 @@
 				body.append( 'target_post_id', '0' );
 			}
 
-			fetch( emcpToolsAdmin.ajaxUrl, {
+			fetch( karmcpToolsAdmin.ajaxUrl, {
 				method: 'POST',
 				credentials: 'same-origin',
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -858,7 +858,7 @@
 			link.href = viewUrl;
 			link.target = '_blank';
 			link.rel = 'noopener noreferrer';
-			link.textContent = ( typeof emcpToolsAdmin !== 'undefined' && emcpToolsAdmin.viewSite ) ? emcpToolsAdmin.viewSite : 'View site →';
+			link.textContent = ( typeof karmcpToolsAdmin !== 'undefined' && karmcpToolsAdmin.viewSite ) ? karmcpToolsAdmin.viewSite : 'View site →';
 			toast.appendChild( link );
 		}
 		document.body.appendChild( toast );
@@ -878,7 +878,7 @@
 	 */
 	function initBrandKits() {
 		var root = document.querySelector( '.elementor-mcp-brand-kits' );
-		if ( ! root || typeof emcpToolsAdmin === 'undefined' || ! emcpToolsAdmin.ajaxUrl ) {
+		if ( ! root || typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) {
 			return;
 		}
 
@@ -911,7 +911,7 @@
 				};
 				var titleEl = modal.querySelector( '.elementor-mcp-brand-kit-modal__title' );
 				if ( titleEl ) {
-					var tpl = ( emcpToolsAdmin.applyKitTitle || 'Apply "%s" brand kit?' );
+					var tpl = ( karmcpToolsAdmin.applyKitTitle || 'Apply "%s" brand kit?' );
 					titleEl.textContent = tpl.replace( '%s', pending.title );
 				}
 				var bk = modal.querySelector( '.elementor-mcp-brand-kit-modal__backup-input' );
@@ -936,16 +936,16 @@
 				var title = pending.title;
 				var orig = confirmBtn.textContent;
 				confirmBtn.disabled = true;
-				confirmBtn.textContent = emcpToolsAdmin.applying || 'Applying…';
+				confirmBtn.textContent = karmcpToolsAdmin.applying || 'Applying…';
 
 				var body = new URLSearchParams();
-				body.append( 'action', 'emcp_tools_apply_pro_brand_kit' );
+				body.append( 'action', 'karmcp_tools_apply_pro_brand_kit' );
 				body.append( 'nonce', grid.getAttribute( 'data-apply-nonce' ) || '' );
 				body.append( 'kit_slug', pending.slug );
 				body.append( 'category_slug', pending.cat );
 				body.append( 'backup', doBackup ? '1' : '0' );
 
-				fetch( emcpToolsAdmin.ajaxUrl, {
+				fetch( karmcpToolsAdmin.ajaxUrl, {
 					method: 'POST',
 					credentials: 'same-origin',
 					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -957,7 +957,7 @@
 						confirmBtn.textContent = orig;
 						if ( res && res.success ) {
 							closeModal();
-							var applied = ( emcpToolsAdmin.kitApplied || '%s applied.' ).replace( '%s', title );
+							var applied = ( karmcpToolsAdmin.kitApplied || '%s applied.' ).replace( '%s', title );
 							showBrandKitToast( applied, res.data && res.data.view_url );
 						} else {
 							var msg = ( res && res.data && res.data.message ) ? res.data.message : 'Apply failed.';
@@ -983,20 +983,20 @@
 					if ( ! select || ! select.value ) {
 						return;
 					}
-					if ( ! window.confirm( emcpToolsAdmin.restoreConfirm || 'Restore global colors and typography from this backup?' ) ) {
+					if ( ! window.confirm( karmcpToolsAdmin.restoreConfirm || 'Restore global colors and typography from this backup?' ) ) {
 						return;
 					}
 					var orig = restoreBtn.textContent;
 					restoreBtn.disabled = true;
-					restoreBtn.textContent = emcpToolsAdmin.restoring || 'Restoring…';
+					restoreBtn.textContent = karmcpToolsAdmin.restoring || 'Restoring…';
 
 					var body = new URLSearchParams();
-					body.append( 'action', 'emcp_tools_restore_pro_brand_kit' );
+					body.append( 'action', 'karmcp_tools_restore_pro_brand_kit' );
 					body.append( 'nonce', restore.getAttribute( 'data-restore-nonce' ) || '' );
 					body.append( 'backup_id', select.value );
 					body.append( 'full_clobber', ( clobber && clobber.checked ) ? '1' : '0' );
 
-					fetch( emcpToolsAdmin.ajaxUrl, {
+					fetch( karmcpToolsAdmin.ajaxUrl, {
 						method: 'POST',
 						credentials: 'same-origin',
 						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1060,45 +1060,45 @@
 	}
 
 	/**
-	 * Slide-in code viewer overlay. Any element with [data-emcp-code-view] opens
-	 * it; the code is read from the nearest .emcp-code-src in the same table cell
+	 * Slide-in code viewer overlay. Any element with [data-karmcp-code-view] opens
+	 * it; the code is read from the nearest .karmcp-code-src in the same table cell
 	 * (or a selector in the attribute's value). Provides Copy + Download.
 	 */
 	function initCodeOverlay() {
-		if ( document.getElementById( 'emcp-code-overlay' ) ) {
+		if ( document.getElementById( 'karmcp-code-overlay' ) ) {
 			return;
 		}
 		var overlay = document.createElement( 'div' );
-		overlay.id = 'emcp-code-overlay';
-		overlay.className = 'emcp-code-overlay';
+		overlay.id = 'karmcp-code-overlay';
+		overlay.className = 'karmcp-code-overlay';
 		overlay.innerHTML =
-			'<div class="emcp-code-overlay__backdrop" data-emcp-close></div>' +
-			'<div class="emcp-code-overlay__panel" role="dialog" aria-modal="true" aria-label="Code viewer">' +
-				'<div class="emcp-code-overlay__header">' +
-					'<span class="emcp-code-overlay__title"></span>' +
-					'<button type="button" class="emcp-code-overlay__close" data-emcp-close aria-label="Close">&times;</button>' +
+			'<div class="karmcp-code-overlay__backdrop" data-karmcp-close></div>' +
+			'<div class="karmcp-code-overlay__panel" role="dialog" aria-modal="true" aria-label="Code viewer">' +
+				'<div class="karmcp-code-overlay__header">' +
+					'<span class="karmcp-code-overlay__title"></span>' +
+					'<button type="button" class="karmcp-code-overlay__close" data-karmcp-close aria-label="Close">&times;</button>' +
 				'</div>' +
-				'<div class="emcp-code-overlay__toolbar">' +
-					'<button type="button" class="emcp-code-overlay__btn" data-emcp-copy></button>' +
-					'<button type="button" class="emcp-code-overlay__btn" data-emcp-download></button>' +
+				'<div class="karmcp-code-overlay__toolbar">' +
+					'<button type="button" class="karmcp-code-overlay__btn" data-karmcp-copy></button>' +
+					'<button type="button" class="karmcp-code-overlay__btn" data-karmcp-download></button>' +
 				'</div>' +
-				'<pre class="emcp-code-overlay__body"><code></code></pre>' +
+				'<pre class="karmcp-code-overlay__body"><code></code></pre>' +
 			'</div>';
 		document.body.appendChild( overlay );
 
-		var titleEl = overlay.querySelector( '.emcp-code-overlay__title' );
-		var codeEl  = overlay.querySelector( '.emcp-code-overlay__body code' );
-		var copyBtn = overlay.querySelector( '[data-emcp-copy]' );
-		var dlBtn   = overlay.querySelector( '[data-emcp-download]' );
-		copyBtn.textContent = window.emcpToolsAdmin && window.emcpToolsAdmin.copy ? window.emcpToolsAdmin.copy : 'Copy';
-		dlBtn.textContent   = window.emcpToolsAdmin && window.emcpToolsAdmin.download ? window.emcpToolsAdmin.download : 'Download';
+		var titleEl = overlay.querySelector( '.karmcp-code-overlay__title' );
+		var codeEl  = overlay.querySelector( '.karmcp-code-overlay__body code' );
+		var copyBtn = overlay.querySelector( '[data-karmcp-copy]' );
+		var dlBtn   = overlay.querySelector( '[data-karmcp-download]' );
+		copyBtn.textContent = window.karmcpToolsAdmin && window.karmcpToolsAdmin.copy ? window.karmcpToolsAdmin.copy : 'Copy';
+		dlBtn.textContent   = window.karmcpToolsAdmin && window.karmcpToolsAdmin.download ? window.karmcpToolsAdmin.download : 'Download';
 		var filename = 'code.txt';
 
 		function open( title, code, fname ) {
 			titleEl.textContent = title || 'Code';
 			codeEl.textContent = code || '';
 			filename = fname || 'code.txt';
-			copyBtn.textContent = window.emcpToolsAdmin && window.emcpToolsAdmin.copy ? window.emcpToolsAdmin.copy : 'Copy';
+			copyBtn.textContent = window.karmcpToolsAdmin && window.karmcpToolsAdmin.copy ? window.karmcpToolsAdmin.copy : 'Copy';
 			overlay.classList.add( 'is-open' );
 			document.body.style.overflow = 'hidden';
 		}
@@ -1109,25 +1109,25 @@
 
 		// Open from any trigger.
 		document.addEventListener( 'click', function ( e ) {
-			var trigger = e.target.closest( '[data-emcp-code-view]' );
+			var trigger = e.target.closest( '[data-karmcp-code-view]' );
 			if ( ! trigger ) { return; }
 			e.preventDefault();
-			var sel = trigger.getAttribute( 'data-emcp-code-view' );
+			var sel = trigger.getAttribute( 'data-karmcp-code-view' );
 			var src = null;
 			if ( sel ) { src = document.querySelector( sel ); }
 			if ( ! src ) {
 				var scope = trigger.closest( 'td' ) || trigger.parentNode;
-				src = scope ? scope.querySelector( '.emcp-code-src' ) : null;
+				src = scope ? scope.querySelector( '.karmcp-code-src' ) : null;
 			}
 			open(
-				trigger.getAttribute( 'data-emcp-code-title' ) || 'Code',
+				trigger.getAttribute( 'data-karmcp-code-title' ) || 'Code',
 				src ? src.textContent : '',
-				trigger.getAttribute( 'data-emcp-code-filename' ) || 'code.txt'
+				trigger.getAttribute( 'data-karmcp-code-filename' ) || 'code.txt'
 			);
 		} );
 
 		overlay.addEventListener( 'click', function ( e ) {
-			if ( e.target.closest( '[data-emcp-close]' ) ) { close(); }
+			if ( e.target.closest( '[data-karmcp-close]' ) ) { close(); }
 		} );
 		document.addEventListener( 'keydown', function ( e ) {
 			if ( 'Escape' === e.key && overlay.classList.contains( 'is-open' ) ) { close(); }
@@ -1136,8 +1136,8 @@
 		copyBtn.addEventListener( 'click', function () {
 			var text = codeEl.textContent || '';
 			var done = function () {
-				copyBtn.textContent = window.emcpToolsAdmin && window.emcpToolsAdmin.copied ? window.emcpToolsAdmin.copied : 'Copied!';
-				setTimeout( function () { copyBtn.textContent = window.emcpToolsAdmin && window.emcpToolsAdmin.copy ? window.emcpToolsAdmin.copy : 'Copy'; }, 1500 );
+				copyBtn.textContent = window.karmcpToolsAdmin && window.karmcpToolsAdmin.copied ? window.karmcpToolsAdmin.copied : 'Copied!';
+				setTimeout( function () { copyBtn.textContent = window.karmcpToolsAdmin && window.karmcpToolsAdmin.copy ? window.karmcpToolsAdmin.copy : 'Copy'; }, 1500 );
 			};
 			if ( navigator.clipboard && navigator.clipboard.writeText ) {
 				navigator.clipboard.writeText( text ).then( done ).catch( function () { fallbackCopy( text, codeEl ); done(); } );
@@ -1186,21 +1186,21 @@
 	 * @param {string} text Text to copy.
 	 * @return {Promise}
 	 */
-	function emcpCopyText( text ) {
+	function karmcpCopyText( text ) {
 		return new Promise( function ( resolve ) {
 			if ( navigator.clipboard && navigator.clipboard.writeText ) {
 				navigator.clipboard.writeText( text ).then( resolve ).catch( function () {
-					emcpExecCopy( text );
+					karmcpExecCopy( text );
 					resolve();
 				} );
 			} else {
-				emcpExecCopy( text );
+				karmcpExecCopy( text );
 				resolve();
 			}
 		} );
 	}
 
-	function emcpExecCopy( text ) {
+	function karmcpExecCopy( text ) {
 		try {
 			var ta = document.createElement( 'textarea' );
 			ta.value = text;
@@ -1214,23 +1214,23 @@
 	}
 
 	/**
-	 * Click-to-copy for any [data-emcp-copy-text] element (e.g. a shortcode
+	 * Click-to-copy for any [data-karmcp-copy-text] element (e.g. a shortcode
 	 * chip). Copies the attribute value (or the element text) and flashes a
 	 * "Copied!" tooltip via the .is-copied class.
 	 */
 	function initClickToCopy() {
 		document.addEventListener( 'click', function ( e ) {
-			var el = e.target.closest( '[data-emcp-copy-text]' );
+			var el = e.target.closest( '[data-karmcp-copy-text]' );
 			if ( ! el ) { return; }
-			var text = el.getAttribute( 'data-emcp-copy-text' ) || el.textContent || '';
-			emcpCopyText( text ).then( function () {
+			var text = el.getAttribute( 'data-karmcp-copy-text' ) || el.textContent || '';
+			karmcpCopyText( text ).then( function () {
 				el.classList.add( 'is-copied' );
-				clearTimeout( el._emcpCopiedTimer );
-				el._emcpCopiedTimer = setTimeout( function () { el.classList.remove( 'is-copied' ); }, 1200 );
+				clearTimeout( el._karmcpCopiedTimer );
+				el._karmcpCopiedTimer = setTimeout( function () { el.classList.remove( 'is-copied' ); }, 1200 );
 			} );
 		} );
 		document.addEventListener( 'keydown', function ( e ) {
-			if ( ( 'Enter' === e.key || ' ' === e.key ) && e.target && e.target.matches && e.target.matches( '[data-emcp-copy-text]' ) ) {
+			if ( ( 'Enter' === e.key || ' ' === e.key ) && e.target && e.target.matches && e.target.matches( '[data-karmcp-copy-text]' ) ) {
 				e.preventDefault();
 				e.target.click();
 			}
@@ -1241,32 +1241,32 @@
 	// Connection tab — client picker helpers
 	// -------------------------------------------------------------------------
 
-	function emcpEscapeHtml( s ) {
+	function karmcpEscapeHtml( s ) {
 		return String( s ).replace( /[&<>"']/g, function ( c ) {
 			return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ c ];
 		} );
 	}
 
-	function emcpClientById( id ) {
-		var list = ( emcpToolsAdmin.connectionClients || [] );
+	function karmcpClientById( id ) {
+		var list = ( karmcpToolsAdmin.connectionClients || [] );
 		for ( var i = 0; i < list.length; i++ ) { if ( list[ i ].id === id ) { return list[ i ]; } }
 		return null;
 	}
 
 	// Per-site MCP server name derived from the domain, so multiple connected sites
-	// don't collide in a client's config (e.g. "emcp-sociable-sylvain-z29-zipwp-dev").
-	function emcpServerName() {
+	// don't collide in a client's config (e.g. "karmcp-sociable-sylvain-z29-zipwp-dev").
+	function karmcpServerName() {
 		var host = '';
-		try { host = new URL( window.emcpConn.siteUrl || window.emcpConn.endpoint ).hostname; } catch ( e ) { host = ''; }
+		try { host = new URL( window.karmcpConn.siteUrl || window.karmcpConn.endpoint ).hostname; } catch ( e ) { host = ''; }
 		host = ( host || '' ).replace( /^www\./, '' ).replace( /[^a-zA-Z0-9]+/g, '-' ).replace( /^-+|-+$/g, '' ).toLowerCase();
-		return host ? ( 'emcp-' + host ) : 'emcp-tools';
+		return host ? ( 'karmcp-' + host ) : 'karmcp-tools';
 	}
 
 	// Build the JSON config object for a given client + json-variant key.
-	function emcpJsonConfig( variant ) {
-		var c = window.emcpConn;
-		var key = emcpServerName();
-		var npx = { command: 'npx', args: [ '-y', '@msrbuilds/emcp-proxy@latest' ],
+	function karmcpJsonConfig( variant ) {
+		var c = window.karmcpConn;
+		var key = karmcpServerName();
+		var npx = { command: 'npx', args: [ '-y', '@msrbuilds/karmcp-proxy@latest' ],
 			env: { WP_URL: c.siteUrl, WP_USERNAME: c.username, WP_APP_PASSWORD: c.appPassword, MCP_PROTOCOL_VERSION: '2024-11-05' } };
 		var http = { type: 'http', url: c.endpoint, headers: { Authorization: 'Basic ' + c.b64 } };
 		var servers = {};
@@ -1283,10 +1283,10 @@
 	// the top-level mcpServers other clients use). openclaw.json almost always
 	// already has other top-level keys, so we emit the "mcp" PROPERTY to merge in
 	// rather than a full { … } object that would clobber the file.
-	function emcpOpenclawConfig( variant ) {
-		var c = window.emcpConn, n = emcpServerName(), server;
+	function karmcpOpenclawConfig( variant ) {
+		var c = window.karmcpConn, n = karmcpServerName(), server;
 		if ( variant === 'npx' ) {
-			server = { command: 'npx', args: [ '-y', '@msrbuilds/emcp-proxy@latest' ],
+			server = { command: 'npx', args: [ '-y', '@msrbuilds/karmcp-proxy@latest' ],
 				env: { WP_URL: c.siteUrl, WP_USERNAME: c.username, WP_APP_PASSWORD: c.appPassword, MCP_PROTOCOL_VERSION: '2024-11-05' } };
 		} else {
 			server = { url: c.endpoint, transport: 'streamable-http', headers: { Authorization: 'Basic ' + c.b64 } };
@@ -1298,13 +1298,13 @@
 
 	// Hermes ~/.hermes/config.yaml — mcp_servers (YAML). Hand-rendered so the output
 	// matches Hermes' documented shape exactly.
-	function emcpHermesConfig( variant ) {
-		var c = window.emcpConn, n = emcpServerName();
+	function karmcpHermesConfig( variant ) {
+		var c = window.karmcpConn, n = karmcpServerName();
 		if ( variant === 'npx' ) {
 			return 'mcp_servers:\n' +
 				'  ' + n + ':\n' +
 				'    command: "npx"\n' +
-				'    args: ["-y", "@msrbuilds/emcp-proxy@latest"]\n' +
+				'    args: ["-y", "@msrbuilds/karmcp-proxy@latest"]\n' +
 				'    env:\n' +
 				'      WP_URL: "' + c.siteUrl + '"\n' +
 				'      WP_USERNAME: "' + c.username + '"\n' +
@@ -1319,8 +1319,8 @@
 	}
 
 	// Codex config.toml — streamable HTTP (expects `http_headers`, an inline table).
-	function emcpTomlConfig() {
-		var c = window.emcpConn, n = emcpServerName();
+	function karmcpTomlConfig() {
+		var c = window.karmcpConn, n = karmcpServerName();
 		return '[mcp_servers.' + n + ']\n' +
 			'url = "' + c.endpoint + '"\n' +
 			'http_headers = { "Authorization" = "Basic ' + c.b64 + '" }';
@@ -1328,11 +1328,11 @@
 
 	// Codex config.toml — Node proxy over stdio (free npx alternative; robust with
 	// clients that struggle with the streamable-HTTP session handshake).
-	function emcpTomlStdioConfig() {
-		var c = window.emcpConn, n = emcpServerName();
+	function karmcpTomlStdioConfig() {
+		var c = window.karmcpConn, n = karmcpServerName();
 		return '[mcp_servers.' + n + ']\n' +
 			'command = "npx"\n' +
-			'args = ["-y", "@msrbuilds/emcp-proxy@latest"]\n\n' +
+			'args = ["-y", "@msrbuilds/karmcp-proxy@latest"]\n\n' +
 			'[mcp_servers.' + n + '.env]\n' +
 			'WP_URL = "' + c.siteUrl + '"\n' +
 			'WP_USERNAME = "' + c.username + '"\n' +
@@ -1341,41 +1341,41 @@
 	}
 
 	// Render one copy/download block.
-	function emcpBlock( title, bodyHtml ) {
+	function karmcpBlock( title, bodyHtml ) {
 		return '<div class="elementor-mcp-config-card"><div class="elementor-mcp-config-card-header">' +
-			'<span class="elementor-mcp-config-card-title">' + emcpEscapeHtml( title ) + '</span></div>' +
+			'<span class="elementor-mcp-config-card-title">' + karmcpEscapeHtml( title ) + '</span></div>' +
 			'<div class="elementor-mcp-config-card-body">' + bodyHtml + '</div></div>';
 	}
 
-	function emcpCopyBlock( title, text ) {
-		var id = 'emcp-opt-' + Math.abs( ( title + text ).length );
+	function karmcpCopyBlock( title, text ) {
+		var id = 'karmcp-opt-' + Math.abs( ( title + text ).length );
 		return '<div class="elementor-mcp-config-card"><div class="elementor-mcp-config-card-header">' +
-			'<span class="elementor-mcp-config-card-title">' + emcpEscapeHtml( title ) + '</span>' +
+			'<span class="elementor-mcp-config-card-title">' + karmcpEscapeHtml( title ) + '</span>' +
 			'<button type="button" class="button elementor-mcp-copy-btn" data-target="' + id + '">Copy</button></div>' +
-			'<pre><code>' + emcpEscapeHtml( text ) + '</code></pre>' +
-			'<textarea id="' + id + '" class="elementor-mcp-copy-source">' + emcpEscapeHtml( text ) + '</textarea></div>';
+			'<pre><code>' + karmcpEscapeHtml( text ) + '</code></pre>' +
+			'<textarea id="' + id + '" class="elementor-mcp-copy-source">' + karmcpEscapeHtml( text ) + '</textarea></div>';
 	}
 
 	// The selected authentication method (falls back to whatever is available).
-	function emcpAuthMethod() {
-		var r = document.querySelector( 'input[name="emcp_auth_method"]:checked' );
+	function karmcpAuthMethod() {
+		var r = document.querySelector( 'input[name="karmcp_auth_method"]:checked' );
 		if ( r ) { return r.value; }
-		return ( typeof emcpToolsAdmin !== 'undefined' && emcpToolsAdmin.oauthEnabled ) ? 'oauth' : 'app-password';
+		return ( typeof karmcpToolsAdmin !== 'undefined' && karmcpToolsAdmin.oauthEnabled ) ? 'oauth' : 'app-password';
 	}
 
 	// --- OAuth setup rendering (no credentials — browser sign-in supplies auth) ---
-	function emcpFill( tpl, name, endpoint ) {
+	function karmcpFill( tpl, name, endpoint ) {
 		return String( tpl ).replace( /%NAME%/g, name ).replace( /%ENDPOINT%/g, endpoint );
 	}
-	function emcpStep( title, descHtml ) {
-		return '<p class="emcp-oauth-step"><strong>' + emcpEscapeHtml( title ) + '</strong></p>' +
-			( descHtml ? '<p class="description emcp-oauth-desc">' + descHtml + '</p>' : '' );
+	function karmcpStep( title, descHtml ) {
+		return '<p class="karmcp-oauth-step"><strong>' + karmcpEscapeHtml( title ) + '</strong></p>' +
+			( descHtml ? '<p class="description karmcp-oauth-desc">' + descHtml + '</p>' : '' );
 	}
-	function emcpSigninText() {
-		return ( typeof emcpToolsAdmin !== 'undefined' && emcpToolsAdmin.oauthSignin ) ||
+	function karmcpSigninText() {
+		return ( typeof karmcpToolsAdmin !== 'undefined' && karmcpToolsAdmin.oauthSignin ) ||
 			'The next time your AI client connects, your browser opens so you can authorize it. Approve to finish connecting.';
 	}
-	function emcpOAuthDeeplink( kind, name, endpoint, label ) {
+	function karmcpOAuthDeeplink( kind, name, endpoint, label ) {
 		var url = '';
 		if ( kind === 'cursor' ) {
 			url = 'cursor://anysphere.cursor-deeplink/mcp/install?name=' + encodeURIComponent( name ) +
@@ -1385,71 +1385,71 @@
 				encodeURIComponent( name ) + '&connectorUrl=' + encodeURIComponent( endpoint );
 		}
 		if ( ! url ) { return ''; }
-		return '<p><a class="button button-primary emcp-oauth-deeplink" href="' + emcpEscapeHtml( url ) + '">' +
-			emcpEscapeHtml( label ) + '</a></p>';
+		return '<p><a class="button button-primary karmcp-oauth-deeplink" href="' + karmcpEscapeHtml( url ) + '">' +
+			karmcpEscapeHtml( label ) + '</a></p>';
 	}
 
-	function emcpRenderOAuth( client ) {
-		var endpoint = ( window.emcpConn && window.emcpConn.endpoint ) || emcpToolsAdmin.mcpEndpoint;
-		var name = emcpServerName();
+	function karmcpRenderOAuth( client ) {
+		var endpoint = ( window.karmcpConn && window.karmcpConn.endpoint ) || karmcpToolsAdmin.mcpEndpoint;
+		var name = karmcpServerName();
 		var o = client.oauth;
 		var out = '';
 
 		if ( ! o || typeof o !== 'object' ) {
-			out += emcpCopyBlock( 'a. Add this site as an HTTP MCP server (paste the URL)', endpoint );
-			return out + emcpStep( 'b. Sign in', emcpEscapeHtml( emcpSigninText() ) );
+			out += karmcpCopyBlock( 'a. Add this site as an HTTP MCP server (paste the URL)', endpoint );
+			return out + karmcpStep( 'b. Sign in', karmcpEscapeHtml( karmcpSigninText() ) );
 		}
 
 		if ( o.type === 'cmd' ) {
-			out += emcpStep( 'a. Run this in your terminal' );
-			out += emcpCopyBlock( '', emcpFill( o.cmd, name, endpoint ) );
-			return out + emcpStep( 'b. Sign in', emcpEscapeHtml( emcpSigninText() ) );
+			out += karmcpStep( 'a. Run this in your terminal' );
+			out += karmcpCopyBlock( '', karmcpFill( o.cmd, name, endpoint ) );
+			return out + karmcpStep( 'b. Sign in', karmcpEscapeHtml( karmcpSigninText() ) );
 		}
 
 		if ( o.type === 'connector' ) {
-			if ( o.deeplink ) { out += emcpOAuthDeeplink( o.deeplink, name, endpoint, 'Add the connector to ' + ( o.app || 'your client' ) ); }
-			if ( o.note ) { out += '<p class="description">' + emcpEscapeHtml( o.note ) + '</p>'; }
-			out += emcpStep( 'a. Open Connectors', emcpEscapeHtml( 'In ' + ( o.app || 'your client' ) + ', open Settings and go to Connectors.' ) );
-			out += emcpStep( 'b. Add a custom connector — give it this name' );
-			out += emcpCopyBlock( '', name );
-			out += emcpStep( 'c. Enter the server URL', emcpEscapeHtml( 'Paste the URL below and save. Leave the OAuth Client ID and Secret (under Advanced settings) empty, then sign in when the browser opens.' ) );
-			out += emcpCopyBlock( '', endpoint );
+			if ( o.deeplink ) { out += karmcpOAuthDeeplink( o.deeplink, name, endpoint, 'Add the connector to ' + ( o.app || 'your client' ) ); }
+			if ( o.note ) { out += '<p class="description">' + karmcpEscapeHtml( o.note ) + '</p>'; }
+			out += karmcpStep( 'a. Open Connectors', karmcpEscapeHtml( 'In ' + ( o.app || 'your client' ) + ', open Settings and go to Connectors.' ) );
+			out += karmcpStep( 'b. Add a custom connector — give it this name' );
+			out += karmcpCopyBlock( '', name );
+			out += karmcpStep( 'c. Enter the server URL', karmcpEscapeHtml( 'Paste the URL below and save. Leave the OAuth Client ID and Secret (under Advanced settings) empty, then sign in when the browser opens.' ) );
+			out += karmcpCopyBlock( '', endpoint );
 			return out;
 		}
 
 		if ( o.type === 'steps' ) {
 			( o.steps || [] ).forEach( function ( s ) {
 				if ( s.copy ) {
-					out += emcpCopyBlock( s.title || '', emcpFill( s.copy, name, endpoint ) );
+					out += karmcpCopyBlock( s.title || '', karmcpFill( s.copy, name, endpoint ) );
 				} else {
-					out += emcpStep( s.title || '', s.desc ? emcpEscapeHtml( emcpFill( s.desc, name, endpoint ) ) : '' );
+					out += karmcpStep( s.title || '', s.desc ? karmcpEscapeHtml( karmcpFill( s.desc, name, endpoint ) ) : '' );
 				}
 			} );
 			return out;
 		}
 
 		if ( o.type === 'config' ) {
-			if ( o.deeplink ) { out += emcpOAuthDeeplink( o.deeplink, name, endpoint, 'One-click install' ); }
+			if ( o.deeplink ) { out += karmcpOAuthDeeplink( o.deeplink, name, endpoint, 'One-click install' ); }
 			var paths = '';
 			( o.paths || [] ).forEach( function ( p ) {
-				paths += '<code>' + emcpEscapeHtml( p.path ) + '</code> <span class="emcp-oauth-path-label">' + emcpEscapeHtml( p.label || '' ) + '</span><br />';
+				paths += '<code>' + karmcpEscapeHtml( p.path ) + '</code> <span class="karmcp-oauth-path-label">' + karmcpEscapeHtml( p.label || '' ) + '</span><br />';
 			} );
-			out += emcpStep( 'a. Open your config', paths );
-			out += emcpStep( 'b. Add this server', emcpEscapeHtml( o.merge_msg || 'If your config file already has content, merge this into it instead of replacing it.' ) );
-			out += emcpCopyBlock( '', emcpFill( o.template, name, endpoint ) );
-			if ( o.note ) { out += '<p class="description">' + emcpEscapeHtml( emcpFill( o.note, name, endpoint ) ) + '</p>'; }
-			return out + emcpStep( 'c. Restart and sign in', emcpEscapeHtml( emcpSigninText() ) );
+			out += karmcpStep( 'a. Open your config', paths );
+			out += karmcpStep( 'b. Add this server', karmcpEscapeHtml( o.merge_msg || 'If your config file already has content, merge this into it instead of replacing it.' ) );
+			out += karmcpCopyBlock( '', karmcpFill( o.template, name, endpoint ) );
+			if ( o.note ) { out += '<p class="description">' + karmcpEscapeHtml( karmcpFill( o.note, name, endpoint ) ) + '</p>'; }
+			return out + karmcpStep( 'c. Restart and sign in', karmcpEscapeHtml( karmcpSigninText() ) );
 		}
 
-		out += emcpCopyBlock( 'a. Connector URL', endpoint );
-		return out + emcpStep( 'b. Sign in', emcpEscapeHtml( emcpSigninText() ) );
+		out += karmcpCopyBlock( 'a. Connector URL', endpoint );
+		return out + karmcpStep( 'b. Sign in', karmcpEscapeHtml( karmcpSigninText() ) );
 	}
 
-	function emcpSelectClient( id ) {
-		var client = emcpClientById( id );
+	function karmcpSelectClient( id ) {
+		var client = karmcpClientById( id );
 		if ( ! client ) { return; }
-		if ( ! window.emcpConn ) { window.emcpConn = { endpoint: emcpToolsAdmin.mcpEndpoint }; }
-		window.localStorage.setItem( 'emcpConnClient', id );
+		if ( ! window.karmcpConn ) { window.karmcpConn = { endpoint: karmcpToolsAdmin.mcpEndpoint }; }
+		window.localStorage.setItem( 'karmcpConnClient', id );
 
 		// toggle card selected state
 		var cards = document.querySelectorAll( '.elementor-mcp-client-card' );
@@ -1466,15 +1466,15 @@
 
 		var html = '';
 		var m = client.methods;
-		var method = emcpAuthMethod();
+		var method = karmcpAuthMethod();
 
 		if ( method === 'oauth' ) {
 			// OAuth mode: no credentials — connect command + browser sign-in.
-			html = emcpRenderOAuth( client );
-		} else if ( ! window.emcpConn.b64 ) {
+			html = karmcpRenderOAuth( client );
+		} else if ( ! window.karmcpConn.b64 ) {
 			// App-password mode needs generated credentials first.
 			html = '<p class="description">' +
-				emcpEscapeHtml( ( emcpToolsAdmin.genFirst || 'Generate your credentials above — the config for %s then appears here.' ).replace( '%s', client.label ) ) +
+				karmcpEscapeHtml( ( karmcpToolsAdmin.genFirst || 'Generate your credentials above — the config for %s then appears here.' ).replace( '%s', client.label ) ) +
 				'</p>';
 		} else {
 
@@ -1482,15 +1482,15 @@
 		//    %ENDPOINT%/%B64% are filled with the live, escaped values.
 		if ( client.guide ) {
 			var guide = client.guide
-				.replace( /%NAME%/g, emcpEscapeHtml( emcpServerName() ) )
-				.replace( /%ENDPOINT%/g, emcpEscapeHtml( window.emcpConn.endpoint ) )
-				.replace( /%B64%/g, emcpEscapeHtml( window.emcpConn.b64 ) );
-			html += emcpBlock( client.guide_title || 'Setup guide', guide );
+				.replace( /%NAME%/g, karmcpEscapeHtml( karmcpServerName() ) )
+				.replace( /%ENDPOINT%/g, karmcpEscapeHtml( window.karmcpConn.endpoint ) )
+				.replace( /%B64%/g, karmcpEscapeHtml( window.karmcpConn.b64 ) );
+			html += karmcpBlock( client.guide_title || 'Setup guide', guide );
 		}
 
 		// 1) Bundle (.mcpb)
 		if ( m.bundle ) {
-			html += emcpBlock( 'One-click bundle (.mcpb)',
+			html += karmcpBlock( 'One-click bundle (.mcpb)',
 				'<p class="description">Download and double-click to install in Claude Desktop — no config files to edit.</p>' +
 				'<p class="elementor-mcp-mcpb-warning"><span class="dashicons dashicons-warning" aria-hidden="true"></span> ' +
 				'<strong>Treat this file as a secret.</strong> It embeds your WordPress application password in plaintext, so anyone with the file can access this site. ' +
@@ -1499,28 +1499,28 @@
 		}
 		// 2) CLI command
 		if ( m.cli ) {
-			var cli = m.cli.replace( /%NAME%/g, emcpServerName() ).replace( /%ENDPOINT%/g, window.emcpConn.endpoint ).replace( /%B64%/g, window.emcpConn.b64 );
-			html += emcpCopyBlock( 'Terminal command', cli );
+			var cli = m.cli.replace( /%NAME%/g, karmcpServerName() ).replace( /%ENDPOINT%/g, window.karmcpConn.endpoint ).replace( /%B64%/g, window.karmcpConn.b64 );
+			html += karmcpCopyBlock( 'Terminal command', cli );
 		}
 		// 3) AI setup prompt
 		if ( m.ai_prompt ) {
-			var prompt = 'Add an MCP server named "' + emcpServerName() + '" at ' + window.emcpConn.endpoint +
-				' using the HTTP transport with header  Authorization: Basic ' + window.emcpConn.b64;
-			html += emcpCopyBlock( 'Ask your AI to set it up (paste into chat)', prompt );
+			var prompt = 'Add an MCP server named "' + karmcpServerName() + '" at ' + window.karmcpConn.endpoint +
+				' using the HTTP transport with header  Authorization: Basic ' + window.karmcpConn.b64;
+			html += karmcpCopyBlock( 'Ask your AI to set it up (paste into chat)', prompt );
 		}
 		// 4) Manual JSON / TOML
 		( m.json || [] ).forEach( function ( variant ) {
-			if ( variant === 'toml' ) { html += emcpCopyBlock( 'Manual config — direct HTTP (config.toml)', emcpTomlConfig() ); }
-			else if ( variant === 'toml-stdio' ) { html += emcpCopyBlock( 'Manual config — Node proxy / npx (config.toml)', emcpTomlStdioConfig() ); }
-			else if ( variant === 'openclaw-http' ) { html += emcpCopyBlock( 'Manual config — direct HTTP (openclaw.json)', emcpOpenclawConfig( 'http' ) ); }
-			else if ( variant === 'openclaw-npx' ) { html += emcpCopyBlock( 'Manual config — Node proxy / npx (openclaw.json)', emcpOpenclawConfig( 'npx' ) ); }
-			else if ( variant === 'hermes-http' ) { html += emcpCopyBlock( 'Manual config — direct HTTP (config.yaml)', emcpHermesConfig( 'http' ) ); }
-			else if ( variant === 'hermes-npx' ) { html += emcpCopyBlock( 'Manual config — Node proxy / npx (config.yaml)', emcpHermesConfig( 'npx' ) ); }
+			if ( variant === 'toml' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (config.toml)', karmcpTomlConfig() ); }
+			else if ( variant === 'toml-stdio' ) { html += karmcpCopyBlock( 'Manual config — Node proxy / npx (config.toml)', karmcpTomlStdioConfig() ); }
+			else if ( variant === 'openclaw-http' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (openclaw.json)', karmcpOpenclawConfig( 'http' ) ); }
+			else if ( variant === 'openclaw-npx' ) { html += karmcpCopyBlock( 'Manual config — Node proxy / npx (openclaw.json)', karmcpOpenclawConfig( 'npx' ) ); }
+			else if ( variant === 'hermes-http' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (config.yaml)', karmcpHermesConfig( 'http' ) ); }
+			else if ( variant === 'hermes-npx' ) { html += karmcpCopyBlock( 'Manual config — Node proxy / npx (config.yaml)', karmcpHermesConfig( 'npx' ) ); }
 			else {
 				var label = variant === 'npx' ? 'Manual config — Node proxy (npx)'
 					: variant === 'http' ? 'Manual config — direct HTTP'
 					: 'Manual config — npx mcp-remote';
-				html += emcpCopyBlock( label, JSON.stringify( emcpJsonConfig( variant ), null, 4 ) );
+				html += karmcpCopyBlock( label, JSON.stringify( karmcpJsonConfig( variant ), null, 4 ) );
 			}
 		} );
 		} // /else (app-password mode with generated credentials)
@@ -1532,8 +1532,8 @@
 		var dl = document.getElementById( 'elementor-mcp-mcpb-download' );
 		if ( dl ) {
 			dl.addEventListener( 'click', function () {
-				document.getElementById( 'elementor-mcp-mcpb-user-id' ).value = window.emcpConn.userId;
-				document.getElementById( 'elementor-mcp-mcpb-app-password' ).value = window.emcpConn.appPassword;
+				document.getElementById( 'elementor-mcp-mcpb-user-id' ).value = window.karmcpConn.userId;
+				document.getElementById( 'elementor-mcp-mcpb-app-password' ).value = window.karmcpConn.appPassword;
 				document.getElementById( 'elementor-mcp-mcpb-form' ).submit();
 			} );
 		}
@@ -1542,7 +1542,7 @@
 	// Delegate card clicks.
 	document.addEventListener( 'click', function ( e ) {
 		var card = e.target.closest ? e.target.closest( '.elementor-mcp-client-card' ) : null;
-		if ( card ) { emcpSelectClient( card.getAttribute( 'data-client' ) ); }
+		if ( card ) { karmcpSelectClient( card.getAttribute( 'data-client' ) ); }
 	} );
 
 	// Context page: char/token counter, starter template, live preview.
@@ -1551,11 +1551,11 @@
 		if ( ! ta ) { return; }
 		var counter = document.getElementById( 'elementor-mcp-context-counter' );
 		var preview = document.getElementById( 'elementor-mcp-context-preview' );
-		var toggle  = document.querySelector( 'input[name="emcp_tools_site_context_enabled"]' );
+		var toggle  = document.querySelector( 'input[name="karmcp_tools_site_context_enabled"]' );
 		var tplBtn  = document.getElementById( 'elementor-mcp-context-template' );
 		var max     = parseInt( ta.getAttribute( 'maxlength' ) || '20000', 10 );
-		var base    = ( emcpToolsAdmin && emcpToolsAdmin.siteContextBase ) || '';
-		var delim   = ( emcpToolsAdmin && emcpToolsAdmin.siteContextDelimiter ) || '\n\n## Site context\n\n';
+		var base    = ( karmcpToolsAdmin && karmcpToolsAdmin.siteContextBase ) || '';
+		var delim   = ( karmcpToolsAdmin && karmcpToolsAdmin.siteContextDelimiter ) || '\n\n## Site context\n\n';
 
 		function refresh() {
 			var len = ta.value.length;
@@ -1576,7 +1576,7 @@
 		if ( tplBtn ) {
 			tplBtn.addEventListener( 'click', function () {
 				if ( ta.value.trim() && ! window.confirm( 'Replace the current context with the starter template?' ) ) { return; }
-				ta.value = emcpContextTemplate();
+				ta.value = karmcpContextTemplate();
 				refresh();
 				ta.focus();
 			} );
@@ -1584,7 +1584,7 @@
 		refresh();
 	}
 
-	function emcpContextTemplate() {
+	function karmcpContextTemplate() {
 		return [
 			'# About this site',
 			'',
@@ -1615,12 +1615,12 @@
 	 * read via admin-ajax the first time it's opened in a page view.
 	 */
 	function initNotifications() {
-		var wrap = document.querySelector( '.emcp-notif' );
+		var wrap = document.querySelector( '.karmcp-notif' );
 		if ( ! wrap ) { return; }
-		var toggle = wrap.querySelector( '.emcp-notif-toggle' );
-		var badge = wrap.querySelector( '.emcp-notif-badge' );
-		var overlay = wrap.querySelector( '.emcp-notif-overlay' );
-		var closeBtn = wrap.querySelector( '.emcp-notif-close' );
+		var toggle = wrap.querySelector( '.karmcp-notif-toggle' );
+		var badge = wrap.querySelector( '.karmcp-notif-badge' );
+		var overlay = wrap.querySelector( '.karmcp-notif-overlay' );
+		var closeBtn = wrap.querySelector( '.karmcp-notif-close' );
 		if ( ! toggle ) { return; }
 
 		var markedThisView = false;
@@ -1633,7 +1633,7 @@
 		function markVisibleRead() {
 			if ( markedThisView ) { return; }
 
-			var items = wrap.querySelectorAll( '.emcp-notif-item.is-unread[data-id]' );
+			var items = wrap.querySelectorAll( '.karmcp-notif-item.is-unread[data-id]' );
 			if ( ! items.length ) { return; }
 
 			markedThisView = true;
@@ -1644,17 +1644,17 @@
 				item.classList.remove( 'is-unread' );
 			} );
 
-			if ( typeof emcpToolsAdmin === 'undefined' || ! emcpToolsAdmin.ajaxUrl ) { return; }
+			if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) { return; }
 
 			var payload = new FormData();
-			payload.append( 'action', 'emcp_tools_notifications_read' );
+			payload.append( 'action', 'karmcp_tools_notifications_read' );
 			payload.append( 'nonce', toggle.getAttribute( 'data-nonce' ) || '' );
 			ids.forEach( function ( id ) {
 				payload.append( 'ids[]', id );
 			} );
 
 			/* global fetch */
-			fetch( emcpToolsAdmin.ajaxUrl, {
+			fetch( karmcpToolsAdmin.ajaxUrl, {
 				method: 'POST',
 				credentials: 'same-origin',
 				body: payload
@@ -1671,7 +1671,7 @@
 
 		function open() {
 			// Only one of help / notif open at a time.
-			var help = document.querySelector( '.emcp-help-menu' );
+			var help = document.querySelector( '.karmcp-help-menu' );
 			if ( help && document.activeElement && help.contains( document.activeElement ) ) {
 				document.activeElement.blur();
 			}
@@ -1715,11 +1715,11 @@
 	 * nav fits. The active tab is scrolled into view on load.
 	 */
 	function initNavArrows() {
-		var wrap = document.querySelector( '.emcp-appnav-wrap' );
+		var wrap = document.querySelector( '.karmcp-appnav-wrap' );
 		if ( ! wrap ) { return; }
-		var nav  = wrap.querySelector( '.emcp-appnav' );
-		var prev = wrap.querySelector( '.emcp-appnav-arrow--prev' );
-		var next = wrap.querySelector( '.emcp-appnav-arrow--next' );
+		var nav  = wrap.querySelector( '.karmcp-appnav' );
+		var prev = wrap.querySelector( '.karmcp-appnav-arrow--prev' );
+		var next = wrap.querySelector( '.karmcp-appnav-arrow--next' );
 		if ( ! nav || ! prev || ! next ) { return; }
 
 		function update() {
@@ -1739,7 +1739,7 @@
 		window.addEventListener( 'resize', update );
 
 		// Bring the active tab into view (in case it's off-screen on a narrow window).
-		var active = nav.querySelector( '.emcp-appnav-item.is-active' );
+		var active = nav.querySelector( '.karmcp-appnav-item.is-active' );
 		if ( active && active.scrollIntoView ) {
 			active.scrollIntoView( { inline: 'center', block: 'nearest' } );
 		}

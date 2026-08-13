@@ -4,11 +4,11 @@
  *
  * Seven tools to discover, install (wordpress.org only), activate, deactivate,
  * update, and delete plugins. Built on WP core's plugin + upgrader APIs and
- * guarded by EMCP_Tools_Package_Guard (protected list, active checks, direct
+ * guarded by KarMCP_Package_Guard (protected list, active checks, direct
  * filesystem). Reads ship enabled; the five mutation tools ship disabled-by-
  * default (admin opts in on the Tools tab).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_Plugin_Abilities {
+class KarMCP_Plugin_Abilities {
 
 	/** @since 3.0.0 @var string[] */
 	private $ability_names = array();
@@ -57,19 +57,19 @@ class EMCP_Tools_Plugin_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_list_plugins(): void {
-		$this->ability_names[] = 'emcp-tools/list-plugins';
-		emcp_tools_register_ability(
-			'emcp-tools/list-plugins',
+		$this->ability_names[] = 'karmcp/list-plugins';
+		karmcp_register_ability(
+			'karmcp/list-plugins',
 			array(
-				'label'               => __( 'List Plugins', 'emcp-tools' ),
-				'description'         => __( 'Lists installed WordPress plugins with status (active/inactive/network), version, whether an update is available, and whether the plugin is protected (EMCP Tools / Elementor can never be disabled via MCP). Optional "status" filter.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Plugins', 'karmcp' ),
+				'description'         => __( 'Lists installed WordPress plugins with status (active/inactive/network), version, whether an update is available, and whether the plugin is protected (KarMCP / Elementor can never be disabled via MCP). Optional "status" filter.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_plugins' ),
 				'permission_callback' => array( $this, 'can_list' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'status' => array( 'type' => 'string', 'enum' => array( 'all', 'active', 'inactive' ), 'description' => __( 'Filter by status. Default: all.', 'emcp-tools' ) ),
+						'status' => array( 'type' => 'string', 'enum' => array( 'all', 'active', 'inactive' ), 'description' => __( 'Filter by status. Default: all.', 'karmcp' ) ),
 					),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'plugins' => array( 'type' => 'array', 'items' => array( 'type' => 'object' ) ) ) ),
@@ -83,7 +83,7 @@ class EMCP_Tools_Plugin_Abilities {
 	 * @return array
 	 */
 	public function execute_list_plugins( $input ): array {
-		EMCP_Tools_Package_Guard::load_upgrader_deps();
+		KarMCP_Package_Guard::load_upgrader_deps();
 		$filter  = in_array( $input['status'] ?? 'all', array( 'all', 'active', 'inactive' ), true ) ? ( $input['status'] ?? 'all' ) : 'all';
 		$all     = function_exists( 'get_plugins' ) ? get_plugins() : array();
 		$updates = get_site_transient( 'update_plugins' );
@@ -91,7 +91,7 @@ class EMCP_Tools_Plugin_Abilities {
 
 		$rows = array();
 		foreach ( $all as $file => $data ) {
-			$active = EMCP_Tools_Package_Guard::is_active_plugin( (string) $file );
+			$active = KarMCP_Package_Guard::is_active_plugin( (string) $file );
 			if ( 'active' === $filter && ! $active ) { continue; }
 			if ( 'inactive' === $filter && $active ) { continue; }
 			$rows[] = array(
@@ -101,7 +101,7 @@ class EMCP_Tools_Plugin_Abilities {
 				'version'          => (string) ( $data['Version'] ?? '' ),
 				'author'           => wp_strip_all_tags( (string) ( $data['Author'] ?? '' ) ),
 				'active'           => $active,
-				'is_protected'     => EMCP_Tools_Package_Guard::is_protected_plugin( (string) $file ),
+				'is_protected'     => KarMCP_Package_Guard::is_protected_plugin( (string) $file ),
 				'update_available' => isset( $resp[ $file ] ),
 				'new_version'      => isset( $resp[ $file ]->new_version ) ? (string) $resp[ $file ]->new_version : '',
 			);
@@ -114,20 +114,20 @@ class EMCP_Tools_Plugin_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_search_plugins(): void {
-		$this->ability_names[] = 'emcp-tools/search-plugins';
-		emcp_tools_register_ability(
-			'emcp-tools/search-plugins',
+		$this->ability_names[] = 'karmcp/search-plugins';
+		karmcp_register_ability(
+			'karmcp/search-plugins',
 			array(
-				'label'               => __( 'Search Plugins', 'emcp-tools' ),
-				'description'         => __( 'Searches the wordpress.org plugin directory by keyword so you can find a slug to install. Returns slug, name, version, rating, and requirements. Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Search Plugins', 'karmcp' ),
+				'description'         => __( 'Searches the wordpress.org plugin directory by keyword so you can find a slug to install. Returns slug, name, version, rating, and requirements. Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_search_plugins' ),
 				'permission_callback' => array( $this, 'can_install' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'search'   => array( 'type' => 'string', 'description' => __( 'Keyword(s) to search the .org directory.', 'emcp-tools' ) ),
-						'per_page' => array( 'type' => 'integer', 'description' => __( '1-50. Default: 10.', 'emcp-tools' ) ),
+						'search'   => array( 'type' => 'string', 'description' => __( 'Keyword(s) to search the .org directory.', 'karmcp' ) ),
+						'per_page' => array( 'type' => 'integer', 'description' => __( '1-50. Default: 10.', 'karmcp' ) ),
 					),
 					'required'   => array( 'search' ),
 				),
@@ -144,9 +144,9 @@ class EMCP_Tools_Plugin_Abilities {
 	public function execute_search_plugins( $input ) {
 		$search = sanitize_text_field( $input['search'] ?? '' );
 		if ( '' === $search ) {
-			return new \WP_Error( 'missing_params', __( 'A "search" keyword is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A "search" keyword is required.', 'karmcp' ) );
 		}
-		EMCP_Tools_Package_Guard::load_upgrader_deps();
+		KarMCP_Package_Guard::load_upgrader_deps();
 		$per_page = max( 1, min( 50, absint( $input['per_page'] ?? 10 ) ) );
 		$api      = plugins_api( 'query_plugins', array( 'search' => $search, 'per_page' => $per_page, 'fields' => array( 'short_description' => true, 'icons' => false ) ) );
 		if ( is_wp_error( $api ) ) {
@@ -174,20 +174,20 @@ class EMCP_Tools_Plugin_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_install_plugin(): void {
-		$this->ability_names[] = 'emcp-tools/install-plugin';
-		emcp_tools_register_ability(
-			'emcp-tools/install-plugin',
+		$this->ability_names[] = 'karmcp/install-plugin';
+		karmcp_register_ability(
+			'karmcp/install-plugin',
 			array(
-				'label'               => __( 'Install Plugin', 'emcp-tools' ),
-				'description'         => __( 'Installs a plugin from the wordpress.org directory by slug (e.g. "contact-form-7"). Optionally activates it. Source is always wordpress.org, arbitrary URLs are not accepted.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Install Plugin', 'karmcp' ),
+				'description'         => __( 'Installs a plugin from the wordpress.org directory by slug (e.g. "contact-form-7"). Optionally activates it. Source is always wordpress.org, arbitrary URLs are not accepted.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_install_plugin' ),
 				'permission_callback' => array( $this, 'can_install' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'slug'     => array( 'type' => 'string', 'description' => __( 'wordpress.org plugin slug.', 'emcp-tools' ) ),
-						'activate' => array( 'type' => 'boolean', 'description' => __( 'Activate after install. Default: false.', 'emcp-tools' ) ),
+						'slug'     => array( 'type' => 'string', 'description' => __( 'wordpress.org plugin slug.', 'karmcp' ) ),
+						'activate' => array( 'type' => 'boolean', 'description' => __( 'Activate after install. Default: false.', 'karmcp' ) ),
 					),
 					'required'   => array( 'slug' ),
 				),
@@ -208,13 +208,13 @@ class EMCP_Tools_Plugin_Abilities {
 	public function execute_install_plugin( $input ) {
 		$slug = sanitize_key( $input['slug'] ?? '' );
 		if ( '' === $slug ) {
-			return new \WP_Error( 'missing_params', __( 'A plugin "slug" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A plugin "slug" is required.', 'karmcp' ) );
 		}
 		$activate = ! empty( $input['activate'] );
 		if ( $activate && ! current_user_can( 'activate_plugins' ) ) {
-			return new \WP_Error( 'cannot_activate', __( 'You cannot activate plugins.', 'emcp-tools' ) );
+			return new \WP_Error( 'cannot_activate', __( 'You cannot activate plugins.', 'karmcp' ) );
 		}
-		$ready = EMCP_Tools_Package_Guard::filesystem_ready();
+		$ready = KarMCP_Package_Guard::filesystem_ready();
 		if ( is_wp_error( $ready ) ) {
 			return $ready;
 		}
@@ -222,14 +222,14 @@ class EMCP_Tools_Plugin_Abilities {
 		if ( is_wp_error( $api ) ) {
 			return $api;
 		}
-		$skin     = EMCP_Tools_Package_Guard::make_skin();
+		$skin     = KarMCP_Package_Guard::make_skin();
 		$upgrader = new \Plugin_Upgrader( $skin );
 		$result   = $upgrader->install( $api->download_link );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 		if ( false === $result || null === $result ) {
-			return new \WP_Error( 'install_failed', __( 'Plugin installation failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'install_failed', __( 'Plugin installation failed.', 'karmcp' ) );
 		}
 		$file      = (string) $upgrader->plugin_info();
 		$activated = false;
@@ -242,7 +242,7 @@ class EMCP_Tools_Plugin_Abilities {
 			'activated' => $activated,
 			'file'      => $file,
 			'slug'      => $slug,
-			'messages'  => EMCP_Tools_Package_Guard::skin_messages( $skin ),
+			'messages'  => KarMCP_Package_Guard::skin_messages( $skin ),
 		);
 	}
 
@@ -251,18 +251,18 @@ class EMCP_Tools_Plugin_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_activate_plugin(): void {
-		$this->ability_names[] = 'emcp-tools/activate-plugin';
-		emcp_tools_register_ability(
-			'emcp-tools/activate-plugin',
+		$this->ability_names[] = 'karmcp/activate-plugin';
+		karmcp_register_ability(
+			'karmcp/activate-plugin',
 			array(
-				'label'               => __( 'Activate Plugin', 'emcp-tools' ),
-				'description'         => __( 'Activates an installed plugin by its file path (e.g. "akismet/akismet.php") or folder slug.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Activate Plugin', 'karmcp' ),
+				'description'         => __( 'Activates an installed plugin by its file path (e.g. "akismet/akismet.php") or folder slug.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_activate_plugin' ),
 				'permission_callback' => array( $this, 'can_activate' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'plugin' => array( 'type' => 'string', 'description' => __( 'Plugin file (folder/file.php) or folder slug.', 'emcp-tools' ) ) ),
+					'properties' => array( 'plugin' => array( 'type' => 'string', 'description' => __( 'Plugin file (folder/file.php) or folder slug.', 'karmcp' ) ) ),
 					'required'   => array( 'plugin' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'success' => array( 'type' => 'boolean' ), 'plugin' => array( 'type' => 'string' ), 'active' => array( 'type' => 'boolean' ) ) ),
@@ -284,7 +284,7 @@ class EMCP_Tools_Plugin_Abilities {
 		if ( is_wp_error( $res ) ) {
 			return $res;
 		}
-		return array( 'success' => true, 'plugin' => $file, 'active' => EMCP_Tools_Package_Guard::is_active_plugin( $file ) );
+		return array( 'success' => true, 'plugin' => $file, 'active' => KarMCP_Package_Guard::is_active_plugin( $file ) );
 	}
 
 	// -------------------------------------------------------------------
@@ -292,18 +292,18 @@ class EMCP_Tools_Plugin_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_deactivate_plugin(): void {
-		$this->ability_names[] = 'emcp-tools/deactivate-plugin';
-		emcp_tools_register_ability(
-			'emcp-tools/deactivate-plugin',
+		$this->ability_names[] = 'karmcp/deactivate-plugin';
+		karmcp_register_ability(
+			'karmcp/deactivate-plugin',
 			array(
-				'label'               => __( 'Deactivate Plugin', 'emcp-tools' ),
-				'description'         => __( 'Deactivates an active plugin. Refuses to deactivate EMCP Tools itself or Elementor (its hard dependency).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Deactivate Plugin', 'karmcp' ),
+				'description'         => __( 'Deactivates an active plugin. Refuses to deactivate KarMCP itself or Elementor (its hard dependency).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_deactivate_plugin' ),
 				'permission_callback' => array( $this, 'can_activate' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'plugin' => array( 'type' => 'string', 'description' => __( 'Plugin file or folder slug.', 'emcp-tools' ) ) ),
+					'properties' => array( 'plugin' => array( 'type' => 'string', 'description' => __( 'Plugin file or folder slug.', 'karmcp' ) ) ),
 					'required'   => array( 'plugin' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'success' => array( 'type' => 'boolean' ), 'plugin' => array( 'type' => 'string' ), 'active' => array( 'type' => 'boolean' ) ) ),
@@ -321,11 +321,11 @@ class EMCP_Tools_Plugin_Abilities {
 		if ( is_wp_error( $file ) ) {
 			return $file;
 		}
-		if ( EMCP_Tools_Package_Guard::is_protected_plugin( $file ) ) {
-			return new \WP_Error( 'protected_plugin', sprintf( /* translators: %s: plugin file */ __( '"%s" is protected and cannot be deactivated via MCP (it would break EMCP Tools or Elementor).', 'emcp-tools' ), $file ) );
+		if ( KarMCP_Package_Guard::is_protected_plugin( $file ) ) {
+			return new \WP_Error( 'protected_plugin', sprintf( /* translators: %s: plugin file */ __( '"%s" is protected and cannot be deactivated via MCP (it would break KarMCP or Elementor).', 'karmcp' ), $file ) );
 		}
 		deactivate_plugins( array( $file ) );
-		return array( 'success' => true, 'plugin' => $file, 'active' => EMCP_Tools_Package_Guard::is_active_plugin( $file ) );
+		return array( 'success' => true, 'plugin' => $file, 'active' => KarMCP_Package_Guard::is_active_plugin( $file ) );
 	}
 
 	// -------------------------------------------------------------------
@@ -333,18 +333,18 @@ class EMCP_Tools_Plugin_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_update_plugin(): void {
-		$this->ability_names[] = 'emcp-tools/update-plugin';
-		emcp_tools_register_ability(
-			'emcp-tools/update-plugin',
+		$this->ability_names[] = 'karmcp/update-plugin';
+		karmcp_register_ability(
+			'karmcp/update-plugin',
 			array(
-				'label'               => __( 'Update Plugin', 'emcp-tools' ),
-				'description'         => __( 'Updates an installed plugin to the latest wordpress.org version. Reports up_to_date when no update is pending.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Plugin', 'karmcp' ),
+				'description'         => __( 'Updates an installed plugin to the latest wordpress.org version. Reports up_to_date when no update is pending.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_plugin' ),
 				'permission_callback' => array( $this, 'can_update' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'plugin' => array( 'type' => 'string', 'description' => __( 'Plugin file or folder slug.', 'emcp-tools' ) ) ),
+					'properties' => array( 'plugin' => array( 'type' => 'string', 'description' => __( 'Plugin file or folder slug.', 'karmcp' ) ) ),
 					'required'   => array( 'plugin' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array(
@@ -366,16 +366,16 @@ class EMCP_Tools_Plugin_Abilities {
 		if ( is_wp_error( $file ) ) {
 			return $file;
 		}
-		// Protected packages (EMCP Tools, Elementor, Elementor Pro) are never
+		// Protected packages (KarMCP, Elementor, Elementor Pro) are never
 		// mutated via MCP — including updates — matching deactivate/delete.
-		if ( EMCP_Tools_Package_Guard::is_protected_plugin( $file ) ) {
+		if ( KarMCP_Package_Guard::is_protected_plugin( $file ) ) {
 			return new \WP_Error(
 				'protected_plugin',
 				/* translators: %s: plugin file */
-				sprintf( __( '"%s" is protected and cannot be updated via MCP.', 'emcp-tools' ), $file )
+				sprintf( __( '"%s" is protected and cannot be updated via MCP.', 'karmcp' ), $file )
 			);
 		}
-		$ready = EMCP_Tools_Package_Guard::filesystem_ready();
+		$ready = KarMCP_Package_Guard::filesystem_ready();
 		if ( is_wp_error( $ready ) ) {
 			return $ready;
 		}
@@ -389,14 +389,14 @@ class EMCP_Tools_Plugin_Abilities {
 		if ( ! isset( $resp[ $file ] ) ) {
 			return array( 'success' => true, 'up_to_date' => true, 'plugin' => $file, 'old_version' => $old, 'new_version' => $old, 'messages' => array() );
 		}
-		$skin     = EMCP_Tools_Package_Guard::make_skin();
+		$skin     = KarMCP_Package_Guard::make_skin();
 		$upgrader = new \Plugin_Upgrader( $skin );
 		$result   = $upgrader->upgrade( $file );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 		if ( false === $result ) {
-			return new \WP_Error( 'update_failed', __( 'Plugin update failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'update_failed', __( 'Plugin update failed.', 'karmcp' ) );
 		}
 		return array(
 			'success'     => true,
@@ -404,7 +404,7 @@ class EMCP_Tools_Plugin_Abilities {
 			'plugin'      => $file,
 			'old_version' => $old,
 			'new_version' => (string) ( $resp[ $file ]->new_version ?? '' ),
-			'messages'    => EMCP_Tools_Package_Guard::skin_messages( $skin ),
+			'messages'    => KarMCP_Package_Guard::skin_messages( $skin ),
 		);
 	}
 
@@ -413,18 +413,18 @@ class EMCP_Tools_Plugin_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_delete_plugin(): void {
-		$this->ability_names[] = 'emcp-tools/delete-plugin';
-		emcp_tools_register_ability(
-			'emcp-tools/delete-plugin',
+		$this->ability_names[] = 'karmcp/delete-plugin';
+		karmcp_register_ability(
+			'karmcp/delete-plugin',
 			array(
-				'label'               => __( 'Delete Plugin', 'emcp-tools' ),
-				'description'         => __( 'Permanently deletes an installed plugin. Destructive. Refuses protected plugins (EMCP Tools / Elementor) and any active plugin (deactivate it first).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Delete Plugin', 'karmcp' ),
+				'description'         => __( 'Permanently deletes an installed plugin. Destructive. Refuses protected plugins (KarMCP / Elementor) and any active plugin (deactivate it first).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_delete_plugin' ),
 				'permission_callback' => array( $this, 'can_delete' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'plugin' => array( 'type' => 'string', 'description' => __( 'Plugin file or folder slug.', 'emcp-tools' ) ) ),
+					'properties' => array( 'plugin' => array( 'type' => 'string', 'description' => __( 'Plugin file or folder slug.', 'karmcp' ) ) ),
 					'required'   => array( 'plugin' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array( 'deleted' => array( 'type' => 'boolean' ), 'plugin' => array( 'type' => 'string' ) ) ),
@@ -442,13 +442,13 @@ class EMCP_Tools_Plugin_Abilities {
 		if ( is_wp_error( $file ) ) {
 			return $file;
 		}
-		if ( EMCP_Tools_Package_Guard::is_protected_plugin( $file ) ) {
-			return new \WP_Error( 'protected_plugin', sprintf( /* translators: %s: plugin file */ __( '"%s" is protected and cannot be deleted via MCP.', 'emcp-tools' ), $file ) );
+		if ( KarMCP_Package_Guard::is_protected_plugin( $file ) ) {
+			return new \WP_Error( 'protected_plugin', sprintf( /* translators: %s: plugin file */ __( '"%s" is protected and cannot be deleted via MCP.', 'karmcp' ), $file ) );
 		}
-		if ( EMCP_Tools_Package_Guard::is_active_plugin( $file ) ) {
-			return new \WP_Error( 'plugin_active', __( 'Deactivate the plugin before deleting it.', 'emcp-tools' ) );
+		if ( KarMCP_Package_Guard::is_active_plugin( $file ) ) {
+			return new \WP_Error( 'plugin_active', __( 'Deactivate the plugin before deleting it.', 'karmcp' ) );
 		}
-		$ready = EMCP_Tools_Package_Guard::filesystem_ready();
+		$ready = KarMCP_Package_Guard::filesystem_ready();
 		if ( is_wp_error( $ready ) ) {
 			return $ready;
 		}
@@ -457,7 +457,7 @@ class EMCP_Tools_Plugin_Abilities {
 			return $res;
 		}
 		if ( ! $res ) {
-			return new \WP_Error( 'delete_failed', __( 'Plugin deletion failed.', 'emcp-tools' ) );
+			return new \WP_Error( 'delete_failed', __( 'Plugin deletion failed.', 'karmcp' ) );
 		}
 		return array( 'deleted' => true, 'plugin' => $file );
 	}
@@ -476,9 +476,9 @@ class EMCP_Tools_Plugin_Abilities {
 	private function resolve_plugin_file( $ref ) {
 		$ref = (string) $ref;
 		if ( '' === $ref ) {
-			return new \WP_Error( 'missing_params', __( 'A "plugin" reference is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A "plugin" reference is required.', 'karmcp' ) );
 		}
-		EMCP_Tools_Package_Guard::load_upgrader_deps();
+		KarMCP_Package_Guard::load_upgrader_deps();
 		$all = function_exists( 'get_plugins' ) ? get_plugins() : array();
 		if ( isset( $all[ $ref ] ) ) {
 			return $ref;
@@ -489,6 +489,6 @@ class EMCP_Tools_Plugin_Abilities {
 				return (string) $file;
 			}
 		}
-		return new \WP_Error( 'plugin_not_found', sprintf( /* translators: %s: plugin reference */ __( 'No installed plugin matches "%s".', 'emcp-tools' ), $ref ) );
+		return new \WP_Error( 'plugin_not_found', sprintf( /* translators: %s: plugin reference */ __( 'No installed plugin matches "%s".', 'karmcp' ), $ref ) );
 	}
 }

@@ -5,7 +5,7 @@
  * No storage, no WordPress dependency — tokenize + rank a passed set of docs.
  * The embedding-backed rerank is a future upgrade layered on top of this.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Search_Ranker {
+class KarMCP_Search_Ranker {
 
 	const TITLE_BOOST = 3.0;
 
@@ -126,7 +126,7 @@ class EMCP_Tools_Search_Ranker {
 		 * @param string $query  The raw query string.
 		 */
 		if ( function_exists( 'apply_filters' ) ) {
-			$scored = (array) apply_filters( 'emcp_tools_search_rerank', $scored, $query );
+			$scored = (array) apply_filters( 'karmcp_search_rerank', $scored, $query );
 		}
 
 		return array_slice( $scored, 0, max( 1, $limit ) );

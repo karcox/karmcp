@@ -4,14 +4,14 @@
  *
  * One of the three stock-photo providers behind the stock-image tools (with
  * Unsplash + Pexels). Requires a free API key from https://pixabay.com/api/docs/,
- * read from the `EMCP_TOOLS_PIXABAY_API_KEY` constant else the
- * `emcp_tools_pixabay_api_key` option (EMCP Tools → Connection).
+ * read from the `KARMCP_PIXABAY_API_KEY` constant else the
+ * `karmcp_pixabay_api_key` option (KarMCP → Connection).
  *
  * Results are normalized to the shared stock-image field shape. Pixabay's terms
  * require downloading/caching images rather than hotlinking — the sideload step
  * satisfies that.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -24,21 +24,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Pixabay_Client {
+class KarMCP_Pixabay_Client {
 
 	const API_BASE = 'https://pixabay.com/api/';
 	const TIMEOUT  = 15;
-	const OPTION   = 'emcp_tools_pixabay_api_key';
+	const OPTION   = 'karmcp_pixabay_api_key';
 
 	/**
 	 * @since 3.1.0
 	 * @return string
 	 */
 	public static function access_key(): string {
-		if ( defined( 'EMCP_TOOLS_PIXABAY_API_KEY' ) && '' !== (string) EMCP_TOOLS_PIXABAY_API_KEY ) {
-			return (string) EMCP_TOOLS_PIXABAY_API_KEY;
+		if ( defined( 'KARMCP_PIXABAY_API_KEY' ) && '' !== (string) KARMCP_PIXABAY_API_KEY ) {
+			return (string) KARMCP_PIXABAY_API_KEY;
 		}
-		return EMCP_Tools_Secret::decrypt_if_needed( (string) get_option( self::OPTION, '' ) );
+		return KarMCP_Secret::decrypt_if_needed( (string) get_option( self::OPTION, '' ) );
 	}
 
 	/**
@@ -53,15 +53,15 @@ class EMCP_Tools_Pixabay_Client {
 	 * Search Pixabay photos.
 	 *
 	 * @since 3.1.0
-	 * @param array $params See EMCP_Tools_Unsplash_Client::search_images().
+	 * @param array $params See KarMCP_Unsplash_Client::search_images().
 	 * @return array|\WP_Error Normalized `{ total, total_pages, results[] }` or error.
 	 */
 	public function search_images( array $params ) {
 		if ( empty( $params['q'] ) ) {
-			return new \WP_Error( 'missing_query', __( 'The search query parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_query', __( 'The search query parameter is required.', 'karmcp' ) );
 		}
 		if ( ! self::has_key() ) {
-			return new \WP_Error( 'no_api_key', __( 'No Pixabay API key is configured. Add one on EMCP Tools → Connection.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_api_key', __( 'No Pixabay API key is configured. Add one on KarMCP → Connection.', 'karmcp' ) );
 		}
 
 		// Pixabay requires per_page between 3 and 200.
@@ -163,7 +163,7 @@ class EMCP_Tools_Pixabay_Client {
 			$url,
 			array(
 				'timeout'    => self::TIMEOUT,
-				'user-agent' => 'Elementor-MCP/' . EMCP_TOOLS_VERSION . ' (WordPress/' . get_bloginfo( 'version' ) . ')',
+				'user-agent' => 'Elementor-MCP/' . KARMCP_VERSION . ' (WordPress/' . get_bloginfo( 'version' ) . ')',
 				'headers'    => array( 'Accept' => 'application/json' ),
 			)
 		);
@@ -173,7 +173,7 @@ class EMCP_Tools_Pixabay_Client {
 				'api_request_failed',
 				sprintf(
 					/* translators: %s: error message */
-					__( 'Pixabay API request failed: %s', 'emcp-tools' ),
+					__( 'Pixabay API request failed: %s', 'karmcp' ),
 					$response->get_error_message()
 				)
 			);
@@ -182,17 +182,17 @@ class EMCP_Tools_Pixabay_Client {
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( 400 === $code || 401 === $code ) {
 			// Pixabay returns 400 for a bad/missing key or invalid params.
-			return new \WP_Error( 'invalid_key', __( 'Pixabay rejected the request, check the API key on EMCP Tools → Connection.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_key', __( 'Pixabay rejected the request, check the API key on KarMCP → Connection.', 'karmcp' ) );
 		}
 		if ( 429 === $code ) {
-			return new \WP_Error( 'rate_limited', __( 'Pixabay rate limit reached (100 requests/minute). Try again shortly.', 'emcp-tools' ) );
+			return new \WP_Error( 'rate_limited', __( 'Pixabay rate limit reached (100 requests/minute). Try again shortly.', 'karmcp' ) );
 		}
 		if ( $code < 200 || $code >= 300 ) {
 			return new \WP_Error(
 				'api_error',
 				sprintf(
 					/* translators: %d: HTTP status code */
-					__( 'Pixabay API returned HTTP %d.', 'emcp-tools' ),
+					__( 'Pixabay API returned HTTP %d.', 'karmcp' ),
 					$code
 				)
 			);
@@ -200,7 +200,7 @@ class EMCP_Tools_Pixabay_Client {
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $data ) ) {
-			return new \WP_Error( 'json_parse_error', __( 'Failed to parse the Pixabay API response.', 'emcp-tools' ) );
+			return new \WP_Error( 'json_parse_error', __( 'Failed to parse the Pixabay API response.', 'karmcp' ) );
 		}
 		return $data;
 	}

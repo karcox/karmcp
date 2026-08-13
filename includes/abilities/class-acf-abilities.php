@@ -15,7 +15,7 @@
  * and edited but never removed via MCP, and field names/keys can never be
  * renamed (renames orphan postmeta).
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.2.1
  */
 
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.2.1
  */
-class EMCP_Tools_ACF_Abilities {
+class KarMCP_ACF_Abilities {
 
 	/** Field types that require ACF PRO. @since 3.2.1 */
 	const PRO_FIELD_TYPES = array( 'repeater', 'flexible_content', 'gallery', 'clone' );
@@ -82,40 +82,40 @@ class EMCP_Tools_ACF_Abilities {
 	private function operations(): array {
 		return array(
 			// Reads ---------------------------------------------------------
-			'list-field-groups'  => array( 'mode' => 'read', 'run' => 'execute_list_field_groups', 'perm' => 'check_read_permission', 'slug' => 'emcp-tools/list-acf-field-groups', 'cpt_tax' => false, 'desc' => __( 'List ACF field groups (key, title, active state, field count). No arguments.', 'emcp-tools' ) ),
-			'get-field-group'    => array( 'mode' => 'read', 'run' => 'execute_get_field_group', 'perm' => 'check_read_permission', 'slug' => 'emcp-tools/get-acf-field-group', 'cpt_tax' => false, 'desc' => __( 'Get one field group\'s location rules + recursive field tree. arguments: { key }.', 'emcp-tools' ) ),
-			'list-options-pages' => array( 'mode' => 'read', 'run' => 'execute_list_options_pages', 'perm' => 'check_read_permission', 'slug' => 'emcp-tools/list-acf-options-pages', 'cpt_tax' => false, 'desc' => __( 'List registered ACF options pages (PRO feature; empty on free ACF). No arguments.', 'emcp-tools' ) ),
-			'get-fields'         => array( 'mode' => 'read', 'run' => 'execute_get_fields', 'perm' => 'check_fields_permission', 'slug' => 'emcp-tools/get-acf-fields', 'cpt_tax' => false, 'desc' => __( 'Read ACF field values from a post or options page. arguments: { post_id } or { options_page }.', 'emcp-tools' ) ),
-			'list-post-types'    => array( 'mode' => 'read', 'run' => 'execute_list_post_types', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/list-acf-post-types', 'cpt_tax' => true, 'desc' => __( 'List ACF-managed Custom Post Types (ACF 6.1+). No arguments.', 'emcp-tools' ) ),
-			'get-post-type'      => array( 'mode' => 'read', 'run' => 'execute_get_post_type', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/get-acf-post-type', 'cpt_tax' => true, 'desc' => __( 'Get one ACF-managed Custom Post Type definition. arguments: { key }.', 'emcp-tools' ) ),
-			'list-taxonomies'    => array( 'mode' => 'read', 'run' => 'execute_list_taxonomies', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/list-acf-taxonomies', 'cpt_tax' => true, 'desc' => __( 'List ACF-managed taxonomies (ACF 6.1+). No arguments.', 'emcp-tools' ) ),
-			'get-taxonomy'       => array( 'mode' => 'read', 'run' => 'execute_get_taxonomy', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/get-acf-taxonomy', 'cpt_tax' => true, 'desc' => __( 'Get one ACF-managed taxonomy definition. arguments: { key }.', 'emcp-tools' ) ),
+			'list-field-groups'  => array( 'mode' => 'read', 'run' => 'execute_list_field_groups', 'perm' => 'check_read_permission', 'slug' => 'karmcp/list-acf-field-groups', 'cpt_tax' => false, 'desc' => __( 'List ACF field groups (key, title, active state, field count). No arguments.', 'karmcp' ) ),
+			'get-field-group'    => array( 'mode' => 'read', 'run' => 'execute_get_field_group', 'perm' => 'check_read_permission', 'slug' => 'karmcp/get-acf-field-group', 'cpt_tax' => false, 'desc' => __( 'Get one field group\'s location rules + recursive field tree. arguments: { key }.', 'karmcp' ) ),
+			'list-options-pages' => array( 'mode' => 'read', 'run' => 'execute_list_options_pages', 'perm' => 'check_read_permission', 'slug' => 'karmcp/list-acf-options-pages', 'cpt_tax' => false, 'desc' => __( 'List registered ACF options pages (PRO feature; empty on free ACF). No arguments.', 'karmcp' ) ),
+			'get-fields'         => array( 'mode' => 'read', 'run' => 'execute_get_fields', 'perm' => 'check_fields_permission', 'slug' => 'karmcp/get-acf-fields', 'cpt_tax' => false, 'desc' => __( 'Read ACF field values from a post or options page. arguments: { post_id } or { options_page }.', 'karmcp' ) ),
+			'list-post-types'    => array( 'mode' => 'read', 'run' => 'execute_list_post_types', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/list-acf-post-types', 'cpt_tax' => true, 'desc' => __( 'List ACF-managed Custom Post Types (ACF 6.1+). No arguments.', 'karmcp' ) ),
+			'get-post-type'      => array( 'mode' => 'read', 'run' => 'execute_get_post_type', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/get-acf-post-type', 'cpt_tax' => true, 'desc' => __( 'Get one ACF-managed Custom Post Type definition. arguments: { key }.', 'karmcp' ) ),
+			'list-taxonomies'    => array( 'mode' => 'read', 'run' => 'execute_list_taxonomies', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/list-acf-taxonomies', 'cpt_tax' => true, 'desc' => __( 'List ACF-managed taxonomies (ACF 6.1+). No arguments.', 'karmcp' ) ),
+			'get-taxonomy'       => array( 'mode' => 'read', 'run' => 'execute_get_taxonomy', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/get-acf-taxonomy', 'cpt_tax' => true, 'desc' => __( 'Get one ACF-managed taxonomy definition. arguments: { key }.', 'karmcp' ) ),
 			// Writes --------------------------------------------------------
-			'update-fields'      => array( 'mode' => 'write', 'run' => 'execute_update_fields', 'perm' => 'check_fields_permission', 'slug' => 'emcp-tools/update-acf-fields', 'cpt_tax' => false, 'desc' => __( 'Write ACF field values on a post or options page (incl. repeater/flexible/gallery rows). arguments: { post_id|options_page, fields: { name: value } }.', 'emcp-tools' ) ),
-			'create-field-group' => array( 'mode' => 'write', 'run' => 'execute_create_field_group', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/create-acf-field-group', 'cpt_tax' => false, 'desc' => __( 'Create a field group with fields + location rules. arguments: { title, fields: [...], location: [[...]] }.', 'emcp-tools' ) ),
-			'update-field-group' => array( 'mode' => 'write', 'run' => 'execute_update_field_group', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/update-acf-field-group', 'cpt_tax' => false, 'desc' => __( 'Edit a stored field group: settings, new fields, or per-field setting changes (no deletes/renames). arguments: { key, ... }.', 'emcp-tools' ) ),
-			'create-post-type'   => array( 'mode' => 'write', 'run' => 'execute_create_post_type', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/create-acf-post-type', 'cpt_tax' => true, 'desc' => __( 'Register a Custom Post Type through ACF (data, no code). arguments: { post_type, title, ... }.', 'emcp-tools' ) ),
-			'update-post-type'   => array( 'mode' => 'write', 'run' => 'execute_update_post_type', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/update-acf-post-type', 'cpt_tax' => true, 'desc' => __( 'Edit an ACF-managed Custom Post Type (slug immutable). arguments: { key, ... }.', 'emcp-tools' ) ),
-			'create-taxonomy'    => array( 'mode' => 'write', 'run' => 'execute_create_taxonomy', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/create-acf-taxonomy', 'cpt_tax' => true, 'desc' => __( 'Register a taxonomy through ACF (data, no code). arguments: { taxonomy, title, object_type: [...] }.', 'emcp-tools' ) ),
-			'update-taxonomy'    => array( 'mode' => 'write', 'run' => 'execute_update_taxonomy', 'perm' => 'check_manage_permission', 'slug' => 'emcp-tools/update-acf-taxonomy', 'cpt_tax' => true, 'desc' => __( 'Edit an ACF-managed taxonomy (slug immutable). arguments: { key, ... }.', 'emcp-tools' ) ),
+			'update-fields'      => array( 'mode' => 'write', 'run' => 'execute_update_fields', 'perm' => 'check_fields_permission', 'slug' => 'karmcp/update-acf-fields', 'cpt_tax' => false, 'desc' => __( 'Write ACF field values on a post or options page (incl. repeater/flexible/gallery rows). arguments: { post_id|options_page, fields: { name: value } }.', 'karmcp' ) ),
+			'create-field-group' => array( 'mode' => 'write', 'run' => 'execute_create_field_group', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/create-acf-field-group', 'cpt_tax' => false, 'desc' => __( 'Create a field group with fields + location rules. arguments: { title, fields: [...], location: [[...]] }.', 'karmcp' ) ),
+			'update-field-group' => array( 'mode' => 'write', 'run' => 'execute_update_field_group', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/update-acf-field-group', 'cpt_tax' => false, 'desc' => __( 'Edit a stored field group: settings, new fields, or per-field setting changes (no deletes/renames). arguments: { key, ... }.', 'karmcp' ) ),
+			'create-post-type'   => array( 'mode' => 'write', 'run' => 'execute_create_post_type', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/create-acf-post-type', 'cpt_tax' => true, 'desc' => __( 'Register a Custom Post Type through ACF (data, no code). arguments: { post_type, title, ... }.', 'karmcp' ) ),
+			'update-post-type'   => array( 'mode' => 'write', 'run' => 'execute_update_post_type', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/update-acf-post-type', 'cpt_tax' => true, 'desc' => __( 'Edit an ACF-managed Custom Post Type (slug immutable). arguments: { key, ... }.', 'karmcp' ) ),
+			'create-taxonomy'    => array( 'mode' => 'write', 'run' => 'execute_create_taxonomy', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/create-acf-taxonomy', 'cpt_tax' => true, 'desc' => __( 'Register a taxonomy through ACF (data, no code). arguments: { taxonomy, title, object_type: [...] }.', 'karmcp' ) ),
+			'update-taxonomy'    => array( 'mode' => 'write', 'run' => 'execute_update_taxonomy', 'perm' => 'check_manage_permission', 'slug' => 'karmcp/update-acf-taxonomy', 'cpt_tax' => true, 'desc' => __( 'Edit an ACF-managed taxonomy (slug immutable). arguments: { key, ... }.', 'karmcp' ) ),
 		);
 	}
 
 	private function register_read_dispatcher(): void {
-		$this->ability_names[] = 'emcp-tools/acf-read';
-		emcp_tools_register_ability(
-			'emcp-tools/acf-read',
+		$this->ability_names[] = 'karmcp/acf-read';
+		karmcp_register_ability(
+			'karmcp/acf-read',
 			array(
-				'label'               => __( 'ACF Read', 'emcp-tools' ),
-				'description'         => __( 'Read Advanced Custom Fields data: field groups, field values, options pages, and (ACF 6.1+) ACF-managed post types and taxonomies. Call with no "operation" to list the available read operations and their arguments, then call again with { operation, arguments }.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'ACF Read', 'karmcp' ),
+				'description'         => __( 'Read Advanced Custom Fields data: field groups, field values, options pages, and (ACF 6.1+) ACF-managed post types and taxonomies. Call with no "operation" to list the available read operations and their arguments, then call again with { operation, arguments }.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_acf_read' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'operation' => array( 'type' => 'string', 'description' => __( 'The read operation to run. Omit to list operations. One of: list-field-groups, get-field-group, list-options-pages, get-fields, list-post-types, get-post-type, list-taxonomies, get-taxonomy.', 'emcp-tools' ) ),
-						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'emcp-tools' ) ),
+						'operation' => array( 'type' => 'string', 'description' => __( 'The read operation to run. Omit to list operations. One of: list-field-groups, get-field-group, list-options-pages, get-fields, list-post-types, get-post-type, list-taxonomies, get-taxonomy.', 'karmcp' ) ),
+						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'karmcp' ) ),
 					),
 				),
 				'meta'                => array(
@@ -127,20 +127,20 @@ class EMCP_Tools_ACF_Abilities {
 	}
 
 	private function register_write_dispatcher(): void {
-		$this->ability_names[] = 'emcp-tools/acf-write';
-		emcp_tools_register_ability(
-			'emcp-tools/acf-write',
+		$this->ability_names[] = 'karmcp/acf-write';
+		karmcp_register_ability(
+			'karmcp/acf-write',
 			array(
-				'label'               => __( 'ACF Write', 'emcp-tools' ),
-				'description'         => __( 'Write Advanced Custom Fields data: field values, field groups, and (ACF 6.1+) ACF-managed post types and taxonomies. Individual write operations are disabled by default, enable them under EMCP Tools → Tools → Plugins → ACF. Call with no "operation" to list the available write operations and their arguments, then call again with { operation, arguments }.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'ACF Write', 'karmcp' ),
+				'description'         => __( 'Write Advanced Custom Fields data: field values, field groups, and (ACF 6.1+) ACF-managed post types and taxonomies. Individual write operations are disabled by default, enable them under KarMCP → Tools → Plugins → ACF. Call with no "operation" to list the available write operations and their arguments, then call again with { operation, arguments }.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'run_acf_write' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'operation' => array( 'type' => 'string', 'description' => __( 'The write operation to run. Omit to list operations. One of: update-fields, create-field-group, update-field-group, create-post-type, update-post-type, create-taxonomy, update-taxonomy.', 'emcp-tools' ) ),
-						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'emcp-tools' ) ),
+						'operation' => array( 'type' => 'string', 'description' => __( 'The write operation to run. Omit to list operations. One of: update-fields, create-field-group, update-field-group, create-post-type, update-post-type, create-taxonomy, update-taxonomy.', 'karmcp' ) ),
+						'arguments' => array( 'type' => 'object', 'description' => __( 'Arguments for the chosen operation (see the catalog returned when operation is omitted).', 'karmcp' ) ),
 					),
 				),
 				'meta'                => array(
@@ -183,7 +183,7 @@ class EMCP_Tools_ACF_Abilities {
 				'unknown_operation',
 				sprintf(
 					/* translators: 1: mode (read/write), 2: operation name */
-					__( 'Unknown ACF %1$s operation "%2$s". Call acf-%1$s with no operation to list the available operations.', 'emcp-tools' ),
+					__( 'Unknown ACF %1$s operation "%2$s". Call acf-%1$s with no operation to list the available operations.', 'karmcp' ),
 					$mode,
 					$operation
 				)
@@ -192,7 +192,7 @@ class EMCP_Tools_ACF_Abilities {
 
 		$op = $ops[ $operation ];
 		if ( ! empty( $op['cpt_tax'] ) && ! self::cpt_tax_supported() ) {
-			return new \WP_Error( 'acf_cpt_tax_unsupported', __( 'This operation requires ACF 6.1+ (Custom Post Type / Taxonomy registration API).', 'emcp-tools' ) );
+			return new \WP_Error( 'acf_cpt_tax_unsupported', __( 'This operation requires ACF 6.1+ (Custom Post Type / Taxonomy registration API).', 'karmcp' ) );
 		}
 
 		// Note: read vs write access is gated at the tool level — the acf-read
@@ -203,7 +203,7 @@ class EMCP_Tools_ACF_Abilities {
 
 		$perm = $op['perm'];
 		if ( ! $this->$perm( $args ) ) {
-			return new \WP_Error( 'forbidden', __( 'You do not have permission to perform this ACF operation.', 'emcp-tools' ) );
+			return new \WP_Error( 'forbidden', __( 'You do not have permission to perform this ACF operation.', 'karmcp' ) );
 		}
 
 		$run = $op['run'];
@@ -237,7 +237,7 @@ class EMCP_Tools_ACF_Abilities {
 			'operations' => $list,
 			'usage'      => sprintf(
 				/* translators: %s: mode (read/write) */
-				__( 'Call acf-%s again with { "operation": "<name>", "arguments": { ... } }.', 'emcp-tools' ),
+				__( 'Call acf-%s again with { "operation": "<name>", "arguments": { ... } }.', 'karmcp' ),
 				$mode
 			),
 		);
@@ -382,11 +382,11 @@ class EMCP_Tools_ACF_Abilities {
 	public function execute_get_field_group( $input ) {
 		$key = sanitize_text_field( (string) ( $input['key'] ?? '' ) );
 		if ( '' === $key ) {
-			return new \WP_Error( 'missing_params', __( 'A field group "key" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A field group "key" is required.', 'karmcp' ) );
 		}
 		$group = acf_get_field_group( is_numeric( $key ) ? (int) $key : $key );
 		if ( ! $group ) {
-			return new \WP_Error( 'group_not_found', __( 'Field group not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'group_not_found', __( 'Field group not found.', 'karmcp' ) );
 		}
 		$fields = function_exists( 'acf_get_fields' ) ? (array) acf_get_fields( $group ) : array();
 
@@ -541,7 +541,7 @@ class EMCP_Tools_ACF_Abilities {
 		}
 		$fields = $input['fields'] ?? null;
 		if ( ! is_array( $fields ) || array() === $fields ) {
-			return new \WP_Error( 'missing_params', __( 'A non-empty "fields" map is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A non-empty "fields" map is required.', 'karmcp' ) );
 		}
 
 		$updated = array();
@@ -570,7 +570,7 @@ class EMCP_Tools_ACF_Abilities {
 			}
 
 			// Capture the prior raw value (by key) before overwriting, for rollback.
-			if ( class_exists( 'EMCP_Tools_Change_Recorder' ) && function_exists( 'get_field' ) ) {
+			if ( class_exists( 'KarMCP_Change_Recorder' ) && function_exists( 'get_field' ) ) {
 				$before[ (string) $field['key'] ] = get_field( $field['key'], $target, false );
 			}
 
@@ -589,8 +589,8 @@ class EMCP_Tools_ACF_Abilities {
 		// later read in the same request sees fresh state.
 		unset( $this->field_index_cache[ (string) $target ] );
 
-		if ( ! empty( $updated ) && ! empty( $before ) && class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			EMCP_Tools_Change_Recorder::record_acf_fields(
+		if ( ! empty( $updated ) && ! empty( $before ) && class_exists( 'KarMCP_Change_Recorder' ) ) {
+			KarMCP_Change_Recorder::record_acf_fields(
 				$target,
 				$before,
 				sprintf( 'Updated %d ACF field(s)', count( $updated ) ),
@@ -648,13 +648,13 @@ class EMCP_Tools_ACF_Abilities {
 	public function execute_create_field_group( $input ) {
 		$title = sanitize_text_field( (string) ( $input['title'] ?? '' ) );
 		if ( '' === $title ) {
-			return new \WP_Error( 'missing_params', __( 'A field group "title" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A field group "title" is required.', 'karmcp' ) );
 		}
 		if ( empty( $input['fields'] ) || ! is_array( $input['fields'] ) ) {
-			return new \WP_Error( 'missing_params', __( 'A non-empty "fields" array is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A non-empty "fields" array is required.', 'karmcp' ) );
 		}
 		if ( ! function_exists( 'acf_import_field_group' ) ) {
-			return new \WP_Error( 'acf_unavailable', __( 'This ACF version does not expose acf_import_field_group().', 'emcp-tools' ) );
+			return new \WP_Error( 'acf_unavailable', __( 'This ACF version does not expose acf_import_field_group().', 'karmcp' ) );
 		}
 
 		$fields = $this->sanitize_field_defs( $input['fields'] );
@@ -683,7 +683,7 @@ class EMCP_Tools_ACF_Abilities {
 		// acf-field-group CPT. acf_add_local_field_group() would be memory-only.
 		$saved = acf_import_field_group( $group );
 		if ( ! $saved || empty( $saved['ID'] ) ) {
-			return new \WP_Error( 'group_create_failed', __( 'ACF did not save the field group.', 'emcp-tools' ) );
+			return new \WP_Error( 'group_create_failed', __( 'ACF did not save the field group.', 'karmcp' ) );
 		}
 
 		$this->field_index_cache = array();
@@ -712,19 +712,19 @@ class EMCP_Tools_ACF_Abilities {
 	public function execute_update_field_group( $input ) {
 		$key = sanitize_text_field( (string) ( $input['key'] ?? '' ) );
 		if ( '' === $key ) {
-			return new \WP_Error( 'missing_params', __( 'A field group "key" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A field group "key" is required.', 'karmcp' ) );
 		}
 		$group = acf_get_field_group( $key );
 		if ( ! $group ) {
-			return new \WP_Error( 'group_not_found', __( 'Field group not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'group_not_found', __( 'Field group not found.', 'karmcp' ) );
 		}
 		if ( ! empty( $group['local'] ) ) {
 			// Updating a local (acf-json / PHP-registered) group would create a DB
 			// copy that shadows the code-registered definition.
-			return new \WP_Error( 'acf_local_group', __( 'This field group is registered from code (acf-json/PHP) and cannot be edited via MCP.', 'emcp-tools' ) );
+			return new \WP_Error( 'acf_local_group', __( 'This field group is registered from code (acf-json/PHP) and cannot be edited via MCP.', 'karmcp' ) );
 		}
 		if ( empty( $group['ID'] ) ) {
-			return new \WP_Error( 'acf_local_group', __( 'This field group is not stored in the database and cannot be edited via MCP.', 'emcp-tools' ) );
+			return new \WP_Error( 'acf_local_group', __( 'This field group is not stored in the database and cannot be edited via MCP.', 'karmcp' ) );
 		}
 
 		$updated = array();
@@ -756,7 +756,7 @@ class EMCP_Tools_ACF_Abilities {
 		$fields_added = array();
 		if ( ! empty( $input['add_fields'] ) && is_array( $input['add_fields'] ) ) {
 			if ( ! function_exists( 'acf_update_field' ) ) {
-				return new \WP_Error( 'acf_unavailable', __( 'This ACF version does not expose acf_update_field().', 'emcp-tools' ) );
+				return new \WP_Error( 'acf_unavailable', __( 'This ACF version does not expose acf_update_field().', 'karmcp' ) );
 			}
 			$defs = $this->sanitize_field_defs( $input['add_fields'] );
 			if ( is_wp_error( $defs ) ) {
@@ -774,25 +774,25 @@ class EMCP_Tools_ACF_Abilities {
 		$fields_updated = array();
 		if ( ! empty( $input['update_fields'] ) && is_array( $input['update_fields'] ) ) {
 			if ( ! function_exists( 'acf_get_field' ) || ! function_exists( 'acf_update_field' ) ) {
-				return new \WP_Error( 'acf_unavailable', __( 'This ACF version does not expose the field update API.', 'emcp-tools' ) );
+				return new \WP_Error( 'acf_unavailable', __( 'This ACF version does not expose the field update API.', 'karmcp' ) );
 			}
 			foreach ( $input['update_fields'] as $change ) {
 				$change    = (array) $change;
 				$field_key = sanitize_text_field( (string) ( $change['key'] ?? '' ) );
 				if ( '' === $field_key ) {
-					return new \WP_Error( 'missing_params', __( 'Each update_fields entry needs the field "key".', 'emcp-tools' ) );
+					return new \WP_Error( 'missing_params', __( 'Each update_fields entry needs the field "key".', 'karmcp' ) );
 				}
 				foreach ( array( 'name', 'type' ) as $immutable ) {
 					if ( isset( $change[ $immutable ] ) ) {
 						return new \WP_Error(
 							'immutable_field_setting',
-							sprintf( /* translators: 1: setting, 2: field key */ __( 'The "%1$s" of an existing field cannot change via MCP (field %2$s). Add a new field instead.', 'emcp-tools' ), $immutable, $field_key )
+							sprintf( /* translators: 1: setting, 2: field key */ __( 'The "%1$s" of an existing field cannot change via MCP (field %2$s). Add a new field instead.', 'karmcp' ), $immutable, $field_key )
 						);
 					}
 				}
 				$field = acf_get_field( $field_key );
 				if ( ! $field ) {
-					return new \WP_Error( 'field_not_found', sprintf( /* translators: %s: field key */ __( 'Field "%s" not found.', 'emcp-tools' ), $field_key ) );
+					return new \WP_Error( 'field_not_found', sprintf( /* translators: %s: field key */ __( 'Field "%s" not found.', 'karmcp' ), $field_key ) );
 				}
 				foreach ( $this->mutable_field_settings() as $setting ) {
 					if ( array_key_exists( $setting, $change ) ) {
@@ -830,21 +830,21 @@ class EMCP_Tools_ACF_Abilities {
 		$options = isset( $input['options_page'] ) ? sanitize_text_field( (string) $input['options_page'] ) : '';
 
 		if ( $post_id && '' !== $options ) {
-			return new \WP_Error( 'invalid_target', __( 'Pass either "post_id" or "options_page", not both.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_target', __( 'Pass either "post_id" or "options_page", not both.', 'karmcp' ) );
 		}
 		if ( $post_id ) {
 			if ( ! get_post( $post_id ) ) {
-				return new \WP_Error( 'post_not_found', __( 'Post not found.', 'emcp-tools' ) );
+				return new \WP_Error( 'post_not_found', __( 'Post not found.', 'karmcp' ) );
 			}
 			return $post_id;
 		}
 		if ( '' !== $options ) {
 			if ( ! self::is_pro() ) {
-				return new \WP_Error( 'acf_pro_required', __( 'Options pages require ACF PRO.', 'emcp-tools' ) );
+				return new \WP_Error( 'acf_pro_required', __( 'Options pages require ACF PRO.', 'karmcp' ) );
 			}
 			return 'option' === $options ? 'options' : $options;
 		}
-		return new \WP_Error( 'invalid_target', __( 'A target is required: pass "post_id" or "options_page".', 'emcp-tools' ) );
+		return new \WP_Error( 'invalid_target', __( 'A target is required: pass "post_id" or "options_page".', 'karmcp' ) );
 	}
 
 	/**
@@ -1014,7 +1014,7 @@ class EMCP_Tools_ACF_Abilities {
 	 */
 	private function sanitize_field_defs( array $defs, int $depth = 0 ) {
 		if ( $depth > self::MAX_DEPTH ) {
-			return new \WP_Error( 'invalid_field', __( 'Field definitions are nested too deeply.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_field', __( 'Field definitions are nested too deeply.', 'karmcp' ) );
 		}
 		$out = array();
 		foreach ( $defs as $def ) {
@@ -1023,13 +1023,13 @@ class EMCP_Tools_ACF_Abilities {
 			$type  = sanitize_key( (string) ( $def['type'] ?? '' ) );
 			$label = sanitize_text_field( (string) ( $def['label'] ?? '' ) );
 			if ( '' === $name || '' === $type || '' === $label ) {
-				return new \WP_Error( 'invalid_field', __( 'Every field definition needs "label", "name", and "type".', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_field', __( 'Every field definition needs "label", "name", and "type".', 'karmcp' ) );
 			}
 			if ( in_array( $type, self::PRO_FIELD_TYPES, true ) && ! self::is_pro() ) {
-				return new \WP_Error( 'acf_pro_required', sprintf( /* translators: %s: field type */ __( 'The "%s" field type requires ACF PRO.', 'emcp-tools' ), $type ) );
+				return new \WP_Error( 'acf_pro_required', sprintf( /* translators: %s: field type */ __( 'The "%s" field type requires ACF PRO.', 'karmcp' ), $type ) );
 			}
 			if ( function_exists( 'acf_get_field_type' ) && ! acf_get_field_type( $type ) ) {
-				return new \WP_Error( 'invalid_field', sprintf( /* translators: %s: field type */ __( 'Unknown ACF field type "%s".', 'emcp-tools' ), $type ) );
+				return new \WP_Error( 'invalid_field', sprintf( /* translators: %s: field type */ __( 'Unknown ACF field type "%s".', 'karmcp' ), $type ) );
 			}
 
 			$field = array(
@@ -1058,7 +1058,7 @@ class EMCP_Tools_ACF_Abilities {
 					$layout      = (array) $layout;
 					$layout_name = sanitize_key( (string) ( $layout['name'] ?? '' ) );
 					if ( '' === $layout_name ) {
-						return new \WP_Error( 'invalid_field', __( 'Every flexible content layout needs a "name".', 'emcp-tools' ) );
+						return new \WP_Error( 'invalid_field', __( 'Every flexible content layout needs a "name".', 'karmcp' ) );
 					}
 					$layout_row = array(
 						'key'     => uniqid( 'layout_' ),
@@ -1099,21 +1099,21 @@ class EMCP_Tools_ACF_Abilities {
 			);
 		}
 		if ( ! is_array( $location ) ) {
-			return new \WP_Error( 'invalid_location', __( 'Location must be an array of rule groups.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_location', __( 'Location must be an array of rule groups.', 'karmcp' ) );
 		}
 		$out = array();
 		foreach ( $location as $rule_group ) {
 			if ( ! is_array( $rule_group ) ) {
-				return new \WP_Error( 'invalid_location', __( 'Each location rule group must be an array of rules.', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_location', __( 'Each location rule group must be an array of rules.', 'karmcp' ) );
 			}
 			$group_out = array();
 			foreach ( $rule_group as $rule ) {
 				$rule = (array) $rule;
 				if ( empty( $rule['param'] ) || empty( $rule['operator'] ) || ! isset( $rule['value'] ) ) {
-					return new \WP_Error( 'invalid_location', __( 'Each location rule needs "param", "operator", and "value".', 'emcp-tools' ) );
+					return new \WP_Error( 'invalid_location', __( 'Each location rule needs "param", "operator", and "value".', 'karmcp' ) );
 				}
 				if ( ! in_array( (string) $rule['operator'], array( '==', '!=' ), true ) ) {
-					return new \WP_Error( 'invalid_location', __( 'Location rule operator must be "==" or "!=".', 'emcp-tools' ) );
+					return new \WP_Error( 'invalid_location', __( 'Location rule operator must be "==" or "!=".', 'karmcp' ) );
 				}
 				$group_out[] = array(
 					'param'    => sanitize_key( (string) $rule['param'] ),
@@ -1126,7 +1126,7 @@ class EMCP_Tools_ACF_Abilities {
 			}
 		}
 		if ( array() === $out ) {
-			return new \WP_Error( 'invalid_location', __( 'At least one location rule is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_location', __( 'At least one location rule is required.', 'karmcp' ) );
 		}
 		return $out;
 	}
@@ -1256,10 +1256,10 @@ class EMCP_Tools_ACF_Abilities {
 		}
 		$title = sanitize_text_field( (string) ( $input['title'] ?? '' ) );
 		if ( '' === $title ) {
-			return new \WP_Error( 'missing_params', __( 'A "title" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A "title" is required.', 'karmcp' ) );
 		}
 		if ( post_type_exists( $slug ) ) {
-			return new \WP_Error( 'post_type_exists', sprintf( /* translators: %s: slug */ __( 'A post type "%s" already exists.', 'emcp-tools' ), $slug ) );
+			return new \WP_Error( 'post_type_exists', sprintf( /* translators: %s: slug */ __( 'A post type "%s" already exists.', 'karmcp' ), $slug ) );
 		}
 
 		$singular = sanitize_text_field( (string) ( $input['singular'] ?? $title ) );
@@ -1283,7 +1283,7 @@ class EMCP_Tools_ACF_Abilities {
 
 		$saved = acf_import_post_type( $def );
 		if ( ! is_array( $saved ) || empty( $saved['ID'] ) ) {
-			return new \WP_Error( 'post_type_create_failed', __( 'ACF did not save the post type.', 'emcp-tools' ) );
+			return new \WP_Error( 'post_type_create_failed', __( 'ACF did not save the post type.', 'karmcp' ) );
 		}
 		return $this->format_acf_post_type( (array) $saved, true );
 	}
@@ -1302,7 +1302,7 @@ class EMCP_Tools_ACF_Abilities {
 			return $pt;
 		}
 		if ( isset( $input['post_type'] ) && sanitize_key( (string) $input['post_type'] ) !== (string) $pt['post_type'] ) {
-			return new \WP_Error( 'immutable_slug', __( 'The post_type slug cannot change via MCP (it would orphan existing content).', 'emcp-tools' ) );
+			return new \WP_Error( 'immutable_slug', __( 'The post_type slug cannot change via MCP (it would orphan existing content).', 'karmcp' ) );
 		}
 
 		$pt = $this->apply_type_updates( $pt, $input );
@@ -1321,7 +1321,7 @@ class EMCP_Tools_ACF_Abilities {
 
 		$saved = acf_update_internal_post_type( $pt, 'acf-post-type' );
 		if ( ! is_array( $saved ) ) {
-			return new \WP_Error( 'post_type_update_failed', __( 'ACF did not save the post type.', 'emcp-tools' ) );
+			return new \WP_Error( 'post_type_update_failed', __( 'ACF did not save the post type.', 'karmcp' ) );
 		}
 		return $this->format_acf_post_type( (array) $saved, true );
 	}
@@ -1390,14 +1390,14 @@ class EMCP_Tools_ACF_Abilities {
 		}
 		$title = sanitize_text_field( (string) ( $input['title'] ?? '' ) );
 		if ( '' === $title ) {
-			return new \WP_Error( 'missing_params', __( 'A "title" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A "title" is required.', 'karmcp' ) );
 		}
 		$object_type = $this->sanitize_string_list( $input['object_type'] ?? array() );
 		if ( array() === $object_type ) {
-			return new \WP_Error( 'missing_params', __( 'A non-empty "object_type" array (post type slugs) is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A non-empty "object_type" array (post type slugs) is required.', 'karmcp' ) );
 		}
 		if ( taxonomy_exists( $slug ) ) {
-			return new \WP_Error( 'taxonomy_exists', sprintf( /* translators: %s: slug */ __( 'A taxonomy "%s" already exists.', 'emcp-tools' ), $slug ) );
+			return new \WP_Error( 'taxonomy_exists', sprintf( /* translators: %s: slug */ __( 'A taxonomy "%s" already exists.', 'karmcp' ), $slug ) );
 		}
 
 		$singular = sanitize_text_field( (string) ( $input['singular'] ?? $title ) );
@@ -1415,7 +1415,7 @@ class EMCP_Tools_ACF_Abilities {
 
 		$saved = acf_import_taxonomy( $def );
 		if ( ! is_array( $saved ) || empty( $saved['ID'] ) ) {
-			return new \WP_Error( 'taxonomy_create_failed', __( 'ACF did not save the taxonomy.', 'emcp-tools' ) );
+			return new \WP_Error( 'taxonomy_create_failed', __( 'ACF did not save the taxonomy.', 'karmcp' ) );
 		}
 		return $this->format_acf_taxonomy( (array) $saved, true );
 	}
@@ -1434,7 +1434,7 @@ class EMCP_Tools_ACF_Abilities {
 			return $tax;
 		}
 		if ( isset( $input['taxonomy'] ) && sanitize_key( (string) $input['taxonomy'] ) !== (string) $tax['taxonomy'] ) {
-			return new \WP_Error( 'immutable_slug', __( 'The taxonomy slug cannot change via MCP (it would orphan existing terms).', 'emcp-tools' ) );
+			return new \WP_Error( 'immutable_slug', __( 'The taxonomy slug cannot change via MCP (it would orphan existing terms).', 'karmcp' ) );
 		}
 
 		$tax = $this->apply_type_updates( $tax, $input );
@@ -1447,7 +1447,7 @@ class EMCP_Tools_ACF_Abilities {
 
 		$saved = acf_update_internal_post_type( $tax, 'acf-taxonomy' );
 		if ( ! is_array( $saved ) ) {
-			return new \WP_Error( 'taxonomy_update_failed', __( 'ACF did not save the taxonomy.', 'emcp-tools' ) );
+			return new \WP_Error( 'taxonomy_update_failed', __( 'ACF did not save the taxonomy.', 'karmcp' ) );
 		}
 		return $this->format_acf_taxonomy( (array) $saved, true );
 	}
@@ -1468,11 +1468,11 @@ class EMCP_Tools_ACF_Abilities {
 	private function find_internal( $key, string $post_type ) {
 		$key = sanitize_text_field( (string) $key );
 		if ( '' === $key ) {
-			return new \WP_Error( 'missing_params', __( 'A "key" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A "key" is required.', 'karmcp' ) );
 		}
 		$item = acf_get_internal_post_type( is_numeric( $key ) ? (int) $key : $key, $post_type );
 		if ( ! $item || ! is_array( $item ) ) {
-			return new \WP_Error( 'not_found', __( 'Not found, or not managed by ACF.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_found', __( 'Not found, or not managed by ACF.', 'karmcp' ) );
 		}
 		return $item;
 	}
@@ -1519,13 +1519,13 @@ class EMCP_Tools_ACF_Abilities {
 	private function sanitize_type_slug( $raw, int $max, string $which ) {
 		$slug = sanitize_key( (string) $raw );
 		if ( '' === $slug ) {
-			return new \WP_Error( 'missing_params', sprintf( /* translators: %s: field name */ __( 'A "%s" slug is required.', 'emcp-tools' ), $which ) );
+			return new \WP_Error( 'missing_params', sprintf( /* translators: %s: field name */ __( 'A "%s" slug is required.', 'karmcp' ), $which ) );
 		}
 		if ( strlen( $slug ) > $max ) {
-			return new \WP_Error( 'invalid_slug', sprintf( /* translators: 1: field, 2: max length */ __( 'The %1$s slug must be %2$d characters or fewer.', 'emcp-tools' ), $which, $max ) );
+			return new \WP_Error( 'invalid_slug', sprintf( /* translators: 1: field, 2: max length */ __( 'The %1$s slug must be %2$d characters or fewer.', 'karmcp' ), $which, $max ) );
 		}
 		if ( in_array( $slug, self::reserved_type_slugs(), true ) ) {
-			return new \WP_Error( 'reserved_slug', sprintf( /* translators: %s: slug */ __( '"%s" is a reserved WordPress slug.', 'emcp-tools' ), $slug ) );
+			return new \WP_Error( 'reserved_slug', sprintf( /* translators: %s: slug */ __( '"%s" is a reserved WordPress slug.', 'karmcp' ), $slug ) );
 		}
 		return $slug;
 	}

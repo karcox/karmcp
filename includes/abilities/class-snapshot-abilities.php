@@ -2,7 +2,7 @@
 /**
  * Page Snapshot MCP ability — one normalized page digest.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.3.0
  */
 
@@ -15,21 +15,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.3.0
  */
-class EMCP_Tools_Snapshot_Abilities {
+class KarMCP_Snapshot_Abilities {
 
 	/**
 	 * The data access layer.
 	 *
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param EMCP_Tools_Data $data The data access layer.
+	 * @param KarMCP_Data $data The data access layer.
 	 */
-	public function __construct( EMCP_Tools_Data $data ) {
+	public function __construct( KarMCP_Data $data ) {
 		$this->data = $data;
 	}
 
@@ -39,7 +39,7 @@ class EMCP_Tools_Snapshot_Abilities {
 	 * @return string[]
 	 */
 	public function get_ability_names(): array {
-		return array( 'emcp-tools/get-page-snapshot' );
+		return array( 'karmcp/get-page-snapshot' );
 	}
 
 	/**
@@ -55,12 +55,12 @@ class EMCP_Tools_Snapshot_Abilities {
 	 * Registers the ability with the WordPress Abilities API.
 	 */
 	public function register(): void {
-		emcp_tools_register_ability(
-			'emcp-tools/get-page-snapshot',
+		karmcp_register_ability(
+			'karmcp/get-page-snapshot',
 			array(
-				'label'               => __( 'Get Page Snapshot', 'emcp-tools' ),
-				'description'         => __( 'Returns ONE normalized digest of a page: structure tree + counts, global colors/typography/classes actually in use, per-device responsive overrides, content outline, and an SEO-lite summary, so you can reason about a page from a single call instead of chaining get-page-structure/get-global-settings/list-global-classes. Pass include:[performance,a11y,seo] for heavy audit summaries (a11y/seo are Pro). Read-only.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get Page Snapshot', 'karmcp' ),
+				'description'         => __( 'Returns ONE normalized digest of a page: structure tree + counts, global colors/typography/classes actually in use, per-device responsive overrides, content outline, and an SEO-lite summary, so you can reason about a page from a single call instead of chaining get-page-structure/get-global-settings/list-global-classes. Pass include:[performance,a11y,seo] for heavy audit summaries (a11y/seo are Pro). Read-only.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
 				'input_schema'        => array(
@@ -68,7 +68,7 @@ class EMCP_Tools_Snapshot_Abilities {
 					'properties' => array(
 						'post_id'  => array(
 							'type'        => 'integer',
-							'description' => __( 'Target post/page ID.', 'emcp-tools' ),
+							'description' => __( 'Target post/page ID.', 'karmcp' ),
 						),
 						'include'  => array(
 							'type'        => 'array',
@@ -76,7 +76,7 @@ class EMCP_Tools_Snapshot_Abilities {
 								'type' => 'string',
 								'enum' => array( 'performance', 'a11y', 'seo' ),
 							),
-							'description' => __( 'Heavy opt-in sections. performance is free (needs manage_options); a11y and seo are Pro.', 'emcp-tools' ),
+							'description' => __( 'Heavy opt-in sections. performance is free (needs manage_options); a11y and seo are Pro.', 'karmcp' ),
 						),
 						'sections' => array(
 							'type'        => 'array',
@@ -84,11 +84,11 @@ class EMCP_Tools_Snapshot_Abilities {
 								'type' => 'string',
 								'enum' => array( 'post', 'structure', 'tokens', 'responsive', 'content', 'seo_lite', 'warnings' ),
 							),
-							'description' => __( 'Subset which core sections to return. Default: all.', 'emcp-tools' ),
+							'description' => __( 'Subset which core sections to return. Default: all.', 'karmcp' ),
 						),
 						'fresh'    => array(
 							'type'        => 'boolean',
-							'description' => __( 'Bypass the heavy-section cache.', 'emcp-tools' ),
+							'description' => __( 'Bypass the heavy-section cache.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'post_id' ),
@@ -106,11 +106,11 @@ class EMCP_Tools_Snapshot_Abilities {
 	public function execute( array $input ) {
 		$post_id = isset( $input['post_id'] ) ? absint( $input['post_id'] ) : 0;
 		if ( $post_id <= 0 ) {
-			return new WP_Error( 'invalid_post', __( 'A valid post_id is required.', 'emcp-tools' ) );
+			return new WP_Error( 'invalid_post', __( 'A valid post_id is required.', 'karmcp' ) );
 		}
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new WP_Error( 'not_found', __( 'Post not found.', 'emcp-tools' ) );
+			return new WP_Error( 'not_found', __( 'Post not found.', 'karmcp' ) );
 		}
 
 		$is_elementor = ( 'builder' === get_post_meta( $post_id, '_elementor_edit_mode', true ) );
@@ -134,7 +134,7 @@ class EMCP_Tools_Snapshot_Abilities {
 			'fresh'    => ! empty( $input['fresh'] ),
 		);
 
-		$builder_obj = new EMCP_Tools_Page_Snapshot( $this->data );
+		$builder_obj = new KarMCP_Page_Snapshot( $this->data );
 		return $builder_obj->build( $post_id, array_filter( $args, static fn( $v ) => null !== $v ) );
 	}
 

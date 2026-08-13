@@ -8,24 +8,24 @@
  *
  *     vendor/bin/phpunit -c tests/phpunit.xml
  *
- * Stubs are driven by the $GLOBALS['emcp_test'] fixture array, reset per test
- * via emcp_test_reset().
+ * Stubs are driven by the $GLOBALS['karmcp_test'] fixture array, reset per test
+ * via karmcp_test_reset().
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', sys_get_temp_dir() . '/wordpress/' );
 }
-if ( ! defined( 'EMCP_TOOLS_DIR' ) ) {
-	define( 'EMCP_TOOLS_DIR', dirname( __DIR__ ) . '/' );
+if ( ! defined( 'KARMCP_DIR' ) ) {
+	define( 'KARMCP_DIR', dirname( __DIR__ ) . '/' );
 }
 
 /**
  * Resets the shared stub fixture. Call from setUp().
  */
-function emcp_test_reset(): void {
-	$GLOBALS['emcp_test'] = array(
+function karmcp_test_reset(): void {
+	$GLOBALS['karmcp_test'] = array(
 		'caps'               => array( 'edit_posts', 'manage_options' ),
 		'post_caps'          => array(),   // post_id => bool for edit_post checks.
 		'acf_pro'            => true,
@@ -53,7 +53,7 @@ function emcp_test_reset(): void {
 		'updated_internal'   => array(),   // recorded acf_update_internal_post_type() args.
 	);
 }
-emcp_test_reset();
+karmcp_test_reset();
 
 // ---------------------------------------------------------------------------
 // Minimal WordPress stubs
@@ -113,50 +113,129 @@ function esc_url_raw( $value ): string {
 	return (string) $value;
 }
 
-if ( ! function_exists( 'apply_filters' ) ) {
-	function apply_filters( $hook, $value = null ) {
-		return $value; // Pass-through: no registered filters in the public harness.
+/**
+ * Minimal hook registry.
+ *
+ * This used to be a pass-through `apply_filters`. It is now a real (tiny)
+ * registry so integration-style tests can wire a class's own filters and assert
+ * the composed behaviour — the Themer condition layer is entirely filter-driven,
+ * and a pass-through cannot exercise it.
+ *
+ * With nothing registered it behaves exactly like the old pass-through, so
+ * existing tests are unaffected. Call karmcp_test_reset_hooks() in setUp() when
+ * a test registers anything, since the registry is global.
+ */
+$GLOBALS['karmcp_test_hooks'] = array();
+
+function karmcp_test_reset_hooks(): void {
+	$GLOBALS['karmcp_test_hooks'] = array();
+}
+
+if ( ! function_exists( 'add_filter' ) ) {
+	function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ): bool {
+		$GLOBALS['karmcp_test_hooks'][ $hook ][ $priority ][] = array(
+			'callback'      => $callback,
+			'accepted_args' => (int) $accepted_args,
+		);
+		return true;
 	}
 }
 
-// Fixture-driven: $GLOBALS['emcp_test']['rest_url_base'] sets the REST base so a
+if ( ! function_exists( 'apply_filters' ) ) {
+	function apply_filters( $hook, $value = null ) {
+		$args = func_get_args();
+		array_shift( $args ); // Drop the hook name; $args[0] is now $value.
+
+		if ( empty( $GLOBALS['karmcp_test_hooks'][ $hook ] ) ) {
+			return $value;
+		}
+
+		$by_priority = $GLOBALS['karmcp_test_hooks'][ $hook ];
+		ksort( $by_priority );
+
+		foreach ( $by_priority as $entries ) {
+			foreach ( $entries as $entry ) {
+				$call    = array_slice( $args, 0, max( 1, $entry['accepted_args'] ) );
+				$call[0] = $value;
+				$value   = call_user_func_array( $entry['callback'], $call );
+			}
+		}
+
+		return $value;
+	}
+}
+
+if ( ! function_exists( 'add_action' ) ) {
+	function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ): bool {
+		return add_filter( $hook, $callback, $priority, $accepted_args );
+	}
+}
+
+if ( ! function_exists( 'do_action' ) ) {
+	function do_action( $hook, ...$args ): void {
+		if ( empty( $GLOBALS['karmcp_test_hooks'][ $hook ] ) ) {
+			return;
+		}
+		$by_priority = $GLOBALS['karmcp_test_hooks'][ $hook ];
+		ksort( $by_priority );
+		foreach ( $by_priority as $entries ) {
+			foreach ( $entries as $entry ) {
+				call_user_func_array( $entry['callback'], array_slice( $args, 0, $entry['accepted_args'] ) );
+			}
+		}
+	}
+}
+
+if ( ! function_exists( '__return_true' ) ) {
+	function __return_true(): bool {
+		return true;
+	}
+}
+
+if ( ! function_exists( '__return_false' ) ) {
+	function __return_false(): bool {
+		return false;
+	}
+}
+
+// Fixture-driven: $GLOBALS['karmcp_test']['rest_url_base'] sets the REST base so a
 // staging-style split (rest_url host != home_url host) can be simulated.
 if ( ! function_exists( 'rest_url' ) ) {
 	function rest_url( $path = '', $scheme = 'rest' ) {
-		$base = $GLOBALS['emcp_test']['rest_url_base'] ?? ( home_url() . '/wp-json' );
+		$base = $GLOBALS['karmcp_test']['rest_url_base'] ?? ( home_url() . '/wp-json' );
 		$base = rtrim( (string) $base, '/' );
 		return '' === (string) $path ? $base . '/' : $base . '/' . ltrim( (string) $path, '/' );
 	}
 }
 
 function get_option( $name, $default = false ) {
-	return $GLOBALS['emcp_test']['options'][ $name ] ?? $default;
+	return $GLOBALS['karmcp_test']['options'][ $name ] ?? $default;
 }
 
 function update_option( $name, $value, $autoload = null ): bool {
-	$GLOBALS['emcp_test']['options'][ $name ] = $value;
+	$GLOBALS['karmcp_test']['options'][ $name ] = $value;
 	return true;
 }
 
 function current_user_can( $cap, $object_id = null ): bool {
 	if ( 'edit_post' === $cap ) {
-		$map = $GLOBALS['emcp_test']['post_caps'];
+		$map = $GLOBALS['karmcp_test']['post_caps'];
 		if ( array_key_exists( (int) $object_id, $map ) ) {
 			return (bool) $map[ (int) $object_id ];
 		}
-		return in_array( 'edit_posts', $GLOBALS['emcp_test']['caps'], true );
+		return in_array( 'edit_posts', $GLOBALS['karmcp_test']['caps'], true );
 	}
-	return in_array( $cap, $GLOBALS['emcp_test']['caps'], true );
+	return in_array( $cap, $GLOBALS['karmcp_test']['caps'], true );
 }
 
 function get_post( $post_id ) {
-	return $GLOBALS['emcp_test']['posts'][ (int) $post_id ] ?? null;
+	return $GLOBALS['karmcp_test']['posts'][ (int) $post_id ] ?? null;
 }
 
 if ( ! function_exists( 'delete_post_meta' ) ) {
-	// Records deletions in $GLOBALS['emcp_test']['deleted_meta'] as [post_id, key].
+	// Records deletions in $GLOBALS['karmcp_test']['deleted_meta'] as [post_id, key].
 	function delete_post_meta( $post_id, $key, $value = '' ) {
-		$GLOBALS['emcp_test']['deleted_meta'][] = array( (int) $post_id, (string) $key );
+		$GLOBALS['karmcp_test']['deleted_meta'][] = array( (int) $post_id, (string) $key );
 		return true;
 	}
 }
@@ -177,16 +256,16 @@ function wp_parse_url( $url, $component = -1 ) {
 	return parse_url( (string) $url, $component ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url
 }
 
-// Fixture-driven: $GLOBALS['emcp_test']['url_to_postid'][ normalized-path ] => post id.
+// Fixture-driven: $GLOBALS['karmcp_test']['url_to_postid'][ normalized-path ] => post id.
 function url_to_postid( $url ) {
 	$path = parse_url( (string) $url, PHP_URL_PATH ); // phpcs:ignore
 	$path = '/' . trim( strtolower( (string) $path ), '/' );
-	return (int) ( $GLOBALS['emcp_test']['url_to_postid'][ $path ] ?? 0 );
+	return (int) ( $GLOBALS['karmcp_test']['url_to_postid'][ $path ] ?? 0 );
 }
 
-// Fixture-driven: $GLOBALS['emcp_test']['post_status'][ id ] => 'publish'|'trash'|...
+// Fixture-driven: $GLOBALS['karmcp_test']['post_status'][ id ] => 'publish'|'trash'|...
 function get_post_status( $id ) {
-	return $GLOBALS['emcp_test']['post_status'][ (int) $id ] ?? false;
+	return $GLOBALS['karmcp_test']['post_status'][ (int) $id ] ?? false;
 }
 
 // ---------------------------------------------------------------------------
@@ -195,13 +274,13 @@ function get_post_status( $id ) {
 
 function acf_get_field_groups( $args = array() ): array {
 	if ( isset( $args['post_id'] ) ) {
-		return $GLOBALS['emcp_test']['groups_for_post'][ (int) $args['post_id'] ] ?? array();
+		return $GLOBALS['karmcp_test']['groups_for_post'][ (int) $args['post_id'] ] ?? array();
 	}
-	return $GLOBALS['emcp_test']['field_groups'];
+	return $GLOBALS['karmcp_test']['field_groups'];
 }
 
 function acf_get_field_group( $key ) {
-	foreach ( $GLOBALS['emcp_test']['field_groups'] as $group ) {
+	foreach ( $GLOBALS['karmcp_test']['field_groups'] as $group ) {
 		if ( ( $group['key'] ?? '' ) === $key || ( isset( $group['ID'] ) && $group['ID'] === $key ) ) {
 			return $group;
 		}
@@ -211,11 +290,11 @@ function acf_get_field_group( $key ) {
 
 function acf_get_fields( $group ): array {
 	$key = is_array( $group ) ? ( $group['key'] ?? '' ) : (string) $group;
-	return $GLOBALS['emcp_test']['group_fields'][ $key ] ?? array();
+	return $GLOBALS['karmcp_test']['group_fields'][ $key ] ?? array();
 }
 
 function acf_get_field( $key ) {
-	return $GLOBALS['emcp_test']['fields_by_key'][ $key ] ?? false;
+	return $GLOBALS['karmcp_test']['fields_by_key'][ $key ] ?? false;
 }
 
 function acf_get_field_type( $type ) {
@@ -224,42 +303,42 @@ function acf_get_field_type( $type ) {
 
 function acf_get_setting( $name ) {
 	if ( 'pro' === $name ) {
-		return $GLOBALS['emcp_test']['acf_pro'];
+		return $GLOBALS['karmcp_test']['acf_pro'];
 	}
 	return null;
 }
 
 function acf_get_options_pages() {
-	return $GLOBALS['emcp_test']['options_pages'];
+	return $GLOBALS['karmcp_test']['options_pages'];
 }
 
 function get_field( $key, $target = false, $format = true ) {
-	return $GLOBALS['emcp_test']['values'][ (string) $target ][ $key ] ?? null;
+	return $GLOBALS['karmcp_test']['values'][ (string) $target ][ $key ] ?? null;
 }
 
 function get_field_objects( $target = false, $format = true ) {
-	return $GLOBALS['emcp_test']['field_objects'][ (string) $target ] ?? array();
+	return $GLOBALS['karmcp_test']['field_objects'][ (string) $target ] ?? array();
 }
 
 function get_field_object( $name, $target = false, $format = true, $load_value = true ) {
-	$objects = $GLOBALS['emcp_test']['field_objects'][ (string) $target ] ?? array();
+	$objects = $GLOBALS['karmcp_test']['field_objects'][ (string) $target ] ?? array();
 	return $objects[ $name ] ?? false;
 }
 
 function update_field( $key, $value, $target = false ): bool {
-	$GLOBALS['emcp_test']['update_field_calls'][]                    = array( $key, $value, $target );
-	$GLOBALS['emcp_test']['values'][ (string) $target ][ $key ] = $value;
+	$GLOBALS['karmcp_test']['update_field_calls'][]                    = array( $key, $value, $target );
+	$GLOBALS['karmcp_test']['values'][ (string) $target ][ $key ] = $value;
 	return true;
 }
 
 function acf_import_field_group( $group ) {
-	$group['ID']                                = 101 + count( $GLOBALS['emcp_test']['imported_groups'] );
-	$GLOBALS['emcp_test']['imported_groups'][] = $group;
+	$group['ID']                                = 101 + count( $GLOBALS['karmcp_test']['imported_groups'] );
+	$GLOBALS['karmcp_test']['imported_groups'][] = $group;
 	return $group;
 }
 
 function acf_update_field_group( $group ) {
-	$GLOBALS['emcp_test']['updated_groups'][] = $group;
+	$GLOBALS['karmcp_test']['updated_groups'][] = $group;
 	return $group;
 }
 
@@ -267,7 +346,7 @@ function acf_update_field( $field ) {
 	if ( empty( $field['key'] ) ) {
 		$field['key'] = uniqid( 'field_' );
 	}
-	$GLOBALS['emcp_test']['updated_fields'][] = $field;
+	$GLOBALS['karmcp_test']['updated_fields'][] = $field;
 	return $field;
 }
 
@@ -276,29 +355,29 @@ function acf_update_field( $field ) {
 // ---------------------------------------------------------------------------
 
 function post_type_exists( $slug ): bool {
-	return in_array( (string) $slug, $GLOBALS['emcp_test']['existing_types'], true );
+	return in_array( (string) $slug, $GLOBALS['karmcp_test']['existing_types'], true );
 }
 
 function taxonomy_exists( $slug ): bool {
-	return in_array( (string) $slug, $GLOBALS['emcp_test']['existing_taxes'], true );
+	return in_array( (string) $slug, $GLOBALS['karmcp_test']['existing_taxes'], true );
 }
 
 // ---------------------------------------------------------------------------
 // ACF 6.1+ CPT / taxonomy stubs (present in the harness = "ACF 6.1+"; the
-// EMCP_Tools_ACF_Abilities::cpt_tax_supported() gate keys off function_exists).
+// KarMCP_ACF_Abilities::cpt_tax_supported() gate keys off function_exists).
 // ---------------------------------------------------------------------------
 
 function acf_get_acf_post_types(): array {
-	return array_values( $GLOBALS['emcp_test']['acf_post_types'] );
+	return array_values( $GLOBALS['karmcp_test']['acf_post_types'] );
 }
 
 function acf_get_acf_taxonomies(): array {
-	return array_values( $GLOBALS['emcp_test']['acf_taxonomies'] );
+	return array_values( $GLOBALS['karmcp_test']['acf_taxonomies'] );
 }
 
 function acf_get_internal_post_type( $id, $post_type ) {
 	$store = 'acf-post-type' === $post_type ? 'acf_post_types' : 'acf_taxonomies';
-	foreach ( $GLOBALS['emcp_test'][ $store ] as $item ) {
+	foreach ( $GLOBALS['karmcp_test'][ $store ] as $item ) {
 		if ( ( $item['key'] ?? '' ) === $id || ( isset( $item['ID'] ) && (int) $item['ID'] === (int) $id ) ) {
 			return $item;
 		}
@@ -307,21 +386,21 @@ function acf_get_internal_post_type( $id, $post_type ) {
 }
 
 function acf_import_post_type( $def ) {
-	$def['ID']                                = 201 + count( $GLOBALS['emcp_test']['imported_types'] );
-	$GLOBALS['emcp_test']['imported_types'][] = $def;
-	$GLOBALS['emcp_test']['acf_post_types'][ $def['key'] ] = $def;
+	$def['ID']                                = 201 + count( $GLOBALS['karmcp_test']['imported_types'] );
+	$GLOBALS['karmcp_test']['imported_types'][] = $def;
+	$GLOBALS['karmcp_test']['acf_post_types'][ $def['key'] ] = $def;
 	return $def;
 }
 
 function acf_import_taxonomy( $def ) {
-	$def['ID']                                = 301 + count( $GLOBALS['emcp_test']['imported_taxes'] );
-	$GLOBALS['emcp_test']['imported_taxes'][] = $def;
-	$GLOBALS['emcp_test']['acf_taxonomies'][ $def['key'] ] = $def;
+	$def['ID']                                = 301 + count( $GLOBALS['karmcp_test']['imported_taxes'] );
+	$GLOBALS['karmcp_test']['imported_taxes'][] = $def;
+	$GLOBALS['karmcp_test']['acf_taxonomies'][ $def['key'] ] = $def;
 	return $def;
 }
 
 function acf_update_internal_post_type( $item, $post_type ) {
-	$GLOBALS['emcp_test']['updated_internal'][] = array( 'post_type' => $post_type, 'item' => $item );
+	$GLOBALS['karmcp_test']['updated_internal'][] = array( 'post_type' => $post_type, 'item' => $item );
 	return $item;
 }
 
@@ -329,20 +408,20 @@ function acf_update_internal_post_type( $item, $post_type ) {
 // Plugin shim + class under test
 // ---------------------------------------------------------------------------
 
-function emcp_tools_register_ability( string $name, array $args ) {
-	$GLOBALS['emcp_test']['abilities'][ $name ] = $args;
+function karmcp_register_ability( string $name, array $args ) {
+	$GLOBALS['karmcp_test']['abilities'][ $name ] = $args;
 	return true;
 }
 
 // ---------------------------------------------------------------------------
-// Meta Box (rwmb_*) stubs, fixture-driven via $GLOBALS['emcp_test']['metabox']
+// Meta Box (rwmb_*) stubs, fixture-driven via $GLOBALS['karmcp_test']['metabox']
 // ---------------------------------------------------------------------------
 
 if ( ! defined( 'RWMB_VER' ) ) { define( 'RWMB_VER', '5.13.1' ); }
 
-if ( ! class_exists( 'EMCP_Test_MB' ) ) {
+if ( ! class_exists( 'KarMCP_Test_MB' ) ) {
 	/** Minimal RW_Meta_Box test double. */
-	class EMCP_Test_MB {
+	class KarMCP_Test_MB {
 		public $meta_box;
 		private $object_type;
 		public function __construct( array $meta_box, string $object_type = 'post' ) {
@@ -352,9 +431,9 @@ if ( ! class_exists( 'EMCP_Test_MB' ) ) {
 		public function get_object_type() { return $this->object_type; }
 	}
 }
-if ( ! class_exists( 'EMCP_Test_MB_Registry' ) ) {
-	class EMCP_Test_MB_Registry {
-		public function all() { return $GLOBALS['emcp_test']['metabox']['boxes'] ?? array(); }
+if ( ! class_exists( 'KarMCP_Test_MB_Registry' ) ) {
+	class KarMCP_Test_MB_Registry {
+		public function all() { return $GLOBALS['karmcp_test']['metabox']['boxes'] ?? array(); }
 		public function get_by( $filter ) {
 			$ot = $filter['object_type'] ?? null;
 			return array_filter( $this->all(), static function ( $mb ) use ( $ot ) {
@@ -364,12 +443,12 @@ if ( ! class_exists( 'EMCP_Test_MB_Registry' ) ) {
 	}
 }
 if ( ! function_exists( 'rwmb_get_registry' ) ) {
-	function rwmb_get_registry( $type ) { return new EMCP_Test_MB_Registry(); }
+	function rwmb_get_registry( $type ) { return new KarMCP_Test_MB_Registry(); }
 }
 if ( ! function_exists( 'rwmb_meta' ) ) {
 	function rwmb_meta( $key, $args = array(), $object_id = null ) {
 		$ot  = $args['object_type'] ?? 'post';
-		return $GLOBALS['emcp_test']['metabox']['values'][ $ot ][ (string) $object_id ][ $key ] ?? '';
+		return $GLOBALS['karmcp_test']['metabox']['values'][ $ot ][ (string) $object_id ][ $key ] ?? '';
 	}
 }
 if ( ! function_exists( 'rwmb_set_meta' ) ) {
@@ -377,15 +456,15 @@ if ( ! function_exists( 'rwmb_set_meta' ) ) {
 		$ot = $args['object_type'] ?? 'post';
 		// Emulate MB: no-op for unregistered fields.
 		$known = false;
-		foreach ( $GLOBALS['emcp_test']['metabox']['boxes'] ?? array() as $mb ) {
+		foreach ( $GLOBALS['karmcp_test']['metabox']['boxes'] ?? array() as $mb ) {
 			foreach ( (array) $mb->fields as $f ) { if ( ( $f['id'] ?? '' ) === $key ) { $known = true; break 2; } }
 		}
-		if ( $known ) { $GLOBALS['emcp_test']['metabox']['values'][ $ot ][ (string) $object_id ][ $key ] = $value; }
+		if ( $known ) { $GLOBALS['karmcp_test']['metabox']['values'][ $ot ][ (string) $object_id ][ $key ] = $value; }
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Contact Form 7 stubs, fixture-driven via $GLOBALS['emcp_test']['cf7']['forms']
+// Contact Form 7 stubs, fixture-driven via $GLOBALS['karmcp_test']['cf7']['forms']
 // ---------------------------------------------------------------------------
 
 if ( ! defined( 'WPCF7_VERSION' ) ) { define( 'WPCF7_VERSION', '6.1.6' ); }
@@ -418,17 +497,17 @@ if ( ! class_exists( 'WPCF7_ContactForm' ) ) {
 		}
 		public static function find( $args = array() ) {
 			$out = array();
-			foreach ( array_keys( $GLOBALS['emcp_test']['cf7']['forms'] ?? array() ) as $id ) {
+			foreach ( array_keys( $GLOBALS['karmcp_test']['cf7']['forms'] ?? array() ) as $id ) {
 				$out[] = new self( $id );
 			}
 			return $out;
 		}
 		public static function get_instance( $id ) {
 			$id = (int) ( is_object( $id ) ? ( $id->ID ?? 0 ) : $id );
-			return isset( $GLOBALS['emcp_test']['cf7']['forms'][ $id ] ) ? new self( $id ) : null;
+			return isset( $GLOBALS['karmcp_test']['cf7']['forms'][ $id ] ) ? new self( $id ) : null;
 		}
 		private function store(): array {
-			return $GLOBALS['emcp_test']['cf7']['forms'][ $this->id_ ] ?? array();
+			return $GLOBALS['karmcp_test']['cf7']['forms'][ $this->id_ ] ?? array();
 		}
 		public function id() {
 			return $this->id_;
@@ -444,7 +523,7 @@ if ( ! class_exists( 'WPCF7_ContactForm' ) ) {
 		}
 		public function set_properties( $props ) {
 			foreach ( (array) $props as $k => $v ) {
-				$GLOBALS['emcp_test']['cf7']['forms'][ $this->id_ ]['props'][ $k ] = $v;
+				$GLOBALS['karmcp_test']['cf7']['forms'][ $this->id_ ]['props'][ $k ] = $v;
 			}
 		}
 		public function save() {
@@ -460,9 +539,9 @@ if ( ! class_exists( 'WPCF7_ContactForm' ) ) {
 	}
 }
 
-require_once EMCP_TOOLS_DIR . 'includes/abilities/forms/class-form-integration.php';
-require_once EMCP_TOOLS_DIR . 'includes/abilities/forms/class-cf7-integration.php';
-require_once EMCP_TOOLS_DIR . 'includes/abilities/class-acf-abilities.php';
-require_once EMCP_TOOLS_DIR . 'includes/abilities/class-metabox-abilities.php';
-require_once EMCP_TOOLS_DIR . 'includes/redirects/class-redirect-store.php';
-require_once EMCP_TOOLS_DIR . 'includes/abilities/class-redirect-abilities.php';
+require_once KARMCP_DIR . 'includes/abilities/forms/class-form-integration.php';
+require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-integration.php';
+require_once KARMCP_DIR . 'includes/abilities/class-acf-abilities.php';
+require_once KARMCP_DIR . 'includes/abilities/class-metabox-abilities.php';
+require_once KARMCP_DIR . 'includes/redirects/class-redirect-store.php';
+require_once KARMCP_DIR . 'includes/abilities/class-redirect-abilities.php';

@@ -5,13 +5,13 @@
  * Wraps WordPress HTTP API calls to Unsplash's photo search. Unlike the old
  * Openverse client, Unsplash requires an Access Key (free — register an app at
  * https://unsplash.com/developers). The key is read from the
- * `EMCP_TOOLS_UNSPLASH_ACCESS_KEY` constant, else the `emcp_tools_unsplash_access_key`
- * option (set on EMCP Tools → Connection).
+ * `KARMCP_UNSPLASH_ACCESS_KEY` constant, else the `karmcp_unsplash_access_key`
+ * option (set on KarMCP → Connection).
  *
  * Results are normalized to the same shape the stock-image abilities consumed
  * from Openverse, so the tools' output stays stable.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -24,11 +24,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Unsplash_Client {
+class KarMCP_Unsplash_Client {
 
 	const API_BASE = 'https://api.unsplash.com';
 	const TIMEOUT  = 15;
-	const OPTION   = 'emcp_tools_unsplash_access_key';
+	const OPTION   = 'karmcp_unsplash_access_key';
 
 	/**
 	 * The configured Unsplash Access Key (constant wins over the option).
@@ -37,10 +37,10 @@ class EMCP_Tools_Unsplash_Client {
 	 * @return string
 	 */
 	public static function access_key(): string {
-		if ( defined( 'EMCP_TOOLS_UNSPLASH_ACCESS_KEY' ) && '' !== (string) EMCP_TOOLS_UNSPLASH_ACCESS_KEY ) {
-			return (string) EMCP_TOOLS_UNSPLASH_ACCESS_KEY;
+		if ( defined( 'KARMCP_UNSPLASH_ACCESS_KEY' ) && '' !== (string) KARMCP_UNSPLASH_ACCESS_KEY ) {
+			return (string) KARMCP_UNSPLASH_ACCESS_KEY;
 		}
-		return EMCP_Tools_Secret::decrypt_if_needed( (string) get_option( self::OPTION, '' ) );
+		return KarMCP_Secret::decrypt_if_needed( (string) get_option( self::OPTION, '' ) );
 	}
 
 	/**
@@ -67,12 +67,12 @@ class EMCP_Tools_Unsplash_Client {
 	 */
 	public function search_images( array $params ) {
 		if ( empty( $params['q'] ) ) {
-			return new \WP_Error( 'missing_query', __( 'The search query parameter is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_query', __( 'The search query parameter is required.', 'karmcp' ) );
 		}
 		if ( ! self::has_key() ) {
 			return new \WP_Error(
 				'no_api_key',
-				__( 'No Unsplash Access Key is configured. Add one on EMCP Tools → Connection (get a free key at https://unsplash.com/developers).', 'emcp-tools' )
+				__( 'No Unsplash Access Key is configured. Add one on KarMCP → Connection (get a free key at https://unsplash.com/developers).', 'karmcp' )
 			);
 		}
 
@@ -152,10 +152,10 @@ class EMCP_Tools_Unsplash_Client {
 	public static function resolve_download( string $url ) {
 		$url = esc_url_raw( $url );
 		if ( 0 !== strpos( $url, self::API_BASE ) ) {
-			return new \WP_Error( 'not_unsplash_api', __( 'Not an Unsplash API URL.', 'emcp-tools' ) );
+			return new \WP_Error( 'not_unsplash_api', __( 'Not an Unsplash API URL.', 'karmcp' ) );
 		}
 		if ( ! self::has_key() ) {
-			return new \WP_Error( 'no_api_key', __( 'The Unsplash download API needs an access key (EMCP Tools → Connection). Use the direct image URL from search-images instead.', 'emcp-tools' ) );
+			return new \WP_Error( 'no_api_key', __( 'The Unsplash download API needs an access key (KarMCP → Connection). Use the direct image URL from search-images instead.', 'karmcp' ) );
 		}
 
 		$response = wp_remote_get(
@@ -170,7 +170,7 @@ class EMCP_Tools_Unsplash_Client {
 		}
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $body ) || empty( $body['url'] ) ) {
-			return new \WP_Error( 'resolve_failed', __( 'Unsplash did not return a downloadable URL.', 'emcp-tools' ) );
+			return new \WP_Error( 'resolve_failed', __( 'Unsplash did not return a downloadable URL.', 'karmcp' ) );
 		}
 		return (string) $body['url'];
 	}
@@ -208,7 +208,7 @@ class EMCP_Tools_Unsplash_Client {
 		$user   = isset( $p['user'] ) && is_array( $p['user'] ) ? $p['user'] : array();
 		$u_link = isset( $user['links']['html'] ) ? (string) $user['links']['html'] : '';
 		$name   = isset( $user['name'] ) ? (string) $user['name'] : '';
-		$ref    = '?utm_source=emcp_tools&utm_medium=referral'; // Unsplash attribution guideline.
+		$ref    = '?utm_source=karmcp_tools&utm_medium=referral'; // Unsplash attribution guideline.
 
 		return array(
 			'id'                  => isset( $p['id'] ) ? (string) $p['id'] : '',
@@ -243,7 +243,7 @@ class EMCP_Tools_Unsplash_Client {
 			$url,
 			array(
 				'timeout'    => self::TIMEOUT,
-				'user-agent' => 'Elementor-MCP/' . EMCP_TOOLS_VERSION . ' (WordPress/' . get_bloginfo( 'version' ) . ')',
+				'user-agent' => 'Elementor-MCP/' . KARMCP_VERSION . ' (WordPress/' . get_bloginfo( 'version' ) . ')',
 				'headers'    => array(
 					'Accept-Version' => 'v1',
 					'Authorization'  => 'Client-ID ' . self::access_key(),
@@ -256,7 +256,7 @@ class EMCP_Tools_Unsplash_Client {
 				'api_request_failed',
 				sprintf(
 					/* translators: %s: error message */
-					__( 'Unsplash API request failed: %s', 'emcp-tools' ),
+					__( 'Unsplash API request failed: %s', 'karmcp' ),
 					$response->get_error_message()
 				)
 			);
@@ -265,17 +265,17 @@ class EMCP_Tools_Unsplash_Client {
 		$code = (int) wp_remote_retrieve_response_code( $response );
 
 		if ( 401 === $code ) {
-			return new \WP_Error( 'invalid_key', __( 'Unsplash rejected the Access Key. Check it on EMCP Tools → Connection.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_key', __( 'Unsplash rejected the Access Key. Check it on KarMCP → Connection.', 'karmcp' ) );
 		}
 		if ( 403 === $code ) {
-			return new \WP_Error( 'rate_limited', __( 'Unsplash rate limit reached (demo apps allow 50 requests/hour). Try again later or request production access.', 'emcp-tools' ) );
+			return new \WP_Error( 'rate_limited', __( 'Unsplash rate limit reached (demo apps allow 50 requests/hour). Try again later or request production access.', 'karmcp' ) );
 		}
 		if ( $code < 200 || $code >= 300 ) {
 			return new \WP_Error(
 				'api_error',
 				sprintf(
 					/* translators: %d: HTTP status code */
-					__( 'Unsplash API returned HTTP %d.', 'emcp-tools' ),
+					__( 'Unsplash API returned HTTP %d.', 'karmcp' ),
 					$code
 				)
 			);
@@ -283,7 +283,7 @@ class EMCP_Tools_Unsplash_Client {
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $data ) ) {
-			return new \WP_Error( 'json_parse_error', __( 'Failed to parse the Unsplash API response.', 'emcp-tools' ) );
+			return new \WP_Error( 'json_parse_error', __( 'Failed to parse the Unsplash API response.', 'karmcp' ) );
 		}
 		return $data;
 	}

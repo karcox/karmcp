@@ -8,7 +8,7 @@
  * a strict privilege guard means agents can only create non-admin accounts and
  * can never edit any user that holds admin-level capabilities.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_User_Abilities {
+class KarMCP_User_Abilities {
 
 	/** @since 3.0.0 @var string[] */
 	private $ability_names = array();
@@ -102,22 +102,22 @@ class EMCP_Tools_User_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_list_users(): void {
-		$this->ability_names[] = 'emcp-tools/list-users';
-		emcp_tools_register_ability(
-			'emcp-tools/list-users',
+		$this->ability_names[] = 'karmcp/list-users';
+		karmcp_register_ability(
+			'karmcp/list-users',
 			array(
-				'label'               => __( 'List Users', 'emcp-tools' ),
-				'description'         => __( 'Lists WordPress users (admin-only). Filter by role or search text; paginated. Returns id, username, display name, email, roles, registration date, and post count. Never returns passwords or auth data.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'List Users', 'karmcp' ),
+				'description'         => __( 'Lists WordPress users (admin-only). Filter by role or search text; paginated. Returns id, username, display name, email, roles, registration date, and post count. Never returns passwords or auth data.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list_users' ),
 				'permission_callback' => array( $this, 'can_list' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'role'     => array( 'type' => 'string', 'description' => __( 'Filter by role slug (e.g. author).', 'emcp-tools' ) ),
-						'search'   => array( 'type' => 'string', 'description' => __( 'Search login/email/display name.', 'emcp-tools' ) ),
-						'per_page' => array( 'type' => 'integer', 'description' => __( '1-100. Default: 20.', 'emcp-tools' ) ),
-						'page'     => array( 'type' => 'integer', 'description' => __( 'Default: 1.', 'emcp-tools' ) ),
+						'role'     => array( 'type' => 'string', 'description' => __( 'Filter by role slug (e.g. author).', 'karmcp' ) ),
+						'search'   => array( 'type' => 'string', 'description' => __( 'Search login/email/display name.', 'karmcp' ) ),
+						'per_page' => array( 'type' => 'integer', 'description' => __( '1-100. Default: 20.', 'karmcp' ) ),
+						'page'     => array( 'type' => 'integer', 'description' => __( 'Default: 1.', 'karmcp' ) ),
 						'orderby'  => array( 'type' => 'string', 'enum' => array( 'registered', 'display_name', 'ID' ) ),
 						'order'    => array( 'type' => 'string', 'enum' => array( 'ASC', 'DESC' ) ),
 					),
@@ -192,18 +192,18 @@ class EMCP_Tools_User_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_get_user(): void {
-		$this->ability_names[] = 'emcp-tools/get-user';
-		emcp_tools_register_ability(
-			'emcp-tools/get-user',
+		$this->ability_names[] = 'karmcp/get-user';
+		karmcp_register_ability(
+			'karmcp/get-user',
 			array(
-				'label'               => __( 'Get User', 'emcp-tools' ),
-				'description'         => __( 'Returns one user\'s detail: username, email, display name, first/last name, URL, description, roles, registration date, post count, and an is_admin flag (true users are off-limits to update-user). Never returns passwords or auth data.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Get User', 'karmcp' ),
+				'description'         => __( 'Returns one user\'s detail: username, email, display name, first/last name, URL, description, roles, registration date, post count, and an is_admin flag (true users are off-limits to update-user). Never returns passwords or auth data.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_user' ),
 				'permission_callback' => array( $this, 'can_list' ),
 				'input_schema'        => array(
 					'type'       => 'object',
-					'properties' => array( 'id' => array( 'type' => 'integer', 'description' => __( 'User ID.', 'emcp-tools' ) ) ),
+					'properties' => array( 'id' => array( 'type' => 'integer', 'description' => __( 'User ID.', 'karmcp' ) ) ),
 					'required'   => array( 'id' ),
 				),
 				'output_schema'       => array( 'type' => 'object', 'properties' => array(
@@ -227,11 +227,11 @@ class EMCP_Tools_User_Abilities {
 	public function execute_get_user( $input ) {
 		$id = absint( $input['id'] ?? 0 );
 		if ( ! $id ) {
-			return new \WP_Error( 'missing_params', __( 'A user "id" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A user "id" is required.', 'karmcp' ) );
 		}
 		$u = get_userdata( $id );
 		if ( ! $u ) {
-			return new \WP_Error( 'user_not_found', __( 'User not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'user_not_found', __( 'User not found.', 'karmcp' ) );
 		}
 		return array(
 			'id'           => (int) $u->ID,
@@ -255,21 +255,21 @@ class EMCP_Tools_User_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_create_user(): void {
-		$this->ability_names[] = 'emcp-tools/create-user';
-		emcp_tools_register_ability(
-			'emcp-tools/create-user',
+		$this->ability_names[] = 'karmcp/create-user';
+		karmcp_register_ability(
+			'karmcp/create-user',
 			array(
-				'label'               => __( 'Create User', 'emcp-tools' ),
-				'description'         => __( 'Creates a new non-admin WordPress user. A strong password is generated automatically and the user is emailed a set-password link, the password is never returned. The role defaults to subscriber and cannot be an administrator or any admin-grade role.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Create User', 'karmcp' ),
+				'description'         => __( 'Creates a new non-admin WordPress user. A strong password is generated automatically and the user is emailed a set-password link, the password is never returned. The role defaults to subscriber and cannot be an administrator or any admin-grade role.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_create_user' ),
 				'permission_callback' => array( $this, 'can_create' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'username'     => array( 'type' => 'string', 'description' => __( 'The login username.', 'emcp-tools' ) ),
-						'email'        => array( 'type' => 'string', 'description' => __( 'Email address (must be unique).', 'emcp-tools' ) ),
-						'role'         => array( 'type' => 'string', 'description' => __( 'Role slug (non-admin). Default: subscriber.', 'emcp-tools' ) ),
+						'username'     => array( 'type' => 'string', 'description' => __( 'The login username.', 'karmcp' ) ),
+						'email'        => array( 'type' => 'string', 'description' => __( 'Email address (must be unique).', 'karmcp' ) ),
+						'role'         => array( 'type' => 'string', 'description' => __( 'Role slug (non-admin). Default: subscriber.', 'karmcp' ) ),
 						'first_name'   => array( 'type' => 'string' ),
 						'last_name'    => array( 'type' => 'string' ),
 						'display_name' => array( 'type' => 'string' ),
@@ -296,10 +296,10 @@ class EMCP_Tools_User_Abilities {
 		$username = sanitize_user( (string) ( $input['username'] ?? '' ), true );
 		$email    = sanitize_email( (string) ( $input['email'] ?? '' ) );
 		if ( '' === $username || '' === $email ) {
-			return new \WP_Error( 'missing_params', __( 'Both "username" and "email" are required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'Both "username" and "email" are required.', 'karmcp' ) );
 		}
 		if ( ! is_email( $email ) ) {
-			return new \WP_Error( 'invalid_email', __( 'That email address is not valid.', 'emcp-tools' ) );
+			return new \WP_Error( 'invalid_email', __( 'That email address is not valid.', 'karmcp' ) );
 		}
 
 		$role = sanitize_key( $input['role'] ?? '' );
@@ -307,10 +307,10 @@ class EMCP_Tools_User_Abilities {
 			$role = 'subscriber';
 		}
 		if ( ! get_role( $role ) ) {
-			return new \WP_Error( 'forbidden_role', sprintf( /* translators: %s: role */ __( 'Unknown role "%s".', 'emcp-tools' ), $role ) );
+			return new \WP_Error( 'forbidden_role', sprintf( /* translators: %s: role */ __( 'Unknown role "%s".', 'karmcp' ), $role ) );
 		}
 		if ( $this->role_has_admin_caps( $role ) ) {
-			return new \WP_Error( 'forbidden_role', __( 'Refusing to create a user with an admin-level role via MCP.', 'emcp-tools' ) );
+			return new \WP_Error( 'forbidden_role', __( 'Refusing to create a user with an admin-level role via MCP.', 'karmcp' ) );
 		}
 
 		$userdata = array(
@@ -334,7 +334,7 @@ class EMCP_Tools_User_Abilities {
 			// cannot be used to enumerate existing usernames/emails.
 			$code = $user_id->get_error_code();
 			if ( in_array( $code, array( 'existing_user_login', 'existing_user_email' ), true ) ) {
-				return new \WP_Error( 'user_unavailable', __( 'That username or email is not available.', 'emcp-tools' ) );
+				return new \WP_Error( 'user_unavailable', __( 'That username or email is not available.', 'karmcp' ) );
 			}
 			return $user_id;
 		}
@@ -345,8 +345,8 @@ class EMCP_Tools_User_Abilities {
 			wp_send_new_user_notifications( $user_id, 'user' );
 		}
 
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			EMCP_Tools_Change_Recorder::record_user_create(
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			KarMCP_Change_Recorder::record_user_create(
 				$user_id,
 				sprintf( 'Created user #%d (%s)', $user_id, $username ),
 				trim( $username . ' (#' . $user_id . ')' )
@@ -367,19 +367,19 @@ class EMCP_Tools_User_Abilities {
 	// -------------------------------------------------------------------
 
 	private function register_update_user(): void {
-		$this->ability_names[] = 'emcp-tools/update-user';
-		emcp_tools_register_ability(
-			'emcp-tools/update-user',
+		$this->ability_names[] = 'karmcp/update-user';
+		karmcp_register_ability(
+			'karmcp/update-user',
 			array(
-				'label'               => __( 'Update User', 'emcp-tools' ),
-				'description'         => __( 'Updates a non-admin user\'s profile: email, first/last name, display name, nickname, URL, description. Cannot change roles or passwords, and refuses to edit any user with admin-level capabilities (administrators are off-limits via MCP).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update User', 'karmcp' ),
+				'description'         => __( 'Updates a non-admin user\'s profile: email, first/last name, display name, nickname, URL, description. Cannot change roles or passwords, and refuses to edit any user with admin-level capabilities (administrators are off-limits via MCP).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_user' ),
 				'permission_callback' => array( $this, 'can_edit' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id'           => array( 'type' => 'integer', 'description' => __( 'User ID.', 'emcp-tools' ) ),
+						'id'           => array( 'type' => 'integer', 'description' => __( 'User ID.', 'karmcp' ) ),
 						'email'        => array( 'type' => 'string' ),
 						'first_name'   => array( 'type' => 'string' ),
 						'last_name'    => array( 'type' => 'string' ),
@@ -406,14 +406,14 @@ class EMCP_Tools_User_Abilities {
 	public function execute_update_user( $input ) {
 		$id = absint( $input['id'] ?? 0 );
 		if ( ! $id ) {
-			return new \WP_Error( 'missing_params', __( 'A user "id" is required.', 'emcp-tools' ) );
+			return new \WP_Error( 'missing_params', __( 'A user "id" is required.', 'karmcp' ) );
 		}
 		$u = get_userdata( $id );
 		if ( ! $u ) {
-			return new \WP_Error( 'user_not_found', __( 'User not found.', 'emcp-tools' ) );
+			return new \WP_Error( 'user_not_found', __( 'User not found.', 'karmcp' ) );
 		}
 		if ( $this->user_has_admin_caps( $id ) ) {
-			return new \WP_Error( 'protected_user', __( 'This user has administrator-level capabilities and cannot be edited via MCP.', 'emcp-tools' ) );
+			return new \WP_Error( 'protected_user', __( 'This user has administrator-level capabilities and cannot be edited via MCP.', 'karmcp' ) );
 		}
 
 		// Build the update from ONLY the allowed profile fields. role/password are
@@ -437,20 +437,20 @@ class EMCP_Tools_User_Abilities {
 		if ( array_key_exists( 'email', $input ) ) {
 			$email = sanitize_email( (string) $input['email'] );
 			if ( ! is_email( $email ) ) {
-				return new \WP_Error( 'invalid_email', __( 'That email address is not valid.', 'emcp-tools' ) );
+				return new \WP_Error( 'invalid_email', __( 'That email address is not valid.', 'karmcp' ) );
 			}
 			$userdata['user_email'] = $email;
 			$updated[]              = 'email';
 		}
 
 		// Capture prior values of exactly the fields being changed, for rollback.
-		$emcp_before = array();
-		if ( class_exists( 'EMCP_Tools_Change_Recorder' ) ) {
-			foreach ( $userdata as $emcp_uk => $emcp_uv ) {
-				if ( 'ID' === $emcp_uk ) {
+		$karmcp_before = array();
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			foreach ( $userdata as $karmcp_uk => $karmcp_uv ) {
+				if ( 'ID' === $karmcp_uk ) {
 					continue;
 				}
-				$emcp_before[ $emcp_uk ] = (string) ( $u->$emcp_uk ?? '' );
+				$karmcp_before[ $karmcp_uk ] = (string) ( $u->$karmcp_uk ?? '' );
 			}
 		}
 
@@ -459,10 +459,10 @@ class EMCP_Tools_User_Abilities {
 			return $res;
 		}
 
-		if ( ! empty( $emcp_before ) ) {
-			EMCP_Tools_Change_Recorder::record_user_fields(
+		if ( ! empty( $karmcp_before ) ) {
+			KarMCP_Change_Recorder::record_user_fields(
 				$id,
-				$emcp_before,
+				$karmcp_before,
 				sprintf( 'Updated user #%d', $id ),
 				trim( (string) ( $u->user_login ?? '' ) . ' (#' . $id . ')' )
 			);

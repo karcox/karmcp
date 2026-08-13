@@ -11,8 +11,8 @@
  * `put($items, $order)` (Elementor computes the add/modify/delete diff and handles
  * relations + usage cleanup). Each class stores one or more variants
  * `{ meta:{breakpoint,state}, props:{ css-prop: $$type } }`; props are the atomic
- * typed props our atomic tools already build (`EMCP_Tools_Atomic_Styles` /
- * `EMCP_Tools_Atomic_Props`), so callers pass friendly flat `styles` (background,
+ * typed props our atomic tools already build (`KarMCP_Atomic_Styles` /
+ * `KarMCP_Atomic_Props`), so callers pass friendly flat `styles` (background,
  * color, padding, margin, border-radius, flex…) plus a raw `props` escape hatch.
  *
  * Registers only when Elementor's Global Classes repository is present (4.0+).
@@ -20,7 +20,7 @@
  * capability (administrator), falling back to `manage_options`. All three tools
  * ship disabled-by-default; `delete-global-class` also requires `confirm:true`.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.9.0
  */
 
@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Create / update / delete Elementor Global Classes over MCP.
  */
-class EMCP_Tools_Global_Classes_Write_Abilities {
+class KarMCP_Global_Classes_Write_Abilities {
 
 	const REPOSITORY  = '\\Elementor\\Modules\\GlobalClasses\\Global_Classes_Repository';
 	const UPDATE_CAP  = 'elementor_global_classes_update_class';
@@ -43,8 +43,8 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 	 * @return bool Whether the Global Classes repository is available (4.0+).
 	 */
 	public static function is_available(): bool {
-		return class_exists( 'EMCP_Tools_Global_Classes_Abilities' )
-			? EMCP_Tools_Global_Classes_Abilities::is_available()
+		return class_exists( 'KarMCP_Global_Classes_Abilities' )
+			? KarMCP_Global_Classes_Abilities::is_available()
 			: class_exists( self::REPOSITORY );
 	}
 
@@ -53,7 +53,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 	 */
 	public function get_ability_names(): array {
 		return self::is_available()
-			? array( 'emcp-tools/create-global-class', 'emcp-tools/update-global-class', 'emcp-tools/delete-global-class', 'emcp-tools/reorder-global-classes' )
+			? array( 'karmcp/create-global-class', 'karmcp/update-global-class', 'karmcp/delete-global-class', 'karmcp/reorder-global-classes' )
 			: array();
 	}
 
@@ -67,34 +67,34 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 
 		$styles_schema = array(
 			'type'        => 'object',
-			'description' => __( 'Friendly flat styles, mapped to Elementor atomic props: background_color, color, width, min_height, border_radius, padding|padding_top|padding_right|padding_bottom|padding_left, margin(+ per-side), direction, justify, align, wrap, gap, row_gap, column_gap (each size accepts a <key>_unit). Anything not covered goes in "props".', 'emcp-tools' ),
+			'description' => __( 'Friendly flat styles, mapped to Elementor atomic props: background_color, color, width, min_height, border_radius, padding|padding_top|padding_right|padding_bottom|padding_left, margin(+ per-side), direction, justify, align, wrap, gap, row_gap, column_gap (each size accepts a <key>_unit). Anything not covered goes in "props".', 'karmcp' ),
 		);
 		$props_schema  = array(
 			'type'        => 'object',
-			'description' => __( 'Raw escape hatch: CSS-property => $$type-wrapped value (e.g. {"border-radius":{"$$type":"size","value":{"size":8,"unit":"px"}}}). Merged over the built styles.', 'emcp-tools' ),
+			'description' => __( 'Raw escape hatch: CSS-property => $$type-wrapped value (e.g. {"border-radius":{"$$type":"size","value":{"size":8,"unit":"px"}}}). Merged over the built styles.', 'karmcp' ),
 		);
 		$bp_schema     = array(
 			'type'        => 'string',
 			'enum'        => self::BREAKPOINTS,
-			'description' => __( 'Breakpoint this variant targets (default desktop). Call update per breakpoint to build responsive styles.', 'emcp-tools' ),
+			'description' => __( 'Breakpoint this variant targets (default desktop). Call update per breakpoint to build responsive styles.', 'karmcp' ),
 		);
 		$state_schema  = array(
 			'type'        => 'string',
-			'description' => __( 'Optional state for this variant, e.g. hover, focus, active. Omit for the normal state.', 'emcp-tools' ),
+			'description' => __( 'Optional state for this variant, e.g. hover, focus, active. Omit for the normal state.', 'karmcp' ),
 		);
 
-		emcp_tools_register_ability(
-			'emcp-tools/create-global-class',
+		karmcp_register_ability(
+			'karmcp/create-global-class',
 			array(
-				'label'               => __( 'Create Global Class', 'emcp-tools' ),
-				'description'         => __( 'Create an Elementor v4 Global Class (Class Manager) with a label and styles. Returns the new g- id to apply to elements. Pass friendly "styles" and/or raw "props"; optional breakpoint/state.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Create Global Class', 'karmcp' ),
+				'description'         => __( 'Create an Elementor v4 Global Class (Class Manager) with a label and styles. Returns the new g- id to apply to elements. Pass friendly "styles" and/or raw "props"; optional breakpoint/state.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_create_global_class' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'label'      => array( 'type' => 'string', 'description' => __( 'Human-readable class name, e.g. "card-base".', 'emcp-tools' ) ),
+						'label'      => array( 'type' => 'string', 'description' => __( 'Human-readable class name, e.g. "card-base".', 'karmcp' ) ),
 						'styles'     => $styles_schema,
 						'props'      => $props_schema,
 						'breakpoint' => $bp_schema,
@@ -106,24 +106,24 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 			)
 		);
 
-		emcp_tools_register_ability(
-			'emcp-tools/update-global-class',
+		karmcp_register_ability(
+			'karmcp/update-global-class',
 			array(
-				'label'               => __( 'Update Global Class', 'emcp-tools' ),
-				'description'         => __( 'Update a Global Class by g- id: change its label and/or merge styles/props into the variant for a breakpoint+state (replace_variant:true replaces that variant instead of merging).', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Update Global Class', 'karmcp' ),
+				'description'         => __( 'Update a Global Class by g- id: change its label and/or merge styles/props into the variant for a breakpoint+state (replace_variant:true replaces that variant instead of merging).', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_global_class' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id'              => array( 'type' => 'string', 'description' => __( 'The g- class id to update.', 'emcp-tools' ) ),
-						'label'           => array( 'type' => 'string', 'description' => __( 'New label (optional).', 'emcp-tools' ) ),
+						'id'              => array( 'type' => 'string', 'description' => __( 'The g- class id to update.', 'karmcp' ) ),
+						'label'           => array( 'type' => 'string', 'description' => __( 'New label (optional).', 'karmcp' ) ),
 						'styles'          => $styles_schema,
 						'props'           => $props_schema,
 						'breakpoint'      => $bp_schema,
 						'state'           => $state_schema,
-						'replace_variant' => array( 'type' => 'boolean', 'description' => __( 'Replace the target variant\'s props instead of merging into them.', 'emcp-tools' ) ),
+						'replace_variant' => array( 'type' => 'boolean', 'description' => __( 'Replace the target variant\'s props instead of merging into them.', 'karmcp' ) ),
 					),
 					'required'   => array( 'id' ),
 				),
@@ -131,19 +131,19 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 			)
 		);
 
-		emcp_tools_register_ability(
-			'emcp-tools/delete-global-class',
+		karmcp_register_ability(
+			'karmcp/delete-global-class',
 			array(
-				'label'               => __( 'Delete Global Class', 'emcp-tools' ),
-				'description'         => __( 'Delete a Global Class by g- id. Destructive — also removes the class from every element that uses it. Requires confirm:true.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Delete Global Class', 'karmcp' ),
+				'description'         => __( 'Delete a Global Class by g- id. Destructive — also removes the class from every element that uses it. Requires confirm:true.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_delete_global_class' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id'      => array( 'type' => 'string', 'description' => __( 'The g- class id to delete.', 'emcp-tools' ) ),
-						'confirm' => array( 'type' => 'boolean', 'description' => __( 'Must be true to delete.', 'emcp-tools' ) ),
+						'id'      => array( 'type' => 'string', 'description' => __( 'The g- class id to delete.', 'karmcp' ) ),
+						'confirm' => array( 'type' => 'boolean', 'description' => __( 'Must be true to delete.', 'karmcp' ) ),
 					),
 					'required'   => array( 'id' ),
 				),
@@ -151,12 +151,12 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 			)
 		);
 
-		emcp_tools_register_ability(
-			'emcp-tools/reorder-global-classes',
+		karmcp_register_ability(
+			'karmcp/reorder-global-classes',
 			array(
-				'label'               => __( 'Reorder Global Classes', 'emcp-tools' ),
-				'description'         => __( 'Set the order of the Elementor v4 Global Classes. The Class Manager order IS the CSS source order, so it decides which class wins when two apply (later overrides earlier at equal specificity). Pass { order: [g-id, ...] }; any existing classes you omit are appended after, keeping their current relative order.', 'emcp-tools' ),
-				'category'            => 'emcp-tools',
+				'label'               => __( 'Reorder Global Classes', 'karmcp' ),
+				'description'         => __( 'Set the order of the Elementor v4 Global Classes. The Class Manager order IS the CSS source order, so it decides which class wins when two apply (later overrides earlier at equal specificity). Pass { order: [g-id, ...] }; any existing classes you omit are appended after, keeping their current relative order.', 'karmcp' ),
+				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_reorder_global_classes' ),
 				'permission_callback' => array( $this, 'check_write_permission' ),
 				'input_schema'        => array(
@@ -165,7 +165,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 						'order' => array(
 							'type'        => 'array',
 							'items'       => array( 'type' => 'string' ),
-							'description' => __( 'The desired top-to-bottom order of g- class ids. Classes omitted here are appended after, in their current order.', 'emcp-tools' ),
+							'description' => __( 'The desired top-to-bottom order of g- class ids. Classes omitted here are appended after, in their current order.', 'karmcp' ),
 						),
 					),
 					'required'   => array( 'order' ),
@@ -192,7 +192,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 		}
 		$label = sanitize_text_field( (string) ( $input['label'] ?? '' ) );
 		if ( '' === $label ) {
-			return new \WP_Error( 'missing_label', __( 'A "label" is required.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'missing_label', __( 'A "label" is required.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$state = $this->read_state();
 		if ( is_wp_error( $state ) ) {
@@ -231,7 +231,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 		}
 		$id = sanitize_text_field( (string) ( $input['id'] ?? '' ) );
 		if ( '' === $id ) {
-			return new \WP_Error( 'missing_id', __( 'A class "id" is required.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'missing_id', __( 'A class "id" is required.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$state = $this->read_state();
 		if ( is_wp_error( $state ) ) {
@@ -239,7 +239,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 		}
 		list( $items, $order ) = $state;
 		if ( ! isset( $items[ $id ] ) ) {
-			return new \WP_Error( 'not_found', sprintf( __( 'Global class not found: %s', 'emcp-tools' ), $id ), array( 'status' => 404 ) );
+			return new \WP_Error( 'not_found', sprintf( __( 'Global class not found: %s', 'karmcp' ), $id ), array( 'status' => 404 ) );
 		}
 
 		$item = (array) $items[ $id ];
@@ -283,10 +283,10 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 		}
 		$id = sanitize_text_field( (string) ( $input['id'] ?? '' ) );
 		if ( '' === $id ) {
-			return new \WP_Error( 'missing_id', __( 'A class "id" is required.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'missing_id', __( 'A class "id" is required.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		if ( empty( $input['confirm'] ) ) {
-			return new \WP_Error( 'confirm_required', __( 'Deleting a global class also removes it from every element using it. Pass confirm:true to proceed.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'confirm_required', __( 'Deleting a global class also removes it from every element using it. Pass confirm:true to proceed.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 		$state = $this->read_state();
 		if ( is_wp_error( $state ) ) {
@@ -294,7 +294,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 		}
 		list( $items, $order ) = $state;
 		if ( ! isset( $items[ $id ] ) ) {
-			return new \WP_Error( 'not_found', sprintf( __( 'Global class not found: %s', 'emcp-tools' ), $id ), array( 'status' => 404 ) );
+			return new \WP_Error( 'not_found', sprintf( __( 'Global class not found: %s', 'karmcp' ), $id ), array( 'status' => 404 ) );
 		}
 		unset( $items[ $id ] );
 		$order = array_values( array_filter( $order, static function ( $oid ) use ( $id ) {
@@ -320,7 +320,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 			? array_values( array_map( 'sanitize_text_field', array_map( 'strval', $input['order'] ) ) )
 			: array();
 		if ( empty( $requested ) ) {
-			return new \WP_Error( 'missing_order', __( 'Provide an "order" array of g- class ids.', 'emcp-tools' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'missing_order', __( 'Provide an "order" array of g- class ids.', 'karmcp' ), array( 'status' => 400 ) );
 		}
 
 		$state = $this->read_state();
@@ -352,7 +352,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 		if ( ! empty( $unknown ) ) {
 			return new \WP_Error(
 				'unknown_class',
-				sprintf( __( 'Unknown global class id(s): %s', 'emcp-tools' ), implode( ', ', $unknown ) ),
+				sprintf( __( 'Unknown global class id(s): %s', 'karmcp' ), implode( ', ', $unknown ) ),
 				array( 'status' => 404 )
 			);
 		}
@@ -411,7 +411,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 	 * @return \WP_Error
 	 */
 	private function unavailable(): \WP_Error {
-		return new \WP_Error( 'unavailable', __( 'Global Classes are not available; Elementor 4.0+ is required.', 'emcp-tools' ), array( 'status' => 501 ) );
+		return new \WP_Error( 'unavailable', __( 'Global Classes are not available; Elementor 4.0+ is required.', 'karmcp' ), array( 'status' => 501 ) );
 	}
 
 	/**
@@ -475,7 +475,7 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 			// Preview mirror is best-effort; the frontend write is authoritative.
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-				error_log( '[EMCP Tools] global-class preview mirror failed: ' . $e->getMessage() );
+				error_log( '[KarMCP] global-class preview mirror failed: ' . $e->getMessage() );
 			}
 		}
 		return true;
@@ -490,10 +490,10 @@ class EMCP_Tools_Global_Classes_Write_Abilities {
 	private function build_variant_props( array $input ): array {
 		$styles = ( isset( $input['styles'] ) && is_array( $input['styles'] ) ) ? $input['styles'] : array();
 		$props  = array();
-		if ( ! empty( $styles ) && class_exists( 'EMCP_Tools_Atomic_Styles' ) ) {
+		if ( ! empty( $styles ) && class_exists( 'KarMCP_Atomic_Styles' ) ) {
 			$props = array_merge(
-				EMCP_Tools_Atomic_Styles::build_common_props( $styles ),
-				EMCP_Tools_Atomic_Styles::build_flex_props( $styles )
+				KarMCP_Atomic_Styles::build_common_props( $styles ),
+				KarMCP_Atomic_Styles::build_flex_props( $styles )
 			);
 		}
 		if ( isset( $input['props'] ) && is_array( $input['props'] ) ) {

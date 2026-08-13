@@ -2,14 +2,14 @@
 /**
  * Sandbox tab — thin view=-routed dispatcher.
  *
- * The Sandbox parent page (?page=emcp-tools-widgets) shows a 3-card overview
+ * The Sandbox parent page (?page=karmcp-widgets) shows a 3-card overview
  * (Blocks | Widgets | PHP Snippets); each pillar's full management UI lives
  * in its own view file under includes/admin/views/sandbox/ and is reached
- * via ?page=emcp-tools-widgets&view=blocks|widgets|snippets. Those views are
+ * via ?page=karmcp-widgets&view=blocks|widgets|snippets. Those views are
  * intentionally hidden from the wp-admin menu (no submenu entries), routed
  * only through this file.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.7.0
  */
 
@@ -17,18 +17,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$emcp_view = EMCP_Tools_Admin::sandbox_view();
-$emcp_map  = array(
+$karmcp_view = KarMCP_Admin::sandbox_view();
+$karmcp_map  = array(
 	'overview' => 'sandbox/overview.php',
 	'blocks'   => 'sandbox/blocks.php',
 	'widgets'  => 'sandbox/widgets.php',
 	'snippets' => 'sandbox/snippets.php',
 );
-$emcp_file = EMCP_TOOLS_DIR . 'includes/admin/views/' . ( $emcp_map[ $emcp_view ] ?? $emcp_map['overview'] );
+$karmcp_file = KARMCP_DIR . 'includes/admin/views/' . ( $karmcp_map[ $karmcp_view ] ?? $karmcp_map['overview'] );
 
-if ( file_exists( $emcp_file ) ) {
-	include $emcp_file;
+if ( file_exists( $karmcp_file ) ) {
+	include $karmcp_file;
 } else {
 	// Graceful fallback (e.g. blocks.php not yet shipped) — show the overview.
-	include EMCP_TOOLS_DIR . 'includes/admin/views/' . $emcp_map['overview'];
+	include KARMCP_DIR . 'includes/admin/views/' . $karmcp_map['overview'];
 }

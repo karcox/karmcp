@@ -1,19 +1,19 @@
 <?php
 /**
- * EMCP Cloud OAuth client: DCR -> authorize -> callback -> token -> refresh -> revoke.
+ * KarMCP Cloud OAuth client: DCR -> authorize -> callback -> token -> refresh -> revoke.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class EMCP_Tools_Cloud_Connect {
-	const ACTION_CONNECT    = 'emcp_tools_cloud_connect';
-	const ACTION_CALLBACK   = 'emcp_tools_cloud_callback';
-	const ACTION_DISCONNECT = 'emcp_tools_cloud_disconnect';
-	const PENDING_TRANSIENT = 'emcp_tools_cloud_pending';
+class KarMCP_Cloud_Connect {
+	const ACTION_CONNECT    = 'karmcp_cloud_connect';
+	const ACTION_CALLBACK   = 'karmcp_cloud_callback';
+	const ACTION_DISCONNECT = 'karmcp_cloud_disconnect';
+	const PENDING_TRANSIENT = 'karmcp_cloud_pending';
 	// Treat the access token as expired this many seconds early (matches the
 	// client's own leeway) when deciding whether a concurrent request already
 	// refreshed it.
@@ -44,7 +44,7 @@ class EMCP_Tools_Cloud_Connect {
 	 * @return string Origin header value for token/refresh/revoke (the website origin).
 	 */
 	private static function origin(): string {
-		return EMCP_Tools_Cloud::base_url();
+		return KarMCP_Cloud::base_url();
 	}
 
 	/**
@@ -53,13 +53,13 @@ class EMCP_Tools_Cloud_Connect {
 	 * @return string|\WP_Error The client_id, or an error.
 	 */
 	public static function register_client() {
-		$res = EMCP_Tools_Cloud_Http::post_json(
-			EMCP_Tools_Cloud::base_url() . '/api/auth/oauth2/register',
+		$res = KarMCP_Cloud_Http::post_json(
+			KarMCP_Cloud::base_url() . '/api/auth/oauth2/register',
 			array(
 				'redirect_uris'              => array( self::redirect_uri() ),
 				'token_endpoint_auth_method' => 'none',
 				'client_name'                => (string) get_bloginfo( 'name' ),
-				'scope'                      => EMCP_Tools_Cloud::SCOPES,
+				'scope'                      => KarMCP_Cloud::SCOPES,
 			)
 		);
 		if ( is_wp_error( $res ) ) {
@@ -68,7 +68,7 @@ class EMCP_Tools_Cloud_Connect {
 		$id   = (string) ( $res['json']['client_id'] ?? '' );
 		$code = (int) $res['code'];
 		if ( ( 200 !== $code && 201 !== $code ) || '' === $id ) {
-			return new \WP_Error( 'dcr_failed', __( 'Could not register this site with EMCP Cloud.', 'emcp-tools' ) );
+			return new \WP_Error( 'dcr_failed', __( 'Could not register this site with KarMCP Cloud.', 'karmcp' ) );
 		}
 		return $id;
 	}
@@ -82,10 +82,10 @@ class EMCP_Tools_Cloud_Connect {
 	 * @return string
 	 */
 	public static function authorize_url( string $client_id, string $verifier, string $csrf ): string {
-		$state = EMCP_Tools_OAuth_Util::base64url_encode(
+		$state = KarMCP_OAuth_Util::base64url_encode(
 			(string) wp_json_encode(
 				array(
-					'site_uuid' => EMCP_Tools_Cloud::site_uuid(),
+					'site_uuid' => KarMCP_Cloud::site_uuid(),
 					'name'      => (string) get_bloginfo( 'name' ),
 					'csrf'      => $csrf,
 				)
@@ -95,12 +95,12 @@ class EMCP_Tools_Cloud_Connect {
 			'response_type'         => 'code',
 			'client_id'             => $client_id,
 			'redirect_uri'          => self::redirect_uri(),
-			'scope'                 => EMCP_Tools_Cloud::SCOPES,
+			'scope'                 => KarMCP_Cloud::SCOPES,
 			'state'                 => $state,
-			'code_challenge'        => EMCP_Tools_OAuth_Util::code_challenge_s256( $verifier ),
+			'code_challenge'        => KarMCP_OAuth_Util::code_challenge_s256( $verifier ),
 			'code_challenge_method' => 'S256',
 		);
-		return EMCP_Tools_Cloud::base_url() . '/api/auth/oauth2/authorize?' . http_build_query( $params );
+		return KarMCP_Cloud::base_url() . '/api/auth/oauth2/authorize?' . http_build_query( $params );
 	}
 
 	/**
@@ -113,8 +113,8 @@ class EMCP_Tools_Cloud_Connect {
 	 * @return array|\WP_Error
 	 */
 	public static function exchange_code( string $code, string $verifier, string $client_id ) {
-		$res = EMCP_Tools_Cloud_Http::post_form(
-			EMCP_Tools_Cloud::base_url() . '/api/auth/oauth2/token',
+		$res = KarMCP_Cloud_Http::post_form(
+			KarMCP_Cloud::base_url() . '/api/auth/oauth2/token',
 			array(
 				'grant_type'    => 'authorization_code',
 				'code'          => $code,
@@ -129,7 +129,7 @@ class EMCP_Tools_Cloud_Connect {
 		}
 		$j = $res['json'];
 		if ( 200 !== (int) $res['code'] || empty( $j['access_token'] ) ) {
-			return new \WP_Error( 'token_failed', __( 'EMCP Cloud rejected the connection.', 'emcp-tools' ) );
+			return new \WP_Error( 'token_failed', __( 'KarMCP Cloud rejected the connection.', 'karmcp' ) );
 		}
 		$bundle = array(
 			'access_token'      => (string) $j['access_token'],
@@ -138,7 +138,7 @@ class EMCP_Tools_Cloud_Connect {
 			'client_id'         => $client_id,
 			'connected_at'      => time(),
 		);
-		EMCP_Tools_Cloud::save_connection( $bundle );
+		KarMCP_Cloud::save_connection( $bundle );
 		return $bundle;
 	}
 
@@ -163,17 +163,17 @@ class EMCP_Tools_Cloud_Connect {
 	 * @return bool
 	 */
 	public static function refresh(): bool {
-		$c = EMCP_Tools_Cloud::get_connection();
+		$c = KarMCP_Cloud::get_connection();
 		if ( empty( $c['refresh_token'] ) || empty( $c['client_id'] ) ) {
 			return false;
 		}
 
-		$lock_key = 'emcp_cloud_refresh_' . substr( md5( (string) $c['client_id'] ), 0, 24 );
+		$lock_key = 'karmcp_cloud_refresh_' . substr( md5( (string) $c['client_id'] ), 0, 24 );
 		$locked   = self::db_lock( $lock_key, self::REFRESH_LOCK_WAIT );
 
 		// Double-checked locking: a request we waited behind may have already
 		// refreshed. Re-read and short-circuit when the token is fresh again.
-		$c = EMCP_Tools_Cloud::get_connection();
+		$c = KarMCP_Cloud::get_connection();
 		if ( empty( $c['refresh_token'] ) || empty( $c['client_id'] ) ) {
 			self::db_unlock( $lock_key, $locked );
 			return false;
@@ -196,8 +196,8 @@ class EMCP_Tools_Cloud_Connect {
 		}
 
 		$used_rt = (string) $c['refresh_token'];
-		$res     = EMCP_Tools_Cloud_Http::post_form(
-			EMCP_Tools_Cloud::base_url() . '/api/auth/oauth2/token',
+		$res     = KarMCP_Cloud_Http::post_form(
+			KarMCP_Cloud::base_url() . '/api/auth/oauth2/token',
 			array(
 				'grant_type'    => 'refresh_token',
 				'refresh_token' => $used_rt,
@@ -218,7 +218,7 @@ class EMCP_Tools_Cloud_Connect {
 			// Auth rejection. If a concurrent request already rotated the token
 			// (stored RT changed) or the access token is fresh again, this is
 			// just the loser of a race — succeed without touching the bundle.
-			$fresh = EMCP_Tools_Cloud::get_connection();
+			$fresh = KarMCP_Cloud::get_connection();
 			$won   = ( ! empty( $fresh['refresh_token'] ) && (string) $fresh['refresh_token'] !== $used_rt )
 				|| self::access_token_fresh( $fresh );
 			if ( $won ) {
@@ -226,7 +226,7 @@ class EMCP_Tools_Cloud_Connect {
 				return true;
 			}
 			$fresh['unhealthy'] = true;
-			EMCP_Tools_Cloud::save_connection( $fresh );
+			KarMCP_Cloud::save_connection( $fresh );
 			self::db_unlock( $lock_key, $locked );
 			return false;
 		}
@@ -234,12 +234,12 @@ class EMCP_Tools_Cloud_Connect {
 		// Success. Merge onto the freshest stored bundle so we never drop a
 		// concurrent write of an unrelated field.
 		$j                         = $res['json'];
-		$save                      = EMCP_Tools_Cloud::get_connection();
+		$save                      = KarMCP_Cloud::get_connection();
 		$save['access_token']      = (string) $j['access_token'];
 		$save['refresh_token']     = (string) ( $j['refresh_token'] ?? ( $save['refresh_token'] ?? $used_rt ) );
 		$save['access_expires_at'] = time() + (int) ( $j['expires_in'] ?? 3600 );
 		unset( $save['unhealthy'] );
-		EMCP_Tools_Cloud::save_connection( $save );
+		KarMCP_Cloud::save_connection( $save );
 		self::db_unlock( $lock_key, $locked );
 		return true;
 	}
@@ -293,12 +293,12 @@ class EMCP_Tools_Cloud_Connect {
 	 * @return void
 	 */
 	public static function revoke_remote(): void {
-		$c = EMCP_Tools_Cloud::get_connection();
+		$c = KarMCP_Cloud::get_connection();
 		if ( empty( $c['refresh_token'] ) ) {
 			return;
 		}
-		EMCP_Tools_Cloud_Http::post_form(
-			EMCP_Tools_Cloud::base_url() . '/api/auth/oauth2/revoke',
+		KarMCP_Cloud_Http::post_form(
+			KarMCP_Cloud::base_url() . '/api/auth/oauth2/revoke',
 			array(
 				'token'     => (string) $c['refresh_token'],
 				'client_id' => (string) ( $c['client_id'] ?? '' ),
@@ -311,12 +311,12 @@ class EMCP_Tools_Cloud_Connect {
 
 	private static function guard_cap(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to do that.', 'emcp-tools' ), '', array( 'response' => 403 ) );
+			wp_die( esc_html__( 'You do not have permission to do that.', 'karmcp' ), '', array( 'response' => 403 ) );
 		}
 	}
 
 	private static function back( string $flag ): void {
-		wp_safe_redirect( admin_url( 'admin.php?page=emcp-tools-connection&' . $flag . '#emcp-conn-main' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=karmcp-connection&' . $flag . '#karmcp-conn-main' ) );
 		exit;
 	}
 
@@ -332,10 +332,10 @@ class EMCP_Tools_Cloud_Connect {
 		if ( is_wp_error( $client_id ) ) {
 			self::back( 'cloud_error=dcr' );
 		}
-		$verifier = EMCP_Tools_OAuth_Util::generate_code_verifier();
-		$csrf     = EMCP_Tools_OAuth_Util::generate_token();
+		$verifier = KarMCP_OAuth_Util::generate_code_verifier();
+		$csrf     = KarMCP_OAuth_Util::generate_token();
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce already checked by check_admin_referer() above.
-		$gateway_optin = isset( $_POST['emcp_gateway_optin'] );
+		$gateway_optin = isset( $_POST['karmcp_gateway_optin'] );
 		set_transient(
 			self::PENDING_TRANSIENT,
 			array(
@@ -349,7 +349,7 @@ class EMCP_Tools_Cloud_Connect {
 		// The authorize URL is on the Cloud host, not this site. wp_safe_redirect()
 		// blocks off-site hosts (falling back to wp-admin), so allow the Cloud host
 		// for this one deliberate redirect to our own service.
-		$cloud_host = wp_parse_url( EMCP_Tools_Cloud::base_url(), PHP_URL_HOST );
+		$cloud_host = wp_parse_url( KarMCP_Cloud::base_url(), PHP_URL_HOST );
 		if ( $cloud_host ) {
 			add_filter(
 				'allowed_redirect_hosts',
@@ -379,17 +379,17 @@ class EMCP_Tools_Cloud_Connect {
 		if ( ! is_array( $pending ) || '' === $code ) {
 			self::back( 'cloud_error=state' );
 		}
-		$decoded = json_decode( EMCP_Tools_OAuth_Util::base64url_decode( $state_in ), true );
+		$decoded = json_decode( KarMCP_OAuth_Util::base64url_decode( $state_in ), true );
 		$csrf    = is_array( $decoded ) ? (string) ( $decoded['csrf'] ?? '' ) : '';
-		if ( ! EMCP_Tools_OAuth_Util::secure_equals( (string) $pending['csrf'], $csrf ) ) {
+		if ( ! KarMCP_OAuth_Util::secure_equals( (string) $pending['csrf'], $csrf ) ) {
 			self::back( 'cloud_error=state' );
 		}
 		$bundle = self::exchange_code( $code, (string) $pending['verifier'], (string) $pending['client_id'] );
-		if ( ! is_wp_error( $bundle ) && ! empty( $pending['gateway'] ) && class_exists( 'EMCP_Tools_Gateway_Credential' ) ) {
+		if ( ! is_wp_error( $bundle ) && ! empty( $pending['gateway'] ) && class_exists( 'KarMCP_Gateway_Credential' ) ) {
 			// Best-effort: the Cloud connection has already succeeded above, so a
 			// gateway provisioning failure here must never turn into a user-facing
 			// error — it just leaves the gateway un-provisioned for this site.
-			EMCP_Tools_Gateway_Credential::provision( get_current_user_id() );
+			KarMCP_Gateway_Credential::provision( get_current_user_id() );
 		}
 		self::back( is_wp_error( $bundle ) ? 'cloud_error=token' : 'cloud_connected=1' );
 	}
@@ -402,11 +402,11 @@ class EMCP_Tools_Cloud_Connect {
 	public static function handle_disconnect(): void {
 		self::guard_cap();
 		check_admin_referer( self::ACTION_DISCONNECT );
-		if ( class_exists( 'EMCP_Tools_Gateway_Credential' ) ) {
-			EMCP_Tools_Gateway_Credential::deprovision(); // Cloud delete needs the live connection → before clear_connection().
+		if ( class_exists( 'KarMCP_Gateway_Credential' ) ) {
+			KarMCP_Gateway_Credential::deprovision(); // Cloud delete needs the live connection → before clear_connection().
 		}
 		self::revoke_remote();
-		EMCP_Tools_Cloud::clear_connection();
+		KarMCP_Cloud::clear_connection();
 		self::back( 'cloud_disconnected=1' );
 	}
 

@@ -2,7 +2,7 @@
 /**
  * Uniform finding builder for the Security & Malware Scanner.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_Security_Finding {
+class KarMCP_Security_Finding {
 
 	/**
 	 * @param string $id

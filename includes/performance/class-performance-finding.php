@@ -2,7 +2,7 @@
 /**
  * Uniform finding builder for the Performance Analyzer.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class EMCP_Tools_Performance_Finding {
+class KarMCP_Performance_Finding {
 
 	/**
 	 * @param string     $id

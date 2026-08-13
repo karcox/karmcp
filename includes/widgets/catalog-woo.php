@@ -4,9 +4,9 @@
  *
  * Harvested from the WooCommerce convenience-tool registrations in
  * class-widget-abilities.php (require Elementor Pro + WooCommerce).
- * Plain data — see EMCP_Tools_Widget_Catalog for the read API.
+ * Plain data — see KarMCP_Widget_Catalog for the read API.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.0.0
  */
 

@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-process.env.EMCP_PROXY_NO_MAIN = '1';
+process.env.KARMCP_PROXY_NO_MAIN = '1';
 const { loadSites, META_TOOLS, isMetaCall, injectMetaTools, handleMetaCall, sitePath, resolveCallSite } = await import('./mcp-proxy.mjs');
 
 test('loadSites: single-site env → one default site', () => {
@@ -18,12 +18,12 @@ test('loadSites: single-site env → one default site', () => {
   assert.equal(sites.default.username, 'u');
 });
 
-test('loadSites: EMCP_SITES JSON registry', () => {
+test('loadSites: KARMCP_SITES JSON registry', () => {
   const registry = JSON.stringify({
     clientA: { url: 'https://a.test', username: 'ua', appPassword: 'pa' },
     clientB: { url: 'https://b.test/', username: 'ub', appPassword: 'pb' },
   });
-  const { sites, defaultSite } = loadSites({ EMCP_SITES: registry, EMCP_DEFAULT_SITE: 'clientB' });
+  const { sites, defaultSite } = loadSites({ KARMCP_SITES: registry, KARMCP_DEFAULT_SITE: 'clientB' });
   assert.equal(Object.keys(sites).length, 2);
   assert.equal(defaultSite, 'clientB');
   assert.equal(sites.clientB.url, 'https://b.test'); // trailing slash trimmed
@@ -31,7 +31,7 @@ test('loadSites: EMCP_SITES JSON registry', () => {
 
 test('loadSites: registry default falls back to first key', () => {
   const registry = JSON.stringify({ x: { url: 'https://x.test', username: 'u', appPassword: 'p' } });
-  const { defaultSite } = loadSites({ EMCP_SITES: registry });
+  const { defaultSite } = loadSites({ KARMCP_SITES: registry });
   assert.equal(defaultSite, 'x');
 });
 
@@ -42,14 +42,14 @@ test('loadSites: no config → empty', () => {
 
 test('META_TOOLS has the two switching tools', () => {
   const names = META_TOOLS.map((t) => t.name);
-  assert.ok(names.includes('emcp_list_sites'));
-  assert.ok(names.includes('emcp_use_site'));
+  assert.ok(names.includes('karmcp_list_sites'));
+  assert.ok(names.includes('karmcp_use_site'));
 });
 
 test('isMetaCall', () => {
-  assert.ok(isMetaCall('emcp_use_site'));
-  assert.ok(isMetaCall('emcp_list_sites'));
-  assert.ok(!isMetaCall('emcp-tools-list-pages'));
+  assert.ok(isMetaCall('karmcp_use_site'));
+  assert.ok(isMetaCall('karmcp_list_sites'));
+  assert.ok(!isMetaCall('karmcp-tools-list-pages'));
 });
 
 test('injectMetaTools: appends only when >1 site', () => {
@@ -58,7 +58,7 @@ test('injectMetaTools: appends only when >1 site', () => {
 
   const multi = injectMetaTools({ result: { tools: [{ name: 'x' }] } }, 2);
   const names = multi.result.tools.map((t) => t.name);
-  assert.ok(names.includes('emcp_use_site'));
+  assert.ok(names.includes('karmcp_use_site'));
   assert.equal(multi.result.tools.length, 3);
 });
 
@@ -82,22 +82,22 @@ test('handleMetaCall: list + switch', () => {
     sites: { a: { url: 'https://a.test' }, b: { url: 'https://b.test' } },
     active: 'a', session: {}, permalinks: {},
   };
-  const list = handleMetaCall('emcp_list_sites', {}, state, 1);
+  const list = handleMetaCall('karmcp_list_sites', {}, state, 1);
   assert.match(JSON.stringify(list.result), /"a"/);
   assert.match(JSON.stringify(list.result), /"b"/);
 
-  const ok = handleMetaCall('emcp_use_site', { site: 'b' }, state, 2);
+  const ok = handleMetaCall('karmcp_use_site', { site: 'b' }, state, 2);
   assert.equal(state.active, 'b');
   assert.match(JSON.stringify(ok.result), /"active":"b"/);
 
-  const bad = handleMetaCall('emcp_use_site', { site: 'nope' }, state, 3);
+  const bad = handleMetaCall('karmcp_use_site', { site: 'nope' }, state, 3);
   assert.ok(bad.result.isError);
   assert.equal(state.active, 'b'); // unchanged on bad switch
 });
 
 test('resolveCallSite: per-call site arg routes to that site and strips it', () => {
   const state = { sites: { a: { url: 'x' }, b: { url: 'y' } }, active: 'a' };
-  const msg = { method: 'tools/call', params: { name: 'emcp-tools-list-pages', arguments: { site: 'b', foo: 1 } } };
+  const msg = { method: 'tools/call', params: { name: 'karmcp-tools-list-pages', arguments: { site: 'b', foo: 1 } } };
   const { alias, message } = resolveCallSite(msg, state);
   assert.equal(alias, 'b');
   assert.deepEqual(message.params.arguments, { foo: 1 });

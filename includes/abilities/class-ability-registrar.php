@@ -2,7 +2,7 @@
 /**
  * Registers all MCP Tools for Elementor abilities with the WordPress Abilities API.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   1.0.0
  */
 
@@ -15,33 +15,33 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class EMCP_Tools_Ability_Registrar {
+class KarMCP_Ability_Registrar {
 
 	/**
 	 * The data access layer.
 	 *
-	 * @var EMCP_Tools_Data
+	 * @var KarMCP_Data
 	 */
 	private $data;
 
 	/**
 	 * The element factory.
 	 *
-	 * @var EMCP_Tools_Element_Factory
+	 * @var KarMCP_Element_Factory
 	 */
 	private $factory;
 
 	/**
 	 * The schema generator.
 	 *
-	 * @var EMCP_Tools_Schema_Generator
+	 * @var KarMCP_Schema_Generator
 	 */
 	private $schema_generator;
 
 	/**
 	 * The settings validator.
 	 *
-	 * @var EMCP_Tools_Settings_Validator
+	 * @var KarMCP_Settings_Validator
 	 */
 	private $validator;
 
@@ -57,16 +57,16 @@ class EMCP_Tools_Ability_Registrar {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param EMCP_Tools_Data               $data             The data access layer.
-	 * @param EMCP_Tools_Element_Factory    $factory          The element factory.
-	 * @param EMCP_Tools_Schema_Generator   $schema_generator The schema generator.
-	 * @param EMCP_Tools_Settings_Validator $validator        The settings validator.
+	 * @param KarMCP_Data               $data             The data access layer.
+	 * @param KarMCP_Element_Factory    $factory          The element factory.
+	 * @param KarMCP_Schema_Generator   $schema_generator The schema generator.
+	 * @param KarMCP_Settings_Validator $validator        The settings validator.
 	 */
 	public function __construct(
-		EMCP_Tools_Data $data,
-		EMCP_Tools_Element_Factory $factory,
-		EMCP_Tools_Schema_Generator $schema_generator,
-		EMCP_Tools_Settings_Validator $validator
+		KarMCP_Data $data,
+		KarMCP_Element_Factory $factory,
+		KarMCP_Schema_Generator $schema_generator,
+		KarMCP_Settings_Validator $validator
 	) {
 		$this->data             = $data;
 		$this->factory          = $factory;
@@ -89,7 +89,7 @@ class EMCP_Tools_Ability_Registrar {
 	 * @return string[] Array of registered ability names.
 	 */
 	public function register_all( bool $elementor_active = true ): array {
-		$profile = defined( 'EMCP_TOOLS_PROFILE_REGISTRATION' ) && EMCP_TOOLS_PROFILE_REGISTRATION;
+		$profile = defined( 'KARMCP_PROFILE_REGISTRATION' ) && KARMCP_PROFILE_REGISTRATION;
 		$started = $profile ? microtime( true ) : 0.0;
 		try {
 			$this->register_groups( $elementor_active );
@@ -104,12 +104,12 @@ class EMCP_Tools_Ability_Registrar {
 			// Keep whatever registered before the failure and carry on; the tools
 			// from the failed group are simply absent.
 			if ( function_exists( 'error_log' ) ) {
-				error_log( 'EMCP Tools: ability registration stopped early: ' . $e->getMessage() );
+				error_log( 'KarMCP: ability registration stopped early: ' . $e->getMessage() );
 			}
 		}
 
 		if ( $profile && function_exists( 'error_log' ) ) {
-			error_log( sprintf( 'EMCP Tools: ability registration took %.1f ms (%d tools).', ( microtime( true ) - $started ) * 1000, count( $this->ability_names ) ) );
+			error_log( sprintf( 'KarMCP: ability registration took %.1f ms (%d tools).', ( microtime( true ) - $started ) * 1000, count( $this->ability_names ) ) );
 		}
 
 		/**
@@ -119,9 +119,9 @@ class EMCP_Tools_Ability_Registrar {
 		 *
 		 * @param string[] $ability_names The registered ability names.
 		 */
-		$this->ability_names = apply_filters( 'emcp_tools_ability_names', $this->ability_names );
+		$this->ability_names = apply_filters( 'karmcp_ability_names', $this->ability_names );
 
-		// F-013: emcp_tools_ability_names is a public seam, so a third-party
+		// F-013: karmcp_ability_names is a public seam, so a third-party
 		// callback can hand back non-strings or names that don't match the MCP
 		// ability-name grammar. Drop anything invalid before the list reaches
 		// create_server(), which would otherwise register broken/undefined tools.
@@ -140,56 +140,56 @@ class EMCP_Tools_Ability_Registrar {
 		// ---- Always-on: pure-WordPress tool groups (no Elementor needed) ----
 
 		// Media Library query ability (list/search the site's own uploads).
-		$media_library = new EMCP_Tools_Media_Library_Abilities( $this->data );
+		$media_library = new KarMCP_Media_Library_Abilities( $this->data );
 		$media_library->register();
 		$this->ability_names = array_merge( $this->ability_names, $media_library->get_ability_names() );
 
 		// resize-media — only when the Image Optimization module is active (it reuses
 		// that module's backup + compress + WebP machinery).
-		if ( class_exists( 'EMCP_Tools_Image_Resize_Abilities' )
-			&& class_exists( 'EMCP_Tools_Image_Optimization_Module' )
-			&& EMCP_Tools_Image_Optimization_Module::module_is_active() ) {
-			$resize = new EMCP_Tools_Image_Resize_Abilities();
+		if ( class_exists( 'KarMCP_Image_Resize_Abilities' )
+			&& class_exists( 'KarMCP_Image_Optimization_Module' )
+			&& KarMCP_Image_Optimization_Module::module_is_active() ) {
+			$resize = new KarMCP_Image_Resize_Abilities();
 			$resize->register();
 			$this->ability_names = array_merge( $this->ability_names, $resize->get_ability_names() );
 		}
 
 		// WordPress Content abilities (posts/pages/CPT CRUD + taxonomy + meta).
-		$content = new EMCP_Tools_Content_Abilities();
+		$content = new KarMCP_Content_Abilities();
 		$content->register();
 		$this->ability_names = array_merge( $this->ability_names, $content->get_ability_names() );
 
 		// Redirect Manager abilities (301/302 redirects + broken-link scan; no
 		// Elementor). Gated on the Redirects module (on by default) — abilities
 		// register before the module boots on init:5, so gate on is_enabled().
-		if ( class_exists( 'EMCP_Tools_Redirect_Module' ) && EMCP_Tools_Redirect_Module::is_enabled() ) {
-			$redirects = new EMCP_Tools_Redirect_Abilities();
+		if ( class_exists( 'KarMCP_Redirect_Module' ) && KarMCP_Redirect_Module::is_enabled() ) {
+			$redirects = new KarMCP_Redirect_Abilities();
 			$redirects->register();
 			$this->ability_names = array_merge( $this->ability_names, $redirects->get_ability_names() );
 		}
 
 		// Gutenberg block abilities (discover blocks/patterns + incremental block-tree edits).
-		$gutenberg = new EMCP_Tools_Gutenberg_Abilities();
+		$gutenberg = new KarMCP_Gutenberg_Abilities();
 		$gutenberg->register();
 		$this->ability_names = array_merge( $this->ability_names, $gutenberg->get_ability_names() );
 
 		// Page Snapshot — always-on normalized page digest (read foundation).
-		$snapshot = new EMCP_Tools_Snapshot_Abilities( $this->data );
+		$snapshot = new KarMCP_Snapshot_Abilities( $this->data );
 		$snapshot->register();
 		$this->ability_names = array_merge( $this->ability_names, $snapshot->get_ability_names() );
 
 		// AI-safe transactions — change ledger + rollback (always-on, write foundation).
-		$transactions = new EMCP_Tools_Transaction_Abilities();
+		$transactions = new KarMCP_Transaction_Abilities();
 		$transactions->register();
 		$this->ability_names = array_merge( $this->ability_names, $transactions->get_ability_names() );
 
 		// Content search — lexical index over pages/templates/widgets/globals (always-on).
-		$search = new EMCP_Tools_Search_Abilities();
+		$search = new KarMCP_Search_Abilities();
 		$search->register();
 		$this->ability_names = array_merge( $this->ability_names, $search->get_ability_names() );
 
 		// Content mirror — export/restore page content as git-trackable files (always-on).
-		$mirror = new EMCP_Tools_Content_Mirror_Abilities();
+		$mirror = new KarMCP_Content_Mirror_Abilities();
 		$mirror->register();
 		$this->ability_names = array_merge( $this->ability_names, $mirror->get_ability_names() );
 
@@ -197,95 +197,81 @@ class EMCP_Tools_Ability_Registrar {
 		// Registered ALWAYS so wp_get_ability() resolves them, but deliberately
 		// NOT added to $this->ability_names — register_mcp_server() surfaces them
 		// only when dispatcher mode is on (otherwise they'd double the surface).
-		$dispatcher = new EMCP_Tools_Dispatcher_Abilities();
+		$dispatcher = new KarMCP_Dispatcher_Abilities();
 		$dispatcher->register();
 
-		// EMCP Themer MCP tools — only when the (free) Themer module is active.
+		// KarMCP Themer MCP tools — only when the (free) Themer module is active.
 		// The module boots on init:5, after this runs, so gate on the option directly.
-		if ( class_exists( 'EMCP_Tools_Themer_Abilities' )
-			&& class_exists( 'EMCP_Tools_Themer_Module' )
-			&& EMCP_Tools_Themer_Module::is_enabled() ) {
-			$themer = new EMCP_Tools_Themer_Abilities();
+		if ( class_exists( 'KarMCP_Themer_Abilities' )
+			&& class_exists( 'KarMCP_Themer_Module' )
+			&& KarMCP_Themer_Module::is_enabled() ) {
+			$themer = new KarMCP_Themer_Abilities();
 			$themer->register();
 			$this->ability_names = array_merge( $this->ability_names, $themer->get_ability_names() );
 		}
 
-		// EMCP Themer PHP-Template MCP tools — only when the feature toggle is on
+		// KarMCP Themer PHP-Template MCP tools — only when the feature toggle is on
 		// (its own option, independent of the base Themer tools above).
-		if ( class_exists( 'EMCP_Tools_Themer_PHP_Abilities' )
-			&& class_exists( 'EMCP_Tools_Themer_PHP' )
-			&& EMCP_Tools_Themer_PHP::enabled() ) {
-			$themer_php = new EMCP_Tools_Themer_PHP_Abilities();
+		if ( class_exists( 'KarMCP_Themer_PHP_Abilities' )
+			&& class_exists( 'KarMCP_Themer_PHP' )
+			&& KarMCP_Themer_PHP::enabled() ) {
+			$themer_php = new KarMCP_Themer_PHP_Abilities();
 			$themer_php->register();
 			$this->ability_names = array_merge( $this->ability_names, $themer_php->get_ability_names() );
 		}
 
 		// WordPress Settings abilities (curated site-settings read/update).
-		$settings = new EMCP_Tools_Settings_Abilities();
+		$settings = new KarMCP_Settings_Abilities();
 		$settings->register();
 		$this->ability_names = array_merge( $this->ability_names, $settings->get_ability_names() );
 
 		// WordPress Plugins & Themes abilities.
-		$plugins = new EMCP_Tools_Plugin_Abilities();
+		$plugins = new KarMCP_Plugin_Abilities();
 		$plugins->register();
 		$this->ability_names = array_merge( $this->ability_names, $plugins->get_ability_names() );
 
-		$themes = new EMCP_Tools_Theme_Abilities();
+		$themes = new KarMCP_Theme_Abilities();
 		$themes->register();
 		$this->ability_names = array_merge( $this->ability_names, $themes->get_ability_names() );
 
 		// WordPress Users abilities.
-		$users = new EMCP_Tools_User_Abilities();
+		$users = new KarMCP_User_Abilities();
 		$users->register();
 		$this->ability_names = array_merge( $this->ability_names, $users->get_ability_names() );
 
 		// WordPress Nav Menu abilities (menus, items, theme locations, render).
-		$nav_menus = new EMCP_Tools_Nav_Menu_Abilities();
+		$nav_menus = new KarMCP_Nav_Menu_Abilities();
 		$nav_menus->register();
 		$this->ability_names = array_merge( $this->ability_names, $nav_menus->get_ability_names() );
 
 		// ACF abilities — only when Advanced Custom Fields (free or Pro) is active.
-		if ( class_exists( 'EMCP_Tools_ACF_Abilities' ) && EMCP_Tools_ACF_Abilities::acf_active() ) {
-			$acf = new EMCP_Tools_ACF_Abilities();
+		if ( class_exists( 'KarMCP_ACF_Abilities' ) && KarMCP_ACF_Abilities::acf_active() ) {
+			$acf = new KarMCP_ACF_Abilities();
 			$acf->register();
 			$this->ability_names = array_merge( $this->ability_names, $acf->get_ability_names() );
 		}
 
 		// WooCommerce abilities (Pro) — only when WooCommerce is active.
-		if ( class_exists( 'EMCP_Tools_Woo_Integration' ) && EMCP_Tools_Woo_Integration::woo_active() ) {
-			$woo = new EMCP_Tools_Woo_Integration();
+		if ( class_exists( 'KarMCP_Woo_Integration' ) && KarMCP_Woo_Integration::woo_active() ) {
+			$woo = new KarMCP_Woo_Integration();
 			$woo->register();
 			$this->ability_names = array_merge( $this->ability_names, $woo->get_ability_names() );
 		}
 
 		// Meta Box abilities — only when Meta Box (free or extensions) is active.
-		if ( class_exists( 'EMCP_Tools_Meta_Box_Abilities' ) && EMCP_Tools_Meta_Box_Abilities::metabox_active() ) {
-			$metabox = new EMCP_Tools_Meta_Box_Abilities();
+		if ( class_exists( 'KarMCP_Meta_Box_Abilities' ) && KarMCP_Meta_Box_Abilities::metabox_active() ) {
+			$metabox = new KarMCP_Meta_Box_Abilities();
 			$metabox->register();
 			$this->ability_names = array_merge( $this->ability_names, $metabox->get_ability_names() );
 		}
 
-		// Forms-tab integrations. CF7 is free; the five entry-storing plugins are
-		// Pro. Each registers only when its plugin is active (is_available()).
+		// Forms-tab integrations. Each registers only when its plugin is active
+		// (is_available()). Only the Contact Form 7 adapter ships in this build;
+		// the entry-storing adapters (WPForms, Gravity, Fluent, Ninja, Formidable,
+		// MetForm, SureForms, Forminator) were upstream Pro files and are absent.
 		$form_integrations = array();
-		if ( class_exists( 'EMCP_Tools_CF7_Integration' ) ) {
-			$form_integrations[] = new EMCP_Tools_CF7_Integration();
-		}
-		if ( function_exists( 'emcp_tools_fs' ) && emcp_tools_fs()->can_use_premium_code() ) {
-			foreach ( array(
-				'EMCP_Tools_WPForms_Integration',
-				'EMCP_Tools_GravityForms_Integration',
-				'EMCP_Tools_FluentForms_Integration',
-				'EMCP_Tools_NinjaForms_Integration',
-				'EMCP_Tools_Formidable_Integration',
-				'EMCP_Tools_MetForm_Integration',
-				'EMCP_Tools_SureForms_Integration',
-				'EMCP_Tools_Forminator_Integration',
-			) as $emcp_form_class ) {
-				if ( class_exists( $emcp_form_class ) ) {
-					$form_integrations[] = new $emcp_form_class();
-				}
-			}
+		if ( class_exists( 'KarMCP_CF7_Integration' ) ) {
+			$form_integrations[] = new KarMCP_CF7_Integration();
 		}
 		foreach ( $form_integrations as $form_integration ) {
 			if ( $form_integration->is_available() ) {
@@ -294,25 +280,13 @@ class EMCP_Tools_Ability_Registrar {
 			}
 		}
 
-		// SEO-plugin integrations. Slim SEO is free; the other 6 are Pro. Each
-		// registers only when its SEO plugin is active.
+		// SEO-plugin integrations. Each registers only when its SEO plugin is
+		// active. Only the Slim SEO adapter ships in this build; the Yoast,
+		// Rank Math, AIOSEO, SEOPress, SEO Framework and SureRank adapters were
+		// upstream Pro files and are absent.
 		$seo_integrations = array();
-		if ( class_exists( 'EMCP_Tools_SlimSEO_Integration' ) ) {
-			$seo_integrations[] = new EMCP_Tools_SlimSEO_Integration();
-		}
-		if ( function_exists( 'emcp_tools_fs' ) && emcp_tools_fs()->can_use_premium_code() ) {
-			foreach ( array(
-				'EMCP_Tools_Yoast_Integration',
-				'EMCP_Tools_RankMath_Integration',
-				'EMCP_Tools_AIOSEO_Integration',
-				'EMCP_Tools_SeoPress_Integration',
-				'EMCP_Tools_SEOFramework_Integration',
-				'EMCP_Tools_SureRank_Integration',
-			) as $emcp_seo_class ) {
-				if ( class_exists( $emcp_seo_class ) ) {
-					$seo_integrations[] = new $emcp_seo_class();
-				}
-			}
+		if ( class_exists( 'KarMCP_SlimSEO_Integration' ) ) {
+			$seo_integrations[] = new KarMCP_SlimSEO_Integration();
 		}
 		foreach ( $seo_integrations as $seo_integration ) {
 			if ( $seo_integration->is_available() ) {
@@ -324,34 +298,34 @@ class EMCP_Tools_Ability_Registrar {
 		// Themes-tab integrations — the framework-agnostic active-theme pack always,
 		// per-framework packs only when that framework is the active theme.
 		$theme_integrations = array();
-		if ( class_exists( 'EMCP_Tools_Active_Theme_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_Active_Theme_Integration();
+		if ( class_exists( 'KarMCP_Active_Theme_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_Active_Theme_Integration();
 		}
-		if ( class_exists( 'EMCP_Tools_Astra_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_Astra_Integration();
+		if ( class_exists( 'KarMCP_Astra_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_Astra_Integration();
 		}
-		if ( class_exists( 'EMCP_Tools_Spectra_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_Spectra_Integration();
+		if ( class_exists( 'KarMCP_Spectra_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_Spectra_Integration();
 		}
-		if ( class_exists( 'EMCP_Tools_Kadence_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_Kadence_Integration();
+		if ( class_exists( 'KarMCP_Kadence_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_Kadence_Integration();
 		}
-		if ( class_exists( 'EMCP_Tools_Kadence_Blocks_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_Kadence_Blocks_Integration();
+		if ( class_exists( 'KarMCP_Kadence_Blocks_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_Kadence_Blocks_Integration();
 		}
 		// GeneratePress + GenerateBlocks (Pro; classes only present when Pro loaded).
-		if ( class_exists( 'EMCP_Tools_GeneratePress_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_GeneratePress_Integration();
+		if ( class_exists( 'KarMCP_GeneratePress_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_GeneratePress_Integration();
 		}
-		if ( class_exists( 'EMCP_Tools_GenerateBlocks_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_GenerateBlocks_Integration();
+		if ( class_exists( 'KarMCP_GenerateBlocks_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_GenerateBlocks_Integration();
 		}
 		// Blocksy (Pro): blocks + Companion extensions.
-		if ( class_exists( 'EMCP_Tools_Blocksy_Blocks_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_Blocksy_Blocks_Integration();
+		if ( class_exists( 'KarMCP_Blocksy_Blocks_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_Blocksy_Blocks_Integration();
 		}
-		if ( class_exists( 'EMCP_Tools_Blocksy_Extensions_Integration' ) ) {
-			$theme_integrations[] = new EMCP_Tools_Blocksy_Extensions_Integration();
+		if ( class_exists( 'KarMCP_Blocksy_Extensions_Integration' ) ) {
+			$theme_integrations[] = new KarMCP_Blocksy_Extensions_Integration();
 		}
 		foreach ( $theme_integrations as $theme_integration ) {
 			if ( $theme_integration->is_available() ) {
@@ -364,9 +338,9 @@ class EMCP_Tools_Ability_Registrar {
 		// tool for discovery + curation; widgets are placed with the generic
 		// add-free-widget tool, so there is deliberately no write tool here.
 		$addon_packs = array();
-		foreach ( array( 'EMCP_Tools_EssentialAddons_Integration', 'EMCP_Tools_PremiumAddons_Integration' ) as $emcp_addon_class ) {
-			if ( class_exists( $emcp_addon_class ) ) {
-				$addon_packs[] = new $emcp_addon_class();
+		foreach ( array( 'KarMCP_EssentialAddons_Integration', 'KarMCP_PremiumAddons_Integration' ) as $karmcp_addon_class ) {
+			if ( class_exists( $karmcp_addon_class ) ) {
+				$addon_packs[] = new $karmcp_addon_class();
 			}
 		}
 		foreach ( $addon_packs as $addon_pack ) {
@@ -380,63 +354,63 @@ class EMCP_Tools_Ability_Registrar {
 		// Both a widget pack AND a data plugin, so unlike the pure packs it keeps
 		// the house read/write dispatcher pair: discovery + templates on read,
 		// templates on write.
-		if ( class_exists( 'EMCP_Tools_UAE_Integration' ) ) {
-			$emcp_uae = new EMCP_Tools_UAE_Integration();
-			if ( $emcp_uae->is_available() ) {
-				$emcp_uae->register();
-				$this->ability_names = array_merge( $this->ability_names, $emcp_uae->get_ability_names() );
+		if ( class_exists( 'KarMCP_UAE_Integration' ) ) {
+			$karmcp_uae = new KarMCP_UAE_Integration();
+			if ( $karmcp_uae->is_available() ) {
+				$karmcp_uae->register();
+				$this->ability_names = array_merge( $this->ability_names, $karmcp_uae->get_ability_names() );
 			}
 		}
 
 		// Performance Analyzer (read-only).
-		$performance = new EMCP_Tools_Performance_Abilities();
+		$performance = new KarMCP_Performance_Abilities();
 		$performance->register();
 		$this->ability_names = array_merge( $this->ability_names, $performance->get_ability_names() );
 
 		// Filesystem abilities (writes disabled-by-default).
-		$filesystem = new EMCP_Tools_Filesystem_Abilities();
+		$filesystem = new KarMCP_Filesystem_Abilities();
 		$filesystem->register();
 		$this->ability_names = array_merge( $this->ability_names, $filesystem->get_ability_names() );
 
 		// Database abilities (writes disabled-by-default).
-		$database = new EMCP_Tools_Database_Abilities();
+		$database = new KarMCP_Database_Abilities();
 		$database->register();
 		$this->ability_names = array_merge( $this->ability_names, $database->get_ability_names() );
 
 		// WP-CLI tools (run + background jobs; disabled-by-default, manage_options).
-		$wpcli = new EMCP_Tools_WPCLI_Abilities();
+		$wpcli = new KarMCP_WPCLI_Abilities();
 		$wpcli->register();
 		$this->ability_names = array_merge( $this->ability_names, $wpcli->get_ability_names() );
 
 		// Security & Malware Scanner (read-only).
-		$security = new EMCP_Tools_Security_Abilities();
+		$security = new KarMCP_Security_Abilities();
 		$security->register();
 		$this->ability_names = array_merge( $this->ability_names, $security->get_ability_names() );
 
 		// PHP Snippet abilities (Sandbox) — free, capability-gated, no Elementor.
-		if ( class_exists( 'EMCP_Tools_PHP_Snippet_Abilities' ) ) {
-			$php_snippets = new EMCP_Tools_PHP_Snippet_Abilities();
+		if ( class_exists( 'KarMCP_PHP_Snippet_Abilities' ) ) {
+			$php_snippets = new KarMCP_PHP_Snippet_Abilities();
 			$php_snippets->register();
 			$this->ability_names = array_merge( $this->ability_names, $php_snippets->get_ability_names() );
 		}
 
 		// Block Builder (Pro; self-guards on license). Gutenberg, not Elementor-gated.
-		if ( class_exists( 'EMCP_Tools_Block_Builder_Abilities' ) ) {
-			$block_builder = new EMCP_Tools_Block_Builder_Abilities();
+		if ( class_exists( 'KarMCP_Block_Builder_Abilities' ) ) {
+			$block_builder = new KarMCP_Block_Builder_Abilities();
 			$block_builder->register();
 			$this->ability_names = array_merge( $this->ability_names, $block_builder->get_ability_names() );
 		}
 		// Sandbox cloud export/import (free; operates over the bundle contract).
-		if ( class_exists( 'EMCP_Tools_Sandbox_Cloud_Abilities' ) ) {
-			$cloud = new EMCP_Tools_Sandbox_Cloud_Abilities();
+		if ( class_exists( 'KarMCP_Sandbox_Cloud_Abilities' ) ) {
+			$cloud = new KarMCP_Sandbox_Cloud_Abilities();
 			$cloud->register();
 			$this->ability_names = array_merge( $this->ability_names, $cloud->get_ability_names() );
 		}
 
-		// EMCP Cloud sync tools — only when the site is connected to a cloud account.
-		if ( class_exists( 'EMCP_Tools_Cloud_Abilities' ) && class_exists( 'EMCP_Tools_Cloud_Module' )
-			&& EMCP_Tools_Cloud_Module::is_enabled() && EMCP_Tools_Cloud::is_connected() ) {
-			$cloud_sync = new EMCP_Tools_Cloud_Abilities();
+		// KarMCP Cloud sync tools — only when the site is connected to a cloud account.
+		if ( class_exists( 'KarMCP_Cloud_Abilities' ) && class_exists( 'KarMCP_Cloud_Module' )
+			&& KarMCP_Cloud_Module::is_enabled() && KarMCP_Cloud::is_connected() ) {
+			$cloud_sync = new KarMCP_Cloud_Abilities();
 			$cloud_sync->register();
 			$this->ability_names = array_merge( $this->ability_names, $cloud_sync->get_ability_names() );
 		}
@@ -444,44 +418,44 @@ class EMCP_Tools_Ability_Registrar {
 		// Stock-image provider tools (search-images + sideload-image) — pure WP core
 		// (a stock-provider search + a Media Library sideload), no Elementor needed,
 		// so they register on any site. add-stock-image (adds a widget) is gated below.
-		$stock_images = new EMCP_Tools_Stock_Image_Abilities( $this->data, $this->factory );
+		$stock_images = new KarMCP_Stock_Image_Abilities( $this->data, $this->factory );
 		$stock_images->register_provider_tools();
 		$this->ability_names = array_merge( $this->ability_names, $stock_images->provider_tool_names() );
 
 		// ---- Elementor-dependent groups: only when Elementor is active ----
 		if ( $elementor_active ) {
 			// P0 query/discovery.
-			$query = new EMCP_Tools_Query_Abilities( $this->data, $this->schema_generator );
+			$query = new KarMCP_Query_Abilities( $this->data, $this->schema_generator );
 			$query->register();
 			$this->ability_names = array_merge( $this->ability_names, $query->get_ability_names() );
 
 			// P1 page CRUD.
-			$pages = new EMCP_Tools_Page_Abilities( $this->data, $this->factory );
+			$pages = new KarMCP_Page_Abilities( $this->data, $this->factory );
 			$pages->register();
 			$this->ability_names = array_merge( $this->ability_names, $pages->get_ability_names() );
 
 			// P1 layout/container.
-			$layout = new EMCP_Tools_Layout_Abilities( $this->data, $this->factory );
+			$layout = new KarMCP_Layout_Abilities( $this->data, $this->factory );
 			$layout->register();
 			$this->ability_names = array_merge( $this->ability_names, $layout->get_ability_names() );
 
 			// Widgets (catalog-backed).
-			$widgets = new EMCP_Tools_Widget_Abilities( $this->data, $this->factory, $this->schema_generator, $this->validator );
+			$widgets = new KarMCP_Widget_Abilities( $this->data, $this->factory, $this->schema_generator, $this->validator );
 			$widgets->register();
 			$this->ability_names = array_merge( $this->ability_names, $widgets->get_ability_names() );
 
 			// Templates.
-			$templates = new EMCP_Tools_Template_Abilities( $this->data, $this->factory );
+			$templates = new KarMCP_Template_Abilities( $this->data, $this->factory );
 			$templates->register();
 			$this->ability_names = array_merge( $this->ability_names, $templates->get_ability_names() );
 
 			// Global settings.
-			$globals = new EMCP_Tools_Global_Abilities( $this->data );
+			$globals = new KarMCP_Global_Abilities( $this->data );
 			$globals->register();
 			$this->ability_names = array_merge( $this->ability_names, $globals->get_ability_names() );
 
 			// Composite build-page.
-			$composite = new EMCP_Tools_Composite_Abilities( $this->data, $this->factory );
+			$composite = new KarMCP_Composite_Abilities( $this->data, $this->factory );
 			$composite->register();
 			$this->ability_names = array_merge( $this->ability_names, $composite->get_ability_names() );
 
@@ -489,66 +463,66 @@ class EMCP_Tools_Ability_Registrar {
 			// registered unconditionally above); this one adds an image widget so it
 			// needs Elementor.
 			$stock_images->register_widget_tool();
-			$this->ability_names[] = 'emcp-tools/add-stock-image';
+			$this->ability_names[] = 'karmcp/add-stock-image';
 
 			// SVG icons.
-			$svg_icons = new EMCP_Tools_Svg_Icon_Abilities( $this->data, $this->factory );
+			$svg_icons = new KarMCP_Svg_Icon_Abilities( $this->data, $this->factory );
 			$svg_icons->register();
 			$this->ability_names = array_merge( $this->ability_names, $svg_icons->get_ability_names() );
 
 			// Custom code (CSS, JS, snippets).
-			$custom_code = new EMCP_Tools_Custom_Code_Abilities( $this->data, $this->factory );
+			$custom_code = new KarMCP_Custom_Code_Abilities( $this->data, $this->factory );
 			$custom_code->register();
 			$this->ability_names = array_merge( $this->ability_names, $custom_code->get_ability_names() );
 
 			// Atomic widgets (Elementor 4.0+; self-guards on version).
-			$atomic_widgets = new EMCP_Tools_Atomic_Widget_Abilities( $this->data, $this->factory );
+			$atomic_widgets = new KarMCP_Atomic_Widget_Abilities( $this->data, $this->factory );
 			$atomic_widgets->register();
 			$this->ability_names = array_merge( $this->ability_names, $atomic_widgets->get_ability_names() );
 
 			// Atomic layout (Elementor 4.0+; includes detect-elementor-version).
-			$atomic_layout = new EMCP_Tools_Atomic_Layout_Abilities( $this->data, $this->factory );
+			$atomic_layout = new KarMCP_Atomic_Layout_Abilities( $this->data, $this->factory );
 			$atomic_layout->register();
 			$this->ability_names = array_merge( $this->ability_names, $atomic_layout->get_ability_names() );
 
 			// Global Classes reader — self-gates on Elementor 4.0+.
-			if ( class_exists( 'EMCP_Tools_Global_Classes_Abilities' ) ) {
-				$global_classes = new EMCP_Tools_Global_Classes_Abilities();
+			if ( class_exists( 'KarMCP_Global_Classes_Abilities' ) ) {
+				$global_classes = new KarMCP_Global_Classes_Abilities();
 				$global_classes->register();
 				$this->ability_names = array_merge( $this->ability_names, $global_classes->get_ability_names() );
 			}
 
 			// Global Classes writer (create/update/delete) — self-gates on 4.0+.
-			if ( class_exists( 'EMCP_Tools_Global_Classes_Write_Abilities' ) ) {
-				$global_classes_write = new EMCP_Tools_Global_Classes_Write_Abilities();
+			if ( class_exists( 'KarMCP_Global_Classes_Write_Abilities' ) ) {
+				$global_classes_write = new KarMCP_Global_Classes_Write_Abilities();
 				$global_classes_write->register();
 				$this->ability_names = array_merge( $this->ability_names, $global_classes_write->get_ability_names() );
 			}
 
 			// Brand kit / system-kit (Pro; self-guards on license).
-			if ( class_exists( 'EMCP_Tools_System_Kit_Abilities' ) ) {
-				$brand_kits = new EMCP_Tools_System_Kit_Abilities();
+			if ( class_exists( 'KarMCP_System_Kit_Abilities' ) ) {
+				$brand_kits = new KarMCP_System_Kit_Abilities();
 				$brand_kits->register();
 				$this->ability_names = array_merge( $this->ability_names, $brand_kits->get_ability_names() );
 			}
 
 			// SEO toolkit (Pro; self-guards on license).
-			if ( class_exists( 'EMCP_Tools_Seo_Abilities' ) ) {
-				$seo = new EMCP_Tools_Seo_Abilities( $this->data );
+			if ( class_exists( 'KarMCP_Seo_Abilities' ) ) {
+				$seo = new KarMCP_Seo_Abilities( $this->data );
 				$seo->register();
 				$this->ability_names = array_merge( $this->ability_names, $seo->get_ability_names() );
 			}
 
 			// Accessibility toolkit (Pro; self-guards on license).
-			if ( class_exists( 'EMCP_Tools_A11y_Abilities' ) ) {
-				$a11y = new EMCP_Tools_A11y_Abilities( $this->data );
+			if ( class_exists( 'KarMCP_A11y_Abilities' ) ) {
+				$a11y = new KarMCP_A11y_Abilities( $this->data );
 				$a11y->register();
 				$this->ability_names = array_merge( $this->ability_names, $a11y->get_ability_names() );
 			}
 
 			// Widget Builder (Pro; self-guards on license).
-			if ( class_exists( 'EMCP_Tools_Widget_Builder_Abilities' ) ) {
-				$widget_builder = new EMCP_Tools_Widget_Builder_Abilities();
+			if ( class_exists( 'KarMCP_Widget_Builder_Abilities' ) ) {
+				$widget_builder = new KarMCP_Widget_Builder_Abilities();
 				$widget_builder->register();
 				$this->ability_names = array_merge( $this->ability_names, $widget_builder->get_ability_names() );
 			}
@@ -557,10 +531,10 @@ class EMCP_Tools_Ability_Registrar {
 		// Skills read-side (Pro; self-guards on license). Not Elementor-dependent,
 		// so it registers regardless of whether Elementor is active — but gated by
 		// the Agent Skills module so the admin can switch the runtime exposure off.
-		if ( class_exists( 'EMCP_Tools_Skill_Abilities' )
-			&& class_exists( 'EMCP_Tools_Agent_Skills_Module' )
-			&& EMCP_Tools_Agent_Skills_Module::is_enabled() ) {
-			$skills = new EMCP_Tools_Skill_Abilities();
+		if ( class_exists( 'KarMCP_Skill_Abilities' )
+			&& class_exists( 'KarMCP_Agent_Skills_Module' )
+			&& KarMCP_Agent_Skills_Module::is_enabled() ) {
+			$skills = new KarMCP_Skill_Abilities();
 			$skills->register();
 			$this->ability_names = array_merge( $this->ability_names, $skills->get_ability_names() );
 		}
@@ -568,10 +542,10 @@ class EMCP_Tools_Ability_Registrar {
 		// Project Memory (Pro; self-guards on license). Not Elementor-dependent;
 		// gated by the Memory module so the admin can switch the runtime exposure
 		// off. is_enabled() runs before the module's init boot.
-		if ( class_exists( 'EMCP_Tools_Memory_Abilities' )
-			&& class_exists( 'EMCP_Tools_Memory_Module' )
-			&& EMCP_Tools_Memory_Module::is_enabled() ) {
-			$memory = new EMCP_Tools_Memory_Abilities();
+		if ( class_exists( 'KarMCP_Memory_Abilities' )
+			&& class_exists( 'KarMCP_Memory_Module' )
+			&& KarMCP_Memory_Module::is_enabled() ) {
+			$memory = new KarMCP_Memory_Abilities();
 			$memory->register();
 			$this->ability_names = array_merge( $this->ability_names, $memory->get_ability_names() );
 		}
@@ -580,10 +554,10 @@ class EMCP_Tools_Ability_Registrar {
 		// Elementor-dependent; gated by the Migrate module. is_enabled() runs
 		// before the module's init:5 boot (abilities register on
 		// wp_abilities_api_init). The two destructive tools ship disabled-by-default.
-		if ( class_exists( 'EMCP_Tools_Migrate_Abilities' )
-			&& class_exists( 'EMCP_Tools_Migrate_Module' )
-			&& EMCP_Tools_Migrate_Module::is_enabled() ) {
-			$migrate = new EMCP_Tools_Migrate_Abilities();
+		if ( class_exists( 'KarMCP_Migrate_Abilities' )
+			&& class_exists( 'KarMCP_Migrate_Module' )
+			&& KarMCP_Migrate_Module::is_enabled() ) {
+			$migrate = new KarMCP_Migrate_Abilities();
 			$migrate->register();
 			$this->ability_names = array_merge( $this->ability_names, $migrate->get_ability_names() );
 		}
@@ -591,7 +565,7 @@ class EMCP_Tools_Ability_Registrar {
 
 	/**
 	 * Keeps only well-formed MCP ability names — `[a-z0-9-]+/[a-z0-9-]+` — from
-	 * whatever the emcp_tools_ability_names filter returned. Non-array input
+	 * whatever the karmcp_ability_names filter returned. Non-array input
 	 * yields an empty list.
 	 *
 	 * @since 3.3.1

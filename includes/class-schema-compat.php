@@ -9,13 +9,13 @@
  *   - strictify(): optional, opt-in OpenAI strict function-calling form — every
  *     property required, optionals nullable, additionalProperties:false (CrewAI
  *     and other OpenAI-compatible stacks require it; it would break Gemini, so
- *     it's gated behind the `emcp_tools_strict_schemas` option/filter).
+ *     it's gated behind the `karmcp_strict_schemas` option/filter).
  *
  * `register_ability()` is the single entry point all ability classes use to
- * register a tool; the global `emcp_tools_register_ability()` shim (defined at
+ * register a tool; the global `karmcp_register_ability()` shim (defined at
  * the bottom of this file) forwards to it so call sites stay terse.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   2.1.0
  */
 
@@ -28,14 +28,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.1.0
  */
-class EMCP_Tools_Schema_Compat {
+class KarMCP_Schema_Compat {
 
-	const STRICT_OPTION = 'emcp_tools_strict_schemas';
+	const STRICT_OPTION = 'karmcp_strict_schemas';
 
 	/**
 	 * Registers an ability with normalized (and optionally strict) schemas.
 	 *
-	 * @since 2.1.0 (extracted from emcp_tools_register_ability, since 1.4.3)
+	 * @since 2.1.0 (extracted from karmcp_register_ability, since 1.4.3)
 	 *
 	 * @param string $name The ability name.
 	 * @param array  $args The ability arguments.
@@ -83,13 +83,13 @@ class EMCP_Tools_Schema_Compat {
 	 *
 	 * @since 3.6.1
 	 *
-	 * For non-read-only abilities the wrapper also runs the `emcp_tools_before_write`
+	 * For non-read-only abilities the wrapper also runs the `karmcp_before_write`
 	 * veto filter first: a listener (the Pro Memory Enforcer) can return a WP_Error
 	 * to block the write — this is how approved `block`-severity project-memory
 	 * guardrails are actually enforced. The default (no listener) allows the write.
 	 *
 	 * @param callable $callback The ability's execute callback.
-	 * @param string   $name     Ability name (e.g. emcp-tools/delete-media).
+	 * @param string   $name     Ability name (e.g. karmcp/delete-media).
 	 * @param bool     $readonly Whether the ability is read-only (no write veto).
 	 * @return callable
 	 */
@@ -107,7 +107,7 @@ class EMCP_Tools_Schema_Compat {
 				 * @param string        $name  Ability name.
 				 * @param array         $input The ability input.
 				 */
-				$veto = apply_filters( 'emcp_tools_before_write', null, $name, $input );
+				$veto = apply_filters( 'karmcp_before_write', null, $name, $input );
 				if ( is_wp_error( $veto ) ) {
 					return $veto;
 				}
@@ -153,7 +153,7 @@ class EMCP_Tools_Schema_Compat {
 
 	/**
 	 * Whether to emit OpenAI-strict-compatible tool schemas. OFF by default;
-	 * opt-in via the Connection-tab toggle or the `emcp_tools_strict_schemas`
+	 * opt-in via the Connection-tab toggle or the `karmcp_strict_schemas`
 	 * filter. (GitHub #42)
 	 *
 	 * @since 2.1.0
@@ -169,7 +169,7 @@ class EMCP_Tools_Schema_Compat {
 	 * Recursively removes empty strings from enum arrays and keeps empty
 	 * `properties` as a JSON object. (Gemini / Antigravity compatibility, #21)
 	 *
-	 * @since 2.1.0 (extracted from emcp_tools_sanitize_schema, since 1.4.3)
+	 * @since 2.1.0 (extracted from karmcp_sanitize_schema, since 1.4.3)
 	 *
 	 * @param array $schema A JSON Schema array.
 	 * @return array
@@ -224,7 +224,7 @@ class EMCP_Tools_Schema_Compat {
 	 * with declared properties get additionalProperties:false. Free-form objects
 	 * (no declared properties) are left untouched. (GitHub #42)
 	 *
-	 * @since 2.1.0 (extracted from emcp_tools_strictify_schema)
+	 * @since 2.1.0 (extracted from karmcp_strictify_schema)
 	 *
 	 * @param array $schema A JSON Schema array.
 	 * @return array
@@ -270,7 +270,7 @@ class EMCP_Tools_Schema_Compat {
 	 * Makes a single property schema nullable (so strict mode can list it in
 	 * `required` while still allowing it to be omitted as null).
 	 *
-	 * @since 2.1.0 (extracted from emcp_tools_make_schema_nullable)
+	 * @since 2.1.0 (extracted from karmcp_make_schema_nullable)
 	 *
 	 * @param array $prop A property schema.
 	 * @return array
@@ -290,10 +290,10 @@ class EMCP_Tools_Schema_Compat {
 	}
 }
 
-if ( ! function_exists( 'emcp_tools_register_ability' ) ) {
+if ( ! function_exists( 'karmcp_register_ability' ) ) {
 	/**
 	 * Back-compat global shim: the public ability-registration entry point used
-	 * by every ability class. Forwards to EMCP_Tools_Schema_Compat::register_ability().
+	 * by every ability class. Forwards to KarMCP_Schema_Compat::register_ability().
 	 *
 	 * @since 1.4.3
 	 *
@@ -301,7 +301,7 @@ if ( ! function_exists( 'emcp_tools_register_ability' ) ) {
 	 * @param array  $args The ability arguments.
 	 * @return mixed
 	 */
-	function emcp_tools_register_ability( string $name, array $args ) {
-		return EMCP_Tools_Schema_Compat::register_ability( $name, $args );
+	function karmcp_register_ability( string $name, array $args ) {
+		return KarMCP_Schema_Compat::register_ability( $name, $args );
 	}
 }

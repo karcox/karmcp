@@ -1,11 +1,11 @@
 <?php
 /**
- * Registry + lifecycle for EMCP Tools modules.
+ * Registry + lifecycle for KarMCP modules.
  *
  * Holds every registered module, seeds the default active-set once (marker
  * option), and boots active+available modules on `init`.
  *
- * @package EMCP_Tools
+ * @package KarMCP
  * @since   3.1.0
  */
 
@@ -18,15 +18,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.1.0
  */
-class EMCP_Tools_Modules_Registry {
+class KarMCP_Modules_Registry {
 
 	/** Option holding the list of module ids already considered for seeding. */
-	const OPTION_SEEDED = 'emcp_tools_modules_seeded';
+	const OPTION_SEEDED = 'karmcp_modules_seeded';
 
 	/** @var self|null */
 	private static $instance = null;
 
-	/** @var array<string,EMCP_Tools_Module> id => module */
+	/** @var array<string,KarMCP_Module> id => module */
 	private $modules = array();
 
 	private function __construct() {}
@@ -47,31 +47,31 @@ class EMCP_Tools_Modules_Registry {
 	/**
 	 * Register a module (idempotent by id).
 	 *
-	 * @param EMCP_Tools_Module $module Module instance.
+	 * @param KarMCP_Module $module Module instance.
 	 */
-	public function register( EMCP_Tools_Module $module ): void {
+	public function register( KarMCP_Module $module ): void {
 		$this->modules[ $module->id() ] = $module;
 	}
 
-	/** @return EMCP_Tools_Module[] All registered modules. */
+	/** @return KarMCP_Module[] All registered modules. */
 	public function all(): array {
 		return array_values( $this->modules );
 	}
 
 	/**
 	 * @param string $id Module id.
-	 * @return EMCP_Tools_Module|null
+	 * @return KarMCP_Module|null
 	 */
-	public function get( string $id ): ?EMCP_Tools_Module {
+	public function get( string $id ): ?KarMCP_Module {
 		return $this->modules[ $id ] ?? null;
 	}
 
-	/** @return EMCP_Tools_Module[] Registered modules whose id is in the active option. */
+	/** @return KarMCP_Module[] Registered modules whose id is in the active option. */
 	public function active(): array {
 		return array_values(
 			array_filter(
 				$this->modules,
-				static function ( EMCP_Tools_Module $m ) {
+				static function ( KarMCP_Module $m ) {
 					return $m->is_active();
 				}
 			)
@@ -86,7 +86,7 @@ class EMCP_Tools_Modules_Registry {
 	 */
 	public function apply_defaults(): void {
 		$seeded  = (array) get_option( self::OPTION_SEEDED, array() );
-		$active  = (array) get_option( EMCP_Tools_Module::OPTION_ACTIVE, array() );
+		$active  = (array) get_option( KarMCP_Module::OPTION_ACTIVE, array() );
 		$changed = false;
 
 		foreach ( $this->modules as $module ) {
@@ -101,7 +101,7 @@ class EMCP_Tools_Modules_Registry {
 		}
 
 		if ( $changed ) {
-			update_option( EMCP_Tools_Module::OPTION_ACTIVE, array_values( $active ) );
+			update_option( KarMCP_Module::OPTION_ACTIVE, array_values( $active ) );
 			update_option( self::OPTION_SEEDED, array_values( $seeded ) );
 		}
 	}

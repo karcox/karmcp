@@ -1824,7 +1824,7 @@ class KarMCP_Admin {
 	 * filled background (see assets/img/karmcp-tile.svg) would recolour into an
 	 * illegible solid block. Use the tile only where colour is preserved.
 	 *
-	 * @since 3.12.0
+	 * @since 1.0.0
 	 *
 	 * @return string `data:image/svg+xml;base64,…`
 	 */

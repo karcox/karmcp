@@ -2,9 +2,11 @@
 
 All notable changes to KarMCP are documented in this file.
 
-## [3.12.0]
+## [1.0.0]
 
-> First release under the KarMCP name. The MCP namespace is `karmcp/` and the server route is `/wp-json/mcp/karmcp-server`, so every client config points here.
+> First public release. The MCP namespace is `karmcp/` and the server route is `/wp-json/mcp/karmcp-server`, so every client config points here.
+>
+> Some `@since` tags in the source read 3.x. Those track the codebase this one grew from, not KarMCP releases — the version numbering starts here.
 
 - **No telemetry, no licensing SDK, no auto-updater.** The plugin makes no outbound network calls unless you configure one, and it never contacts a licensing or analytics service. Updates are manual: replace the plugin folder.
 - **Theme builder, extended.** Unlimited templates per type, granular display conditions (a specific post, term, author, author archive, or date), Exclude rules, and working priority — with an object search in the condition builder so you can pick the exact target.

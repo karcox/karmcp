@@ -939,7 +939,7 @@ class KarMCP_Atomic_Props {
 	 * the experiment flag, then — only when Elementor is not loaded at all (test
 	 * stubs) — to true so non-WP unit paths keep their current behaviour.
 	 *
-	 * @since 3.12.0
+	 * @since 1.0.0
 	 *
 	 * @return bool True if the `container` element type will render on this site.
 	 */

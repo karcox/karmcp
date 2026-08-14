@@ -263,7 +263,7 @@ class KarMCP_Data {
 	 * the CLI/REST atomic registry can't resolve, #112). Those route to the raw
 	 * meta-write fallback; anything else hard-fails.
 	 *
-	 * @since 3.12.0
+	 * @since 1.0.0
 	 *
 	 * @param string $message The exception message from Document::save().
 	 * @return bool True when the message is a settings/styles validation rejection.

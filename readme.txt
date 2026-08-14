@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 3.12.0
+Stable tag: 1.0.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,7 +151,7 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 
 == Changelog ==
 
-= 3.12.0 =
+= 1.0.0 =
 
 * Independent release under the KarMCP name, with its own MCP namespace (`karmcp/`) and server route (`/wp-json/mcp/karmcp-server`).
 * No telemetry, no licensing SDK, and no auto-updater: the plugin makes no outbound network calls unless you configure one.

@@ -1,0 +1,31 @@
+# What NOT to ship in a release zip.
+#
+# The build is `git archive --prefix=karmcp/ -o karmcp-<ver>.zip HEAD`, so this
+# file IS the release manifest: anything marked export-ignore here is absent
+# from the artifact, and everything else tracked in git is included.
+#
+# vendor/ is deliberately NOT ignored — the MCP Adapter is a committed runtime
+# dependency loaded through the Jetpack Autoloader, and the plugin cannot boot
+# without it. Do not "clean up" the tree by pruning it.
+#
+# LICENSE and NOTICE always ship: the licence requires the copyright notices to
+# travel with the distribution.
+
+# Repo mechanics
+/.gitattributes  export-ignore
+/.gitignore      export-ignore
+/.github         export-ignore
+/.claude         export-ignore
+
+# Development-only
+/tests           export-ignore
+/docs            export-ignore
+/composer.json   export-ignore
+/composer.lock   export-ignore
+/phpunit.xml     export-ignore
+/bin/mcp-proxy.test.mjs export-ignore
+
+# Contributor docs, not user docs
+/CLAUDE.md       export-ignore
+/CONTRIBUTING.md export-ignore
+/SECURITY.md     export-ignore

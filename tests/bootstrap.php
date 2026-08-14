@@ -1,12 +1,11 @@
 <?php
 /**
- * Standalone PHPUnit bootstrap for the public test suite.
+ * Standalone PHPUnit bootstrap for the test suite.
  *
- * The project's main phpunit.xml points at the private pro/tests submodule,
- * which outside contributors cannot fetch. This bootstrap is a self-contained
- * WordPress + ACF stub harness so the public tests run with plain PHPUnit:
+ * A self-contained WordPress + ACF stub harness, so the suite runs with plain
+ * PHPUnit and no WordPress install:
  *
- *     vendor/bin/phpunit -c tests/phpunit.xml
+ *     vendor/bin/phpunit
  *
  * Stubs are driven by the $GLOBALS['karmcp_test'] fixture array, reset per test
  * via karmcp_test_reset().

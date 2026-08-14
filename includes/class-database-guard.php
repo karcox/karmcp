@@ -221,6 +221,83 @@ class KarMCP_Database_Guard {
 	}
 
 	/**
+	 * Pure: which of $keys is not a real column name in $known?
+	 *
+	 * Comparison is case-insensitive because MySQL column names are, and a key
+	 * that is not a string at all (a JSON object arrives with integer keys when
+	 * the caller sends an array) can never be a column, so it is reported too.
+	 *
+	 * @param array    $keys  Caller-supplied column names.
+	 * @param string[] $known Real column names of the target table.
+	 * @return string[] The offending keys, in the order given.
+	 */
+	public static function unknown_columns( array $keys, array $known ): array {
+		$map = array();
+		foreach ( $known as $k ) {
+			$map[ strtolower( (string) $k ) ] = true;
+		}
+		$bad = array();
+		foreach ( $keys as $key ) {
+			if ( ! is_string( $key ) || ! isset( $map[ strtolower( $key ) ] ) ) {
+				$bad[] = (string) $key;
+			}
+		}
+		return $bad;
+	}
+
+	/**
+	 * The real column names of a validated table.
+	 *
+	 * @param string $table A table name already resolved by valid_table().
+	 * @return string[]
+	 */
+	public static function columns( string $table ): array {
+		global $wpdb;
+		$safe = str_replace( '`', '', $table );
+		// phpcs:ignore WordPress.DB -- identifier already resolved against SHOW TABLES; backticks stripped.
+		$cols = $wpdb->get_col( "SHOW COLUMNS FROM `{$safe}`" );
+		return is_array( $cols ) ? array_map( 'strval', $cols ) : array();
+	}
+
+	/**
+	 * Refuse a structured write whose column names are not real columns.
+	 *
+	 * This is a SECURITY boundary, not a convenience check. `$wpdb->insert()`,
+	 * `->update()` and `->delete()` parameterize the VALUES but interpolate the
+	 * column names straight into the SQL between backticks, without escaping a
+	 * backtick in the name. So a key like ``id` = 1 OR 1=1 #`` closes the
+	 * identifier and rewrites the statement — which would let a caller sidestep
+	 * the protected-table list entirely (e.g. by writing a subquery that copies
+	 * password hashes into a readable table). Validating against the table's
+	 * real columns closes that off, and gives a clear error for a typo.
+	 *
+	 * @param string $table A table name already resolved by valid_table().
+	 * @param array  $keys  Caller-supplied column names.
+	 * @param string $label Which input the keys came from, for the message.
+	 * @return true|\WP_Error
+	 */
+	public static function validate_columns( string $table, array $keys, string $label ) {
+		$known = self::columns( $table );
+		if ( empty( $known ) ) {
+			return new \WP_Error( 'no_columns', __( 'Could not read the table columns.', 'karmcp' ) );
+		}
+		$bad = self::unknown_columns( $keys, $known );
+		if ( ! empty( $bad ) ) {
+			return new \WP_Error(
+				'unknown_column',
+				sprintf(
+					/* translators: 1: input name (data or where), 2: comma-separated column names, 3: table name */
+					__( 'Unknown column(s) in %1$s: %2$s. Not columns of %3$s — call describe-table to see the real ones.', 'karmcp' ),
+					$label,
+					implode( ', ', $bad ),
+					$table
+				)
+			);
+		}
+		return true;
+	}
+
+	/**
 	 * Capture the rows an equality-AND WHERE will affect, before update/delete.
 	 *
 	 * @param string $table A validated real table name.

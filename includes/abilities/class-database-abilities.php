@@ -154,6 +154,10 @@ class KarMCP_Database_Abilities {
 		if ( KarMCP_Database_Guard::is_protected( $table ) ) {
 			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'karmcp' ) );
 		}
+		$cols = KarMCP_Database_Guard::validate_columns( $table, array_keys( $data ), 'data' );
+		if ( is_wp_error( $cols ) ) {
+			return $cols;
+		}
 		global $wpdb;
 		$ok = $wpdb->insert( $table, $data );
 		if ( false === $ok ) {
@@ -188,6 +192,12 @@ class KarMCP_Database_Abilities {
 		if ( KarMCP_Database_Guard::is_protected( $table ) ) {
 			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'karmcp' ) );
 		}
+		foreach ( array( 'data' => $data, 'where' => $where ) as $karmcp_label => $karmcp_set ) {
+			$cols = KarMCP_Database_Guard::validate_columns( $table, array_keys( $karmcp_set ), $karmcp_label );
+			if ( is_wp_error( $cols ) ) {
+				return $cols;
+			}
+		}
 		$before = KarMCP_Database_Guard::before_image( $table, $where );
 		global $wpdb;
 		$affected = $wpdb->update( $table, $data, $where );
@@ -221,6 +231,10 @@ class KarMCP_Database_Abilities {
 		}
 		if ( KarMCP_Database_Guard::is_protected( $table ) ) {
 			return new \WP_Error( 'protected_table', __( 'Writes to this table are not allowed.', 'karmcp' ) );
+		}
+		$cols = KarMCP_Database_Guard::validate_columns( $table, array_keys( $where ), 'where' );
+		if ( is_wp_error( $cols ) ) {
+			return $cols;
 		}
 		$before = KarMCP_Database_Guard::before_image( $table, $where );
 		global $wpdb;

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,18 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.2.0 =
+
+* Security: create-post checked the generic `edit_posts` and then wrote any post type it was given, so an Editor could create posts of types this plugin gates behind `manage_options` — including Agent Skills and PHP snippets, bypassing their own guards. Capabilities are now resolved against the target post type, and the plugin's own types are refused outright.
+* Security: get-post returned any post to anyone who could edit any post. It now applies the per-post `read_post` capability, so private drafts and the plugin's own private types are no longer readable by ID alone.
+* Security: list-posts enumerated any post type it was asked for, so titles and slugs of types the caller cannot read came back anyway. Requested types are now filtered by capability, and private posts by another author are excluded.
+* Security: a download could be redirected to the cloud metadata service at 169.254.169.254 — WordPress's own redirect check permits that range. Every hop is now re-validated against the plugin's address table, IPv6 and IPv4-mapped forms included.
+* Security: OAuth dynamic client registration is rate-limited per address, and the granted scope is reduced to what the server actually supports instead of echoing back whatever the client asked for.
+* Fixed: uninstalling left roughly two dozen options and all five plugin tables behind, including OAuth clients and live tokens. The cleanup now sweeps by prefix and drops the tables, once per site on a network install.
+* Fixed: the plugin could not be translated — around three thousand strings and no `load_plugin_textdomain()` call. Translations placed in `languages/` now load.
+* Fixed: the query tool rejected the `REPLACE()` string function as if it were a `REPLACE INTO` write.
+* Removed dead Project Memory code: three AJAX endpoints and a section of the Tools tab for a feature that is not part of this build.
 
 = 1.1.0 =
 

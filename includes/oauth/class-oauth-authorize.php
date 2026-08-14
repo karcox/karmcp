@@ -179,7 +179,9 @@ class KarMCP_OAuth_Authorize {
 				'user_id'        => get_current_user_id(),
 				'redirect_uri'   => $redirect_uri,
 				'code_challenge' => $challenge,
-				'scopes'         => (string) ( $p['scope'] ?? KarMCP_OAuth_Server::SCOPE ),
+				// Re-normalized rather than trusted: this value round-trips
+				// through a hidden field on the consent form.
+				'scopes'         => self::normalize_scope( (string) ( $p['scope'] ?? '' ) ),
 			)
 		);
 
@@ -214,8 +216,37 @@ class KarMCP_OAuth_Authorize {
 			'redirect_uri'   => (string) ( $params['redirect_uri'] ?? '' ),
 			'code_challenge' => (string) $params['code_challenge'],
 			'state'          => (string) ( $params['state'] ?? '' ),
-			'scope'          => (string) ( $params['scope'] ?? KarMCP_OAuth_Server::SCOPE ),
+			'scope'          => self::normalize_scope( (string) ( $params['scope'] ?? '' ) ),
 		);
+	}
+
+	/**
+	 * Reduce a requested scope string to what this server actually grants.
+	 *
+	 * The request value was previously stored and echoed back verbatim as the
+	 * GRANTED scope, so a client asking for `mcp admin:everything` was told it
+	 * had been given it. Nothing downstream reads the column, so this was a
+	 * truthfulness bug rather than an open door — but the moment a scope check
+	 * is added, an unfiltered column is what it would be reading. RFC 6749 §3.3
+	 * allows granting a narrower scope than asked for, as long as the response
+	 * says so, which the token response already does.
+	 *
+	 * @since 1.2.0
+	 * @param string $requested Space-separated scopes from the client.
+	 * @return string Space-separated granted scopes; never empty.
+	 */
+	public static function normalize_scope( string $requested ): string {
+		$supported = array( KarMCP_OAuth_Server::SCOPE );
+		$granted   = array();
+
+		foreach ( (array) preg_split( '/\s+/', trim( $requested ) ) as $scope ) {
+			$scope = (string) $scope;
+			if ( '' !== $scope && in_array( $scope, $supported, true ) && ! in_array( $scope, $granted, true ) ) {
+				$granted[] = $scope;
+			}
+		}
+
+		return empty( $granted ) ? KarMCP_OAuth_Server::SCOPE : implode( ' ', $granted );
 	}
 
 	/**

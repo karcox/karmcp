@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.1.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.2.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -44,7 +44,7 @@ PHPDIR=$(dirname "$(which php)")
 php -d extension_dir="$PHPDIR/ext" -d extension=mbstring /ruta/a/phpunit.phar
 ```
 
-Estado de referencia: **437 tests, 1.029 aserciones, todo en verde** (2026-08-14). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+Estado de referencia: **496 tests, 1.120 aserciones, todo en verde** (2026-08-14). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
 
 El harness comparte stubs en `tests/bootstrap.php`, y ahí está la trampa: **un stub del harness gana al que declare un fichero de test**, porque el bootstrap carga primero. Si añades ahí una función que un test ya simulaba por su cuenta, ese test empieza a leer una fixture distinta y falla lejos del cambio. Pasó con `wp_get_object_terms()` y los menús.
 
@@ -135,16 +135,14 @@ Al añadir una herramienta que escribe: súbele `DEFAULTS_VERSION` en `class-adm
 
 ## Deuda conocida
 
-Auditado el 2026-08-14; pendiente de abordar. **`duplicate-post` salió de esta lista en 1.1.0**: vive en `includes/class-post-duplicator.php` (la primitiva) y `includes/abilities/class-duplicate-abilities.php` (la herramienta), y es también sobre lo que se construye `create-translation`.
+Auditado el 2026-08-14. **La 1.2.0 fue una release de auditoría y vació la mitad de esta lista**: capacidades reales por post type en `create-post`/`update-post`, `read_post` en `get-post`, filtrado por tipo y `perm: readable` en `list-posts`, revalidación de cada salto en `safe_download()`, rate-limit y normalización de `scope` en OAuth, desinstalador completo, `load_plugin_textdomain()`, el falso positivo de `REPLACE()` y el código muerto de Memory. Lo de abajo es lo que sigue pendiente. **`duplicate-post` salió de esta lista en 1.1.0**: vive en `includes/class-post-duplicator.php` (la primitiva) y `includes/abilities/class-duplicate-abilities.php` (la herramienta), y es también sobre lo que se construye `create-translation`.
 
-Fuera de esta lista, sin abordar y verificado el 2026-08-14: **la i18n del propio plugin no funciona** (3.172 llamadas a `__()`, ningún `load_plugin_textdomain()`, `languages/` vacío), **no hay CI** (`.github/` solo tiene plantillas de issues) y **el desinstalador borra 7 opciones y deja las 5 tablas propias**, incluidos clientes y tokens OAuth.
+Fuera de esta lista, sin abordar y verificado el 2026-08-14: **no hay CI** (`.github/` solo tiene plantillas de issues) y **`languages/` sigue vacío** — el cargador ya está, pero no hay `.pot` ni traducciones.
 
-- **`includes/admin/class-admin.php` son ~5.900 líneas** mezclando 6 responsabilidades. `get_tool_catalog()` es un único método de ~1.865 líneas que solo devuelve un array. La extracción natural es a archivos de datos, patrón que el repo ya usa en `includes/widgets/catalog-*.php`.
+- **`includes/admin/class-admin.php` son ~5.800 líneas** mezclando 6 responsabilidades. `get_tool_catalog()` es un único método de ~1.840 líneas que solo devuelve un array. La extracción natural es a archivos de datos, patrón que el repo ya usa en `includes/widgets/catalog-*.php`.
 - **Duplicación en abilities:** 168 registros repiten el literal completo; solo `class-database-abilities.php` y `class-wpcli-abilities.php` lo factorizan en un helper `ability()`. Esa es la plantilla a seguir.
-- **Código muerto:** unas 250 líneas inalcanzables y 3 endpoints AJAX de una feature eliminada (Memory) en `class-admin.php`.
-- **`create-post` es incoherente con las herramientas de Elementor.** Deja crear un post de un CPT que después ninguna herramienta de Elementor puede tocar, porque comprueban cosas distintas (`edit_posts` genérico frente a `edit_post` sobre el ID). El resultado es un post huérfano e irrellenable. O ambas cosas, o ninguna.
-- **El guard SQL bloquea la función `REPLACE()`** confundiéndola con `REPLACE INTO`. `REPLACE()` como función de cadena es solo lectura; el falso positivo tumba consultas legítimas de análisis.
-- **Seguridad, pendiente (severidad media):** los redirects de `KarMCP_Url_Guard::safe_download()` no revalidan contra 169.254.169.254 (el validador estricto `ip_is_blocked()` ya existe, pero solo se usa en otra ruta); el registro dinámico de clientes OAuth no tiene rate-limit; y los `scope` OAuth se guardan pero no se aplican en `KarMCP_OAuth_Bearer::permission_callback()`.
+- **Los `scope` OAuth se normalizan al emitirlos pero nadie los lee.** `KarMCP_OAuth_Bearer::permission_callback()` autentica el token y no mira su columna `scopes`. Hoy da igual —solo existe el scope `mcp`—, pero el día que haya un segundo scope, ese callback es donde hay que aplicarlo.
+- **El desinstalador conserva a propósito el contenido de los CPT** (brand kits, plantillas del Themer, Skills). Es una decisión, no un olvido: son cosas que escribió una persona. Está documentada en `class-uninstaller.php` para que no se re-litigue.
 
 ## Documentos
 

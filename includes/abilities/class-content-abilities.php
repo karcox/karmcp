@@ -76,17 +76,52 @@ class KarMCP_Content_Abilities {
 	}
 
 	/**
-	 * Create permission: creating a (draft) post only needs `edit_posts`.
+	 * Create permission: the `create_posts` capability of the TARGET type.
 	 *
-	 * Mirrors WordPress core, where `edit_posts` is the meta-cap floor for
-	 * authoring new posts; publishing is gated separately at save time. The
-	 * read==create cap is therefore intentional, not an oversight.
+	 * For `post` and `page` that resolves to `edit_posts`, which is the meta-cap
+	 * floor core uses for authoring a draft (publishing is gated separately at
+	 * save time). But a type registered with its own capabilities — KarMCP's own
+	 * skills want `manage_options`, WooCommerce products want `edit_products` —
+	 * publishes different names, and `wp_insert_post()` enforces none of them.
+	 * Checking the generic capability alone would let anyone who can write a
+	 * blog post create a post of any registered type.
 	 *
 	 * @since 3.0.0
+	 * @since 1.2.0 Resolves the capability against the requested post type.
+	 * @param array|null $input Tool input; may carry a `post_type`.
 	 * @return bool
 	 */
-	public function check_create_permission(): bool {
-		return current_user_can( 'edit_posts' );
+	public function check_create_permission( $input = null ): bool {
+		$post_type = sanitize_key( $input['post_type'] ?? 'post' );
+		if ( '' === $post_type ) {
+			$post_type = 'post';
+		}
+		return current_user_can( self::type_cap( $post_type, 'create_posts', 'edit_posts' ) );
+	}
+
+	/**
+	 * The capability a post type requires for one of the write gates.
+	 *
+	 * Falls back to the generic post capability, which is the right answer for a
+	 * type that never declared any of its own.
+	 *
+	 * @since 1.2.0
+	 * @param string $post_type Post type name.
+	 * @param string $key       Cap key, e.g. `create_posts`, `publish_posts`.
+	 * @param string $fallback  Generic capability to use when the type has none.
+	 * @return string
+	 */
+	public static function type_cap( string $post_type, string $key, string $fallback ): string {
+		$object = post_type_exists( $post_type ) ? get_post_type_object( $post_type ) : null;
+		$caps   = is_object( $object ) && isset( $object->cap ) ? $object->cap : null;
+
+		if ( is_object( $caps ) && ! empty( $caps->$key ) && is_string( $caps->$key ) ) {
+			return $caps->$key;
+		}
+		if ( is_array( $caps ) && ! empty( $caps[ $key ] ) && is_string( $caps[ $key ] ) ) {
+			return $caps[ $key ];
+		}
+		return $fallback;
 	}
 
 	/**
@@ -263,7 +298,26 @@ class KarMCP_Content_Abilities {
 
 	/** Internal/non-writable post types (never targets for create/update/delete). */
 	private function internal_post_types(): array {
-		return array( 'revision', 'nav_menu_item', 'custom_css', 'customize_changeset', 'oembed_cache', 'user_request', 'wp_template', 'wp_template_part', 'wp_global_styles', 'wp_navigation', 'attachment' );
+		return array_merge(
+			array( 'revision', 'nav_menu_item', 'custom_css', 'customize_changeset', 'oembed_cache', 'user_request', 'wp_template', 'wp_template_part', 'wp_global_styles', 'wp_navigation', 'attachment' ),
+			self::managed_post_types()
+		);
+	}
+
+	/**
+	 * The post types KarMCP stores its own artifacts in.
+	 *
+	 * Each has a dedicated tool with a guard the generic content tools do not
+	 * run: a PHP snippet passes the validator before it is stored, a skill needs
+	 * an administrator, a Themer template carries render conditions. Writing one
+	 * through create-post would be a way around that guard, so these are never
+	 * targets here.
+	 *
+	 * @since 1.2.0
+	 * @return string[]
+	 */
+	public static function managed_post_types(): array {
+		return array( 'karmcp_skill', 'karmcp_php_snippet', 'karmcp_widget', 'karmcp_theme_tpl', 'karmcp_theme_php', 'karmcp_kit_backup' );
 	}
 
 	/** Whether a post type may be written to. */
@@ -436,11 +490,18 @@ class KarMCP_Content_Abilities {
 			return new \WP_Error( 'invalid_post_type', sprintf( /* translators: %s: type */ __( '"%s" is not a writable post type.', 'karmcp' ), $post_type ) );
 		}
 
+		// The permission callback already resolved the capability for the type it
+		// was handed, but the execute path is reachable on its own (the compact
+		// dispatcher, a direct ability call), so it re-checks rather than trusts.
+		if ( ! current_user_can( self::type_cap( $post_type, 'create_posts', 'edit_posts' ) ) ) {
+			return new \WP_Error( 'cannot_create', sprintf( /* translators: %s: type */ __( 'You do not have permission to create "%s" content.', 'karmcp' ), $post_type ) );
+		}
+
 		$status = sanitize_key( $input['status'] ?? 'draft' );
 		if ( ! in_array( $status, $this->valid_statuses(), true ) ) {
 			return new \WP_Error( 'invalid_status', __( 'Invalid status.', 'karmcp' ) );
 		}
-		if ( 'publish' === $status && ! current_user_can( 'publish_posts' ) ) {
+		if ( 'publish' === $status && ! current_user_can( self::type_cap( $post_type, 'publish_posts', 'publish_posts' ) ) ) {
 			return new \WP_Error( 'cannot_publish', __( 'You do not have permission to publish.', 'karmcp' ) );
 		}
 
@@ -452,7 +513,7 @@ class KarMCP_Content_Abilities {
 		}
 
 		$author = absint( $input['author'] ?? 0 );
-		if ( $author && (int) $author !== get_current_user_id() && ! current_user_can( 'edit_others_posts' ) ) {
+		if ( $author && (int) $author !== get_current_user_id() && ! current_user_can( self::type_cap( $post_type, 'edit_others_posts', 'edit_others_posts' ) ) ) {
 			return new \WP_Error( 'cannot_set_author', __( 'You cannot assign another author.', 'karmcp' ) );
 		}
 
@@ -564,6 +625,14 @@ class KarMCP_Content_Abilities {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
 			return new \WP_Error( 'post_not_found', __( 'Post not found.', 'karmcp' ) );
+		}
+		// `edit_posts` (the tool's gate) says the caller writes content somewhere,
+		// not that they may read THIS row. Without the per-post meta cap, an ID is
+		// enough to pull back another author's draft or the body of a private
+		// KarMCP type — a PHP snippet's code, a skill. map_meta_cap resolves it
+		// against the post's own type, status and author.
+		if ( ! current_user_can( 'read_post', $post_id ) ) {
+			return new \WP_Error( 'forbidden', __( 'You do not have permission to read that post.', 'karmcp' ) );
 		}
 		return $this->format_post( $post );
 	}
@@ -721,14 +790,14 @@ class KarMCP_Content_Abilities {
 			if ( ! in_array( $status, $this->valid_statuses(), true ) ) {
 				return new \WP_Error( 'invalid_status', __( 'Invalid status.', 'karmcp' ) );
 			}
-			if ( 'publish' === $status && ! current_user_can( 'publish_posts' ) ) {
+			if ( 'publish' === $status && ! current_user_can( self::type_cap( (string) $post->post_type, 'publish_posts', 'publish_posts' ) ) ) {
 				return new \WP_Error( 'cannot_publish', __( 'You do not have permission to publish.', 'karmcp' ) );
 			}
 			$postarr['post_status'] = $status;
 		}
 		if ( ! empty( $input['author'] ) ) {
 			$author = absint( $input['author'] );
-			if ( (int) $author !== get_current_user_id() && ! current_user_can( 'edit_others_posts' ) ) {
+			if ( (int) $author !== get_current_user_id() && ! current_user_can( self::type_cap( (string) $post->post_type, 'edit_others_posts', 'edit_others_posts' ) ) ) {
 				return new \WP_Error( 'cannot_set_author', __( 'You cannot assign another author.', 'karmcp' ) );
 			}
 			$postarr['post_author'] = $author;
@@ -962,6 +1031,22 @@ class KarMCP_Content_Abilities {
 		if ( empty( $post_type ) ) {
 			$post_type = 'post';
 		}
+
+		// Same reasoning as get-post, one level up: the tool's `edit_posts` gate
+		// does not say the caller may see THIS type. Named explicitly, a type
+		// they have no capability for would otherwise come back as a list of
+		// titles and slugs — including the plugin's own private types.
+		$requested = (array) $post_type;
+		$allowed   = array();
+		foreach ( $requested as $type ) {
+			if ( current_user_can( self::type_cap( (string) $type, 'edit_posts', 'edit_posts' ) ) ) {
+				$allowed[] = (string) $type;
+			}
+		}
+		if ( empty( $allowed ) ) {
+			return new \WP_Error( 'forbidden', __( 'You do not have permission to list that content type.', 'karmcp' ) );
+		}
+		$post_type = is_array( $pt_raw ) ? $allowed : $allowed[0];
 		$valid_status = array( 'publish', 'future', 'draft', 'pending', 'private', 'trash', 'any' );
 		$status_raw   = $input['status'] ?? 'any';
 		if ( is_array( $status_raw ) ) {
@@ -980,6 +1065,9 @@ class KarMCP_Content_Abilities {
 			'paged'          => $page,
 			'orderby'        => $orderby,
 			'order'          => $order,
+			// Makes WP_Query apply the read capability to private posts, so
+			// `status: "private"` cannot be used to read past another author.
+			'perm'           => 'readable',
 		);
 		if ( ! empty( $input['search'] ) ) {
 			$args['s'] = sanitize_text_field( $input['search'] );

@@ -46,16 +46,29 @@ class KarMCP_Url_Guard {
 			return false;
 		}
 
-		// Resolve the host and reject any private/reserved/link-local IP that
-		// core misses. filter_var()'s NO_PRIV_RANGE | NO_RES_RANGE flags cover
-		// RFC1918, loopback, 0.0.0.0/8, 169.254.0.0/16, and the IPv6
-		// equivalents (::1, fe80::/10, fc00::/7).
+		// Resolve the host and reject any private/reserved/link-local address that
+		// core misses. ip_is_blocked() is the shared decision table below: it
+		// covers RFC1918, loopback, 0.0.0.0/8, CGNAT, the link-local range that
+		// carries the cloud-metadata endpoint 169.254.169.254, and the IPv6
+		// equivalents including IPv4-mapped forms like ::ffff:127.0.0.1.
 		$host = strtolower( trim( $parsed['host'], '[]' ) );
-		$ip   = filter_var( $host, FILTER_VALIDATE_IP ) ? $host : gethostbyname( $host );
 
-		// gethostbyname() returns the host unchanged when resolution fails.
-		if ( $ip && filter_var( $ip, FILTER_VALIDATE_IP ) ) {
-			if ( ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+		if ( false !== filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			return ! self::ip_is_blocked( $host );
+		}
+
+		// EVERY record must be public — a host publishing one public and one
+		// internal address must not slip through. resolve_host() reads A *and*
+		// AAAA, so an IPv6-only internal host is seen; gethostbyname() below,
+		// which is IPv4-only, is the fallback for hosts where DNS functions are
+		// disabled and returns the name unchanged when it cannot resolve.
+		$ips = self::resolve_host( $host );
+		if ( empty( $ips ) ) {
+			$ips = array( gethostbyname( $host ) );
+		}
+
+		foreach ( $ips as $ip ) {
+			if ( $ip && false !== filter_var( $ip, FILTER_VALIDATE_IP ) && self::ip_is_blocked( (string) $ip ) ) {
 				return false;
 			}
 		}
@@ -98,8 +111,27 @@ class KarMCP_Url_Guard {
 		};
 		add_filter( 'http_request_args', $harden );
 
+		// reject_unsafe_urls alone is not enough for the hops: it validates them
+		// with wp_http_validate_url(), which permits the link-local 169.254.0.0/16
+		// range — the cloud-metadata endpoint 169.254.169.254 included — and does
+		// not look at IPv6 at all. So a public URL that 302s to the metadata
+		// service would be followed. WP_Http re-enters request() for every
+		// redirect, and this filter runs at the top of it, so each hop gets the
+		// same check the first URL got; returning WP_Error aborts the transfer.
+		$hop_guard = static function ( $pre, $args, $hop_url ) {
+			if ( ! self::is_safe_remote_url( (string) $hop_url ) ) {
+				return new \WP_Error(
+					'unsafe_redirect',
+					__( 'The URL redirected to an address that is not allowed (private, loopback, or link-local).', 'karmcp' )
+				);
+			}
+			return $pre;
+		};
+		add_filter( 'pre_http_request', $hop_guard, 10, 3 );
+
 		$tmp_file = download_url( $url, $timeout );
 
+		remove_filter( 'pre_http_request', $hop_guard, 10 );
 		remove_filter( 'http_request_args', $harden );
 
 		return $tmp_file;

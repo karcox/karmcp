@@ -19,6 +19,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class KarMCP_OAuth_Clients {
 
+	/** Registrations one address may make inside a window. */
+	const RATE_LIMIT = 10;
+
+	/** Length of the rate-limit window, in seconds. */
+	const RATE_WINDOW = 3600;
+
 	/**
 	 * Register the REST route.
 	 */
@@ -41,6 +47,21 @@ class KarMCP_OAuth_Clients {
 	 * @return WP_REST_Response
 	 */
 	public static function handle_register( $request ) {
+		// Open registration is what the spec asks for, but "open" is not
+		// "unlimited": the endpoint is unauthenticated and every call writes a
+		// row, so without a ceiling one script fills the clients table. The
+		// window is per address and generous enough that a person setting up
+		// several MCP clients never meets it.
+		if ( self::rate_limited() ) {
+			return new WP_REST_Response(
+				array(
+					'error'             => 'too_many_requests',
+					'error_description' => 'Too many client registrations from this address. Try again later.',
+				),
+				429
+			);
+		}
+
 		$body = $request->get_json_params();
 		if ( ! is_array( $body ) ) {
 			$body = $request->get_params();
@@ -75,6 +96,59 @@ class KarMCP_OAuth_Clients {
 			),
 			201
 		);
+	}
+
+	/**
+	 * Whether this caller has already used up its registrations for the window.
+	 *
+	 * Counts into a fixed time bucket rather than a sliding transient: a plain
+	 * `set_transient()` per hit pushes the expiry forward every time, so a
+	 * steady stream of requests would keep a counter alive forever and never
+	 * let a legitimate client through once it tripped.
+	 *
+	 * @since 1.2.0
+	 * @return bool True when the request should be refused.
+	 */
+	public static function rate_limited(): bool {
+		$key   = self::rate_limit_key( self::client_ip(), time() );
+		$count = (int) get_transient( $key );
+
+		if ( $count >= self::RATE_LIMIT ) {
+			return true;
+		}
+
+		// Two windows of TTL so the bucket outlives its own period and the count
+		// cannot be reset by a request landing exactly on the boundary.
+		set_transient( $key, $count + 1, self::RATE_WINDOW * 2 );
+		return false;
+	}
+
+	/**
+	 * The transient key for one address in one time bucket. Pure.
+	 *
+	 * The address is hashed: it is personal data, and it has no business sitting
+	 * in the options table in the clear.
+	 *
+	 * @since 1.2.0
+	 * @param string $ip  Caller address.
+	 * @param int    $now Current UNIX time.
+	 * @return string
+	 */
+	public static function rate_limit_key( string $ip, int $now ): string {
+		return 'karmcp_oauth_reg_' . md5( $ip ) . '_' . (int) floor( $now / self::RATE_WINDOW );
+	}
+
+	/**
+	 * The caller's address. REMOTE_ADDR only — a forwarded-for header is
+	 * attacker-controlled, and trusting it would hand out a fresh bucket per
+	 * request, which is worse than no limit at all.
+	 *
+	 * @since 1.2.0
+	 * @return string
+	 */
+	private static function client_ip(): string {
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
+		return '' === $ip ? 'unknown' : $ip;
 	}
 
 	/**

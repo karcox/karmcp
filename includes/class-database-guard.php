@@ -120,7 +120,14 @@ class KarMCP_Database_Guard {
 		}
 		// Whole-statement write/DDL denylist (literals/comments already stripped,
 		// so these match only real keyword tokens, not strings or identifiers).
-		if ( preg_match( '/\b(INSERT|UPDATE|DELETE|REPLACE|MERGE|DROP|TRUNCATE|ALTER|CREATE|RENAME|GRANT|REVOKE|HANDLER|CALL|LOCK|UNLOCK|PREPARE|EXECUTE|INTO)\b/i', $norm ) ) {
+		if ( preg_match( '/\b(INSERT|UPDATE|DELETE|MERGE|DROP|TRUNCATE|ALTER|CREATE|RENAME|GRANT|REVOKE|HANDLER|CALL|LOCK|UNLOCK|PREPARE|EXECUTE|INTO)\b/i', $norm ) ) {
+			return new \WP_Error( 'not_read_only', __( 'The query contains a write or unsafe keyword.', 'karmcp' ) );
+		}
+		// REPLACE is two different things: the write statement `REPLACE [INTO]
+		// tbl ...` and the read-only string function `REPLACE(col,'a','b')`.
+		// Denylisting the bare word rejected legitimate analysis queries. Only
+		// the statement form is a write, and it is never followed by '('.
+		if ( preg_match( '/\bREPLACE\b\s*(?!\()/i', $norm ) ) {
 			return new \WP_Error( 'not_read_only', __( 'The query contains a write or unsafe keyword.', 'karmcp' ) );
 		}
 		return true;

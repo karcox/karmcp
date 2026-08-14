@@ -28,6 +28,11 @@ class KarMCP_Bootstrap {
 	 * @since 2.1.0 (since 1.0.0 as karmcp_init)
 	 */
 	public static function boot(): void {
+		// Translations. Registered before the dependency check so the notice that
+		// check prints is itself translatable, and deferred to `init` because
+		// WordPress 6.7+ warns about a text domain loaded any earlier.
+		add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
+
 		// Fallback legacy-data migration (the primary snapshot happens in the
 		// legacy guard while the old plugin is still present). Idempotent.
 		KarMCP_Migration::migrate();
@@ -57,6 +62,21 @@ class KarMCP_Bootstrap {
 
 		// Boot the plugin singleton.
 		KarMCP_Plugin::instance();
+	}
+
+	/**
+	 * Load the plugin's translations.
+	 *
+	 * Required, not optional: the automatic loading WordPress added in 4.6 only
+	 * covers translations it downloads for plugins hosted on wordpress.org. This
+	 * one ships with `Update URI: false` and is installed by hand, so without
+	 * this call the ~3,000 translatable strings could never resolve to anything
+	 * but English, whatever was placed in `languages/`.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function load_textdomain(): void {
+		load_plugin_textdomain( 'karmcp', false, dirname( KARMCP_BASENAME ) . '/languages' );
 	}
 
 	/**

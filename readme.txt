@@ -161,6 +161,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 * `duplicate-post`: copies a post with its protected meta and terms, so post types owned by other plugins can finally be created rather than only edited.
 * Structured data: validated Schema.org JSON-LD (Organization, LocalBusiness, Product, FAQPage, BreadcrumbList, Article, Person, Service, Event) printed in the page head.
 * `build-site`: pages, menu, front page and global palette in one call. Dry-run by default, idempotent by slug, administrator only.
+* Agent Skills: short operating manuals you write once and every connected agent reads. Listed under KarMCP → Skills, read-only over MCP. Documented under 1.0.0 but not part of that build; it ships here.
+* Guardrails: an opt-in module of site rules above the capability checks — read-only mode, destructive-tool blocking, a freeze window, protected posts and post types. Enforced on every write and published into the agent's context. Documented under 1.0.0 but not part of that build; it ships here.
+* Fixed: module cards said a feature required "an active Pro license", but this build has no licensing at all. They now say the feature is not included in this version.
 
 = 1.0.0 =
 

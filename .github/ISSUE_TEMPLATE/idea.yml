@@ -8,7 +8,7 @@ body:
       value: |
         Half-formed ideas are welcome here. So are questions about how something works, or feedback on something that felt awkward.
 
-        If you already know exactly what you want built, the [feature request](https://github.com/msrbuilds/elementor-mcp/issues/new?template=feature_request.yml) template will get you a faster answer.
+        If you already know exactly what you want built, the [feature request](https://github.com/karcox/karmcp/issues/new?template=feature_request.yml) template will get you a faster answer.
 
   - type: textarea
     id: idea

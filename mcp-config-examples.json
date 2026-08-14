@@ -27,7 +27,7 @@
         "command": "npx",
         "args": [
           "-y",
-          "@msrbuilds/karmcp-proxy@latest"
+          "karmcp-proxy@latest"
         ],
         "env": {
           "WP_URL": "https://your-site.com",
@@ -67,7 +67,7 @@
         "command": "npx",
         "args": [
           "-y",
-          "@msrbuilds/karmcp-proxy@latest"
+          "karmcp-proxy@latest"
         ],
         "env": {
           "WP_URL": "https://your-site.com",

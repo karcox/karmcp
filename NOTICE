@@ -1,0 +1,52 @@
+KarMCP
+Copyright (c) 2026 karcox
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version. The full licence text is in LICENSE.
+
+
+THIRD-PARTY NOTICES
+===================
+
+This product includes software developed by third parties. Their copyright
+notices and licence terms are reproduced below, as those licences require.
+
+
+elementor-mcp / EMCP Tools
+--------------------------
+Copyright (c) Mian Shahzad Raza — https://github.com/msrbuilds/elementor-mcp
+Licensed under the GNU General Public License, version 2 or later.
+
+Portions of this program are derived from that work and have been extensively
+modified. KarMCP is an independent project and is neither affiliated with nor
+endorsed by the authors of the original work; please do not direct KarMCP
+support requests to them.
+
+
+WordPress MCP Adapter (wordpress/mcp-adapter)
+---------------------------------------------
+Copyright (c) WordPress contributors — https://github.com/WordPress/mcp-adapter
+Licensed under the GNU General Public License, version 2 or later.
+Bundled unmodified under vendor/.
+
+
+Jetpack Autoloader (automattic/jetpack-autoloader)
+--------------------------------------------------
+Copyright (c) Automattic Inc.
+Licensed under the GNU General Public License, version 2 or later.
+Bundled unmodified under vendor/.
+
+
+svg-sanitize (enshrined/svg-sanitize)
+-------------------------------------
+Copyright (c) Daryll Doyle
+Licensed under the GNU General Public License, version 2 or later.
+Bundled unmodified under vendor/.
+
+
+Geist typeface
+--------------
+Copyright (c) Vercel
+Licensed under the SIL Open Font License 1.1 — see assets/fonts/Geist-LICENSE.txt.

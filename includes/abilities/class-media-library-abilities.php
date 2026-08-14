@@ -11,7 +11,6 @@
  *
  * @package KarMCP
  * @since   2.0.2
- * @link    https://github.com/msrbuilds/elementor-mcp/issues/25
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

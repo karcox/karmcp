@@ -40,7 +40,7 @@ body:
         - WordPress content
         - Media
         - Users, settings, plugins or themes
-        - Theme building (EMCP Themer)
+        - Theme building (KarMCP Themer)
         - Performance or security
         - Filesystem or database
         - A plugin integration
@@ -53,7 +53,7 @@ body:
     id: workaround
     attributes:
       label: How do you handle it today?
-      description: Manually, with another plugin, or by chaining existing EMCP tools? This tells us how much the gap actually costs.
+      description: Manually, with another plugin, or by chaining existing KarMCP tools? This tells us how much the gap actually costs.
     validations:
       required: false
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Tools tab view for the MCP Tools for Elementor admin settings page.
+ * Tools tab view for the KarMCP admin settings page.
  *
  * Displays all MCP tools grouped by category with toggle switches.
  *

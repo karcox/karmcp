@@ -39,7 +39,7 @@ body:
     attributes:
       label: Which tool was called?
       description: The MCP tool name, if you know it. Your client usually shows this.
-      placeholder: emcp-tools-add-free-widget
+      placeholder: karmcp-add-free-widget
     validations:
       required: false
 
@@ -74,8 +74,8 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: EMCP Tools, WordPress, PHP, and Elementor if relevant.
-      placeholder: "EMCP 3.6.0, WP 6.9.5, PHP 8.3, Elementor 4.1.4 + Pro"
+      description: KarMCP, WordPress, PHP, and Elementor if relevant.
+      placeholder: "KarMCP 3.12.0, WP 7.0, PHP 8.3, Elementor 4.1.4 + Pro"
     validations:
       required: true
 

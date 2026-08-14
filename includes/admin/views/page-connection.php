@@ -1,6 +1,6 @@
 <?php
 /**
- * Connection info tab view for the MCP Tools for Elementor admin settings page.
+ * Connection info tab view for the KarMCP admin settings page.
  *
  * Organised into two sub-tabs: "Connections" (server gate + strict schemas +
  * status + client wizard) and "3rd Party Services" (stock-image provider keys).
@@ -72,7 +72,7 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 						<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
 					</span>
 					<span class="elementor-mcp-status-card-info">
-						<span class="elementor-mcp-status-card-label"><?php esc_html_e( 'MCP Tools for Elementor', 'karmcp' ); ?></span>
+						<span class="elementor-mcp-status-card-label"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
 						<span class="elementor-mcp-status-card-value"><?php esc_html_e( 'Active', 'karmcp' ); ?></span>
 					</span>
 				</div>

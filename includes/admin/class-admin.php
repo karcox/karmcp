@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin settings page for MCP Tools for Elementor.
+ * Admin settings page for KarMCP.
  *
  * Provides a UI to toggle individual MCP tools on/off and view
  * connection information for various MCP clients.
@@ -73,6 +73,18 @@ class KarMCP_Admin {
 	 * @var string
 	 */
 	const PAGE_SLUG = 'karmcp';
+
+	/**
+	 * Outbound links shown in the admin header's "Get Help" menu. Defined once
+	 * here so the whole admin surface moves together when the project gets its
+	 * own docs site — the views read these, never a literal URL.
+	 *
+	 * @var string
+	 */
+	const DOCS_URL = 'https://github.com/karcox/karmcp#readme';
+
+	/** Where an admin reports a problem. */
+	const SUPPORT_URL = 'https://github.com/karcox/karmcp/issues';
 
 	/**
 	 * Map of sub-screen slug => label. The first entry is the dashboard
@@ -1802,20 +1814,45 @@ class KarMCP_Admin {
 	}
 
 	/**
+	 * The KarMCP mark as a base64 data URI for the top-level menu.
+	 *
+	 * The brand mark is a "K" whose arms end in two nodes — the initial and the
+	 * connection topology MCP describes, in one shape that still reads at 20px.
+	 *
+	 * Deliberately monochrome: WordPress recolours a data-URI menu icon to match
+	 * the admin colour scheme, so any colour baked in here is overridden, and a
+	 * filled background (see assets/img/karmcp-tile.svg) would recolour into an
+	 * illegible solid block. Use the tile only where colour is preserved.
+	 *
+	 * @since 3.12.0
+	 *
+	 * @return string `data:image/svg+xml;base64,…`
+	 */
+	public static function menu_icon(): string {
+		$svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+			. '<g stroke="black" stroke-width="2.6" stroke-linecap="round" fill="none">'
+			. '<path d="M5.5 3.5v17"/><path d="M5.7 12.6 14.6 5.4"/><path d="M5.7 11.4 14.6 18.6"/>'
+			. '</g>'
+			. '<circle cx="17.6" cy="4.2" r="2.7" fill="black"/>'
+			. '<circle cx="17.6" cy="19.8" r="2.7" fill="black"/>'
+			. '</svg>';
+
+		return 'data:image/svg+xml;base64,' . base64_encode( $svg ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- WordPress requires menu icons in this exact form.
+	}
+
+	/**
 	 * Add the settings page under the Settings menu.
 	 *
 	 * @since 1.0.0
 	 */
 	public function add_settings_page(): void {
 		$this->hook_suffixes[] = add_menu_page(
-			__( 'MCP Tools for Elementor', 'karmcp' ),
+			__( 'KarMCP', 'karmcp' ),
 			__( 'KarMCP', 'karmcp' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			array( $this, 'render_page' ),
-			// A core dashicon rather than a bundled mark: the upstream icon was
-			// EMCP branding and this fork ships no logo of its own yet.
-			'dashicons-networking',
+			self::menu_icon(),
 			58
 		);
 
@@ -3050,8 +3087,11 @@ class KarMCP_Admin {
 			<!-- App bar -->
 			<div class="karmcp-appbar">
 				<div class="karmcp-appbar-brand">
+					<span class="karmcp-appbar-mark" aria-hidden="true">
+						<svg viewBox="0 0 24 24" width="24" height="24" focusable="false"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M5.5 3.5v17"/><path d="M5.7 12.6 14.6 5.4"/><path d="M5.7 11.4 14.6 18.6"/></g><circle cx="17.6" cy="4.2" r="2.7" fill="currentColor"/><circle cx="17.6" cy="19.8" r="2.7" fill="currentColor"/></svg>
+					</span>
 					<span class="karmcp-appbar-title karmcp-appbar-title--full"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
-					<span class="karmcp-appbar-title karmcp-appbar-title--short"><?php esc_html_e( 'MCP Tools', 'karmcp' ); ?></span>
+					<span class="karmcp-appbar-title karmcp-appbar-title--short"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
 					<span class="karmcp-appbar-version">v<?php echo esc_html( KARMCP_VERSION ); ?></span>
 				</div>
 				<div class="karmcp-appbar-actions">
@@ -3074,11 +3114,8 @@ class KarMCP_Admin {
 							<span class="dashicons dashicons-arrow-down-alt2 karmcp-help-caret" aria-hidden="true"></span>
 						</button>
 						<div class="karmcp-help-dropdown" role="menu">
-							<a role="menuitem" href="https://support.msrbuilds.com/" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-sos" aria-hidden="true"></span><?php esc_html_e( 'Ticket Support', 'karmcp' ); ?></a>
-							<a role="menuitem" href="https://example.com/docs" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-book" aria-hidden="true"></span><?php esc_html_e( 'Documentation', 'karmcp' ); ?></a>
-							<a role="menuitem" href="https://www.facebook.com/groups/karmcptools" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-groups" aria-hidden="true"></span><?php esc_html_e( 'Community', 'karmcp' ); ?></a>
-							<a role="menuitem" href="https://discord.gg/vJfksd3S9j" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-format-chat" aria-hidden="true"></span><?php esc_html_e( 'Discord', 'karmcp' ); ?></a>
-							<a role="menuitem" href="https://example.com/tutorials" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-video-alt3" aria-hidden="true"></span><?php esc_html_e( 'Tutorials', 'karmcp' ); ?></a>
+							<a role="menuitem" href="<?php echo esc_url( self::DOCS_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-book" aria-hidden="true"></span><?php esc_html_e( 'Documentation', 'karmcp' ); ?></a>
+							<a role="menuitem" href="<?php echo esc_url( self::SUPPORT_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-sos" aria-hidden="true"></span><?php esc_html_e( 'Support', 'karmcp' ); ?></a>
 						</div>
 					</div>
 					<div class="karmcp-notif">
@@ -4049,8 +4086,13 @@ class KarMCP_Admin {
 					),
 				),
 			),
+			// Not built in this tree: KarMCP_Migrate_Abilities does not exist, so
+			// none of these tools ever register. Flagged so get_all_tools() drops
+			// the whole category — otherwise the Tools screen shows 7 toggles that
+			// do nothing and the dashboard's "X of Y" counters are inflated by 7.
 			'migrate'          => array(
 				'platform' => 'wordpress',
+				'pro'   => true,
 				'label' => __( 'Backup & Migrate', 'karmcp' ),
 				'tools' => array(
 					'karmcp/create-backup' => array(

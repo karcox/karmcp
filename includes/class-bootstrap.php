@@ -445,7 +445,7 @@ class KarMCP_Bootstrap {
 						'<div class="notice notice-error"><p>%s</p></div>',
 						sprintf(
 							/* translators: %s: comma-separated list of missing dependencies */
-							esc_html__( 'MCP Tools for Elementor requires the following to be installed and active: %s', 'karmcp' ),
+							esc_html__( 'KarMCP requires the following to be installed and active: %s', 'karmcp' ),
 							'<strong>' . esc_html( $list ) . '</strong>'
 						)
 					);

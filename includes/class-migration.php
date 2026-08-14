@@ -3,7 +3,7 @@
  * Legacy data migration + coexistence guard for the elementor-mcp → karmcp
  * rename (v2.0).
  *
- * Loaded by the bootstrap file *before* constants/Freemius so the guard can
+ * Loaded by the bootstrap file *before* the plugin constants so the guard can
  * decide whether to boot at all when the old plugin is still active.
  *
  * @package KarMCP

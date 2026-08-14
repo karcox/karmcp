@@ -15,19 +15,14 @@
  * Text Domain:       karmcp
  * Domain Path:       /languages
  *
- * KarMCP is a fork of EMCP Tools 3.12.0 by Mian Shahzad Raza
- * (https://msrbuilds.com — https://github.com/msrbuilds/elementor-mcp),
- * used and redistributed under the GPL-2.0-or-later. The original copyright
- * notices and the LICENSE file are retained unchanged, as the licence requires.
+ * Third-party copyright notices and licence terms are in NOTICE and LICENSE.
  *
- * This build updates manually: there is no GitHub/Freemius auto-updater, and
- * `Update URI: false` stops WordPress from consulting wordpress.org on a slug
- * match.
+ * This build updates manually: there is no auto-updater, and `Update URI: false`
+ * stops WordPress from consulting wordpress.org on a slug match.
  *
  * This file is the bootstrap ONLY: plugin header, the legacy-rename guard,
- * constants, the Freemius SDK helper, the uninstall hook, and the entry point
- * that hands off to KarMCP_Bootstrap. All feature logic lives in classes
- * under includes/.
+ * constants, the uninstall hook, and the entry point that hands off to
+ * KarMCP_Bootstrap. All feature logic lives in classes under includes/.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -43,9 +38,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * includes/class-migration.php below) and fatal. This runs BEFORE any require,
  * so it can never redeclare.
  *
- * Upstream also carried a free⇄premium arbitration here (a `.karmcp-pro`
- * marker file, a sibling `karmcp-pro/` folder, and mutual deactivation). KarMCP
- * has a single tier, so that machinery is gone; only the re-entry check remains.
+ * KarMCP has a single tier, so this is a plain re-entry check — there is no
+ * free/premium arbitration to do.
  */
 if ( defined( 'KARMCP_VERSION' ) ) {
 	return;
@@ -54,14 +48,13 @@ if ( defined( 'KARMCP_VERSION' ) ) {
 /**
  * Legacy coexistence guard.
  *
- * This plugin was renamed from the `elementor-mcp` folder/slug to `karmcp`.
- * On an existing site the old `elementor-mcp/elementor-mcp.php` plugin may still
- * be active alongside this one during the transition. All PHP symbols were
- * re-prefixed (KarMCP_* / karmcp_*) so the two can coexist without
- * "cannot redeclare" fatals — but they would still both register the same MCP
- * abilities/server and share data. So while the old plugin is active we do NOT
- * boot: we snapshot its settings (admin only) and show a notice, then bail
- * before defining constants, initializing Freemius, or registering anything.
+ * A site upgrading from the older `elementor-mcp` plugin may still have it
+ * active alongside this one. Every PHP symbol here is prefixed KarMCP_/karmcp_,
+ * so the two never collide at load time — but both would register an MCP
+ * server over the same data, which the MCP client cannot disambiguate. So
+ * while the old plugin is active we do NOT boot: we snapshot its settings
+ * (admin only) and show a notice, then bail before defining constants or
+ * registering anything.
  */
 require_once __DIR__ . '/includes/class-migration.php';
 
@@ -79,7 +72,7 @@ if ( KarMCP_Migration::is_legacy_plugin_active() ) {
 			}
 			echo '<div class="notice notice-warning"><p>';
 			echo wp_kses(
-				__( '<strong>KarMCP:</strong> The previous &#8220;MCP Tools for Elementor&#8221; plugin (folder <code>elementor-mcp</code>) is still active. KarMCP has replaced it &mdash; please <strong>deactivate and delete</strong> the old plugin to finish the upgrade. Your settings and license carry over automatically. KarMCP stays paused until then.', 'karmcp' ),
+				__( '<strong>KarMCP:</strong> Another MCP plugin (folder <code>elementor-mcp</code>) is active and would register a competing MCP server over the same data. Please <strong>deactivate and delete</strong> it &mdash; your settings carry over automatically. KarMCP stays paused until then.', 'karmcp' ),
 				array(
 					'strong' => array(),
 					'code'   => array(),
@@ -88,7 +81,7 @@ if ( KarMCP_Migration::is_legacy_plugin_active() ) {
 			echo '</p></div>';
 		}
 	);
-	// Bail before booting anything else (no constants, no Freemius, no abilities).
+	// Bail before booting anything else (no constants, no abilities).
 	return;
 }
 
@@ -107,10 +100,8 @@ define( 'KARMCP_BASENAME', plugin_basename( __FILE__ ) );
 require_once KARMCP_DIR . 'includes/class-mcp-adapter-bootstrap.php';
 KarMCP_Adapter_Bootstrap::preload_bundled_namespace();
 
-// Uninstall cleanup. Upstream routed this through Freemius's `after_uninstall`
-// action because Freemius rejects builds containing an uninstall.php. With the
-// SDK gone that action never fires, so wire WordPress's own uninstall hook —
-// otherwise removing the plugin would leave every option and table behind.
+// Uninstall cleanup on WordPress's own hook — without it, removing the plugin
+// would leave every option and table behind.
 require_once KARMCP_DIR . 'includes/class-uninstaller.php';
 register_uninstall_hook( __FILE__, array( 'KarMCP_Uninstaller', 'run' ) );
 

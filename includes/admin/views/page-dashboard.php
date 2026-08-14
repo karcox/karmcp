@@ -106,37 +106,13 @@ $karmcp_features = array(
 );
 
 /**
- * Featured video guides. Real YouTube tutorials — `id` is the video ID (used
- * for the thumbnail + watch link), `channel` is the creator. To feature a
- * different video, swap `id`/`title`/`channel` and the `watch?v=` URL.
+ * Featured video guides. Empty by design: each entry renders a thumbnail
+ * straight from i.ytimg.com, so a populated list makes every dashboard load
+ * call YouTube. Add our own videos here when we have them — `id` is the
+ * YouTube video ID (drives both thumbnail and watch link), `channel` the
+ * creator. The section below skips itself entirely while this is empty.
  */
-$karmcp_videos = array(
-	array(
-		'title'   => 'Build a Full WordPress Site Without Touching Elementor',
-		'channel' => 'WP Academy',
-		'id'      => 'KkOioXKT_Eo',
-	),
-	array(
-		'title'   => 'Create Elementor Landing Pages FAST with Claude and MCP Server',
-		'channel' => 'WP Academy',
-		'id'      => 'tXCpGa-hqxk',
-	),
-	array(
-		'title'   => 'How to Use Elementor MCP with Open Models (DeepSeek, Kimi, MiniMax)',
-		'channel' => 'WP Academy',
-		'id'      => 'wAEJORy5eek',
-	),
-	array(
-		'title'   => 'How I Use Elementor MCP + Claude Code to Create Custom Websites',
-		'channel' => 'WPDev',
-		'id'      => 'tCRt5m4jsY8',
-	),
-	array(
-		'title'   => 'Create Elementor Websites with AI Agents | Urdu & Hindi Tutorial',
-		'channel' => 'WP Academy',
-		'id'      => 'B0K-9I4v5zc',
-	),
-);
+$karmcp_videos = array();
 ?>
 
 <div class="karmcp-dash">
@@ -364,6 +340,7 @@ $karmcp_videos = array(
 	<div class="karmcp-dash-row">
 
 	<!-- Featured video guides -->
+	<?php if ( ! empty( $karmcp_videos ) ) : ?>
 	<section class="karmcp-dash-section karmcp-dash-section--videos" aria-labelledby="karmcp-dash-videos-h">
 		<div class="karmcp-dash-section-head">
 			<h2 id="karmcp-dash-videos-h" class="karmcp-dash-section-title"><?php esc_html_e( 'Featured video guides', 'karmcp' ); ?></h2>
@@ -386,15 +363,16 @@ $karmcp_videos = array(
 					</span>
 				</a>
 			<?php endforeach; ?>
-			<a class="karmcp-dash-video karmcp-dash-video--more" href="https://example.com/tutorials" target="_blank" rel="noopener noreferrer">
+			<a class="karmcp-dash-video karmcp-dash-video--more" href="<?php echo esc_url( KarMCP_Admin::DOCS_URL ); ?>" target="_blank" rel="noopener noreferrer">
 				<span class="karmcp-dash-more-inner">
 					<span class="karmcp-dash-more-icon"><span class="dashicons dashicons-playlist-video" aria-hidden="true"></span></span>
-					<span class="karmcp-dash-more-title"><?php esc_html_e( 'Watch More', 'karmcp' ); ?></span>
-					<span class="karmcp-dash-more-sub"><?php esc_html_e( 'See all tutorials', 'karmcp' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></span>
+					<span class="karmcp-dash-more-title"><?php esc_html_e( 'Read the docs', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-more-sub"><?php esc_html_e( 'Guides and reference', 'karmcp' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></span>
 				</span>
 			</a>
 		</div>
 	</section>
+	<?php endif; ?>
 
 	<!-- Help & resources -->
 	<section class="karmcp-dash-section karmcp-dash-section--help" aria-labelledby="karmcp-dash-help-h">
@@ -403,8 +381,8 @@ $karmcp_videos = array(
 			<p class="karmcp-dash-section-sub"><?php esc_html_e( 'Quick links to the free and premium support channels.', 'karmcp' ); ?></p>
 		</div>
 		<?php
-		// This build updates manually (no GitHub/Freemius updater), so the
-		// installed version is always "latest" as far as the dashboard knows.
+		// This build updates manually (no auto-updater), so the installed
+		// version is always "latest" as far as the dashboard knows.
 		$karmcp_ver = array(
 			'current'          => KARMCP_VERSION,
 			'latest'           => KARMCP_VERSION,
@@ -448,25 +426,18 @@ $karmcp_videos = array(
 			</div>
 		<?php endif; ?>
 		<div class="karmcp-dash-help">
-			<a class="karmcp-dash-help-link" href="https://example.com/docs" target="_blank" rel="noopener noreferrer">
+			<a class="karmcp-dash-help-link" href="<?php echo esc_url( KarMCP_Admin::DOCS_URL ); ?>" target="_blank" rel="noopener noreferrer">
 				<span class="dashicons dashicons-book" aria-hidden="true"></span>
 				<span>
 					<span class="karmcp-dash-help-title"><?php esc_html_e( 'Documentation', 'karmcp' ); ?></span>
 					<span class="karmcp-dash-help-desc"><?php esc_html_e( 'Guides and reference for every feature.', 'karmcp' ); ?></span>
 				</span>
 			</a>
-			<a class="karmcp-dash-help-link" href="https://support.msrbuilds.com/" target="_blank" rel="noopener noreferrer">
+			<a class="karmcp-dash-help-link" href="<?php echo esc_url( KarMCP_Admin::SUPPORT_URL ); ?>" target="_blank" rel="noopener noreferrer">
 				<span class="dashicons dashicons-sos" aria-hidden="true"></span>
 				<span>
-					<span class="karmcp-dash-help-title"><?php esc_html_e( 'Ticket Support', 'karmcp' ); ?></span>
-					<span class="karmcp-dash-help-desc"><?php esc_html_e( 'Stuck? Open a ticket with our team.', 'karmcp' ); ?></span>
-				</span>
-			</a>
-			<a class="karmcp-dash-help-link" href="https://www.facebook.com/groups/karmcptools" target="_blank" rel="noopener noreferrer">
-				<span class="dashicons dashicons-groups" aria-hidden="true"></span>
-				<span>
-					<span class="karmcp-dash-help-title"><?php esc_html_e( 'Community', 'karmcp' ); ?></span>
-					<span class="karmcp-dash-help-desc"><?php esc_html_e( 'Share builds and get tips from other users.', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-help-title"><?php esc_html_e( 'Support', 'karmcp' ); ?></span>
+					<span class="karmcp-dash-help-desc"><?php esc_html_e( 'Stuck? Report a problem or ask a question.', 'karmcp' ); ?></span>
 				</span>
 			</a>
 			<a class="karmcp-dash-help-link" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $karmcp_page . '-changelog' ) ); ?>">

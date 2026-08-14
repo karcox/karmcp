@@ -1,6 +1,6 @@
 <?php
 /**
- * Prompts tab view for the MCP Tools for Elementor admin settings page.
+ * Prompts tab view for the KarMCP admin settings page.
  *
  * Free section: 5 bundled sample prompts.
  * Premium section: 50+ categorized prompts fetched from the KarMCP Pro

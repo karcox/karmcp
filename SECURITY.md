@@ -20,7 +20,11 @@ Responsible disclosure is appreciated. We will credit researchers in the release
 
 ## Scope
 
-This plugin requires WordPress Application Password authentication for all tool calls. There are no unauthenticated attack surfaces. Vulnerabilities affecting only users with `manage_options` (Administrator role) are considered lower severity than those affecting `edit_posts` (Editor/Author role).
+Every tool call requires authentication (WordPress Application Password or an OAuth bearer token) and runs a real capability check before doing anything.
+
+The OAuth endpoints are the exception and are **deliberately unauthenticated**, as their specs require: dynamic client registration (`/register`, RFC 7591), the token and revocation endpoints (`/token`, `/revoke`, which authenticate by grant rather than by session), and the `/.well-known/*` discovery documents. Findings against those endpoints are in scope.
+
+Vulnerabilities affecting only users with `manage_options` (Administrator role) are considered lower severity than those affecting `edit_posts` (Editor/Author role) or no authentication at all.
 
 ## Supported Versions
 

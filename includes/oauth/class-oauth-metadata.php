@@ -72,7 +72,9 @@ class KarMCP_OAuth_Metadata {
 			'authorization_servers'    => array( self::issuer() ),
 			'bearer_methods_supported' => array( 'header' ),
 			'scopes_supported'         => array( KarMCP_OAuth_Server::SCOPE ),
-			'resource_documentation'   => 'https://example.com/docs/',
+			// Published in the discovery document every MCP client reads, so it
+			// has to resolve — filterable for anyone hosting their own docs.
+			'resource_documentation'   => apply_filters( 'karmcp_resource_documentation', 'https://github.com/karcox/karmcp#readme' ),
 		);
 	}
 

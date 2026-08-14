@@ -261,7 +261,7 @@ class KarMCP_Plugin {
 		wp_register_ability_category(
 			'karmcp',
 			array(
-				'label'       => __( 'MCP Tools for Elementor', 'karmcp' ),
+				'label'       => __( 'KarMCP', 'karmcp' ),
 				'description' => __( 'Tools for reading and manipulating Elementor page designs via MCP.', 'karmcp' ),
 			)
 		);
@@ -340,7 +340,7 @@ class KarMCP_Plugin {
 			'karmcp-server',                                   // server_id
 			'mcp',                                                    // route_namespace
 			'karmcp-server',                                   // route
-			__( 'MCP Tools for Elementor Server', 'karmcp' ),            // server_name
+			__( 'KarMCP Server', 'karmcp' ),            // server_name
 			KarMCP_Site_Context::compose_instructions( KarMCP_Site_Context::default_base() . "\n\n" . KarMCP_Site_Context::environment_summary() ), // description (base + env + site context)
 			'v' . KARMCP_VERSION,                              // version
 			array( \WP\MCP\Transport\HttpTransport::class ),          // transports

@@ -1,6 +1,6 @@
 <?php
 /**
- * Registers all MCP Tools for Elementor abilities with the WordPress Abilities API.
+ * Registers all KarMCP abilities with the WordPress Abilities API.
  *
  * @package KarMCP
  * @since   1.0.0

@@ -1,4 +1,5 @@
 <h1 align="center">
+  <img src="assets/img/karmcp-mark.svg" alt="" width="56" height="56"><br>
   KarMCP<br>
   <sub>MCP Tools for WordPress &amp; Page Builders</sub>
 </h1>
@@ -14,19 +15,6 @@
 Turn your WordPress site into something an AI agent can actually operate.
 
 KarMCP is a WordPress plugin that exposes your site as **[MCP](https://modelcontextprotocol.io/) tools**, so Claude, Cursor, and any other MCP client can build Elementor pages, write content, manage plugins and users, audit performance and security, and drive the plugins you already run. It builds on the [WordPress MCP Adapter](https://github.com/WordPress/mcp-adapter), which ships bundled.
-
-## About this fork
-
-KarMCP is a hard fork of [EMCP Tools](https://github.com/msrbuilds/elementor-mcp) **3.12.0** by Mian Shahzad Raza, redistributed under the GPL-2.0-or-later. The original copyright notices and the `LICENSE` file are retained unchanged, as the licence requires. KarMCP is not affiliated with or endorsed by the upstream project — please do not report KarMCP issues to the upstream tracker.
-
-What differs from upstream:
-
-- **Renamed throughout.** Classes `KarMCP_*`, functions and hooks `karmcp_*`, constants `KARMCP_*`, text domain `karmcp`. The MCP server lives at `/wp-json/mcp/karmcp-server` and abilities use the `karmcp/` namespace, so KarMCP and EMCP Tools can run side by side on one site without colliding.
-- **No auto-updater.** The GitHub updater is removed and the header carries `Update URI: false`, so WordPress never consults wordpress.org on a slug match. Updates are manual and deliberate.
-- **No Freemius.** The SDK is not loaded and its telemetry is gone. A small local stand-in (`KarMCP_License`) answers the licensing calls the codebase makes, reporting "not premium" everywhere.
-- **No upsells.** The upgrade and community banners are gone; Pro-only tabs render a neutral "not available in this build" notice. The Elementor-missing notice stays, because it reports a real dependency.
-
-Upstream releases are reviewed by hand and selectively adopted. See [UPSTREAM.md](UPSTREAM.md) for the review log and the maintenance workflow.
 
 ## What it does
 
@@ -60,7 +48,7 @@ The MCP endpoint is:
 https://your-site.com/wp-json/mcp/karmcp-server
 ```
 
-Tool names are prefixed `karmcp-` (for example `karmcp-add-container`). If you are migrating from EMCP Tools, every client config must be updated to the new URL and the OAuth flow re-authorised.
+Tool names are prefixed `karmcp-` (for example `karmcp-add-container`), and abilities use the `karmcp/` namespace.
 
 ## Safe by default
 
@@ -70,7 +58,7 @@ Anything that writes, deletes, or renders site-wide **ships disabled** and is op
 
 ## Tests
 
-The public suite runs with plain PHPUnit against a self-contained WordPress stub harness — no WordPress install required:
+The suite runs with plain PHPUnit against a self-contained WordPress stub harness — no WordPress install required:
 
 ```bash
 composer install && vendor/bin/phpunit
@@ -82,4 +70,4 @@ The [`prompts/`](prompts/) directory has complete landing-page blueprints that b
 
 ## License
 
-[GNU General Public License v2.0 or later](LICENSE). Originally EMCP Tools, copyright its respective authors; see the plugin header and `LICENSE`.
+[GNU General Public License v2.0 or later](LICENSE). Third-party copyright notices are in [NOTICE](NOTICE).

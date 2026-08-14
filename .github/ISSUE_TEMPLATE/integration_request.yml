@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        EMCP already speaks ACF, Meta Box, WooCommerce, 8 form builders, 7 SEO plugins, and the Elementor addon packs. See the [integrations directory](https://emcptools.com/integrations/) before requesting, yours may already be there.
+        KarMCP already speaks ACF, Meta Box, WooCommerce, form builders, SEO plugins, and the Elementor addon packs. Check the **Tools → Plugins** tab in your own install before requesting — yours may already be there.
 
         Integrations follow a fixed shape: **two tools**, `<plugin>-read` and `<plugin>-write`, each taking an operation and arguments. So the useful question is *which operations matter*.
 

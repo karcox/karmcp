@@ -1,6 +1,6 @@
 {
     "name": "karmcp/karmcp",
-    "description": "KarMCP - MCP tools for Elementor and WordPress (fork of EMCP Tools)",
+    "description": "KarMCP - MCP tools for WordPress and Elementor",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "require": {

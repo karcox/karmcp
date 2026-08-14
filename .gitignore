@@ -76,31 +76,9 @@ skills/*
 .mcp.json
 
 #Meta
-# Upstream kept docs/ untracked (local-only working notes). KarMCP tracks it:
-# the roadmap and design decisions belong in the repo, not on one machine.
+# docs/ IS tracked: the roadmap and design decisions belong in the repo, not on
+# one machine.
 .commandcode/
-
-# Pro overlay lives in the private pro/ submodule (see pro-manifest.txt).
-# Anchored so bare entries don't match nested dirs (e.g. vendor Tools/).
-/includes/abilities/class-seo-abilities.php
-/includes/abilities/class-a11y-abilities.php
-/includes/abilities/class-widget-builder-abilities.php
-/includes/abilities/class-system-kit-abilities.php
-/includes/class-color-contrast.php
-/includes/class-content-extractor.php
-/includes/class-seo-meta.php
-/includes/class-widget-generator.php
-/includes/ai-chat/
-/includes/admin/class-pro-prompts.php
-/includes/admin/class-pro-templates.php
-/includes/admin/class-pro-ajax.php
-/includes/admin/class-pro-skills.php
-/includes/admin/class-pro-brand-kits.php
-/includes/admin/views/page-ai-chat.php
-/includes/admin/views/page-skills.php
-/assets/js/ai-chat.js
-/assets/css/ai-chat.css
-/tools/
 
 # Public test-suite cache (tests/phpunit.xml)
 .phpunit.public.cache/
@@ -109,10 +87,3 @@ skills/*
 .playwright-mcp/
 /services-final.png
 /services-page.png
-
-# Freemius deploy secrets — NEVER commit. The API Bearer token / secret key go
-# in .freemius.env (gitignored); pro/tools/freemius-deploy.sh auto-loads it.
-# Only .freemius.env.example (no real values) is tracked.
-.freemius.env
-.freemius.env.local
-freemius.env

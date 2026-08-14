@@ -1,5 +1,5 @@
 /**
- * MCP Tools for Elementor — Admin Settings Scripts
+ * KarMCP — Admin Settings Scripts
  *
  * @package KarMCP
  * @since   1.0.0
@@ -1266,7 +1266,7 @@
 	function karmcpJsonConfig( variant ) {
 		var c = window.karmcpConn;
 		var key = karmcpServerName();
-		var npx = { command: 'npx', args: [ '-y', '@msrbuilds/karmcp-proxy@latest' ],
+		var npx = { command: 'npx', args: [ '-y', 'karmcp-proxy@latest' ],
 			env: { WP_URL: c.siteUrl, WP_USERNAME: c.username, WP_APP_PASSWORD: c.appPassword, MCP_PROTOCOL_VERSION: '2024-11-05' } };
 		var http = { type: 'http', url: c.endpoint, headers: { Authorization: 'Basic ' + c.b64 } };
 		var servers = {};
@@ -1286,7 +1286,7 @@
 	function karmcpOpenclawConfig( variant ) {
 		var c = window.karmcpConn, n = karmcpServerName(), server;
 		if ( variant === 'npx' ) {
-			server = { command: 'npx', args: [ '-y', '@msrbuilds/karmcp-proxy@latest' ],
+			server = { command: 'npx', args: [ '-y', 'karmcp-proxy@latest' ],
 				env: { WP_URL: c.siteUrl, WP_USERNAME: c.username, WP_APP_PASSWORD: c.appPassword, MCP_PROTOCOL_VERSION: '2024-11-05' } };
 		} else {
 			server = { url: c.endpoint, transport: 'streamable-http', headers: { Authorization: 'Basic ' + c.b64 } };
@@ -1304,7 +1304,7 @@
 			return 'mcp_servers:\n' +
 				'  ' + n + ':\n' +
 				'    command: "npx"\n' +
-				'    args: ["-y", "@msrbuilds/karmcp-proxy@latest"]\n' +
+				'    args: ["-y", "karmcp-proxy@latest"]\n' +
 				'    env:\n' +
 				'      WP_URL: "' + c.siteUrl + '"\n' +
 				'      WP_USERNAME: "' + c.username + '"\n' +
@@ -1332,7 +1332,7 @@
 		var c = window.karmcpConn, n = karmcpServerName();
 		return '[mcp_servers.' + n + ']\n' +
 			'command = "npx"\n' +
-			'args = ["-y", "@msrbuilds/karmcp-proxy@latest"]\n\n' +
+			'args = ["-y", "karmcp-proxy@latest"]\n\n' +
 			'[mcp_servers.' + n + '.env]\n' +
 			'WP_URL = "' + c.siteUrl + '"\n' +
 			'WP_USERNAME = "' + c.username + '"\n' +

@@ -2,7 +2,7 @@
 /**
  * Uninstall cleanup.
  *
- * Wired to Freemius's `after_uninstall` action from the bootstrap file. Removes
+ * Wired to WordPress's uninstall hook from the bootstrap file. Removes
  * plugin-owned options/transients/user-meta and, critically, the generated
  * executable PHP (custom widgets + PHP snippets) which must never survive an
  * uninstall.

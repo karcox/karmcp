@@ -1,5 +1,5 @@
 /**
- * MCP Tools for Elementor — Admin Settings Styles
+ * KarMCP — Admin Settings Styles
  *
  * @package Elementor_MCP
  * @since   1.0.0
@@ -3363,6 +3363,8 @@ body.karmcp-modal-open { overflow: hidden; }
 .karmcp-appbar { display: flex; align-items: stretch; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--mcp-white); border-bottom: 1px solid var(--mcp-gray-200); padding: 10px 20px 10px 20px; margin: 0 -20px 0 -22px; border-top: 1px solid var(--mcp-gray-200); }
 .karmcp-appbar-brand { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 15px 0; width: 40%;}
 .karmcp-appbar-logo { width: 34px; height: 34px; border-radius: 6px; object-fit: contain; }
+.karmcp-appbar-mark { display: inline-flex; align-items: center; color: var(--mcp-primary); flex: none; }
+.karmcp-appbar-mark svg { display: block; }
 .karmcp-appbar-title { font-size: 18px; font-weight: 700; color: var(--mcp-gray-800, #1d2327); }
 .karmcp-appbar-version { font-size: 11px; font-weight: 700; color: var(--mcp-primary); background: var(--mcp-primary-light); border-radius: 10px; padding: 2px 8px; }
 .karmcp-appbar-actions { display: flex; align-items: center; gap: 10px; }

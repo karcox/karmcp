@@ -1,16 +1,13 @@
 <?php
 /**
- * Free Brand Kits — the 10 bundled, no-license-required brand kits.
+ * Brand Kits — the 10 bundled brand kits.
  *
- * This is the free-tier counterpart to KarMCP_Pro_Brand_Kits. Where the
- * Pro service fetches 50+ kits from example.com behind a license, this
- * one reads a small curated set shipped inside the plugin
- * (`assets/brand-kits/free-brand-kits.json`) and is available to everyone — the
- * same model as the 5 bundled sample prompts.
+ * Reads a curated set shipped inside the plugin
+ * (`assets/brand-kits/free-brand-kits.json`), so it needs no network access —
+ * the same model as the bundled sample prompts.
  *
  * It only PROVIDES the kit data; applying still routes through the shared
- * KarMCP_System_Kit_Writer (and backups through
- * KarMCP_Kit_Backup_Store), exactly like the Pro path.
+ * KarMCP_System_Kit_Writer (and backups through KarMCP_Kit_Backup_Store).
  *
  * Previews use the pre-rendered, font-outlined SVGs shipped alongside the JSON
  * in `assets/brand-kits/{slug}.svg`; their URLs are injected at read time since

@@ -1,17 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📚 Documentation
-    url: https://emcptools.com/docs/
-    about: Setup, connecting your AI client, the full tool reference, and troubleshooting.
-  - name: 🔌 Connection or "no tools appearing" problems
-    url: https://emcptools.com/docs/troubleshooting/no-tools-appearing/
-    about: Most connection problems are covered here. Worth a look before opening an issue.
-  - name: 💬 Community
-    url: https://discord.gg/vJfksd3S9j
-    about: Questions, help, and general chat with other users.
+    url: https://github.com/karcox/karmcp#readme
+    about: Setup, connecting your AI client, and the tool reference.
   - name: 🔒 Report a security vulnerability
-    url: mailto:hello@msrbuilds.com
-    about: Please report security issues privately by email, not as a public issue.
-  - name: 🛟 Pro support
-    url: mailto:hello@msrbuilds.com
-    about: Have an EMCP Pro license? Email us for priority support.
+    url: https://github.com/karcox/karmcp/security/advisories/new
+    about: Please report security issues privately, not as a public issue.

@@ -79,8 +79,16 @@ class KarMCP_Notifications {
 			return array();
 		}
 
+		// No Cloud configured is the default state, not an error. Without this
+		// the concatenation below yields the relative '/api/karmcp/notifications',
+		// which wp_remote_get() can only fail on — once every 2h, forever.
+		$base = KarMCP_Cloud::base_url();
+		if ( '' === $base ) {
+			return array();
+		}
+
 		$response = wp_remote_get(
-			KarMCP_Cloud::base_url() . '/api/karmcp/notifications',
+			$base . '/api/karmcp/notifications',
 			array( 'timeout' => 6 )
 		);
 

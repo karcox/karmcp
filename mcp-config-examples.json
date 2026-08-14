@@ -1,17 +1,17 @@
 {
-  "_comment": "Copy-paste MCP configurations for connecting to the MCP Tools for Elementor server. Pick the one that matches your client and environment.",
+  "_comment": "Copy-paste MCP configurations for connecting to the KarMCP server. Pick the one that matches your client and environment. The Connection tab in the admin generates these filled in with your own site URL and credentials.",
 
   "claude_desktop_local_wpcli": {
     "_description": "Claude Desktop — local WordPress via WP-CLI (fastest, recommended for local dev)",
     "_config_path_windows": "%APPDATA%\\Claude\\claude_desktop_config.json",
     "_config_path_macos": "~/Library/Application Support/Claude/claude_desktop_config.json",
     "mcpServers": {
-      "karmcp-tools": {
+      "karmcp": {
         "command": "wp",
         "args": [
           "mcp-adapter",
           "serve",
-          "--server=karmcp-tools-server",
+          "--server=karmcp-server",
           "--user=admin",
           "--path=/path/to/wordpress"
         ]
@@ -19,31 +19,28 @@
     }
   },
 
-  "claude_desktop_remote_npx": {
-    "_description": "Claude Desktop — remote WordPress via npx runner (RECOMMENDED for remote/shared hosting; nothing to install or keep in sync)",
-    "_note": "The proxy runs as a LOCAL subprocess on the machine with Claude Desktop. npx fetches it on demand, so there is no file path to maintain. Requires Node.js 18+ locally.",
+  "claude_desktop_remote_mcp_remote": {
+    "_description": "Claude Desktop — remote WordPress via mcp-remote (recommended for remote/shared hosting)",
+    "_note": "mcp-remote is a published, general-purpose stdio-to-HTTP bridge. It runs as a LOCAL subprocess on the machine with Claude Desktop, so it needs Node.js 18+ locally. KarMCP publishes no npm package of its own.",
     "mcpServers": {
-      "karmcp-tools": {
+      "karmcp": {
         "command": "npx",
         "args": [
           "-y",
-          "karmcp-proxy@latest"
-        ],
-        "env": {
-          "WP_URL": "https://your-site.com",
-          "WP_USERNAME": "admin",
-          "WP_APP_PASSWORD": "xxxx xxxx xxxx xxxx xxxx xxxx",
-          "MCP_PROTOCOL_VERSION": "2024-11-05"
-        }
+          "mcp-remote",
+          "https://your-site.com/wp-json/mcp/karmcp-server",
+          "--header",
+          "Authorization: Basic BASE64_OF_USERNAME:APP_PASSWORD"
+        ]
       }
     }
   },
 
-  "claude_desktop_remote_proxy_local_copy": {
-    "_description": "Claude Desktop — remote WordPress via a LOCAL copy of the proxy file",
-    "_note": "Claude Desktop launches the proxy locally, so mcp-proxy.mjs must exist on THIS machine, not on the server. Extract bin/mcp-proxy.mjs from the plugin ZIP, save it locally, and point 'args' at that local path. Re-extract after plugin updates to get proxy fixes.",
+  "claude_desktop_remote_bundled_proxy": {
+    "_description": "Claude Desktop — remote WordPress via the bundled proxy file",
+    "_note": "Claude Desktop launches the proxy locally, so mcp-proxy.mjs must exist on THIS machine, not on the server. Extract bin/mcp-proxy.mjs from the plugin ZIP, save it locally, and point 'args' at that path. Re-extract after plugin updates to pick up proxy fixes. Set KARMCP_SITES instead of WP_URL to drive several sites from one connection.",
     "mcpServers": {
-      "karmcp-tools": {
+      "karmcp": {
         "command": "node",
         "args": [
           "C:\\local\\path\\to\\mcp-proxy.mjs"
@@ -58,38 +55,16 @@
     }
   },
 
-  "claude_code_remote_npx": {
-    "_description": "Claude Code — remote WordPress via npx runner with protocol version override",
-    "_note": "The npx package runs locally; no file path to maintain. Requires Node.js 18+.",
-    "mcpServers": {
-      "karmcp-tools": {
-        "type": "stdio",
-        "command": "npx",
-        "args": [
-          "-y",
-          "karmcp-proxy@latest"
-        ],
-        "env": {
-          "WP_URL": "https://your-site.com",
-          "WP_USERNAME": "admin",
-          "WP_APP_PASSWORD": "xxxx xxxx xxxx xxxx xxxx xxxx",
-          "MCP_PROTOCOL_VERSION": "2024-11-05",
-          "MCP_LOG_FILE": ""
-        }
-      }
-    }
-  },
-
   "claude_code_mcp_json": {
     "_description": "Claude Code — place as .mcp.json in project root",
     "mcpServers": {
-      "karmcp-tools": {
+      "karmcp": {
         "type": "stdio",
         "command": "wp",
         "args": [
           "mcp-adapter",
           "serve",
-          "--server=karmcp-tools-server",
+          "--server=karmcp-server",
           "--user=admin",
           "--path=/path/to/wordpress"
         ]
@@ -97,12 +72,25 @@
     }
   },
 
+  "claude_code_remote_http": {
+    "_description": "Claude Code — remote WordPress over direct HTTP",
+    "mcpServers": {
+      "karmcp": {
+        "type": "http",
+        "url": "https://your-site.com/wp-json/mcp/karmcp-server",
+        "headers": {
+          "Authorization": "Basic BASE64_OF_USERNAME:APP_PASSWORD"
+        }
+      }
+    }
+  },
+
   "vscode_mcp_direct_http": {
     "_description": "VS Code MCP extension — direct HTTP connection (add to VS Code settings)",
     "servers": {
-      "karmcp-tools": {
+      "karmcp": {
         "type": "http",
-        "url": "https://your-site.com/wp-json/mcp/karmcp-tools-server",
+        "url": "https://your-site.com/wp-json/mcp/karmcp-server",
         "headers": {
           "Authorization": "Basic BASE64_OF_USERNAME:APP_PASSWORD"
         }
@@ -112,11 +100,11 @@
 
   "mcp_inspector_wpcli": {
     "_description": "MCP Inspector — test and debug tools via WP-CLI",
-    "_command": "npx @modelcontextprotocol/inspector wp mcp-adapter serve --server=karmcp-tools-server --user=admin --path=/path/to/wordpress"
+    "_command": "npx @modelcontextprotocol/inspector wp mcp-adapter serve --server=karmcp-server --user=admin --path=/path/to/wordpress"
   },
 
   "mcp_inspector_proxy": {
-    "_description": "MCP Inspector — test and debug tools via HTTP proxy",
+    "_description": "MCP Inspector — test and debug tools through the bundled proxy",
     "_command": "npx @modelcontextprotocol/inspector -e WP_URL=https://your-site.com -e WP_USERNAME=admin -e WP_APP_PASSWORD=xxxx node bin/mcp-proxy.mjs"
   }
 }

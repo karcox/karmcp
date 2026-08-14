@@ -81,25 +81,28 @@ The **Connection** tab generates a ready-to-paste config for your client, includ
 }
 `
 
-= Node.js proxy (remote sites) =
+= Remote sites over stdio =
 
-Create an Application Password at **Users → Profile → Application Passwords**, then:
+For a client that only speaks stdio, bridge it with `mcp-remote`. Create an Application Password at **Users → Profile → Application Passwords** first:
 
 `
 {
   "mcpServers": {
     "karmcp": {
       "command": "npx",
-      "args": ["-y", "karmcp-proxy@latest"],
-      "env": {
-        "WP_URL": "https://your-site.com",
-        "WP_USERNAME": "admin",
-        "WP_APP_PASSWORD": "xxxx xxxx xxxx xxxx xxxx xxxx"
-      }
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://your-site.com/wp-json/mcp/karmcp-server",
+        "--header",
+        "Authorization: Basic BASE64_ENCODED_CREDENTIALS"
+      ]
     }
   }
 }
 `
+
+The plugin also bundles its own proxy at `bin/mcp-proxy.mjs` for driving several sites from one connection; see `bin/README.md`.
 
 = Direct HTTP =
 

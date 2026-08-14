@@ -3410,7 +3410,7 @@ class KarMCP_Admin {
 			. '<tr><th>' . esc_html__( 'Bearer token env var', 'karmcp' ) . '</th><td>' . esc_html__( 'Leave blank, KarMCP uses a WordPress Application Password (HTTP Basic), not a bearer token.', 'karmcp' ) . '</td></tr>'
 			. '<tr><th>' . esc_html__( 'Headers', 'karmcp' ) . '</th><td>' . esc_html__( 'Key', 'karmcp' ) . ' <code>Authorization</code> &middot; ' . esc_html__( 'Value', 'karmcp' ) . ' <code>Basic %B64%</code></td></tr>'
 			. '</tbody></table>'
-			. '<p class="description">' . esc_html__( 'Then Save. The config blocks below do the same thing, “direct HTTP” for the URL + header approach, or the “Node proxy / npx” config if the HTTP transport gives you handshake trouble.', 'karmcp' ) . '</p>';
+			. '<p class="description">' . esc_html__( 'Then Save. The config block below does the same thing with the URL + header approach.', 'karmcp' ) . '</p>';
 
 		return array(
 			array(
@@ -3418,7 +3418,7 @@ class KarMCP_Admin {
 				'label'   => __( 'Claude Desktop', 'karmcp' ),
 				'icon'    => 'desktop',
 				'image'   => 'claude.png',
-				'methods' => array( 'bundle' => true, 'cli' => null, 'ai_prompt' => true, 'json' => array( 'npx', 'http' ) ),
+				'methods' => array( 'bundle' => true, 'cli' => null, 'ai_prompt' => true, 'json' => array( 'http' ) ),
 				'oauth'   => $oauth_claude_desktop,
 			),
 			array(
@@ -3434,7 +3434,7 @@ class KarMCP_Admin {
 				'label'   => __( 'Claude Code', 'karmcp' ),
 				'icon'    => 'editor-code',
 				'image'   => 'claude.png',
-				'methods' => array( 'bundle' => false, 'cli' => $claude_cli, 'ai_prompt' => false, 'json' => array( 'npx', 'http' ) ),
+				'methods' => array( 'bundle' => false, 'cli' => $claude_cli, 'ai_prompt' => false, 'json' => array( 'http' ) ),
 				'oauth'   => $oauth_claude_code,
 			),
 			array(
@@ -3452,7 +3452,7 @@ class KarMCP_Admin {
 				'image'       => 'gpt.png',
 				'guide_title' => __( 'Using the ChatGPT App “Custom MCP” form', 'karmcp' ),
 				'guide'       => $codex_guide,
-				'methods'     => array( 'bundle' => false, 'cli' => $codex_cli, 'ai_prompt' => false, 'json' => array( 'toml', 'toml-stdio' ) ),
+				'methods'     => array( 'bundle' => false, 'cli' => $codex_cli, 'ai_prompt' => false, 'json' => array( 'toml' ) ),
 				'oauth'       => $oauth_codex,
 			),
 			array(
@@ -3467,14 +3467,14 @@ class KarMCP_Admin {
 				'id'      => 'openclaw',
 				'label'   => __( 'OpenClaw', 'karmcp' ),
 				'icon'    => 'editor-code',
-				'methods' => array( 'bundle' => false, 'cli' => $openclaw_cli, 'ai_prompt' => false, 'json' => array( 'openclaw-http', 'openclaw-npx' ) ),
+				'methods' => array( 'bundle' => false, 'cli' => $openclaw_cli, 'ai_prompt' => false, 'json' => array( 'openclaw-http' ) ),
 				'oauth'   => $oauth_openclaw,
 			),
 			array(
 				'id'      => 'hermes',
 				'label'   => __( 'Hermes', 'karmcp' ),
 				'icon'    => 'editor-code',
-				'methods' => array( 'bundle' => false, 'cli' => null, 'ai_prompt' => false, 'json' => array( 'hermes-http', 'hermes-npx' ) ),
+				'methods' => array( 'bundle' => false, 'cli' => null, 'ai_prompt' => false, 'json' => array( 'hermes-http' ) ),
 				'oauth'   => $oauth_hermes,
 			),
 			array(

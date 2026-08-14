@@ -1263,14 +1263,16 @@
 	}
 
 	// Build the JSON config object for a given client + json-variant key.
+	//
+	// There is no variant for a KarMCP-published npm proxy: we publish nothing to
+	// npm, so a config naming one could only 404 on the user. Clients that want
+	// stdio use `mcp-remote` (the 'remote' variant), which is a real published
+	// package, or the .mcpb bundle.
 	function karmcpJsonConfig( variant ) {
 		var c = window.karmcpConn;
 		var key = karmcpServerName();
-		var npx = { command: 'npx', args: [ '-y', 'karmcp-proxy@latest' ],
-			env: { WP_URL: c.siteUrl, WP_USERNAME: c.username, WP_APP_PASSWORD: c.appPassword, MCP_PROTOCOL_VERSION: '2024-11-05' } };
 		var http = { type: 'http', url: c.endpoint, headers: { Authorization: 'Basic ' + c.b64 } };
 		var servers = {};
-		if ( variant === 'npx' )  { servers[ key ] = Object.assign( { type: 'stdio' }, npx ); return { mcpServers: servers }; }
 		if ( variant === 'http' ) { servers[ key ] = http; return { mcpServers: servers }; }
 		if ( variant === 'remote' ) {
 			servers[ key ] = { command: 'npx', args: [ '-y', 'mcp-remote', c.endpoint, '--header', 'Authorization: Basic ' + c.b64 ] };
@@ -1283,14 +1285,9 @@
 	// the top-level mcpServers other clients use). openclaw.json almost always
 	// already has other top-level keys, so we emit the "mcp" PROPERTY to merge in
 	// rather than a full { … } object that would clobber the file.
-	function karmcpOpenclawConfig( variant ) {
+	function karmcpOpenclawConfig() {
 		var c = window.karmcpConn, n = karmcpServerName(), server;
-		if ( variant === 'npx' ) {
-			server = { command: 'npx', args: [ '-y', 'karmcp-proxy@latest' ],
-				env: { WP_URL: c.siteUrl, WP_USERNAME: c.username, WP_APP_PASSWORD: c.appPassword, MCP_PROTOCOL_VERSION: '2024-11-05' } };
-		} else {
-			server = { url: c.endpoint, transport: 'streamable-http', headers: { Authorization: 'Basic ' + c.b64 } };
-		}
+		server = { url: c.endpoint, transport: 'streamable-http', headers: { Authorization: 'Basic ' + c.b64 } };
 		var inner = { servers: {} };
 		inner.servers[ n ] = server;
 		return '"mcp": ' + JSON.stringify( inner, null, 4 );
@@ -1298,19 +1295,8 @@
 
 	// Hermes ~/.hermes/config.yaml — mcp_servers (YAML). Hand-rendered so the output
 	// matches Hermes' documented shape exactly.
-	function karmcpHermesConfig( variant ) {
+	function karmcpHermesConfig() {
 		var c = window.karmcpConn, n = karmcpServerName();
-		if ( variant === 'npx' ) {
-			return 'mcp_servers:\n' +
-				'  ' + n + ':\n' +
-				'    command: "npx"\n' +
-				'    args: ["-y", "karmcp-proxy@latest"]\n' +
-				'    env:\n' +
-				'      WP_URL: "' + c.siteUrl + '"\n' +
-				'      WP_USERNAME: "' + c.username + '"\n' +
-				'      WP_APP_PASSWORD: "' + c.appPassword + '"\n' +
-				'      MCP_PROTOCOL_VERSION: "2024-11-05"';
-		}
 		return 'mcp_servers:\n' +
 			'  ' + n + ':\n' +
 			'    url: "' + c.endpoint + '"\n' +
@@ -1324,20 +1310,6 @@
 		return '[mcp_servers.' + n + ']\n' +
 			'url = "' + c.endpoint + '"\n' +
 			'http_headers = { "Authorization" = "Basic ' + c.b64 + '" }';
-	}
-
-	// Codex config.toml — Node proxy over stdio (free npx alternative; robust with
-	// clients that struggle with the streamable-HTTP session handshake).
-	function karmcpTomlStdioConfig() {
-		var c = window.karmcpConn, n = karmcpServerName();
-		return '[mcp_servers.' + n + ']\n' +
-			'command = "npx"\n' +
-			'args = ["-y", "karmcp-proxy@latest"]\n\n' +
-			'[mcp_servers.' + n + '.env]\n' +
-			'WP_URL = "' + c.siteUrl + '"\n' +
-			'WP_USERNAME = "' + c.username + '"\n' +
-			'WP_APP_PASSWORD = "' + c.appPassword + '"\n' +
-			'MCP_PROTOCOL_VERSION = "2024-11-05"';
 	}
 
 	// Render one copy/download block.
@@ -1511,14 +1483,10 @@
 		// 4) Manual JSON / TOML
 		( m.json || [] ).forEach( function ( variant ) {
 			if ( variant === 'toml' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (config.toml)', karmcpTomlConfig() ); }
-			else if ( variant === 'toml-stdio' ) { html += karmcpCopyBlock( 'Manual config — Node proxy / npx (config.toml)', karmcpTomlStdioConfig() ); }
-			else if ( variant === 'openclaw-http' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (openclaw.json)', karmcpOpenclawConfig( 'http' ) ); }
-			else if ( variant === 'openclaw-npx' ) { html += karmcpCopyBlock( 'Manual config — Node proxy / npx (openclaw.json)', karmcpOpenclawConfig( 'npx' ) ); }
-			else if ( variant === 'hermes-http' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (config.yaml)', karmcpHermesConfig( 'http' ) ); }
-			else if ( variant === 'hermes-npx' ) { html += karmcpCopyBlock( 'Manual config — Node proxy / npx (config.yaml)', karmcpHermesConfig( 'npx' ) ); }
+			else if ( variant === 'openclaw-http' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (openclaw.json)', karmcpOpenclawConfig() ); }
+			else if ( variant === 'hermes-http' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (config.yaml)', karmcpHermesConfig() ); }
 			else {
-				var label = variant === 'npx' ? 'Manual config — Node proxy (npx)'
-					: variant === 'http' ? 'Manual config — direct HTTP'
+				var label = variant === 'http' ? 'Manual config — direct HTTP'
 					: 'Manual config — npx mcp-remote';
 				html += karmcpCopyBlock( label, JSON.stringify( karmcpJsonConfig( variant ), null, 4 ) );
 			}

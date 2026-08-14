@@ -3047,52 +3047,6 @@ class KarMCP_Admin {
 			$karmcp_cloud_connected = class_exists( 'KarMCP_Cloud' ) && KarMCP_Cloud::is_connected();
 			?>
 
-			<!-- Rotating promo / announcement bar -->
-			<?php
-			$karmcp_anncs = array(
-				array(
-					'key'   => 'cloud',
-					'badge' => __( 'New', 'karmcp' ),
-					'icon'  => 'dashicons-cloud',
-					'title' => __( 'KarMCP Cloud is live', 'karmcp' ),
-					'text'  => __( 'Back up, sync and sell your blocks, widgets and snippets across every site you run.', 'karmcp' ),
-					'cta'   => __( 'Explore Cloud', 'karmcp' ),
-					'url'   => 'https://example.com/cloud',
-				),
-			);
-			$karmcp_annc_rotate = count( $karmcp_anncs ) > 1;
-			?>
-			<div class="karmcp-annc" data-karmcp-annc data-rotate="<?php echo $karmcp_annc_rotate ? '1' : '0'; ?>">
-				<div class="karmcp-annc-slides">
-					<?php foreach ( $karmcp_anncs as $karmcp_i => $karmcp_a ) : ?>
-						<a class="karmcp-annc-slide karmcp-annc-slide--<?php echo esc_attr( $karmcp_a['key'] ); ?><?php echo 0 === $karmcp_i ? ' is-active' : ''; ?>" href="<?php echo esc_url( $karmcp_a['url'] ); ?>" target="_blank" rel="noopener">
-							<span class="karmcp-annc-badge"><?php echo esc_html( $karmcp_a['badge'] ); ?></span>
-							<span class="karmcp-annc-icon dashicons <?php echo esc_attr( $karmcp_a['icon'] ); ?>" aria-hidden="true"></span>
-							<span class="karmcp-annc-text"><strong><?php echo esc_html( $karmcp_a['title'] ); ?></strong> <?php echo esc_html( $karmcp_a['text'] ); ?></span>
-							<span class="karmcp-annc-cta"><?php echo esc_html( $karmcp_a['cta'] ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></span>
-						</a>
-					<?php endforeach; ?>
-				</div>
-				<?php if ( $karmcp_annc_rotate ) : ?>
-					<div class="karmcp-annc-dots">
-						<?php foreach ( $karmcp_anncs as $karmcp_i => $karmcp_a ) : ?>
-							<button type="button" class="karmcp-annc-dot<?php echo 0 === $karmcp_i ? ' is-active' : ''; ?>" data-i="<?php echo (int) $karmcp_i; ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %d: announcement number */ __( 'Announcement %d', 'karmcp' ), $karmcp_i + 1 ) ); ?>"></button>
-						<?php endforeach; ?>
-					</div>
-				<?php endif; ?>
-			</div>
-			<script>
-			( function () {
-				var b = document.querySelector( '[data-karmcp-annc]' );
-				if ( ! b ) { return; }
-				var slides = b.querySelectorAll( '.karmcp-annc-slide' ), dots = b.querySelectorAll( '.karmcp-annc-dot' ), i = 0, t;
-				function go( n ) { i = ( n + slides.length ) % slides.length; slides.forEach( function ( s, x ) { s.classList.toggle( 'is-active', x === i ); } ); dots.forEach( function ( d, x ) { d.classList.toggle( 'is-active', x === i ); } ); }
-				function reset() { if ( b.getAttribute( 'data-rotate' ) !== '1' ) { return; } clearInterval( t ); t = setInterval( function () { go( i + 1 ); }, 7000 ); }
-				dots.forEach( function ( d ) { d.addEventListener( 'click', function () { go( parseInt( d.getAttribute( 'data-i' ), 10 ) ); reset(); } ); } );
-				reset();
-			} )();
-			</script>
-
 			<!-- App bar -->
 			<div class="karmcp-appbar">
 				<div class="karmcp-appbar-brand">

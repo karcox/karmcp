@@ -145,8 +145,7 @@ $karmcp_wb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 										<span class="dashicons dashicons-download" aria-hidden="true"></span><?php esc_html_e( 'Export', 'karmcp' ); ?>
 									</a>
 									<?php
-									// Cloud/marketplace button state machine (Save to Cloud → Publish →
-									// View on Marketplace / Push update). Pre-escaped markup.
+									// Cloud-backup button (Save to Cloud → Saved). Pre-escaped markup.
 									// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 									echo KarMCP_Admin::render_sandbox_cloud_actions( 'widget', $karmcp_wid );
 									?>

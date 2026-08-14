@@ -242,8 +242,6 @@ class KarMCP_Admin {
 		add_action( 'wp_ajax_karmcp_delete_block', array( $this, 'ajax_delete_block' ) );
 		add_action( 'wp_ajax_karmcp_backup_artifact', array( $this, 'ajax_backup_artifact' ) );
 		add_action( 'wp_ajax_karmcp_bulk_backup_artifacts', array( $this, 'ajax_bulk_backup_artifacts' ) );
-		add_action( 'wp_ajax_karmcp_push_update', array( $this, 'ajax_push_update' ) );
-		add_action( 'wp_ajax_karmcp_marketplace_state', array( $this, 'ajax_marketplace_state' ) );
 		add_action( 'wp_ajax_karmcp_resync_cloud', array( $this, 'ajax_resync_cloud' ) );
 		add_action( 'wp_ajax_karmcp_cloud_library', array( $this, 'ajax_cloud_library' ) );
 		add_action( 'wp_ajax_karmcp_cloud_import', array( $this, 'ajax_cloud_import' ) );
@@ -590,11 +588,9 @@ class KarMCP_Admin {
 			wp_send_json_error( array( 'message' => $msg ) );
 		}
 		// Record that this artifact now exists in the cloud + the checksum of what
-		// was pushed (to later detect local edits), and refresh its marketplace
-		// state so the buttons reflect reality.
+		// was pushed, so a later local edit is detectable.
 		update_post_meta( $id, '_karmcp_cloud_pushed', time() );
 		self::store_artifact_checksum( $kind, $id );
-		self::refresh_marketplace_state( $kind, $id );
 		$payload            = self::cloud_action_payload( $kind, $id );
 		$payload['message'] = __( 'Saved to cloud.', 'karmcp' );
 		wp_send_json_success( $payload );
@@ -637,7 +633,6 @@ class KarMCP_Admin {
 			if ( $karmcp_iid ) {
 				update_post_meta( $karmcp_iid, '_karmcp_cloud_pushed', time() );
 				self::store_artifact_checksum( $kind, $karmcp_iid );
-				self::refresh_marketplace_state( $kind, $karmcp_iid );
 			}
 		}
 		$pushed = (int) ( $res['pushed'] ?? 0 );
@@ -697,35 +692,11 @@ class KarMCP_Admin {
 		return self::artifact_checksum( $kind, $id ) !== $pushed;
 	}
 
-	/**
-	 * Fetch marketplace state from the cloud and cache the useful bits locally.
-	 * Best-effort — returns the state array, or null on any error.
-	 */
-	private static function refresh_marketplace_state( string $kind, int $id ): ?array {
-		if ( ! class_exists( 'KarMCP_Cloud_Sync' ) ) {
-			return null;
-		}
-		$state = KarMCP_Cloud_Sync::marketplace_state( $kind, $id );
-		if ( is_wp_error( $state ) || ! is_array( $state ) ) {
-			return null;
-		}
-		$slug = isset( $state['slug'] ) ? (string) $state['slug'] : '';
-		if ( '' !== $slug ) {
-			update_post_meta( $id, '_karmcp_marketplace_slug', $slug );
-			update_post_meta( $id, '_karmcp_marketplace_status', (string) ( $state['status'] ?? '' ) );
-			update_post_meta( $id, '_karmcp_marketplace_pending', ! empty( $state['hasPendingUpdate'] ) ? 1 : 0 );
-		} else {
-			delete_post_meta( $id, '_karmcp_marketplace_slug' );
-			delete_post_meta( $id, '_karmcp_marketplace_status' );
-			delete_post_meta( $id, '_karmcp_marketplace_pending' );
-		}
-		return $state;
-	}
 
 	/**
-	 * Verify the artifact still exists as a CLOUD BACKUP (separate from any
-	 * marketplace listing). If it was deleted remotely, clear the local
-	 * "pushed" flag so the button reverts from "Saved" to "Save to Cloud".
+	 * Verify the artifact still exists as a cloud backup. If it was deleted
+	 * remotely, clear the local "pushed" flag so the button reverts from
+	 * "Saved" to "Save to Cloud".
 	 *
 	 * Only a definitive 404/410 resets the state — transient errors (network,
 	 * 5xx, not-connected) leave it untouched so a blip never drops a real save.
@@ -749,29 +720,21 @@ class KarMCP_Admin {
 		}
 	}
 
-	/** JS payload describing an artifact's cloud/marketplace state (from cached meta). */
+	/** JS payload describing an artifact's cloud backup state (from cached meta). */
 	public static function cloud_action_payload( string $kind, int $id ): array {
-		$slug   = (string) get_post_meta( $id, '_karmcp_marketplace_slug', true );
-		$status = (string) get_post_meta( $id, '_karmcp_marketplace_status', true );
 		return array(
-			'kind'               => $kind,
-			'id'                 => $id,
-			'pushed'             => (bool) get_post_meta( $id, '_karmcp_cloud_pushed', true ),
-			'changed'            => self::artifact_changed( $kind, $id ),
-			'slug'               => $slug,
-			'status'             => $status,
-			'published'          => ( 'published' === $status ),
-			'has_pending_update' => (bool) get_post_meta( $id, '_karmcp_marketplace_pending', true ),
-			'publish_url'        => class_exists( 'KarMCP_Cloud_Sync' ) ? KarMCP_Cloud_Sync::publish_url( $kind, $id ) : '',
-			'view_url'           => ( '' !== $slug && class_exists( 'KarMCP_Cloud_Sync' ) ) ? KarMCP_Cloud_Sync::marketplace_view_url( $slug ) : '',
+			'kind'    => $kind,
+			'id'      => $id,
+			'pushed'  => (bool) get_post_meta( $id, '_karmcp_cloud_pushed', true ),
+			'changed' => self::artifact_changed( $kind, $id ),
 		);
 	}
 
 	/**
-	 * Renders the Sandbox cloud/marketplace button cluster. The correct buttons
-	 * are shown server-side (works without JS); sandbox-cloud.js refines them
-	 * after refreshing state. Visibility is toggled via inline display because
-	 * WordPress's `.button` (display:inline-block) overrides the [hidden] attr.
+	 * Renders the Sandbox cloud button. Backup only — this plugin ships no
+	 * marketplace, so there is nothing to publish an artifact TO. The correct
+	 * state is rendered server-side (works without JS); sandbox-cloud.js refines
+	 * it after refreshing state.
 	 */
 	public static function render_sandbox_cloud_actions( string $kind, int $id ): string {
 		if ( ! class_exists( 'KarMCP_Cloud' ) || ! KarMCP_Cloud::is_connected() ) {
@@ -780,42 +743,19 @@ class KarMCP_Admin {
 		$s     = self::cloud_action_payload( $kind, $id );
 		$nonce = wp_create_nonce( self::cloud_nonce_action( $kind ) );
 
-		$pushed    = ! empty( $s['pushed'] );
-		$published = ! empty( $s['published'] );
-		$changed   = ! empty( $s['changed'] );
-		$has_slug  = '' !== (string) $s['slug'];
-		$pending   = ! empty( $s['has_pending_update'] );
+		$pushed  = ! empty( $s['pushed'] );
+		$changed = ! empty( $s['changed'] );
 
-		// Save button label/state. Hidden once published (updates go via Push update).
-		$save_show = true;
-		$save_dis  = false;
+		$save_dis = false;
 		if ( ! $pushed ) {
 			$save_txt = __( 'Save to Cloud', 'karmcp' );
-		} elseif ( $published ) {
-			$save_show = false;
-			$save_txt  = __( 'Save to Cloud', 'karmcp' );
 		} elseif ( $changed ) {
 			$save_txt = __( 'Update cloud', 'karmcp' );
 		} else {
 			$save_txt = __( 'Saved', 'karmcp' );
 			$save_dis = true;
 		}
-		$publish_show = $pushed && ! $has_slug;
-		$view_show    = $has_slug;
-		$update_show  = $published && $changed && ! $pending;
 
-		$tag_txt = '';
-		if ( $pending ) {
-			$tag_txt = __( 'Update in review', 'karmcp' );
-		} elseif ( $has_slug && 'pending' === (string) $s['status'] ) {
-			$tag_txt = __( 'In review', 'karmcp' );
-		} elseif ( $published && ! $changed ) {
-			$tag_txt = __( 'Up to date', 'karmcp' );
-		}
-
-		$hide = static function ( bool $show ): string {
-			return $show ? '' : ' style="display:none"';
-		};
 		$icon = static function ( string $d ): string {
 			return '<span class="dashicons dashicons-' . esc_attr( $d ) . '" aria-hidden="true"></span>';
 		};
@@ -823,28 +763,12 @@ class KarMCP_Admin {
 		ob_start();
 		?>
 		<span class="karmcp-sb-cloud" data-kind="<?php echo esc_attr( $kind ); ?>" data-id="<?php echo esc_attr( (string) $id ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>" data-state="<?php echo esc_attr( (string) wp_json_encode( $s ) ); ?>">
-			<button type="button" class="button karmcp-sb-save"<?php echo $hide( $save_show ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><?php disabled( $save_dis ); ?>
+			<button type="button" class="button karmcp-sb-save"<?php disabled( $save_dis ); ?>
 				data-t-save="<?php echo esc_attr__( 'Save to Cloud', 'karmcp' ); ?>"
 				data-t-update="<?php echo esc_attr__( 'Update cloud', 'karmcp' ); ?>"
 				data-t-saved="<?php echo esc_attr__( 'Saved', 'karmcp' ); ?>"><?php
 				echo $icon( 'backup' ) . '<span class="karmcp-sb-txt">' . esc_html( $save_txt ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			?></button>
-			<a class="button button-primary karmcp-sb-publish" href="<?php echo esc_url( $s['publish_url'] ); ?>" target="_blank" rel="noopener"<?php echo $hide( $publish_show ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>><?php
-				echo $icon( 'upload' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				esc_html_e( 'Publish to Marketplace', 'karmcp' );
-			?></a>
-			<a class="button karmcp-sb-view" href="<?php echo esc_url( $s['view_url'] ); ?>" target="_blank" rel="noopener"<?php echo $hide( $view_show ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>><?php
-				echo $icon( 'external' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				esc_html_e( 'View on Marketplace', 'karmcp' );
-			?></a>
-			<button type="button" class="button button-primary karmcp-sb-update"<?php echo $hide( $update_show ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>><?php
-				echo $icon( 'update' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				esc_html_e( 'Push update', 'karmcp' );
-			?></button>
-			<span class="karmcp-sb-tag"<?php echo $hide( '' !== $tag_txt ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-				data-t-inreview="<?php echo esc_attr__( 'Update in review', 'karmcp' ); ?>"
-				data-t-pending="<?php echo esc_attr__( 'In review', 'karmcp' ); ?>"
-				data-t-uptodate="<?php echo esc_attr__( 'Up to date', 'karmcp' ); ?>"><?php echo esc_html( $tag_txt ); ?></span>
 			<span class="karmcp-sb-msg" aria-live="polite"></span>
 		</span>
 		<?php
@@ -987,54 +911,12 @@ class KarMCP_Admin {
 		);
 	}
 
-	/** Push an update to an already-published marketplace listing. AJAX. */
-	public function ajax_push_update(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission to do this.', 'karmcp' ) ), 403 );
-		}
-		$kind = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : '';
-		$na   = self::cloud_nonce_action( $kind );
-		if ( '' === $na || ! check_ajax_referer( $na, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
-		}
-		$id        = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
-		$changelog = isset( $_POST['changelog'] ) ? sanitize_textarea_field( wp_unslash( $_POST['changelog'] ) ) : '';
-		if ( ! $id || ! class_exists( 'KarMCP_Cloud_Sync' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Nothing to update.', 'karmcp' ) ) );
-		}
-		$res = KarMCP_Cloud_Sync::push_update( $kind, $id, $changelog );
-		if ( is_wp_error( $res ) ) {
-			wp_send_json_error( array( 'message' => $res->get_error_message() ) );
-		}
-		self::store_artifact_checksum( $kind, $id );
-		self::refresh_marketplace_state( $kind, $id );
-		$payload            = self::cloud_action_payload( $kind, $id );
-		$payload['message'] = __( 'Update pushed — pending review.', 'karmcp' );
-		wp_send_json_success( $payload );
-	}
 
-	/** Refresh + return an artifact's marketplace state. AJAX (page-load sync). */
-	public function ajax_marketplace_state(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Forbidden.', 'karmcp' ) ), 403 );
-		}
-		$kind = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : '';
-		$na   = self::cloud_nonce_action( $kind );
-		if ( '' === $na || ! check_ajax_referer( $na, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
-		}
-		$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
-		if ( ! $id ) {
-			wp_send_json_error( array( 'message' => __( 'Missing id.', 'karmcp' ) ) );
-		}
-		self::refresh_marketplace_state( $kind, $id );
-		wp_send_json_success( self::cloud_action_payload( $kind, $id ) );
-	}
 
 	/**
-	 * Full resync of an artifact's cloud state: verify the backup still exists
-	 * remotely (self-heals a stale "Saved" after a cloud-side delete) AND refresh
-	 * its marketplace listing state. Drives the "Refresh cloud status" button.
+	 * Resync an artifact's cloud state: verify the backup still exists remotely,
+	 * which self-heals a stale "Saved" after a cloud-side delete. Drives the
+	 * "Refresh cloud status" button.
 	 */
 	public function ajax_resync_cloud(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -1050,7 +932,6 @@ class KarMCP_Admin {
 			wp_send_json_error( array( 'message' => __( 'Missing id.', 'karmcp' ) ) );
 		}
 		self::verify_cloud_backup( $kind, $id );
-		self::refresh_marketplace_state( $kind, $id );
 		$payload            = self::cloud_action_payload( $kind, $id );
 		$payload['message'] = __( 'Cloud status refreshed.', 'karmcp' );
 		wp_send_json_success( $payload );
@@ -2209,7 +2090,7 @@ class KarMCP_Admin {
 			true
 		);
 
-		// Sandbox cloud/marketplace button state machine (no-op unless the page
+		// Sandbox cloud-backup button state machine (no-op unless the page
 		// renders .karmcp-sb-cloud clusters).
 		$sb_js = KARMCP_DIR . 'assets/js/sandbox-cloud.js';
 		if ( file_exists( $sb_js ) ) {

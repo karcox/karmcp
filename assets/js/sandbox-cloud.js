@@ -1,14 +1,15 @@
 /**
- * Sandbox cloud/marketplace button state machine.
+ * Sandbox cloud-backup button state machine.
  *
  * Each artifact row renders a `.karmcp-sb-cloud` cluster carrying its initial
- * state as JSON in data-state. This script renders the right buttons from that
- * state, refreshes pushed artifacts against the cloud on load, and wires the
- * Save-to-Cloud / Push-update actions.
+ * state as JSON in data-state. This script renders the button from that state
+ * and wires the Save-to-Cloud action.
+ *
+ * Backup only: the plugin ships no marketplace, so there is nowhere to publish
+ * an artifact to and no listing state to track.
  *
  * State shape (from KarMCP_Admin::cloud_action_payload):
- *   { kind, id, pushed, changed, slug, status, published, has_pending_update,
- *     publish_url, view_url }
+ *   { kind, id, pushed, changed }
  */
 ( function () {
 	'use strict';
@@ -40,56 +41,19 @@
 	function render( cluster, s ) {
 		cluster.__state = s;
 		var save = cluster.querySelector( '.karmcp-sb-save' );
-		var pub = cluster.querySelector( '.karmcp-sb-publish' );
-		var view = cluster.querySelector( '.karmcp-sb-view' );
-		var upd = cluster.querySelector( '.karmcp-sb-update' );
-		var tag = cluster.querySelector( '.karmcp-sb-tag' );
+		if ( ! save ) { return; }
 
-		// Save to Cloud: primary until published. Once published, updates go
-		// through "Push update" instead.
-		if ( save ) {
-			if ( ! s.pushed ) {
-				setText( save, save.getAttribute( 'data-t-save' ) || 'Save to Cloud' );
-				save.disabled = false;
-				show( save, true );
-			} else if ( s.published ) {
-				show( save, false );
-			} else if ( s.changed ) {
-				setText( save, save.getAttribute( 'data-t-update' ) || 'Update cloud' );
-				save.disabled = false;
-				show( save, true );
-			} else {
-				setText( save, save.getAttribute( 'data-t-saved' ) || 'Saved' );
-				save.disabled = true;
-				show( save, true );
-			}
+		if ( ! s.pushed ) {
+			setText( save, save.getAttribute( 'data-t-save' ) || 'Save to Cloud' );
+			save.disabled = false;
+		} else if ( s.changed ) {
+			setText( save, save.getAttribute( 'data-t-update' ) || 'Update cloud' );
+			save.disabled = false;
+		} else {
+			setText( save, save.getAttribute( 'data-t-saved' ) || 'Saved' );
+			save.disabled = true;
 		}
-
-		// Publish: only before it's on the marketplace.
-		if ( pub ) {
-			var canPublish = s.pushed && ! s.slug && s.publish_url;
-			if ( canPublish ) { pub.href = s.publish_url; }
-			show( pub, !! canPublish );
-		}
-
-		// View on Marketplace: once it has a listing.
-		if ( view ) {
-			if ( s.view_url ) { view.href = s.view_url; }
-			show( view, !! s.slug );
-		}
-
-		// Push update: published + locally changed + not already in review.
-		show( upd, !! ( s.published && s.changed && ! s.has_pending_update ) );
-
-		// Status tag.
-		if ( tag ) {
-			var text = '';
-			if ( s.has_pending_update ) { text = tag.getAttribute( 'data-t-inreview' ) || 'Update in review'; }
-			else if ( s.slug && s.status === 'pending' ) { text = tag.getAttribute( 'data-t-pending' ) || 'In review'; }
-			else if ( s.published && ! s.changed ) { text = tag.getAttribute( 'data-t-uptodate' ) || 'Up to date'; }
-			tag.textContent = text;
-			show( tag, text !== '' );
-		}
+		show( save, true );
 	}
 
 	function msg( cluster, text, isErr ) {
@@ -109,7 +73,7 @@
 	}
 
 	document.addEventListener( 'click', function ( e ) {
-		var btn = e.target.closest( '.karmcp-sb-save, .karmcp-sb-update' );
+		var btn = e.target.closest( '.karmcp-sb-save' );
 		if ( ! btn ) { return; }
 		var cluster = btn.closest( '.karmcp-sb-cloud' );
 		if ( ! cluster ) { return; }
@@ -117,21 +81,13 @@
 		btn.disabled = true;
 		msg( cluster, '…', false );
 
-		if ( btn.classList.contains( 'karmcp-sb-update' ) ) {
-			var note = window.prompt( 'What changed in this update? (optional)' );
-			if ( note === null ) { btn.disabled = false; msg( cluster, '', false ); return; }
-			post( 'karmcp_tools_push_update', cluster, { changelog: note } ).then( function ( res ) {
-				btn.disabled = false; handle( res, cluster );
-			} ).catch( function () { btn.disabled = false; msg( cluster, 'Network error.', true ); } );
-		} else {
-			post( 'karmcp_tools_backup_artifact', cluster, null ).then( function ( res ) {
-				btn.disabled = false; handle( res, cluster );
-			} ).catch( function () { btn.disabled = false; msg( cluster, 'Network error.', true ); } );
-		}
+		post( 'karmcp_tools_backup_artifact', cluster, null ).then( function ( res ) {
+			btn.disabled = false; handle( res, cluster );
+		} ).catch( function () { btn.disabled = false; msg( cluster, 'Network error.', true ); } );
 	} );
 
-	// Full resync of one cluster: verifies the cloud backup still exists (heals a
-	// stale "Saved" after a cloud-side delete) and refreshes marketplace state.
+	// Resync one cluster: verifies the cloud backup still exists, healing a stale
+	// "Saved" after a cloud-side delete.
 	function resync( cluster ) {
 		return post( 'karmcp_tools_resync_cloud', cluster, null ).then( function ( res ) {
 			if ( res && res.success && res.data ) { render( cluster, res.data ); }
@@ -225,13 +181,6 @@
 			var s;
 			try { s = JSON.parse( cluster.getAttribute( 'data-state' ) || '{}' ); } catch ( err ) { s = {}; }
 			render( cluster, s );
-			// Pushed artifacts may have gained a listing (published on the website)
-			// since last time — refresh their state in the background.
-			if ( s.pushed ) {
-				post( 'karmcp_tools_marketplace_state', cluster, null ).then( function ( res ) {
-					if ( res && res.success && res.data ) { render( cluster, res.data ); }
-				} ).catch( function () {} );
-			}
 		} );
 		mountRefreshAll( clusters );
 	}

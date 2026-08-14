@@ -214,7 +214,7 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 									<span class="dashicons dashicons-download" aria-hidden="true"></span><?php esc_html_e( 'Export', 'karmcp' ); ?>
 								</a>
 								<?php
-								// Cloud/marketplace button state machine. Pre-escaped markup.
+								// Cloud-backup button. Pre-escaped markup.
 								// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 								echo KarMCP_Admin::render_sandbox_cloud_actions( 'snippet', $karmcp_sid );
 								?>

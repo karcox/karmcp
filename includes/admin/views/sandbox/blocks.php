@@ -145,7 +145,7 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 										<span class="dashicons dashicons-download" aria-hidden="true"></span><?php esc_html_e( 'Export', 'karmcp' ); ?>
 									</a>
 									<?php
-									// Cloud/marketplace button state machine. Pre-escaped markup.
+									// Cloud-backup button. Pre-escaped markup.
 									// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 									echo KarMCP_Admin::render_sandbox_cloud_actions( 'block', $karmcp_bid );
 									?>
@@ -203,7 +203,7 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 								else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || 'Failed.' ); }
 							} ).catch( function () { e.target.disabled = false; } );
 						}
-						// Cloud/marketplace actions handled by shared sandbox-cloud.js.
+						// Cloud-backup action handled by shared sandbox-cloud.js.
 					} );
 				} )();
 				</script>

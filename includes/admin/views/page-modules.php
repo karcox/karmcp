@@ -64,7 +64,10 @@ $modules  = $registry ? $registry->all() : array();
 							if ( KarMCP_Image_Optimization_Module::ID === $module->id() ) {
 								esc_html_e( 'Not available on this server (WebP support is missing in the image editor).', 'karmcp' );
 							} else {
-								esc_html_e( 'Not available, requires an active Pro license.', 'karmcp' );
+								// There is no licensing in this build, so "buy Pro" would be
+								// selling something that does not exist. Say what is true:
+								// the feature is not part of this version.
+								esc_html_e( 'Not included in this version.', 'karmcp' );
 							}
 							?>
 						</p>

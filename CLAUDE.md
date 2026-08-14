@@ -44,7 +44,7 @@ PHPDIR=$(dirname "$(which php)")
 php -d extension_dir="$PHPDIR/ext" -d extension=mbstring /ruta/a/phpunit.phar
 ```
 
-Estado de referencia: **173 tests, 456 aserciones, todo en verde** (2026-08-14). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+Estado de referencia: **238 tests, 618 aserciones, todo en verde** (2026-08-14). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
 
 ## Arquitectura
 
@@ -73,7 +73,7 @@ Los widgets son **datos** en `includes/widgets/` (`catalog-{free,pro,woo}.php`),
 
 Features que el admin enciende y apaga desde la pestaña **Modules**. Base `KarMCP_Module` + `KarMCP_Modules_Registry` en `includes/modules/`. Los activos se guardan en la opción `karmcp_active_modules` y arrancan en `init` (prioridad 5).
 
-Módulos presentes: Themer, Redirects, Prompts, Brand Kits, Templates, Agent Skills, Cloud, Image Optimization, SVG Support.
+Módulos presentes: Themer, Redirects, Prompts, Brand Kits, Templates, Agent Skills, Cloud, Image Optimization, SVG Support, Guardrails.
 
 > **Patrón de gating a respetar:** las abilities se registran en `wp_abilities_api_init`, que corre **antes** de que el módulo arranque en `init:5`. Por eso el registrar consulta el estático `is_enabled()` del módulo, nunca su instancia.
 
@@ -88,7 +88,7 @@ Esto ahorra horas: hay guards por todo el código que comprueban clases que **nu
 - **No hay `pro/`**, ni submódulo, ni `pro-manifest.txt`, ni `KarMCP_Pro_Loader`. Un solo tier.
 - **No hay Freemius ni licenciamiento.** `KarMCP_License` y `karmcp_fs()` no existen (0 ocurrencias).
 - **No hay auto-updater.** La cabecera lleva `Update URI: false`; se actualiza sustituyendo la carpeta.
-- **Clases ausentes** que sus guards siempre resuelven a falso: `KarMCP_Migrate_Abilities`, `KarMCP_Block_Store`, `KarMCP_Widget_Generator`, y los grupos Woo / GeneratePress / Blocksy / EssentialAddons / PremiumAddons / UAE / Block Builder / System Kit / SEO / A11y / Widget Builder / Skills / Memory.
+- **Clases ausentes** que sus guards siempre resuelven a falso: `KarMCP_Migrate_Abilities`, `KarMCP_Block_Store`, `KarMCP_Widget_Generator`, y los grupos Woo / GeneratePress / Blocksy / EssentialAddons / PremiumAddons / UAE / Block Builder / System Kit / SEO / A11y / Widget Builder / Memory. **Skills ya no está en esta lista**: se implementó en `includes/skills/`.
 - **Guards que devuelven `false` literal:** `KarMCP_Widget_Loader::has_access()`, `KarMCP_Widget_Store::user_has_access()`.
 - **Cloud está inerte:** `KarMCP_Cloud::DEFAULT_BASE_URL` está vacío a propósito, así que el plugin **no hace ninguna llamada saliente** salvo que se configure (`KARMCP_CLOUD_URL`, la opción `karmcp_cloud_base_url`, o el filtro homónimo).
 
@@ -101,6 +101,16 @@ Toda herramienta comprueba una capacidad real de WordPress antes de actuar — u
 - Los administradores no son editables por MCP y no hay herramienta de borrado de usuarios.
 - El acceso a ficheros está confinado a `ABSPATH`, con backup automático y log de auditoría; `wp-config.php` y `.htaccess` se rechazan.
 - Los snippets PHP **nunca se ejecutan sin aprobación humana**: el agente crea borradores validados, pero solo un admin puede activarlos.
+
+Por encima de eso está el **módulo Guardrails** (`includes/modules/guardrails/`), que es política del dueño del sitio, no seguridad: modo solo lectura, bloqueo de herramientas destructivas, ventana de congelación horaria, posts y tipos de contenido protegidos. La lógica vive en `KarMCP_Guardrails_Policy`, **deliberadamente pura** —ni `get_option()` ni `current_time()` dentro—, y por eso se testea sin WordPress; el módulo reúne los datos y se los pasa.
+
+Se apoya en dos costuras a la vez, y el emparejamiento es el diseño: `karmcp_discovery_memory` publica las reglas en el contexto del agente (prevención) y `karmcp_before_write` las aplica (cumplimiento).
+
+Al lado están las **Skills** (`includes/skills/`), que son lo contrario: no lo que el agente no puede hacer, sino **cómo se hacen aquí las cosas**. Un CPT `karmcp_skill` mapeado sobre campos nativos —título = nombre, `post_name` = nombre de máquina, `post_excerpt` = resumen, `post_content` = cuerpo, `publish`/`draft` = encendido/apagado—, así que no hay meta propia y salen gratis el editor, las revisiones y el buscador. Edición solo para administradores: una skill dirige el comportamiento de los agentes en todo el sitio, está más cerca de la configuración que del contenido.
+
+> **La economía de las dos costuras:** por `karmcp_discovery_memory` va la política **entera**, porque es corta y aplica a todas las llamadas. Por `karmcp_discovery_skills` va **solo el índice** (nombre + resumen); el cuerpo se pide con `get-skill` cuando hace falta. Mandar los cuerpos en cada conexión gravaría todas las conversaciones con guías que la mayoría no usa. Hay un test que fija que el índice nunca lleve cuerpo, porque es una regresión que no rompe nada visible — solo cuesta dinero en silencio.
+
+> **Trampa del modo dispatcher:** `karmcp/call-tool` no está anotada como read-only, así que el veto se dispara **primero para el sobre y después para la herramienta real**. Juzgar el sobre bloquearía lecturas —un `list-posts` invocado vía `call-tool` moriría en una regla de escritura—, así que el módulo lo deja pasar a propósito: la ability destino corre por el mismo callback envuelto y la política la ve con su nombre y sus argumentos verdaderos.
 
 Al añadir una herramienta que escribe: súbele `DEFAULTS_VERSION` en `class-admin.php` y siembra su slug como deshabilitada.
 

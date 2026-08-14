@@ -41,6 +41,8 @@ function karmcp_test_reset(): void {
 		'posts'              => array(),   // post_id => post-ish object.
 		'options_pages'      => array(),
 		'abilities'          => array(),   // name => registration args.
+		'now'                => null,      // format => value, pinning current_time().
+		'cpt_posts'          => array(),   // post_type => WP_Post[] for get_posts().
 		'options'            => array(),   // option name => value (get_option/update_option).
 		'cpt_tax_supported'  => true,      // Toggles the ACF 6.1+ CPT/tax API stubs.
 		'acf_post_types'     => array(),   // key/ID => acf-post-type definition.
@@ -77,9 +79,14 @@ if ( ! class_exists( 'WP_Error' ) ) {
 
 if ( ! class_exists( 'WP_Post' ) ) {
 	class WP_Post {
-		public $ID         = 0;
-		public $post_title = '';
-		public $post_type  = 'post';
+		public $ID           = 0;
+		public $post_title   = '';
+		public $post_type    = 'post';
+		public $post_name    = '';
+		public $post_excerpt = '';
+		public $post_content = '';
+		public $post_status  = 'publish';
+		public $menu_order   = 0;
 		public function __construct( array $props = array() ) {
 			foreach ( $props as $k => $v ) {
 				$this->$k = $v;
@@ -110,6 +117,89 @@ function sanitize_key( $value ): string {
 
 function esc_url_raw( $value ): string {
 	return (string) $value;
+}
+
+/**
+ * Post query stub. Serves $GLOBALS['karmcp_test']['cpt_posts'][ post_type ],
+ * honouring only the `name` filter — enough for slug lookups, and honest about
+ * not being WP_Query.
+ *
+ * @param array $args Query args.
+ * @return array
+ */
+if ( ! function_exists( 'get_posts' ) ) {
+	function get_posts( $args = array() ) {
+		$type  = (string) ( $args['post_type'] ?? 'post' );
+		$posts = $GLOBALS['karmcp_test']['cpt_posts'][ $type ] ?? array();
+
+		if ( isset( $args['name'] ) && '' !== $args['name'] ) {
+			$posts = array_values(
+				array_filter(
+					$posts,
+					static function ( $post ) use ( $args ) {
+						return isset( $post->post_name ) && $post->post_name === $args['name'];
+					}
+				)
+			);
+		}
+
+		if ( isset( $args['numberposts'] ) && (int) $args['numberposts'] > 0 ) {
+			$posts = array_slice( $posts, 0, (int) $args['numberposts'] );
+		}
+
+		return array_values( $posts );
+	}
+}
+
+if ( ! function_exists( 'sanitize_title' ) ) {
+	function sanitize_title( $title ): string {
+		$title = strtolower( trim( (string) $title ) );
+		$title = preg_replace( '/[^a-z0-9_\-]+/', '-', $title );
+		return trim( (string) $title, '-' );
+	}
+}
+
+/**
+ * Site-local time, pinned by the fixture so schedule-driven code is testable.
+ * Falls back to the real clock when a test has not set one.
+ *
+ * @param string $type 'H:i', 'N', … — the same format strings WordPress accepts.
+ * @return string
+ */
+if ( ! function_exists( 'current_time' ) ) {
+	function current_time( $type = 'H:i' ) {
+		$now = $GLOBALS['karmcp_test']['now'] ?? null;
+		if ( is_array( $now ) && isset( $now[ $type ] ) ) {
+			return $now[ $type ];
+		}
+		return gmdate( 'mysql' === $type ? 'Y-m-d H:i:s' : (string) $type );
+	}
+}
+
+/**
+ * Ability lookup. Returns an object exposing get_meta() for the registrations
+ * recorded in the fixture, so annotation-driven code can be exercised.
+ *
+ * @param string $name Ability name.
+ * @return object|null
+ */
+if ( ! function_exists( 'wp_get_ability' ) ) {
+	function wp_get_ability( $name ) {
+		$args = $GLOBALS['karmcp_test']['abilities'][ $name ] ?? null;
+		if ( null === $args ) {
+			return null;
+		}
+		return new class( (array) $args ) {
+			/** @var array */
+			private $args;
+			public function __construct( array $args ) {
+				$this->args = $args;
+			}
+			public function get_meta() {
+				return $this->args['meta'] ?? array();
+			}
+		};
+	}
 }
 
 /**

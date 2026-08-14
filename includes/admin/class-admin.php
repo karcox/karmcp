@@ -5517,6 +5517,28 @@ class KarMCP_Admin {
 			),
 		);
 
+		// Agent Skills — the read side of the skills an admin writes under
+		// KarMCP → Skills. Both read-only, so both ship enabled; the Agent Skills
+		// module is the switch that removes them entirely.
+		if ( class_exists( 'KarMCP_Agent_Skills_Module' ) && KarMCP_Agent_Skills_Module::is_enabled() ) {
+			$tools['skills'] = array(
+				'platform' => 'wordpress',
+				'label'    => __( 'Agent Skills', 'karmcp' ),
+				'tools'    => array(
+					'karmcp/list-skills' => array(
+						'label'       => __( 'List Skills', 'karmcp' ),
+						'description' => __( 'Names and one-line summaries of this site\'s skills — the operating manuals you wrote for agents.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/get-skill'   => array(
+						'label'       => __( 'Get Skill', 'karmcp' ),
+						'description' => __( 'Full text of one skill by machine name.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+				),
+			);
+		}
+
 		// Themer PHP Templates — free, capability-gated + master-switch-gated;
 		// disabled by default. AI authors DRAFTS; a human attaches one in a
 		// template metabox (the execution gate). Registered only when the Themer

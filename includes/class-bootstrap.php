@@ -139,6 +139,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/redirects/class-redirect-store.php';
 		require_once KARMCP_DIR . 'includes/redirects/class-redirect-handler.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-redirect-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-skill-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-content-mirror.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-content-mirror-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-admin-bar.php';
@@ -268,6 +269,12 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/modules/class-agent-skills-module.php';
 		require_once KARMCP_DIR . 'includes/modules/svg-support/class-svg-sanitizer.php';
 		require_once KARMCP_DIR . 'includes/modules/svg-support/class-svg-support-module.php';
+		require_once KARMCP_DIR . 'includes/modules/guardrails/class-guardrails-policy.php';
+		require_once KARMCP_DIR . 'includes/modules/guardrails/class-guardrails-module.php';
+		// Agent Skills: the store + catalog load unconditionally (the post type
+		// must exist so an admin can write skills), the module gates exposure.
+		require_once KARMCP_DIR . 'includes/skills/class-skill-store.php';
+		require_once KARMCP_DIR . 'includes/skills/class-skill-catalog.php';
 		require_once KARMCP_DIR . 'includes/modules/class-cloud-module.php';
 		// KarMCP Themer (free): builder-agnostic theme builder engine + module + MCP tools.
 		require_once KARMCP_DIR . 'includes/themer/class-themer-matcher-registry.php';
@@ -333,6 +340,7 @@ class KarMCP_Bootstrap {
 		KarMCP_Content_Mirror::init();
 		add_action( 'init', array( 'KarMCP_Kit_Backup_Store', 'register_post_type' ) );
 		add_action( 'init', array( 'KarMCP_Widget_Store', 'register_post_type' ) );
+		add_action( 'init', array( 'KarMCP_Skill_Store', 'register_post_type' ) );
 		( new KarMCP_Widget_Loader() )->register_hooks();
 		add_action( 'init', array( 'KarMCP_PHP_Snippet_Store', 'register_post_type' ) );
 		( new KarMCP_PHP_Snippet_Loader() )->register_hooks();
@@ -357,6 +365,7 @@ class KarMCP_Bootstrap {
 		$karmcp_modules->register( new KarMCP_Redirect_Module() );
 		$karmcp_modules->register( new KarMCP_Agent_Skills_Module() );
 		$karmcp_modules->register( new KarMCP_SVG_Support_Module() );
+		$karmcp_modules->register( new KarMCP_Guardrails_Module() );
 		$karmcp_modules->register( new KarMCP_Cloud_Module() );
 		do_action( 'karmcp_register_modules', $karmcp_modules );
 		$karmcp_modules->apply_defaults();

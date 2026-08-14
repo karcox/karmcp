@@ -2,16 +2,14 @@
 /**
  * Agent Skills as a module.
  *
- * Controls the *runtime* exposure of the bundled skills to connected AI agents:
- * the `list-skills` / `get-skill` MCP tools and the `## Skills` catalog injected
- * into the discovery context. Turning it off removes both (and their ~900-token
- * footprint) without touching the local-install path on the Skills tab.
+ * Controls the *runtime* exposure of a site's skills to connected AI agents: the
+ * `list-skills` / `get-skill` MCP tools and the `## Skills` index injected into
+ * the discovery context. Turning it off removes both, and with them their token
+ * cost on every connection — without touching the skills themselves, which stay
+ * editable under KarMCP → Skills either way.
  *
- * Pro tier, on by default. Metadata only — the gating is read statically:
- *   - the ability registrar checks is_enabled() before registering the tools,
- *   - KarMCP_Skill_Catalog::discovery_catalog() checks it before injecting.
- * So this class carries no Pro logic and lives safely in the free tree, like
- * KarMCP_Templates_Module.
+ * The gating is read statically, because the ability registrar runs on
+ * `wp_abilities_api_init`, before this module boots on `init:5`.
  *
  * @package KarMCP
  * @since   3.2.0
@@ -37,32 +35,32 @@ class KarMCP_Agent_Skills_Module extends KarMCP_Module {
 	}
 
 	public function description(): string {
-		return __( 'Expose the bundled skills to connected AI agents at runtime, the list-skills / get-skill tools plus a Skills catalog in the discovery context. Turn off to remove that injection (the Skills download on the Skills tab is unaffected).', 'karmcp' );
+		return __( 'Hand your skills to connected AI agents: an index of names and summaries in the discovery context, plus the list-skills / get-skill tools to fetch one on demand. Write and edit the skills themselves under KarMCP → Skills; this switch only decides whether agents can see them.', 'karmcp' );
 	}
 
 	public function tier(): string {
-		return 'pro';
+		return 'free';
 	}
 
 	public function default_active(): bool {
 		return true;
 	}
 
-	/** The skill catalog + abilities shipped in the upstream Pro overlay and are absent here. */
-	public function is_available(): bool {
-		return false;
-	}
-
-	/** The Skills tab is where the skills live (download + guides). */
+	/** Where the skills are written. */
 	public function settings_url(): string {
-		return admin_url( 'admin.php?page=' . KarMCP_Admin::PAGE_SLUG . '-skills' );
+		return admin_url( 'edit.php?post_type=' . KarMCP_Skill_Store::POST_TYPE );
 	}
 
 	/** No overlay knobs — the on/off toggle is the whole control. */
 	public function render_settings(): void {}
 
-	/** Nothing to wire on boot — the two consumers gate themselves via is_enabled(). */
-	public function register(): void {}
+	/**
+	 * Wire the discovery index. The MCP tools are not wired here: the ability
+	 * registrar runs before this, and gates itself on is_enabled().
+	 */
+	public function register(): void {
+		KarMCP_Skill_Catalog::init();
+	}
 
 	/**
 	 * Whether the module is active (static helper for the ability registrar,

@@ -5,7 +5,7 @@
  * Description:       Extends the WordPress MCP Adapter to expose Elementor data, widgets, and page design tools as MCP tools for AI agents.
  * Version:           1.0.0
  * Requires at least: 6.9
- * Tested up to:      6.9
+ * Tested up to:      7.0
  * Requires PHP:      8.1
  * Author:            karcox
  * Author URI:        https://github.com/karcox

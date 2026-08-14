@@ -528,9 +528,9 @@ class KarMCP_Ability_Registrar {
 			}
 		}
 
-		// Skills read-side (Pro; self-guards on license). Not Elementor-dependent,
-		// so it registers regardless of whether Elementor is active — but gated by
-		// the Agent Skills module so the admin can switch the runtime exposure off.
+		// Skills read-side. Not Elementor-dependent, so it registers regardless of
+		// whether Elementor is active — but gated by the Agent Skills module so
+		// the admin can switch the runtime exposure off in one place.
 		if ( class_exists( 'KarMCP_Skill_Abilities' )
 			&& class_exists( 'KarMCP_Agent_Skills_Module' )
 			&& KarMCP_Agent_Skills_Module::is_enabled() ) {

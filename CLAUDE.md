@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.0.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.1.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -44,7 +44,9 @@ PHPDIR=$(dirname "$(which php)")
 php -d extension_dir="$PHPDIR/ext" -d extension=mbstring /ruta/a/phpunit.phar
 ```
 
-Estado de referencia: **238 tests, 618 aserciones, todo en verde** (2026-08-14). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+Estado de referencia: **437 tests, 1.029 aserciones, todo en verde** (2026-08-14). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+
+El harness comparte stubs en `tests/bootstrap.php`, y ahí está la trampa: **un stub del harness gana al que declare un fichero de test**, porque el bootstrap carga primero. Si añades ahí una función que un test ya simulaba por su cuenta, ese test empieza a leer una fixture distinta y falla lejos del cambio. Pasó con `wp_get_object_terms()` y los menús.
 
 ## Arquitectura
 
@@ -63,7 +65,17 @@ Tres hooks, en este orden:
 1. **Datos** (`class-elementor-data.php`) — envoltorio de lectura/escritura sobre `_elementor_data`. **Nunca escribas ese meta directamente**: todo guardado pasa por `\Elementor\Plugin::$instance->documents->get()->save()`, que es lo que regenera el CSS e invalida caché. Una escritura cruda produce bugs que solo se ven en el front.
 2. **Factory** (`class-element-factory.php`) — construye JSON válido de Elementor; cada elemento recibe un id hex de 7 caracteres.
 3. **Esquemas** (`schemas/`) — genera JSON Schema a partir de los controles reales de Elementor. No se escriben a mano.
-4. **Abilities** (`includes/abilities/`, 48 archivos) — las herramientas, agrupadas por dominio y coordinadas por `class-ability-registrar.php`.
+4. **Abilities** (`includes/abilities/`, 66 archivos) — las herramientas, agrupadas por dominio y coordinadas por `class-ability-registrar.php`.
+
+### El bucle cerrado: render-page
+
+`KarMCP_Content_Extractor` (`includes/class-content-extractor.php`) renderiza un post como lo recibe un visitante y lo reduce a un digest normalizado. Está partido a propósito: `analyze()` es **puro** (HTML entra, digest sale, sin WordPress) y es lo que se testea; `extract()` es la mitad que resuelve un post a HTML. No reinventa nada: el render delega en `KarMCP_Themer_Content_Renderer::render()` y el `scope: full` en `KarMCP_Performance_Page_Audit::fetch()`, que ya revalida cada salto de redirección contra el host de origen.
+
+Es la base compartida que pide la Parte 2 del roadmap: `audit-page-seo` y `audit-page-a11y` consumen esta misma vista.
+
+### Integraciones de plugin: el trait
+
+Las integraciones exponen dos herramientas (`<id>-read` / `<id>-write`) que reciben `{ operation, arguments }`. La mecánica común —resolver la operación, revalidar su capacidad, exigir `confirm` en las destructivas, devolver el catálogo cuando no se nombra ninguna— vive en `includes/abilities/trait-operation-dispatcher.php`. La base de formularios es anterior y conserva su copia; **lo nuevo usa el trait**.
 
 ### Widgets: catálogo, no herramientas
 
@@ -88,7 +100,7 @@ Esto ahorra horas: hay guards por todo el código que comprueban clases que **nu
 - **No hay `pro/`**, ni submódulo, ni `pro-manifest.txt`, ni `KarMCP_Pro_Loader`. Un solo tier.
 - **No hay Freemius ni licenciamiento.** `KarMCP_License` y `karmcp_fs()` no existen (0 ocurrencias).
 - **No hay auto-updater.** La cabecera lleva `Update URI: false`; se actualiza sustituyendo la carpeta.
-- **Clases ausentes** que sus guards siempre resuelven a falso: `KarMCP_Migrate_Abilities`, `KarMCP_Block_Store`, `KarMCP_Widget_Generator`, y los grupos Woo / GeneratePress / Blocksy / EssentialAddons / PremiumAddons / UAE / Block Builder / System Kit / SEO / A11y / Widget Builder / Memory. **Skills ya no está en esta lista**: se implementó en `includes/skills/`.
+- **Clases ausentes** que sus guards siempre resuelven a falso: `KarMCP_Migrate_Abilities`, `KarMCP_Block_Store`, `KarMCP_Widget_Generator`, y los grupos GeneratePress / Blocksy / EssentialAddons / PremiumAddons / UAE / Block Builder / System Kit / SEO / A11y / Widget Builder / Memory. **Skills y Woo ya no están en esta lista**: Skills se implementó en `includes/skills/` y `KarMCP_Woo_Integration` en `includes/abilities/woo/` (catálogo de productos, no pedidos).
 - **Guards que devuelven `false` literal:** `KarMCP_Widget_Loader::has_access()`, `KarMCP_Widget_Store::user_has_access()`.
 - **Cloud está inerte:** `KarMCP_Cloud::DEFAULT_BASE_URL` está vacío a propósito, así que el plugin **no hace ninguna llamada saliente** salvo que se configure (`KARMCP_CLOUD_URL`, la opción `karmcp_cloud_base_url`, o el filtro homónimo).
 
@@ -123,11 +135,15 @@ Al añadir una herramienta que escribe: súbele `DEFAULTS_VERSION` en `class-adm
 
 ## Deuda conocida
 
-Auditado el 2026-08-14; pendiente de abordar:
+Auditado el 2026-08-14; pendiente de abordar. **`duplicate-post` salió de esta lista en 1.1.0**: vive en `includes/class-post-duplicator.php` (la primitiva) y `includes/abilities/class-duplicate-abilities.php` (la herramienta), y es también sobre lo que se construye `create-translation`.
+
+Fuera de esta lista, sin abordar y verificado el 2026-08-14: **la i18n del propio plugin no funciona** (3.172 llamadas a `__()`, ningún `load_plugin_textdomain()`, `languages/` vacío), **no hay CI** (`.github/` solo tiene plantillas de issues) y **el desinstalador borra 7 opciones y deja las 5 tablas propias**, incluidos clientes y tokens OAuth.
 
 - **`includes/admin/class-admin.php` son ~5.900 líneas** mezclando 6 responsabilidades. `get_tool_catalog()` es un único método de ~1.865 líneas que solo devuelve un array. La extracción natural es a archivos de datos, patrón que el repo ya usa en `includes/widgets/catalog-*.php`.
 - **Duplicación en abilities:** 168 registros repiten el literal completo; solo `class-database-abilities.php` y `class-wpcli-abilities.php` lo factorizan en un helper `ability()`. Esa es la plantilla a seguir.
 - **Código muerto:** unas 250 líneas inalcanzables y 3 endpoints AJAX de una feature eliminada (Memory) en `class-admin.php`.
+- **`create-post` es incoherente con las herramientas de Elementor.** Deja crear un post de un CPT que después ninguna herramienta de Elementor puede tocar, porque comprueban cosas distintas (`edit_posts` genérico frente a `edit_post` sobre el ID). El resultado es un post huérfano e irrellenable. O ambas cosas, o ninguna.
+- **El guard SQL bloquea la función `REPLACE()`** confundiéndola con `REPLACE INTO`. `REPLACE()` como función de cadena es solo lectura; el falso positivo tumba consultas legítimas de análisis.
 - **Seguridad, pendiente (severidad media):** los redirects de `KarMCP_Url_Guard::safe_download()` no revalidan contra 169.254.169.254 (el validador estricto `ip_is_blocked()` ya existe, pero solo se usa en otra ruta); el registro dinámico de clientes OAuth no tiene rate-limit; y los `scope` OAuth se guardan pero no se aplican en `KarMCP_OAuth_Bearer::permission_callback()`.
 
 ## Documentos

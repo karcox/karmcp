@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,17 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.1.0 =
+
+* `render-page`: renders a page the way a visitor gets it and returns a digest of the output, with warnings for empty containers, missing alt text, placeholder links, unresolved shortcodes and duplicate ids. The one read tool that can disagree with what the agent thought it wrote.
+* Contact Form 7: create and rebuild forms from a plain field list, with a mail template that reports every field. Reads submissions through Flamingo when it is installed.
+* `add-contact-form`: a working Elementor Pro form from a plain field list, with the notification email and reply-to wired up.
+* WooCommerce: list, get, create, update and delete products, set their categories and tags, and read the store setup. Prices are accepted in any human format. Orders and customers are deliberately not exposed.
+* Polylang and WPML: list languages, read a page's translation status, create a translation (duplicated, assigned and linked), and link copies made by hand.
+* `duplicate-post`: copies a post with its protected meta and terms, so post types owned by other plugins can finally be created rather than only edited.
+* Structured data: validated Schema.org JSON-LD (Organization, LocalBusiness, Product, FAQPage, BreadcrumbList, Article, Person, Service, Event) printed in the page head.
+* `build-site`: pages, menu, front page and global palette in one call. Dry-run by default, idempotent by slug, administrator only.
 
 = 1.0.0 =
 

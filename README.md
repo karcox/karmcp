@@ -20,11 +20,15 @@ KarMCP is a WordPress plugin that exposes your site as **[MCP](https://modelcont
 
 **Build pages.** The full Elementor workflow — containers, widgets, templates, global styles, and atomic elements for Elementor 4.0+. Also Gutenberg blocks, and a builder-agnostic theme builder for headers, footers, and archives.
 
+**See what you built.** `render-page` renders a page the way a visitor gets it and returns a digest of the *output*, not the builder data: the heading outline, links, images, forms, visible text, and warnings for the failures that leave no trace in the source — containers that render empty, images with no alt text, links still pointing at `#`, shortcodes that never resolved, duplicate ids. It is the one read tool that can disagree with what the agent thought it wrote.
+
+**Build a whole site, not just a page.** `build-site` lays down the pages, the menu, the front page and the global palette in one call — dry-run by default, idempotent by slug. Contact forms that actually deliver mail, whether you run Contact Form 7 or Elementor Pro. Products, categories and store setup for WooCommerce. Translations for Polylang and WPML, duplicated and linked so the language switcher finds them. Validated Schema.org JSON-LD in the page head.
+
 **Run the site.** Content and taxonomies, media, users, settings, plugins and themes, nav menus, the filesystem, and the database, all over MCP.
 
 **Understand and undo.** One-call page snapshots, content search across your own pages and templates, a change ledger with rollback, and read-only performance and security scans that return a scored report.
 
-**Speak your plugins.** Integrations that register only when the plugin is active: ACF, Meta Box, WooCommerce, form builders, SEO plugins, and the Elementor addon packs.
+**Speak your plugins.** Integrations that register only when the plugin is active: ACF, Meta Box, WooCommerce, Contact Form 7, Polylang, WPML, SEO plugins, and the Elementor addon packs.
 
 Elementor is **optional**. Every WordPress domain works without it; installing Elementor unlocks the page-building family.
 

@@ -317,23 +317,6 @@ $karmcp_videos = array();
 		</div>
 	</section>
 
-		<aside class="karmcp-dash-side">
-			<!-- KarMCP Cloud -->
-			<div class="karmcp-dash-promo karmcp-dash-promo--cloud">
-				<span class="karmcp-dash-promo-badge"><?php esc_html_e( 'KarMCP Cloud', 'karmcp' ); ?></span>
-				<span class="karmcp-dash-promo-icon dashicons dashicons-cloud" aria-hidden="true"></span>
-				<h3 class="karmcp-dash-promo-title"><?php esc_html_e( 'Your artifacts, everywhere', 'karmcp' ); ?></h3>
-				<p class="karmcp-dash-promo-desc"><?php esc_html_e( 'Back up your blocks, widgets and snippets, sync them across sites, and publish to the marketplace.', 'karmcp' ); ?></p>
-				<ul class="karmcp-dash-promo-list">
-					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Back up & restore anywhere', 'karmcp' ); ?></li>
-					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Sync across all your sites', 'karmcp' ); ?></li>
-					<li><span class="dashicons dashicons-yes" aria-hidden="true"></span><?php esc_html_e( 'Publish & sell on the marketplace', 'karmcp' ); ?></li>
-				</ul>
-				<a class="karmcp-dash-promo-cta" href="<?php echo esc_url( admin_url( 'admin.php?page=karmcp-connection' ) ); ?>">
-					<?php esc_html_e( 'Explore KarMCP Cloud', 'karmcp' ); ?><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
-				</a>
-			</div>
-		</aside>
 	</div><!-- .karmcp-dash-row--toolkit -->
 
 	<!-- Video guides + help, side by side (70/30) -->

@@ -131,13 +131,58 @@ class KarMCP_Global_Abilities {
 	}
 
 	/**
-	 * Executes the update-global-colors ability.
+	 * Resolve the active kit, and confirm the user can actually save it.
 	 *
-	 * @since 1.0.0
+	 * `manage_options` is not the capability that governs this write. Saving kit
+	 * settings runs `Document::update_settings()` -> `Document::save_settings()`
+	 * -> `Page\Manager::ajax_before_save_settings()`, and that last one throws a
+	 * bare `Access denied.` unless the user passes `edit_post` on the kit post
+	 * itself. The two are unrelated: `edit_post` is a meta capability resolved
+	 * against the kit's post type (`elementor_library`), so a capability manager
+	 * that puts that type under type-specific capabilities takes it away from
+	 * everyone -- administrators included -- while `manage_options` stays put.
 	 *
-	 * @param array $input The input parameters.
-	 * @return array|\WP_Error
+	 * Checking it here costs one capability call and turns an exception thrown
+	 * three libraries away into an error that names the capability and the post.
+	 *
+	 * @since 1.2.1
+	 *
+	 * @return object|\WP_Error The kit document, or WP_Error if it cannot be written.
 	 */
+	private function resolve_writable_kit() {
+		if ( ! class_exists( '\Elementor\Plugin' ) || ! isset( \Elementor\Plugin::$instance->kits_manager ) ) {
+			return new \WP_Error( 'no_elementor', __( 'Elementor is not active on this site, so there is no kit to update.', 'karmcp' ) );
+		}
+
+		$kit = \Elementor\Plugin::$instance->kits_manager->get_active_kit();
+
+		if ( ! $kit || ! $kit->get_id() ) {
+			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'karmcp' ) );
+		}
+
+		$kit_id = (int) $kit->get_id();
+
+		if ( ! current_user_can( 'edit_post', $kit_id ) ) {
+			return new \WP_Error(
+				'cannot_edit_kit',
+				sprintf(
+					/* translators: 1: kit post ID, 2: kit post type */
+					__( 'Elementor refuses to save global settings unless the current user passes the "edit_post" capability on the active kit (post %1$d, post type %2$s). This user has "manage_options" but not that, so Elementor aborts the save with a bare "Access denied.". "edit_post" is a meta capability: check which concrete capabilities the kit\'s post type maps it to, because a capability manager that puts that post type under type-specific capabilities removes it from every role, administrators included, without touching the generic edit_others_posts.', 'karmcp' ),
+					$kit_id,
+					get_post_type( $kit_id )
+				),
+				array(
+					'kit_id'                => $kit_id,
+					'kit_post_type'         => get_post_type( $kit_id ),
+					'required_capability'   => 'edit_post',
+					'enforced_by'           => 'elementor/core/settings/page/manager.php (ajax_before_save_settings)',
+				)
+			);
+		}
+
+		return $kit;
+	}
+
 	/**
 	 * Snapshot the kit's stored settings meta so a global change can be rolled back.
 	 *
@@ -169,6 +214,14 @@ class KarMCP_Global_Abilities {
 		}
 	}
 
+	/**
+	 * Executes the update-global-colors ability.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $input The input parameters.
+	 * @return array|\WP_Error
+	 */
 	public function execute_update_global_colors( $input ) {
 		$colors = $input['colors'] ?? array();
 
@@ -176,10 +229,9 @@ class KarMCP_Global_Abilities {
 			return new \WP_Error( 'missing_colors', __( 'The colors parameter is required and must be an array.', 'karmcp' ) );
 		}
 
-		$kit = \Elementor\Plugin::$instance->kits_manager->get_active_kit();
-
-		if ( ! $kit || ! $kit->get_id() ) {
-			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'karmcp' ) );
+		$kit = $this->resolve_writable_kit();
+		if ( is_wp_error( $kit ) ) {
+			return $kit;
 		}
 
 		// Get current kit settings.
@@ -311,10 +363,9 @@ class KarMCP_Global_Abilities {
 			return new \WP_Error( 'missing_typography', __( 'The typography parameter is required and must be an array.', 'karmcp' ) );
 		}
 
-		$kit = \Elementor\Plugin::$instance->kits_manager->get_active_kit();
-
-		if ( ! $kit || ! $kit->get_id() ) {
-			return new \WP_Error( 'kit_not_found', __( 'Active Elementor kit not found.', 'karmcp' ) );
+		$kit = $this->resolve_writable_kit();
+		if ( is_wp_error( $kit ) ) {
+			return $kit;
 		}
 
 		$kit_settings      = $kit->get_settings();

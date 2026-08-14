@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.2.1 =
+
+* Fixed: a tool that threw reported nothing you could act on. WordPress keeps only the exception's message, so when Elementor refused to save the Elementor kit with a bare "Access denied.", that literal — which appears nowhere in this plugin — was the entire report: no class, no file, no line. Anything escaping a tool now returns an error naming all three.
+* Fixed: update-global-colors and update-global-typography checked `manage_options`, but Elementor requires `edit_post` on the kit post itself and throws if it is missing. The two are unrelated, so a capability manager that puts `elementor_library` under type-specific capabilities breaks both tools for every user, administrators included. They now check the capability Elementor actually enforces and say which post and which capability failed.
+* Fixed: a per-post permission denial returned a bare "Permission denied" naming neither the post, the post type, nor the capability. update-post and delete-post now report all three.
 
 = 1.2.0 =
 

@@ -2,6 +2,16 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.2.1]
+
+> Three failures, two causes, and one thing in common: the error said nothing you could act on. Nothing here changes what the plugin does — only what it tells you when it cannot do it.
+
+### Fixed
+
+- **A tool that threw reported nothing you could act on.** WordPress core catches whatever an ability callback throws and keeps only `getMessage()`. So when Elementor refused to save the kit with a bare `Access denied.`, that literal was the entire report — and it appears nowhere in this plugin, so the one clue pointed away from the code. Anything escaping a tool now comes back as an error naming the exception class, the file and the line, with the same facts in the error data. Paths are relative to the WordPress root, which is both what `read-file` accepts and one less thing disclosed to the client. `\Throwable` is caught, not just `\Exception`: a `TypeError` was equally opaque and returned an empty 500 rather than a tool error.
+- **`update-global-colors` and `update-global-typography` checked the wrong capability.** Both gated on `manage_options`, but saving kit settings runs through Elementor's `ajax_before_save_settings()`, which throws unless the caller passes `edit_post` **on the kit post**. The two are unrelated: `edit_post` is a meta capability resolved against the kit's post type, so a capability manager that puts `elementor_library` under type-specific capabilities revokes it for every role — administrators included — while `manage_options` sits there untouched and the generic `edit_others_posts` still passes. Both tools now check what Elementor enforces, before doing any work, and name the capability, the kit post and its type.
+- **A per-post permission denial said only "Permission denied".** The permission callbacks behind `update-post` and `delete-post` returned a bare `false`, which the adapter renders with no tool, no post and no capability attached — the same dead end as above, one layer up, and reached by the same missing `edit_post`. They now return an error naming the capability, the post and its post type, and distinguish lacking the capability in general from lacking it on that one post.
+
 ## [1.2.0]
 
 > An audit release. No new tools: what changed is who is allowed to use the ones that exist, and what the plugin leaves behind when it goes.

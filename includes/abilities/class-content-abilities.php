@@ -127,16 +127,20 @@ class KarMCP_Content_Abilities {
 	/**
 	 * Edit permission: `edit_posts` plus per-post ownership when a post_id is given.
 	 *
+	 * Returns WP_Error rather than false on failure. The adapter renders a bare
+	 * `false` as "Permission denied" with nothing else — not the tool, not the
+	 * post, not the capability — and a per-post meta capability is precisely the
+	 * kind that fails for reasons the caller cannot guess: `edit_post` resolves
+	 * against the target's post type, so a capability manager can revoke it for
+	 * one type while `edit_posts` still passes. Naming the post and the
+	 * capability is the whole difference between a dead end and a fix.
+	 *
 	 * @since 3.0.0
 	 * @param array|null $input Tool input; may carry a `post_id`.
-	 * @return bool
+	 * @return true|\WP_Error
 	 */
-	public function check_edit_permission( $input = null ): bool {
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			return false;
-		}
-		$post_id = absint( $input['post_id'] ?? 0 );
-		return ! $post_id || current_user_can( 'edit_post', $post_id );
+	public function check_edit_permission( $input = null ) {
+		return $this->check_post_capability( $input, 'edit_posts', 'edit_post' );
 	}
 
 	/**
@@ -144,14 +148,58 @@ class KarMCP_Content_Abilities {
 	 *
 	 * @since 3.0.0
 	 * @param array|null $input Tool input; may carry a `post_id`.
-	 * @return bool
+	 * @return true|\WP_Error
 	 */
-	public function check_delete_permission( $input = null ): bool {
-		if ( ! current_user_can( 'delete_posts' ) ) {
-			return false;
+	public function check_delete_permission( $input = null ) {
+		return $this->check_post_capability( $input, 'delete_posts', 'delete_post' );
+	}
+
+	/**
+	 * Shared body of the two permission checks above: a general capability, then
+	 * the per-post meta capability when the input names a post.
+	 *
+	 * @since 1.2.1
+	 *
+	 * @param array|null $input        Tool input; may carry a `post_id`.
+	 * @param string     $general_cap  Capability required regardless of target.
+	 * @param string     $meta_cap     Meta capability checked against the target.
+	 * @return true|\WP_Error
+	 */
+	private function check_post_capability( $input, string $general_cap, string $meta_cap ) {
+		if ( ! current_user_can( $general_cap ) ) {
+			return new \WP_Error(
+				'missing_capability',
+				sprintf(
+					/* translators: %s: capability name */
+					__( 'The current user does not have the "%s" capability.', 'karmcp' ),
+					$general_cap
+				),
+				array( 'required_capability' => $general_cap )
+			);
 		}
+
 		$post_id = absint( $input['post_id'] ?? 0 );
-		return ! $post_id || current_user_can( 'delete_post', $post_id );
+		if ( ! $post_id || current_user_can( $meta_cap, $post_id ) ) {
+			return true;
+		}
+
+		$post_type = get_post_type( $post_id );
+
+		return new \WP_Error(
+			'cannot_edit_post',
+			sprintf(
+				/* translators: 1: meta capability name, 2: post ID, 3: post type */
+				__( 'The current user has "%1$s" in general but not on post %2$d (post type %3$s). This is a meta capability resolved against that post type and the post\'s author and status, so a capability manager can revoke it for one post type while the generic capability still passes.', 'karmcp' ),
+				$meta_cap,
+				$post_id,
+				false !== $post_type ? $post_type : 'unknown'
+			),
+			array(
+				'required_capability' => $meta_cap,
+				'post_id'             => $post_id,
+				'post_type'           => false !== $post_type ? $post_type : null,
+			)
+		);
 	}
 
 	// ---------------------------------------------------------------------

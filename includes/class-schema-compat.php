@@ -112,8 +112,95 @@ class KarMCP_Schema_Compat {
 					return $veto;
 				}
 			}
-			return self::normalize_result( $callback( ...$call_args ) );
+			try {
+				return self::normalize_result( $callback( ...$call_args ) );
+			} catch ( \Throwable $karmcp_thrown ) {
+				return self::error_from_throwable( $karmcp_thrown, $name );
+			}
 		};
+	}
+
+	/**
+	 * Turn a Throwable escaping a tool into a WP_Error that names its origin.
+	 *
+	 * WordPress core already catches whatever an ability callback throws
+	 * (`WP_Ability::invoke_callback()`), but it keeps only `getMessage()` and
+	 * wraps it in "Ability %s callback threw an exception: %s". When a third
+	 * party throws a bare string, that is all the client ever sees.
+	 *
+	 * The case that prompted this: saving kit settings goes through Elementor's
+	 * `Page\Manager::ajax_before_save_settings()`, which throws `Access denied.`
+	 * when the user fails `edit_post` on the kit. The literal exists nowhere in
+	 * this plugin, so the report is not just unhelpful, it points away from the
+	 * actual code. Catching first — our wrapper runs inside core's try — keeps
+	 * the class, the file and the line.
+	 *
+	 * Catching \Throwable rather than \Exception is deliberate: a TypeError out
+	 * of a widget schema is exactly as opaque, and here it becomes a tool error
+	 * instead of a 500 with an empty body.
+	 *
+	 * @since 1.2.1
+	 *
+	 * @param \Throwable $thrown The caught throwable.
+	 * @param string     $name   Ability name (e.g. karmcp/update-global-colors).
+	 * @return \WP_Error
+	 */
+	public static function error_from_throwable( \Throwable $thrown, string $name = '' ) {
+		$origin = self::relative_path( $thrown->getFile() ) . ':' . $thrown->getLine();
+
+		$data = array(
+			'tool'      => $name,
+			'exception' => get_class( $thrown ),
+			'origin'    => $origin,
+			'code'      => $thrown->getCode(),
+		);
+
+		$previous = $thrown->getPrevious();
+		if ( $previous instanceof \Throwable ) {
+			$data['previous'] = sprintf(
+				'%s: %s @ %s:%d',
+				get_class( $previous ),
+				$previous->getMessage(),
+				self::relative_path( $previous->getFile() ),
+				$previous->getLine()
+			);
+		}
+
+		return new \WP_Error(
+			'unhandled_exception',
+			sprintf(
+				/* translators: 1: exception class, 2: ability name, 3: file:line, 4: exception message */
+				__( '%1$s escaped %2$s at %3$s: %4$s', 'karmcp' ),
+				get_class( $thrown ),
+				'' !== $name ? $name : __( 'the tool', 'karmcp' ),
+				$origin,
+				$thrown->getMessage()
+			),
+			$data
+		);
+	}
+
+	/**
+	 * A file path relative to the WordPress root.
+	 *
+	 * The absolute path is noise to an MCP client, and it discloses the server's
+	 * directory layout to it. Relative is also what `read-file` accepts, so the
+	 * origin of an error can be opened without editing the path by hand.
+	 *
+	 * @since 1.2.1
+	 *
+	 * @param string $file Absolute file path.
+	 * @return string
+	 */
+	private static function relative_path( string $file ): string {
+		if ( function_exists( 'wp_normalize_path' ) && defined( 'ABSPATH' ) ) {
+			$file = wp_normalize_path( $file );
+			$root = wp_normalize_path( ABSPATH );
+			if ( '' !== $root && 0 === strpos( $file, $root ) ) {
+				return substr( $file, strlen( $root ) );
+			}
+		}
+		return basename( $file );
 	}
 
 	/**

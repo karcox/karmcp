@@ -64,15 +64,23 @@ if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
 		private $code;
 		private $message;
-		public function __construct( $code = '', $message = '' ) {
+		private $data;
+		// The stub used to drop the third constructor argument, which made the
+		// data payload of every WP_Error in the plugin untestable — and it is
+		// the half a client can act on programmatically.
+		public function __construct( $code = '', $message = '', $data = '' ) {
 			$this->code    = $code;
 			$this->message = $message;
+			$this->data    = $data;
 		}
 		public function get_error_code() {
 			return $this->code;
 		}
 		public function get_error_message() {
 			return $this->message;
+		}
+		public function get_error_data() {
+			return $this->data;
 		}
 	}
 }
@@ -329,6 +337,14 @@ function current_user_can( $cap, $object_id = null ): bool {
 
 function get_post( $post_id ) {
 	return $GLOBALS['karmcp_test']['posts'][ (int) $post_id ] ?? null;
+}
+
+if ( ! function_exists( 'get_post_type' ) ) {
+	// Derived from the same ['posts'] fixture get_post() serves.
+	function get_post_type( $post = null ) {
+		$post = $GLOBALS['karmcp_test']['posts'][ (int) $post ] ?? null;
+		return ( $post && isset( $post->post_type ) ) ? $post->post_type : false;
+	}
 }
 
 if ( ! function_exists( 'delete_post_meta' ) ) {

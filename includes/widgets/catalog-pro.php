@@ -29,6 +29,13 @@ return array(
 				'items'       => array(
 					'type'       => 'object',
 					'properties' => array(
+						// The editor fills these two in from JavaScript, so a form
+						// built through the API has to supply them itself. Without
+						// custom_id the submitted value has no name and the
+						// notification arrives empty; without _id the repeater row
+						// has no identity for the editor to track.
+						'_id'                   => array( 'type' => 'string' ),
+						'custom_id'             => array( 'type' => 'string' ),
 						'field_type'            => array( 'type' => 'string', 'enum' => array( 'text', 'email', 'textarea', 'url', 'tel', 'select', 'radio', 'checkbox', 'number', 'date', 'time', 'upload', 'acceptance', 'password', 'html', 'hidden', 'step' ) ),
 						'field_label'           => array( 'type' => 'string' ),
 						'placeholder'           => array( 'type' => 'string' ),

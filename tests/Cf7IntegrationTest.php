@@ -53,7 +53,7 @@ final class Cf7IntegrationTest extends TestCase {
 		$out   = $this->cf7->run_write( array() );
 		$names = array_column( $out['operations'], 'operation' );
 		$this->assertEqualsCanonicalizing(
-			array( 'update-notification', 'update-messages', 'update-form-settings' ),
+			array( 'create-form', 'update-form', 'update-notification', 'update-messages', 'update-form-settings' ),
 			$names
 		);
 	}

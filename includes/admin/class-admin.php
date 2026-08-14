@@ -1044,7 +1044,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 34;
+	const DEFAULTS_VERSION = 35;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1616,6 +1616,20 @@ class KarMCP_Admin {
 		// it ships disabled-by-default. The list + discard reads stay enabled.
 		if ( $applied < 34 ) {
 			$add[] = 'karmcp/sync-content-item';
+		}
+
+		// v35 — duplicate-post copies protected meta from the source post, and the
+		// multilingual writes assign languages and rewrite translation groups.
+		// Both are safe in intent and hard to undo by hand, so the admin opts in.
+		// The multilingual reads stay enabled.
+		if ( $applied < 35 ) {
+			$add[] = 'karmcp/duplicate-post';
+			$add[] = 'karmcp/polylang-write';
+			$add[] = 'karmcp/wpml-write';
+			// build-site changes the reading settings and the menu assignment,
+			// which are site-wide. Its own dry-run default is not enough on its
+			// own: the admin decides whether the tool exists at all.
+			$add[] = 'karmcp/build-site';
 		}
 
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
@@ -3128,6 +3142,10 @@ class KarMCP_Admin {
 				'label' => __( 'SEO', 'karmcp' ),
 				'desc'  => __( 'Read & write the SEO metadata your SEO plugin stores.', 'karmcp' ),
 			),
+			'translation' => array(
+				'label' => __( 'Translation', 'karmcp' ),
+				'desc'  => __( 'Languages, translations, and the links between them.', 'karmcp' ),
+			),
 			'addons'    => array(
 				'label' => __( 'Elementor Addons', 'karmcp' ),
 				'desc'  => __( 'Discover addon widget packs, and manage Ultimate Addons for Elementor templates.', 'karmcp' ),
@@ -3481,6 +3499,16 @@ class KarMCP_Admin {
 	 */
 	public static function cf7_available(): bool {
 		return class_exists( 'WPCF7_ContactForm' ) || defined( 'WPCF7_VERSION' );
+	}
+
+	/** @since 1.1.0 */
+	public static function polylang_available(): bool {
+		return function_exists( 'pll_languages_list' ) && function_exists( 'pll_save_post_translations' );
+	}
+
+	/** @since 1.1.0 */
+	public static function wpml_available(): bool {
+		return defined( 'ICL_SITEPRESS_VERSION' ) || class_exists( 'SitePress' );
 	}
 
 	/** @since 3.5.0 */
@@ -3899,6 +3927,44 @@ class KarMCP_Admin {
 					),
 				),
 			),
+			'render'           => array(
+				'platform' => 'wordpress',
+				'label' => __( 'Render & Audit', 'karmcp' ),
+				'tools' => array(
+					'karmcp/render-page' => array(
+						'label'       => __( 'Render Page', 'karmcp' ),
+						'description' => __( 'Renders a page the way a visitor gets it and returns a digest of the output: heading outline, links, images, forms, visible text, and warnings for empty containers, missing alt text, placeholder links and unresolved shortcodes. Read-only.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+				),
+			),
+			'scaffold'         => array(
+				'platform' => 'wordpress',
+				'label' => __( 'Site Scaffolding', 'karmcp' ),
+				'tools' => array(
+					'karmcp/build-site' => array(
+						'label'       => __( 'Build Site', 'karmcp' ),
+						'description' => __( 'Creates a site skeleton in one call: pages, navigation menu, static front page, and the global palette and fonts. Dry-run unless called with apply:true and confirm:true, and idempotent by slug. Requires administrator. Disabled by default.', 'karmcp' ),
+						'badges'      => array(),
+					),
+				),
+			),
+			'structured_data'  => array(
+				'platform' => 'wordpress',
+				'label' => __( 'Structured Data', 'karmcp' ),
+				'tools' => array(
+					'karmcp/get-post-schema' => array(
+						'label'       => __( 'Get Post Schema', 'karmcp' ),
+						'description' => __( 'Returns the Schema.org JSON-LD attached to a post, and whether an SEO plugin is already emitting its own.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/set-post-schema' => array(
+						'label'       => __( 'Set Post Schema', 'karmcp' ),
+						'description' => __( 'Attaches validated Schema.org JSON-LD (Organization, LocalBusiness, Product, FAQPage, BreadcrumbList, Article, Person, Service, Event) to a post, printed in the page head.', 'karmcp' ),
+						'badges'      => array(),
+					),
+				),
+			),
 			'redirects'        => array(
 				'platform' => 'wordpress',
 				'label' => __( 'Redirects', 'karmcp' ),
@@ -4065,6 +4131,11 @@ class KarMCP_Admin {
 					'karmcp/create-post'     => array(
 						'label'       => __( 'Create Post', 'karmcp' ),
 						'description' => __( 'Creates a post/page/CPT with content, terms, meta, featured image.', 'karmcp' ),
+						'badges'      => array(),
+					),
+					'karmcp/duplicate-post'  => array(
+						'label'       => __( 'Duplicate Post', 'karmcp' ),
+						'description' => __( 'Copies a post, page or CPT with its meta and terms, as a draft. The way to create posts of plugin-owned types (popups, listings) whose configuration lives in protected meta that create-post will not write. Requires confirm:true. Disabled by default.', 'karmcp' ),
 						'badges'      => array(),
 					),
 					'karmcp/get-post'        => array(
@@ -4328,23 +4399,71 @@ class KarMCP_Admin {
 				'group'    => 'ecommerce',
 				'pro'      => true,
 				'label'    => __( 'WooCommerce', 'karmcp' ),
-				'note'     => __( 'WooCommerce is exposed as two tools, one Read, one Write, over the full wc/v3 API (~120 operations). The AI calls a tool with an operation name; toggle a tool to allow or block all of its operations at once. Money/irreversible operations (refunds, deletes, batch) additionally require confirm:true. Requires WooCommerce active.', 'karmcp' ),
+				'note'     => __( 'WooCommerce is exposed as two tools, one Read, one Write, scoped to the product catalog and the store setup a site builder needs. Orders, refunds and customers are deliberately not exposed: that is the money and personal-data surface, and building a site never needs it. The AI calls a tool with an operation name; toggle a tool to allow or block all of its operations at once. Deleting a product also requires confirm:true. Requires WooCommerce active.', 'karmcp' ),
 				'tools'    => array(
 					'karmcp/woo-read'  => array(
 						'label'            => __( 'WooCommerce Read', 'karmcp' ),
-						'description'      => __( 'Read products, variations, orders, refunds, customers, coupons, reports, settings, shipping, taxes, webhooks, and system status. Call the tool with no operation to list all read operations.', 'karmcp' ),
+						'description'      => __( 'Read products, product categories, and the store setup (currency, base country, shop pages, catalog and stock settings). Call the tool with no operation to list them.', 'karmcp' ),
 						'badges'           => array( 'read-only' ),
-						'operations'       => array( 'list-products', 'get-order', 'list-orders', 'list-customers', 'list-coupons', 'report-sales', 'get-settings', 'list-webhooks', 'system-status', '… ~58 read operations' ),
+						'operations'       => array( 'list-products', 'get-product', 'list-product-categories', 'get-store-setup' ),
 						'available'        => self::woo_available(),
 						'unavailable_note' => __( 'Install & activate WooCommerce to enable this tool.', 'karmcp' ),
 					),
 					'karmcp/woo-write' => array(
 						'label'            => __( 'WooCommerce Write', 'karmcp' ),
-						'description'      => __( 'Create, update, and delete products, orders, refunds, customers, coupons, settings, shipping, taxes, and webhooks. Refunds/deletes/batch require confirm:true. Call the tool with no operation to list all write operations.', 'karmcp' ),
+						'description'      => __( 'Create and update products (simple, grouped, external), set their categories and tags, and delete them. Prices are accepted in any human format and normalized. Deletes require confirm:true.', 'karmcp' ),
 						'badges'           => array( 'destructive' ),
-						'operations'       => array( 'create-product', 'update-order', 'create-refund', 'create-customer', 'delete-order', 'update-setting', '… ~59 write operations' ),
+						'operations'       => array( 'create-product', 'update-product', 'set-product-terms', 'delete-product' ),
 						'available'        => self::woo_available(),
 						'unavailable_note' => __( 'Install & activate WooCommerce to enable this tool.', 'karmcp' ),
+					),
+				),
+			),
+			'wp_polylang'      => array(
+				'platform' => 'plugins',
+				'group'    => 'translation',
+				'label'    => __( 'Polylang', 'karmcp' ),
+				'note'     => __( 'Polylang exposed as two tools, one Read, one Write. Reads list the site\'s languages and tell you which translations of a page exist and which are missing; writes create a translation by duplicating the page, assigning its language and linking the pair, so the language switcher finds it. The copy carries the original text: translate it afterwards with the normal content tools.', 'karmcp' ),
+				'tools'    => array(
+					'karmcp/polylang-read'  => array(
+						'label'            => __( 'Polylang Read', 'karmcp' ),
+						'description'      => __( 'List configured languages and read a post\'s translation status.', 'karmcp' ),
+						'badges'           => array( 'read-only' ),
+						'operations'       => array( 'list-languages', 'get-translation-status' ),
+						'available'        => self::polylang_available(),
+						'unavailable_note' => __( 'Install & activate Polylang to enable this tool.', 'karmcp' ),
+					),
+					'karmcp/polylang-write' => array(
+						'label'            => __( 'Polylang Write', 'karmcp' ),
+						'description'      => __( 'Create a translation of a page, assign a post\'s language, and link existing posts as translations. Disabled by default.', 'karmcp' ),
+						'badges'           => array(),
+						'operations'       => array( 'create-translation', 'set-post-language', 'link-translations' ),
+						'available'        => self::polylang_available(),
+						'unavailable_note' => __( 'Install & activate Polylang to enable this tool.', 'karmcp' ),
+					),
+				),
+			),
+			'wp_wpml'          => array(
+				'platform' => 'plugins',
+				'group'    => 'translation',
+				'label'    => __( 'WPML', 'karmcp' ),
+				'note'     => __( 'WPML exposed as two tools, one Read, one Write, over its published hooks API. Same operations as the Polylang pair: read the languages and a page\'s translation status, create a translation by duplicating and linking, or link copies that already exist.', 'karmcp' ),
+				'tools'    => array(
+					'karmcp/wpml-read'  => array(
+						'label'            => __( 'WPML Read', 'karmcp' ),
+						'description'      => __( 'List configured languages and read a post\'s translation status.', 'karmcp' ),
+						'badges'           => array( 'read-only' ),
+						'operations'       => array( 'list-languages', 'get-translation-status' ),
+						'available'        => self::wpml_available(),
+						'unavailable_note' => __( 'Install & activate WPML to enable this tool.', 'karmcp' ),
+					),
+					'karmcp/wpml-write' => array(
+						'label'            => __( 'WPML Write', 'karmcp' ),
+						'description'      => __( 'Create a translation of a page, assign a post\'s language, and link existing posts as translations. Disabled by default.', 'karmcp' ),
+						'badges'           => array(),
+						'operations'       => array( 'create-translation', 'set-post-language', 'link-translations' ),
+						'available'        => self::wpml_available(),
+						'unavailable_note' => __( 'Install & activate WPML to enable this tool.', 'karmcp' ),
 					),
 				),
 			),
@@ -4443,21 +4562,21 @@ class KarMCP_Admin {
 				'platform' => 'plugins',
 				'group'    => 'forms',
 				'label'    => __( 'Contact Form 7', 'karmcp' ),
-				'note'     => __( 'Contact Form 7 exposed as two tools, one Read, one Write. Reads list forms, fields, mail templates and messages; writes update mail, messages, and settings. CF7 stores no submissions, so there are no entry operations.', 'karmcp' ),
+				'note'     => __( 'Contact Form 7 exposed as two tools, one Read, one Write. Reads list forms, fields, mail templates and messages; writes create forms from a field list and update mail, messages and settings. CF7 stores no submissions of its own, so list-entries reads them from Flamingo when that plugin is installed.', 'karmcp' ),
 				'tools'    => array(
 					'karmcp/cf7-read'  => array(
 						'label'            => __( 'Contact Form 7 Read', 'karmcp' ),
-						'description'      => __( 'Read CF7 forms, fields, mail templates, messages, and settings.', 'karmcp' ),
+						'description'      => __( 'Read CF7 forms, fields, mail templates, messages, settings, and stored submissions.', 'karmcp' ),
 						'badges'           => array( 'read-only' ),
-						'operations'       => array( 'list-forms', 'get-form', 'list-notifications', 'get-settings' ),
+						'operations'       => array( 'list-forms', 'get-form', 'list-notifications', 'get-settings', 'list-entries' ),
 						'available'        => self::cf7_available(),
 						'unavailable_note' => __( 'Install & activate Contact Form 7 to enable this tool.', 'karmcp' ),
 					),
 					'karmcp/cf7-write' => array(
 						'label'            => __( 'Contact Form 7 Write', 'karmcp' ),
-						'description'      => __( 'Update CF7 mail templates, messages, and additional settings.', 'karmcp' ),
+						'description'      => __( 'Create a CF7 form from a field list, and update mail templates, messages and additional settings.', 'karmcp' ),
 						'badges'           => array(),
-						'operations'       => array( 'update-notification', 'update-messages', 'update-form-settings' ),
+						'operations'       => array( 'create-form', 'update-form', 'update-notification', 'update-messages', 'update-form-settings' ),
 						'available'        => self::cf7_available(),
 						'unavailable_note' => __( 'Install & activate Contact Form 7 to enable this tool.', 'karmcp' ),
 					),
@@ -5123,6 +5242,11 @@ class KarMCP_Admin {
 						'label'       => __( 'Update Widget', 'karmcp' ),
 						'description' => __( 'Updates settings on an existing widget (partial merge).', 'karmcp' ),
 						'badges'      => array(),
+					),
+					'karmcp/add-contact-form' => array(
+						'label'       => __( 'Add Contact Form', 'karmcp' ),
+						'description' => __( 'Adds a working Elementor Pro form from a plain field list, wiring the notification email, reply-to and submit button. Registers only when the Form widget is available.', 'karmcp' ),
+						'badges'      => array( 'elementor-pro' ),
 					),
 				),
 			),

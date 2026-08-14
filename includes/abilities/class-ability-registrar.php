@@ -178,6 +178,14 @@ class KarMCP_Ability_Registrar {
 		$snapshot->register();
 		$this->ability_names = array_merge( $this->ability_names, $snapshot->get_ability_names() );
 
+		// render-page — the rendered-output digest. Always on and not
+		// Elementor-gated: it reads whatever the page renders to, whoever built it.
+		if ( class_exists( 'KarMCP_Render_Abilities' ) ) {
+			$render = new KarMCP_Render_Abilities();
+			$render->register();
+			$this->ability_names = array_merge( $this->ability_names, $render->get_ability_names() );
+		}
+
 		// AI-safe transactions — change ledger + rollback (always-on, write foundation).
 		$transactions = new KarMCP_Transaction_Abilities();
 		$transactions->register();
@@ -256,6 +264,47 @@ class KarMCP_Ability_Registrar {
 			$woo = new KarMCP_Woo_Integration();
 			$woo->register();
 			$this->ability_names = array_merge( $this->ability_names, $woo->get_ability_names() );
+		}
+
+		// build-site — the composite that lays down pages, menu, front page and
+		// palette. Not Elementor-gated: the palette step is the only Elementor
+		// part and it degrades to a note.
+		if ( class_exists( 'KarMCP_Site_Builder_Abilities' ) ) {
+			$site_builder = new KarMCP_Site_Builder_Abilities();
+			$site_builder->register();
+			$this->ability_names = array_merge( $this->ability_names, $site_builder->get_ability_names() );
+		}
+
+		// Structured data (JSON-LD). Plain WordPress, so it registers everywhere.
+		if ( class_exists( 'KarMCP_Structured_Data_Abilities' ) ) {
+			$structured_data = new KarMCP_Structured_Data_Abilities();
+			$structured_data->register();
+			$this->ability_names = array_merge( $this->ability_names, $structured_data->get_ability_names() );
+		}
+
+		// duplicate-post — the copy primitive. Always on: it is plain WordPress,
+		// and it is what makes plugin CPTs reachable at all.
+		if ( class_exists( 'KarMCP_Duplicate_Abilities' ) ) {
+			$duplicate = new KarMCP_Duplicate_Abilities();
+			$duplicate->register();
+			$this->ability_names = array_merge( $this->ability_names, $duplicate->get_ability_names() );
+		}
+
+		// Multilingual integrations. Each registers only when its plugin is
+		// active, and a site running both would get both tool pairs — which is
+		// correct, since only one of them owns any given post.
+		$translation_integrations = array();
+		if ( class_exists( 'KarMCP_Polylang_Integration' ) ) {
+			$translation_integrations[] = new KarMCP_Polylang_Integration();
+		}
+		if ( class_exists( 'KarMCP_WPML_Integration' ) ) {
+			$translation_integrations[] = new KarMCP_WPML_Integration();
+		}
+		foreach ( $translation_integrations as $translation_integration ) {
+			if ( $translation_integration->is_available() ) {
+				$translation_integration->register();
+				$this->ability_names = array_merge( $this->ability_names, $translation_integration->get_ability_names() );
+			}
 		}
 
 		// Meta Box abilities — only when Meta Box (free or extensions) is active.
@@ -464,6 +513,15 @@ class KarMCP_Ability_Registrar {
 			// needs Elementor.
 			$stock_images->register_widget_tool();
 			$this->ability_names[] = 'karmcp/add-stock-image';
+
+			// add-contact-form. Self-gates on the Form widget actually being
+			// registered, which is the honest test for "Elementor Pro is here"
+			// — a Pro install with the widget disabled would fail otherwise.
+			if ( class_exists( 'KarMCP_Form_Widget_Abilities' ) && KarMCP_Form_Widget_Abilities::form_widget_available() ) {
+				$form_widget = new KarMCP_Form_Widget_Abilities( $this->data, $this->factory );
+				$form_widget->register();
+				$this->ability_names = array_merge( $this->ability_names, $form_widget->get_ability_names() );
+			}
 
 			// SVG icons.
 			$svg_icons = new KarMCP_Svg_Icon_Abilities( $this->data, $this->factory );

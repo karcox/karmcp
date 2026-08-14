@@ -84,6 +84,9 @@ class KarMCP_Bootstrap {
 		// Schema compatibility + the karmcp_register_ability() entry point
 		// must load before any ability group registers.
 		require_once KARMCP_DIR . 'includes/class-schema-compat.php';
+		// Shared dispatch for the two-tool plugin integrations. Loads before any
+		// of them, since a trait has to exist when the class that uses it does.
+		require_once KARMCP_DIR . 'includes/abilities/trait-operation-dispatcher.php';
 		require_once KARMCP_DIR . 'includes/class-id-generator.php';
 		require_once KARMCP_DIR . 'includes/class-url-guard.php';
 		require_once KARMCP_DIR . 'includes/class-site-context.php';
@@ -129,6 +132,8 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-bearer.php';
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-server.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-snapshot-abilities.php';
+		require_once KARMCP_DIR . 'includes/class-content-extractor.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-render-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-change-log.php';
 		require_once KARMCP_DIR . 'includes/class-change-blobs.php';
 		require_once KARMCP_DIR . 'includes/class-change-recorder.php';
@@ -174,7 +179,21 @@ class KarMCP_Bootstrap {
 		// Forms-tab integrations — abstract base + Contact Form 7. The adapters for
 		// the entry-storing plugins were upstream Pro files and are not in this build.
 		require_once KARMCP_DIR . 'includes/abilities/forms/class-form-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-form-builder.php';
 		require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/forms/class-elementor-form-builder.php';
+		require_once KARMCP_DIR . 'includes/abilities/forms/class-form-widget-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/woo/class-woo-product-input.php';
+		require_once KARMCP_DIR . 'includes/abilities/woo/class-woo-integration.php';
+		require_once KARMCP_DIR . 'includes/class-post-duplicator.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-duplicate-abilities.php';
+		require_once KARMCP_DIR . 'includes/class-structured-data.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-structured-data-abilities.php';
+		require_once KARMCP_DIR . 'includes/class-site-plan.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-site-builder-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/i18n/class-translation-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/i18n/class-polylang-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/i18n/class-wpml-integration.php';
 		// SEO plugin integrations — abstract base + Slim SEO. The Yoast, Rank Math,
 		// AIOSEO, SEOPress, SEO Framework and SureRank adapters were upstream Pro
 		// files and are not in this build.
@@ -338,6 +357,8 @@ class KarMCP_Bootstrap {
 		KarMCP_OAuth_Server::init();
 		// Content mirror: auto-export-on-save (gated by its option) + delete cleanup.
 		KarMCP_Content_Mirror::init();
+		// Structured data: print a post's JSON-LD in the document head.
+		KarMCP_Structured_Data::init();
 		add_action( 'init', array( 'KarMCP_Kit_Backup_Store', 'register_post_type' ) );
 		add_action( 'init', array( 'KarMCP_Widget_Store', 'register_post_type' ) );
 		add_action( 'init', array( 'KarMCP_Skill_Store', 'register_post_type' ) );

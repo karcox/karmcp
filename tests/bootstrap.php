@@ -87,6 +87,16 @@ if ( ! class_exists( 'WP_Post' ) ) {
 		public $post_content = '';
 		public $post_status  = 'publish';
 		public $menu_order   = 0;
+		// Real WP_Post declares these; the stub used to omit them, which made
+		// any code reading a field a fixture had not set look like a bug.
+		public $post_author    = 1;
+		public $post_parent    = 0;
+		public $comment_status = 'closed';
+		public $ping_status    = 'closed';
+		public $post_password  = '';
+		public $post_date      = '2026-01-01 00:00:00';
+		public $post_modified  = '2026-01-01 00:00:00';
+		public $guid           = '';
 		public function __construct( array $props = array() ) {
 			foreach ( $props as $k => $v ) {
 				$this->$k = $v;
@@ -355,6 +365,148 @@ function url_to_postid( $url ) {
 // Fixture-driven: $GLOBALS['karmcp_test']['post_status'][ id ] => 'publish'|'trash'|...
 function get_post_status( $id ) {
 	return $GLOBALS['karmcp_test']['post_status'][ (int) $id ] ?? false;
+}
+
+// ---------------------------------------------------------------------------
+// Post write stubs. Fixture-driven through $GLOBALS['karmcp_test']['posts'],
+// ['post_meta'] and ['object_terms'], so a test can assert what a copy carried
+// over without a database.
+// ---------------------------------------------------------------------------
+
+if ( ! function_exists( 'wp_insert_post' ) ) {
+	function wp_insert_post( $postarr, $wp_error = false ) {
+		$id = 1 + ( $GLOBALS['karmcp_test']['next_post_id'] ?? 1000 );
+		$GLOBALS['karmcp_test']['next_post_id'] = $id;
+
+		$post = new WP_Post( array( 'ID' => $id ) );
+		foreach ( $postarr as $key => $value ) {
+			$post->$key = $value;
+		}
+		if ( empty( $post->post_name ) ) {
+			$post->post_name = sanitize_title( (string) ( $postarr['post_title'] ?? '' ) );
+		}
+
+		$GLOBALS['karmcp_test']['posts'][ $id ]       = $post;
+		$GLOBALS['karmcp_test']['post_status'][ $id ] = $post->post_status;
+		$GLOBALS['karmcp_test']['inserted_posts'][]   = $postarr;
+
+		return $id;
+	}
+}
+
+if ( ! function_exists( 'get_post_meta' ) ) {
+	function get_post_meta( $post_id, $key = '', $single = false ) {
+		$all = $GLOBALS['karmcp_test']['post_meta'][ (int) $post_id ] ?? array();
+
+		if ( '' === $key ) {
+			// List mode: WordPress hands back every value serialized.
+			$out = array();
+			foreach ( $all as $meta_key => $values ) {
+				$out[ $meta_key ] = array_map(
+					static function ( $value ) {
+						return is_scalar( $value ) ? $value : serialize( $value ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+					},
+					(array) $values
+				);
+			}
+			return $out;
+		}
+
+		$values = (array) ( $all[ $key ] ?? array() );
+		if ( $single ) {
+			return $values ? reset( $values ) : '';
+		}
+		return $values;
+	}
+}
+
+if ( ! function_exists( 'add_post_meta' ) ) {
+	function add_post_meta( $post_id, $key, $value, $unique = false ) {
+		$GLOBALS['karmcp_test']['post_meta'][ (int) $post_id ][ $key ][] = $value;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'update_post_meta' ) ) {
+	function update_post_meta( $post_id, $key, $value, $prev = '' ) {
+		$GLOBALS['karmcp_test']['post_meta'][ (int) $post_id ][ $key ] = array( $value );
+		return true;
+	}
+}
+
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	function wp_json_encode( $data, $options = 0, $depth = 512 ) {
+		return json_encode( $data, $options, $depth ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+	}
+}
+
+if ( ! function_exists( 'maybe_unserialize' ) ) {
+	function maybe_unserialize( $value ) {
+		if ( is_string( $value ) && preg_match( '/^[aOs]:\d+:/', $value ) ) {
+			$restored = @unserialize( $value ); // phpcs:ignore
+			return false === $restored ? $value : $restored;
+		}
+		return $value;
+	}
+}
+
+if ( ! function_exists( 'get_object_taxonomies' ) ) {
+	function get_object_taxonomies( $object_type, $output = 'names' ) {
+		$type = is_object( $object_type ) ? $object_type->post_type : (string) $object_type;
+		return $GLOBALS['karmcp_test']['taxonomies_for_type'][ $type ] ?? array();
+	}
+}
+
+/**
+ * Object terms. The fixture may hold plain ids or term objects — nav menus need
+ * objects, taxonomies elsewhere only need ids — so `fields => ids` normalizes
+ * whichever is stored, the way WordPress does.
+ */
+if ( ! function_exists( 'wp_get_object_terms' ) ) {
+	function wp_get_object_terms( $object_ids, $taxonomies, $args = array() ) {
+		$id    = (int) ( is_array( $object_ids ) ? reset( $object_ids ) : $object_ids );
+		$tx    = (string) ( is_array( $taxonomies ) ? reset( $taxonomies ) : $taxonomies );
+		$terms = $GLOBALS['karmcp_test']['object_terms'][ $id ][ $tx ] ?? array();
+
+		if ( isset( $args['fields'] ) && 'ids' === $args['fields'] ) {
+			return array_map(
+				static function ( $term ) {
+					return is_object( $term ) ? (int) $term->term_id : (int) $term;
+				},
+				(array) $terms
+			);
+		}
+
+		return $terms;
+	}
+}
+
+if ( ! function_exists( 'wp_set_object_terms' ) ) {
+	function wp_set_object_terms( $object_id, $terms, $taxonomy, $append = false ) {
+		$existing = $append ? ( $GLOBALS['karmcp_test']['object_terms'][ (int) $object_id ][ $taxonomy ] ?? array() ) : array();
+		$GLOBALS['karmcp_test']['object_terms'][ (int) $object_id ][ $taxonomy ] = array_values( array_unique( array_merge( $existing, (array) $terms ) ) );
+		return (array) $terms;
+	}
+}
+
+if ( ! function_exists( 'get_the_title' ) ) {
+	function get_the_title( $post = 0 ) {
+		$id   = is_object( $post ) ? (int) $post->ID : (int) $post;
+		$item = $GLOBALS['karmcp_test']['posts'][ $id ] ?? null;
+		return $item ? (string) $item->post_title : '';
+	}
+}
+
+if ( ! function_exists( 'get_current_user_id' ) ) {
+	function get_current_user_id() {
+		return (int) ( $GLOBALS['karmcp_test']['current_user_id'] ?? 1 );
+	}
+}
+
+if ( ! function_exists( 'get_post_type_object' ) ) {
+	function get_post_type_object( $post_type ) {
+		return $GLOBALS['karmcp_test']['post_type_objects'][ (string) $post_type ] ?? null;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -629,6 +781,7 @@ if ( ! class_exists( 'WPCF7_ContactForm' ) ) {
 }
 
 require_once KARMCP_DIR . 'includes/abilities/forms/class-form-integration.php';
+require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-form-builder.php';
 require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-integration.php';
 require_once KARMCP_DIR . 'includes/abilities/class-acf-abilities.php';
 require_once KARMCP_DIR . 'includes/abilities/class-metabox-abilities.php';

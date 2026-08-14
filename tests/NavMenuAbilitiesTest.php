@@ -184,6 +184,12 @@ if ( ! function_exists( 'wp_update_nav_menu_item' ) ) {
 		);
 		$GLOBALS['karmcp_nav']['item_menu'][ $item_id ] = (int) $menu_id;
 		$GLOBALS['karmcp_test']['posts'][ $item_id ]    = new WP_Post( array( 'ID' => $item_id, 'post_type' => 'nav_menu_item' ) );
+		// Menu membership is a nav_menu term on the item, and that is how the
+		// ability reads it back. The shared harness owns wp_get_object_terms(),
+		// so the fixture it reads has to be kept in step here.
+		if ( isset( $GLOBALS['karmcp_nav']['menus'][ (int) $menu_id ] ) ) {
+			$GLOBALS['karmcp_test']['object_terms'][ $item_id ]['nav_menu'] = array( $GLOBALS['karmcp_nav']['menus'][ (int) $menu_id ] );
+		}
 		return $item_id;
 	}
 }
@@ -200,16 +206,6 @@ if ( ! function_exists( 'wp_delete_post' ) ) {
 		$existed = isset( $GLOBALS['karmcp_nav']['items'][ $id ] );
 		unset( $GLOBALS['karmcp_nav']['items'][ $id ], $GLOBALS['karmcp_nav']['item_menu'][ $id ], $GLOBALS['karmcp_test']['posts'][ $id ] );
 		return $existed ? new WP_Post( array( 'ID' => $id ) ) : false;
-	}
-}
-
-if ( ! function_exists( 'wp_get_object_terms' ) ) {
-	function wp_get_object_terms( $id, $taxonomy ) {
-		$mid = isset( $GLOBALS['karmcp_nav']['item_menu'][ (int) $id ] ) ? (int) $GLOBALS['karmcp_nav']['item_menu'][ (int) $id ] : 0;
-		if ( ! $mid || ! isset( $GLOBALS['karmcp_nav']['menus'][ $mid ] ) ) {
-			return array();
-		}
-		return array( $GLOBALS['karmcp_nav']['menus'][ $mid ] );
 	}
 }
 

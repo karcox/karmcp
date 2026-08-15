@@ -160,6 +160,29 @@ class KarMCP_Vuln_Remediation {
 
 		$was_active = is_plugin_active( $file );
 
+		// Refresh the update transient first, and this is not belt and braces.
+		// Plugin_Upgrader reads that transient to find the package to install,
+		// and a *successful* upgrade ends by calling wp_clean_plugins_cache(),
+		// which deletes it. So the second update in the same request found
+		// nothing on offer and returned false — reported as "the update did not
+		// complete" when in truth it had never started. It looked like only one
+		// plugin could be updated per page load, and that is exactly what it was.
+		if ( function_exists( 'wp_update_plugins' ) ) {
+			wp_update_plugins();
+		}
+
+		$current = get_site_transient( 'update_plugins' );
+		if ( ! is_object( $current ) || empty( $current->response[ $file ] ) ) {
+			return new \WP_Error(
+				'up_to_date',
+				sprintf(
+					/* translators: %s: plugin file. */
+					__( 'WordPress is not offering an update for "%s" — it may already be current, or its licence may not be delivering updates. Nothing was changed.', 'karmcp' ),
+					$file
+				)
+			);
+		}
+
 		$upgrader = new \Plugin_Upgrader( KarMCP_Package_Guard::make_skin() );
 		$result   = $upgrader->upgrade( $file );
 
@@ -167,7 +190,10 @@ class KarMCP_Vuln_Remediation {
 			return $result;
 		}
 		if ( false === $result ) {
-			return new \WP_Error( 'update_failed', __( 'The update did not complete.', 'karmcp' ) );
+			return new \WP_Error(
+				'update_failed',
+				__( 'The upgrader refused the update. The most common causes are the filesystem not being writable and the download failing.', 'karmcp' )
+			);
 		}
 
 		// Plugin_Upgrader deactivates before upgrading. A plugin that was running

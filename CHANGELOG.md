@@ -2,6 +2,16 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.10.1]
+
+### Fixed
+
+- **Only one plugin could be updated per page load.** The second update in the same request failed with "The update did not complete", and reloading made exactly one more possible.
+
+  `Plugin_Upgrader` reads the `update_plugins` transient to find the package to install, and a *successful* upgrade ends by calling `wp_clean_plugins_cache()`, which deletes that transient. So the second upgrade found nothing on offer and returned `false` — which this reported as a failed update when in truth it had never started. The transient is now refreshed before each upgrade, exactly as the `update-plugin` MCP tool has always done; joining the two paths is what would have avoided this in the first place.
+
+- **"The update did not complete" said nothing useful, and was often wrong.** `false` from the upgrader now says the upgrader refused it and names the usual causes, and the case where WordPress is simply offering no update is reported as that, with the note that a premium licence not delivering updates looks identical.
+
 ## [1.10.0]
 
 ### Added

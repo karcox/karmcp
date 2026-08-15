@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.10.0
+Stable tag: 1.10.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.10.1 =
+
+* Fixed: only one plugin could be updated per page load. A successful upgrade makes WordPress delete the `update_plugins` transient, and `Plugin_Upgrader` reads that transient to find what to install — so the second update in the same request found nothing and reported a failure that had never been attempted. The transient is now refreshed before each upgrade.
+* Fixed: "The update did not complete" was uninformative and often wrong. The two cases — the upgrader refusing, and WordPress offering no update at all — are now reported separately and by name.
 
 = 1.10.0 =
 

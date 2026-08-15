@@ -242,6 +242,7 @@ class KarMCP_Admin {
 		add_action( 'wp_ajax_karmcp_scan_start', array( $this, 'ajax_scan_start' ) );
 		add_action( 'wp_ajax_karmcp_scan_step', array( $this, 'ajax_scan_step' ) );
 		add_action( 'wp_ajax_karmcp_vuln_update', array( $this, 'ajax_vuln_update' ) );
+		add_action( 'wp_ajax_karmcp_db_clean', array( $this, 'ajax_db_clean' ) );
 		add_action( 'admin_init', array( $this, 'maybe_apply_default_disabled_tools' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_head', array( $this, 'print_menu_icon_style' ) );
@@ -1874,6 +1875,71 @@ class KarMCP_Admin {
 		wp_send_json_success(
 			array(
 				'message' => __( 'Updated. Scan again to confirm it is cleared.', 'karmcp' ),
+			)
+		);
+	}
+
+	/**
+	 * Runs one cleanup task from the Optimize tab, without leaving the page.
+	 *
+	 * The reload it replaces was the wrong shape for this work. Deletions are
+	 * batched, so a task that starts at four thousand rows needs running more
+	 * than once, and every run cost a full page load to find out whether it was
+	 * done. Here the row reports its own outcome and every count on the table is
+	 * recomputed from the database — cleaning revisions changes the overhead
+	 * figure too, so refreshing only the row that was clicked would leave the
+	 * others quietly stale.
+	 *
+	 * @since 1.11.1
+	 * @return void
+	 */
+	public function ajax_db_clean(): void {
+		check_ajax_referer( 'karmcp_db_clean' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
+		}
+		if ( ! class_exists( 'KarMCP_DB_Cleaner' ) ) {
+			wp_send_json_error( array( 'message' => __( 'The database cleaner is not available.', 'karmcp' ) ), 409 );
+		}
+
+		$task = isset( $_POST['task'] ) ? sanitize_key( wp_unslash( $_POST['task'] ) ) : '';
+		if ( '' === $task || ! array_key_exists( $task, KarMCP_DB_Cleaner::tasks() ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown cleanup task.', 'karmcp' ) ), 400 );
+		}
+
+		$done    = KarMCP_DB_Cleaner::run( array( $task ) );
+		$removed = (int) ( $done[ $task ] ?? 0 );
+		$counts  = KarMCP_DB_Cleaner::counts();
+		$left    = (int) ( $counts[ $task ] ?? 0 );
+
+		if ( 'optimize' === $task ) {
+			$message = sprintf(
+				/* translators: %d: number of database tables compacted. */
+				_n( '%d table compacted.', '%d tables compacted.', $removed, 'karmcp' ),
+				$removed
+			);
+		} elseif ( $left > 0 ) {
+			$message = sprintf(
+				/* translators: 1: rows removed in this run, 2: rows still left. */
+				__( 'Removed %1$d. %2$d left — run it again.', 'karmcp' ),
+				$removed,
+				$left
+			);
+		} else {
+			$message = sprintf(
+				/* translators: %d: rows removed. */
+				__( 'Removed %d. Nothing left.', 'karmcp' ),
+				$removed
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'task'    => $task,
+				'removed' => $removed,
+				'left'    => $left,
+				'counts'  => $counts,
+				'message' => $message,
 			)
 		);
 	}

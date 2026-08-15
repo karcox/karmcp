@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.11.1]
+
+### Changed
+
+- **Each cleanup task on the Optimize tab now runs in place, with its own button and spinner, instead of reloading the page.** It follows the plugin-update row on the Security tab, which already worked this way: press the button, a spinner appears beside it, and the row reports what it did.
+
+  The reload was the wrong shape for this work. Deletions run in bounded batches, so a task that starts at four thousand rows needs running more than once — and every run cost a full page load just to find out whether it was finished. Now the answer arrives in the row itself: how many were removed, how many are left, and whether to press it again.
+
+  Every count on the table is recomputed after each run, not only the one that was clicked. The tasks are not independent — deleting revisions leaves free space behind, which is exactly what the table-overhead figure measures — so refreshing a single row would leave the others quietly stale. Buttons re-arm or disable themselves from those fresh counts, and the "nothing to clean" notice appears on its own when the last count reaches zero.
+
+  The confirmation is now per task and names it, rather than one blanket warning that several of the selected tasks delete permanently. **The page still works with JavaScript off:** each row is a real form that posts that one task and comes back through the redirect, as before.
+
 ## [1.11.0]
 
 ### Added

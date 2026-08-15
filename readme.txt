@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.11.0
+Stable tag: 1.11.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.11.1 =
+
+* Each cleanup task on the **Optimize** tab now runs without reloading the page: its own button, a spinner beside it while it works, and the result reported in the row — the same way plugin updates already work on the Security tab.
+* Deletions are batched, so a task often needs running more than once. Every count on the table is refreshed after each run, buttons re-arm or disable themselves accordingly, and the confirmation now names the task it is about to delete.
+* Still works with JavaScript off: each row is a real form that posts that single task.
 
 = 1.11.0 =
 

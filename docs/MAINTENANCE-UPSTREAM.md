@@ -6,6 +6,8 @@ The origin tree is [`msrbuilds/elementor-mcp`](https://github.com/msrbuilds/elem
 
 It is a **source of ideas, not a source of code**. We never rebase or merge; changes are read, judged, and ported by hand. One line per reviewed release goes in the log below — in a year that log is the difference between knowing where you stand and re-reading forty releases.
 
+La rama de trabajo es **`master`** (antes `karmcp`, unificada el 2026-08-15). La rama local `main`, que seguía a `upstream/main`, se ha borrado a propósito: era la única cosa del repositorio que invitaba a mergear upstream por confusión de nombres. El punto de fork sigue marcado por el tag `baseline-3.12.0`, y `upstream/main` se lee directamente desde el remote-tracking.
+
 **The automatic daily `git merge upstream/main` workflow has been deleted** (it contradicted every line of this document — it would have silently overwritten the divergences below). Fetch and read; never merge.
 
 ## Current baseline

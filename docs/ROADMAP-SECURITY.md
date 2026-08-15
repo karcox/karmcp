@@ -246,10 +246,35 @@ Ver [[wordfence-intelligence-feed]] en memoria. Lo esencial, verificado el 2026-
       public function attribution( array $rec );  // aviso + enlace exigidos por la licencia
   }
   ```
-- **Almacenamiento en fichero, no en base de datos.** Con ~15.000 registros de 1-2 KB son decenas de
-  MB en cualquier escenario: descarta `wp_options` y descarta un transient. Va a
-  `wp-content/uploads/` con `.htaccess` de denegación, más un **índice `slug → [ids]`** aparte para no
-  cargar el feed entero en cada comprobación.
+### Tamaño real del feed — medido el 2026-08-15
+
+| | |
+|---|---|
+| Descarga (gzip) | **11,2 MB** en ~1,8 s |
+| Descomprimido | **150,87 MB** |
+| Registros de vulnerabilidad | **38.701** |
+| Entradas software (slug × vuln) | 42.057 |
+| Slugs distintos | 18.106 — 15.960 plugins, 2.144 temas, 2 core |
+| Índice `slug → [ids]` solo | 2,2 MB |
+
+**Esto invalida el plan ingenuo de "guardar el JSON y decodificarlo".** `json_decode()` de 150 MB
+necesita del orden de 1 GB de memoria PHP: imposible en un `memory_limit` normal, y desde luego en
+hosting compartido. **El feed no se puede cargar entero en memoria, nunca.**
+
+**Arquitectura que sí funciona:**
+
+1. Descargar a disco **comprimido** (11 MB) en `wp-content/uploads/` con `.htaccess` de denegación —
+   patrón que `KarMCP_Filesystem_Guard` ya usa (~línea 191).
+2. **Parseo incremental.** La raíz es un objeto `{"uuid": {…}, "uuid": {…}}`, así que se recorre el
+   stream contando llaves —respetando cadenas y escapes— y se hace `json_decode()` **de un registro
+   cada vez**. La memoria se queda en un registro, no en 150 MB. El troceador es **lógica pura**: se
+   testea con un JSON de juguete, sin WordPress y sin red.
+3. Volcar a **tabla propia** solo lo que se usa: `slug`, `type`, rangos de versión, `cve`, `cvss`,
+   `patched_versions`, título y enlace. 42.000 filas no son nada para MySQL, y consultar por slug pasa
+   a ser un índice en vez de recorrer un fichero.
+4. Borrar el `.gz` tras procesarlo. No hace falta conservarlo.
+
+El paso 2 es el que hay que escribir con cuidado; el resto es rutina.
 - `class-security-vulnerability-audit.php` → **quinta categoría `vulnerability`**, añadida a
   `Scanner::ALL_CHECKS`. El hueco ya existe: es una lista y `Finding::make()` es uniforme.
 - Ability `karmcp/list-vulnerabilities`.
@@ -443,9 +468,10 @@ Wordfence, el camino más corto es **0 → 7 → 1 → 5**.
    **Hasta que Cloudflare esté delante, esa capa está descubierta.** Comprobar primero qué trae ya el
    hosting: LiteSpeed y la mayoría de gestionados llevan ModSecurity, puede que la pieza ya esté
    puesta sin saberlo.
-2. **Cuota de Wordfence.** Falta medir el tamaño real del feed de producción; se agotó la cuota antes
-   de poder descargarlo. Si el límite gratuito resulta ser incompatible con un refresco diario, pedir
-   ampliación por correo.
+2. **Cuota de Wordfence — medida, y compatible.** El feed se descargó con éxito ~50 minutos después
+   del primer 429, así que la ventana está en el orden de la hora, no del día. Un refresco diario cabe
+   de sobra. Los números del feed están arriba, en la Pieza 5. Si algún día hiciera falta más cuota, se
+   pide a `wfi-support@wordfence.com` justificándola.
 3. **Deuda de seguridad ya identificada, fuera de estas piezas.** Los scopes OAuth se normalizan al
    emitirlos y **nadie los lee** (`KarMCP_OAuth_Bearer::permission_callback()` no mira la columna);
    hoy es inocuo porque solo existe `mcp`. Y hay que auditar qué secretos van cifrados con

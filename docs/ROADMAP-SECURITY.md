@@ -343,6 +343,71 @@ afecta a la versión instalada.** No es un permiso general.
 
 ---
 
+## Pieza 7 — Endurecimiento del login
+
+**Por qué.** De todo lo que se pierde al quitar Wordfence, esta es la única mitad que **sí** tiene
+sentido absorber en el plugin. No es un WAF: no necesita inteligencia de amenazas ni reglas mantenidas
+por nadie. Es contar intentos fallidos y aplicar bloqueo temporal. Está acotado, es lógica pura, y es
+**el ataque más frecuente que recibe cualquier WordPress**.
+
+El WAF se queda fuera a propósito (ver Decisiones abiertas): va delante, en Cloudflare o en el
+hosting, no dentro de un plugin PHP que arranca tarde y que en un sitio con LiteSpeed solo vería los
+*cache miss*.
+
+**Qué escribir**
+
+- `includes/security/class-login-guard-policy.php` — **puro**, al estilo de
+  `KarMCP_Guardrails_Policy`: dados N fallos con sus marcas de tiempo, ¿esta IP o este usuario están
+  bloqueados, y hasta cuándo? Sin `get_option()` ni `current_time()` dentro; los datos se le pasan.
+- `includes/security/class-login-guard.php` — engancha `wp_login_failed`, `authenticate` y
+  `wp_login`, y aplica la política.
+- Bloqueo **con escalado y siempre acotado en el tiempo**. Nunca permanente: un bloqueo permanente por
+  IP acaba dejándote a ti fuera.
+- Conteo **por IP y por nombre de usuario** por separado. Solo por IP no frena un ataque distribuido
+  contra una cuenta; solo por usuario permite barrer usuarios desde una IP.
+- Cortar la **enumeración de usuarios**, que es la mitad de reconocimiento del ataque:
+  `/wp-json/wp/v2/users` y las redirecciones `?author=N`. Ojo: la enumeración por REST tiene usos
+  legítimos autenticados — cerrar solo la vía anónima.
+- **XML-RPC como amplificador**: `system.multicall` permite probar cientos de contraseñas en una sola
+  petición. La auditoría de `hardening` ya detecta XML-RPC expuesto; aquí es donde se cierra.
+- Almacenamiento: los intentos fallidos son datos de alta rotación. Va en **tabla propia** —el plugin
+  ya crea cinco— con limpieza por el patrón de GC que `KarMCP_OAuth_Server` ya usa (`wp_schedule_event`
+  diario).
+- Superficie en la pestaña Security (Pieza 1): bloqueos activos, intentos recientes, y un botón para
+  desbloquear una IP.
+
+### La trampa de la IP detrás de Cloudflare
+
+**Esto hay que hacerlo bien desde el principio o el módulo es peor que no tenerlo.** Detrás de
+Cloudflare, `REMOTE_ADDR` es la IP de Cloudflare, no la del visitante: **todos tus usuarios comparten
+IP**, así que a los cinco fallos de cualquiera bloqueas el mundo entero.
+
+La corrección es leer `CF-Connecting-IP` o `X-Forwarded-For` — pero esas cabeceras **las puede
+falsificar cualquiera** si no vienen de un proxy en el que confías, y entonces el atacante rota su IP
+aparente a voluntad y el bloqueo no sirve de nada.
+
+Regla: **por defecto `REMOTE_ADDR`**, y la cabecera solo se usa cuando el administrador declara
+explícitamente el proxy y su rango en la configuración. `KarMCP_Url_Guard` ya tiene una tabla de
+rangos reservados y formas IPv6 que sirve para validar eso.
+
+Es directamente relevante: Cloudflare entra en el plan.
+
+### No romper la autenticación de MCP
+
+El guard no puede dejar fuera al propio agente. La ruta OAuth ya tiene su propio límite por IP en
+`/register` desde la 1.2.0 — hay que ser coherente con él y **excluir explícitamente** los endpoints
+del servidor MCP del conteo de login, o un cliente que reintenta se autobloquea.
+
+**Fuera de alcance** 2FA. Se hace bien en plugins dedicados, e implementar TOTP con códigos de
+recuperación en condiciones es un proyecto propio, no un apartado de este.
+
+**Tests** Toda la política, pura: escalado, expiración, conteo por IP frente a por usuario,
+resolución de IP con y sin proxy declarado.
+
+**Esfuerzo** 2-3 días.
+
+---
+
 ## Orden
 
 | # | Pieza | Esfuerzo | Depende de |
@@ -354,16 +419,30 @@ afecta a la versión instalada.** No es un permiso general.
 | 4 | `update-core` | Medio día | 3 |
 | 5 | Módulo de vulnerabilidades | 3-5 días | 1 |
 | 6 | Parcheo desde la pestaña | 1-2 días | 1, 3, 5 |
+| 7 | Endurecimiento del login | 2-3 días | — (superficie en 1) |
 
-Total: **dos o tres semanas** de trabajo real. La 5 tiene que estar **antes** de desinstalar Wordfence,
-no después.
+Total: **tres semanas largas** de trabajo real.
+
+**Dos condiciones de salida antes de desinstalar Wordfence:** la Pieza 5, o te quedas sin datos de
+vulnerabilidad; y la Pieza 7, o te quedas sin protección de fuerza bruta. El WAF va aparte, ver abajo.
+
+La 7 no depende de nada, así que puede adelantarse: si el objetivo inmediato es poder apagar
+Wordfence, el camino más corto es **0 → 7 → 1 → 5**.
 
 ## Decisiones abiertas
 
-1. **El WAF.** Al quitar Wordfence pierdes cortafuegos y protección de fuerza bruta, y **ninguna de las
-   siete piezas lo sustituye** — es deliberado, es la capa equivocada para este plugin. Si delante de
-   sitionet no hay Cloudflare o algo del hosting que filtre, esa pieza queda desnuda en un sitio con
-   WooPayments. Decisión ajena a este roadmap pero parte de la misma migración.
+1. **El WAF — decidido: fuera del plugin, delante.** Va en **Cloudflare**, que Carlos añadirá.
+   Queda escrito el porqué para no re-litigarlo: un WAF en PHP arranca *después* de que WordPress se
+   haya inicializado (Wordfence solo lo evita con `auto_prepend_file`, es decir, dejando de ser un
+   plugin); en un sitio con LiteSpeed cache solo vería los *cache miss*; las reglas son el producto de
+   pago de Wordfence y Patchstack y no se pueden reutilizar —la licencia de Defiant cubre los datos,
+   no las reglas—; un falso positivo rompe el checkout de WooCommerce en silencio, con peor radio de
+   explosión que la mayoría de las vulnerabilidades que evitaría; y un WAF tiene que parsear entrada
+   no confiada **antes** de que WordPress sanee nada, o sea que añade superficie de ataque dentro de
+   lo que protege.
+   **Hasta que Cloudflare esté delante, esa capa está descubierta.** Comprobar primero qué trae ya el
+   hosting: LiteSpeed y la mayoría de gestionados llevan ModSecurity, puede que la pieza ya esté
+   puesta sin saberlo.
 2. **Cuota de Wordfence.** Falta medir el tamaño real del feed de producción; se agotó la cuota antes
    de poder descargarlo. Si el límite gratuito resulta ser incompatible con un refresco diario, pedir
    ampliación por correo.

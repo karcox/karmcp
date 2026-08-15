@@ -166,7 +166,31 @@ class KarMCP_Security_Monitor {
 			$report  = $scanner->scan( array( 'deep' => false ) );
 			self::store( $report );
 		} catch ( \Throwable $e ) {
-			self::store_failure( $e->getMessage() );
+			// Name the class, the file and the line. Storing only getMessage()
+			// left a real failure — "Attempt to assign property on false", thrown
+			// by a third-party update checker reached through the scan — with no
+			// way to find what threw it. It is the same dead end 1.2.1 removed
+			// from the tools, and it was reintroduced here.
+			//
+			// Reaching this at all is now unusual: each audit has its own guard,
+			// so a single broken check no longer takes the scan with it. This
+			// catches what escapes the orchestrator itself.
+			$file = function_exists( 'wp_normalize_path' ) ? wp_normalize_path( $e->getFile() ) : $e->getFile();
+			$root = ( defined( 'ABSPATH' ) && function_exists( 'wp_normalize_path' ) ) ? wp_normalize_path( ABSPATH ) : '';
+			if ( '' !== $root && 0 === strpos( $file, $root ) ) {
+				$file = substr( $file, strlen( $root ) );
+			}
+
+			self::store_failure(
+				sprintf(
+					/* translators: 1: exception class, 2: message, 3: file, 4: line. */
+					__( '%1$s: %2$s (at %3$s line %4$d)', 'karmcp' ),
+					get_class( $e ),
+					$e->getMessage(),
+					$file,
+					$e->getLine()
+				)
+			);
 		}
 	}
 

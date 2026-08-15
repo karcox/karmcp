@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.7.2 =
+
+* Fixed: a failure in any one of the five checks discarded the whole scan. The malware, integrity and hardening results were complete when something threw inside the software audit, and all of it was replaced by "scan failed". Each check now runs in its own guard — the ones that finish are kept, and the one that broke is reported as a warning in its own category.
+* Fixed: the failure recorded only the exception message, with no class, file or line, which made it impossible to find what threw. Failures now name all three. The message seen in practice, `Attempt to assign property "plugin" on false`, comes from a third-party update checker reached through the scan; this release will say which one.
 
 = 1.7.1 =
 

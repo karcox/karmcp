@@ -15,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../includes/security/class-security-finding.php';
 require_once __DIR__ . '/../includes/security/class-security-malware-audit.php';
+require_once __DIR__ . '/../includes/security/class-security-software-audit.php';
 require_once __DIR__ . '/../includes/security/class-security-scanner.php';
 
 class SecurityScoringTest extends TestCase {
@@ -152,5 +153,61 @@ class SecurityScoringTest extends TestCase {
 		$this->assertTrue(
 			KarMCP_Security_Malware_Audit::is_known_php_producer( 'wp-content\\uploads\\code-snippets\\2283.php' )
 		);
+	}
+
+	// -----------------------------------------------------------------
+	// One broken audit must not take the scan with it
+	// -----------------------------------------------------------------
+
+	/**
+	 * The measured failure: a third-party update checker threw inside the
+	 * software audit, and the whole scan was discarded — a complete malware,
+	 * integrity and hardening report thrown away to store the word "failed".
+	 *
+	 * Each audit now runs in its own guard, so the ones that finished are kept
+	 * and the one that broke is reported as broken. The stand-in finding is a
+	 * warning, not an info: a category that produced nothing because it crashed
+	 * is not a category that came back clean.
+	 */
+	public function test_a_throwing_audit_is_reported_without_discarding_the_others(): void {
+		$malware = new class() extends KarMCP_Security_Malware_Audit {
+			public function run( bool $deep = false, int $max_files = 0, int $max_seconds = 0 ): array {
+				return array(
+					'findings' => array(
+						KarMCP_Security_Finding::make( 'ok', 'malware', 'Clean', 'pass', true, 'Nothing found.' ),
+					),
+					'stats'    => array(
+						'files_scanned'      => 3,
+						'files_skipped_size' => 0,
+						'truncated'          => false,
+						'truncated_reason'   => null,
+					),
+				);
+			}
+		};
+
+		$software = new class() extends KarMCP_Security_Software_Audit {
+			public function run(): array {
+				throw new \Error( 'Attempt to assign property "plugin" on false' );
+			}
+		};
+
+		$scanner = new KarMCP_Security_Scanner( $malware, null, null, $software );
+		$report  = $scanner->scan( array( 'checks' => array( 'malware', 'software' ) ) );
+
+		$malware_findings = $report['sections']['malware'] ?? array();
+		$this->assertNotEmpty( $malware_findings, 'The audit that finished must survive the one that threw.' );
+
+		$software_findings = $report['sections']['software'] ?? array();
+		$this->assertCount( 1, $software_findings );
+		$this->assertSame( 'software_audit_failed', $software_findings[0]['id'] );
+		$this->assertSame( 'warning', $software_findings[0]['status'] );
+
+		// The message has to name what threw and where, or the failure is a dead
+		// end — which is exactly what happened the first time.
+		$this->assertStringContainsString( 'Error', $software_findings[0]['message'] );
+		$this->assertStringContainsString( 'Attempt to assign property', $software_findings[0]['message'] );
+		$this->assertArrayHasKey( 'file', $software_findings[0]['value'] );
+		$this->assertArrayHasKey( 'line', $software_findings[0]['value'] );
 	}
 }

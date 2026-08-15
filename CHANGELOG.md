@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.7.2]
+
+> A scan reported `KarMCP security scan failed`, and the whole report was gone. What actually broke was one check out of five — and the two defects that turned that into a total loss are both mine.
+
+### Fixed
+
+- **One failing audit discarded the entire scan.** The malware, integrity and hardening checks had all completed; something threw inside the software audit and every one of those results was thrown away to store the single word "failed". Each audit now runs inside its own guard: the ones that finish are kept, and the one that broke is reported as a warning in its own category. A check that produced nothing because it crashed is not a check that came back clean, so it costs score rather than passing quietly.
+
+- **The failure named nothing you could act on.** The stored reason was `Attempt to assign property "plugin" on false` and no more — no exception class, no file, no line. That message appears nowhere in this plugin, and the code that threw it is reached indirectly, so there was no way to find it. This is precisely the dead end 1.2.1 removed from the tools, reintroduced here in the monitor. Failures now name the class, the file relative to the WordPress root, and the line.
+
+  For the record, that particular error is characteristic of a third-party plugin's update checker assigning to a property of `get_site_transient( 'update_plugins' )` without checking it is not `false` — reached through the scan rather than caused by it. With this release the scan will say which plugin and which line.
+
 ## [1.7.1]
 
 > The first real scan of the new Security tab reported 144 critical findings, of which **none were real**, and scored the site 0 out of 100. Everything here comes from that one run. None of it could have been caught by a unit test: it took a site with a hundred snippets and thirty outdated plugins to show it.

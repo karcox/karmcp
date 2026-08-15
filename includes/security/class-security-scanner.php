@@ -162,30 +162,57 @@ class KarMCP_Security_Scanner {
 			'elapsed_ms'         => 0,
 		);
 
+		// Each audit runs inside its own guard. One of them throwing must not
+		// discard the four that finished: the first real failure came from a
+		// third-party update-checker blowing up inside the software audit, and
+		// it threw away a complete malware, integrity and hardening report to
+		// store nothing but "failed". A category that could not run is reported
+		// as a category that could not run — the same rule as everywhere else in
+		// this section, applied one level down.
 		if ( in_array( 'malware', $checks, true ) ) {
-			$m = $this->malware()->run( $deep, $max_files, $max_seconds );
-			$findings = array_merge( $findings, $m['findings'] );
-			$scan_meta['files_scanned']      = (int) $m['stats']['files_scanned'];
-			$scan_meta['files_skipped_size'] = (int) $m['stats']['files_skipped_size'];
-			$scan_meta['truncated']          = (bool) $m['stats']['truncated'];
-			$scan_meta['truncated_reason']   = $m['stats']['truncated_reason'];
+			try {
+				$m = $this->malware()->run( $deep, $max_files, $max_seconds );
+				$findings = array_merge( $findings, $m['findings'] );
+				$scan_meta['files_scanned']      = (int) $m['stats']['files_scanned'];
+				$scan_meta['files_skipped_size'] = (int) $m['stats']['files_skipped_size'];
+				$scan_meta['truncated']          = (bool) $m['stats']['truncated'];
+				$scan_meta['truncated_reason']   = $m['stats']['truncated_reason'];
+			} catch ( \Throwable $e ) {
+				$findings[] = self::audit_failed( 'malware', $e );
+			}
 		}
 		if ( in_array( 'integrity', $checks, true ) ) {
-			$i = $this->integrity()->run();
-			$findings = array_merge( $findings, $i['findings'] );
-			$scan_meta['integrity_api'] = $i['api'];
+			try {
+				$i = $this->integrity()->run();
+				$findings = array_merge( $findings, $i['findings'] );
+				$scan_meta['integrity_api'] = $i['api'];
+			} catch ( \Throwable $e ) {
+				$findings[] = self::audit_failed( 'integrity', $e );
+			}
 		}
 		if ( in_array( 'hardening', $checks, true ) ) {
-			$h = $this->hardening()->run();
-			$findings = array_merge( $findings, $h['findings'] );
-			$scan_meta['headers_fetch'] = $h['headers_fetch'];
+			try {
+				$h = $this->hardening()->run();
+				$findings = array_merge( $findings, $h['findings'] );
+				$scan_meta['headers_fetch'] = $h['headers_fetch'];
+			} catch ( \Throwable $e ) {
+				$findings[] = self::audit_failed( 'hardening', $e );
+			}
 		}
 		if ( in_array( 'software', $checks, true ) ) {
-			$findings = array_merge( $findings, $this->software()->run() );
+			try {
+				$findings = array_merge( $findings, $this->software()->run() );
+			} catch ( \Throwable $e ) {
+				$findings[] = self::audit_failed( 'software', $e );
+			}
 		}
 		if ( in_array( 'vulnerability', $checks, true ) && class_exists( 'KarMCP_Vuln_Audit' ) ) {
-			$vuln     = new KarMCP_Vuln_Audit();
-			$findings = array_merge( $findings, $vuln->run() );
+			try {
+				$vuln     = new KarMCP_Vuln_Audit();
+				$findings = array_merge( $findings, $vuln->run() );
+			} catch ( \Throwable $e ) {
+				$findings[] = self::audit_failed( 'vulnerability', $e );
+			}
 		}
 
 		$summary               = $this->summarize( $findings );
@@ -209,6 +236,56 @@ class KarMCP_Security_Scanner {
 	 * @param array $findings Finding[]
 	 * @return array { counts, score, grade, top_recommendations }
 	 */
+	/**
+	 * The finding that stands in for an audit that could not run.
+	 *
+	 * A **warning**, not an info: the category produced no results and the
+	 * reason is that it broke, which the score should notice. And it names the
+	 * exception class, file and line, because a failure reported as bare text
+	 * is exactly the dead end 1.2.1 removed from the tools — a third-party
+	 * update-checker throwing inside an audit is unfindable without them.
+	 *
+	 * The path is relative to the WordPress root: it is what read-file accepts,
+	 * and one less thing disclosed to a client.
+	 *
+	 * @since 1.7.2
+	 *
+	 * @param string     $category Which audit failed.
+	 * @param \Throwable $e        What escaped it.
+	 * @return array Finding
+	 */
+	private static function audit_failed( string $category, \Throwable $e ): array {
+		// wp_normalize_path() rather than a hand-rolled str_replace: it is what
+		// the rest of the plugin uses and it handles Windows paths and stream
+		// wrappers without a literal backslash in the source.
+		$file = function_exists( 'wp_normalize_path' ) ? wp_normalize_path( $e->getFile() ) : $e->getFile();
+		$root = ( defined( 'ABSPATH' ) && function_exists( 'wp_normalize_path' ) ) ? wp_normalize_path( ABSPATH ) : '';
+		if ( '' !== $root && 0 === strpos( $file, $root ) ) {
+			$file = substr( $file, strlen( $root ) );
+		}
+
+		return KarMCP_Security_Finding::make(
+			$category . '_audit_failed',
+			$category,
+			'Check could not run',
+			'warning',
+			array(
+				'exception' => get_class( $e ),
+				'file'      => $file,
+				'line'      => $e->getLine(),
+			),
+			sprintf(
+				'The %1$s check did not finish, so nothing was verified in it. %2$s threw "%3$s" at %4$s:%5$d.',
+				$category,
+				get_class( $e ),
+				$e->getMessage(),
+				$file,
+				$e->getLine()
+			),
+			'The file and line above name the code that threw — often a third-party plugin reached through WordPress rather than this scanner. The other categories in this report are unaffected and their results stand.'
+		);
+	}
+
 	public function summarize( array $findings ): array {
 		$counts        = array( 'critical' => 0, 'warning' => 0, 'pass' => 0, 'info' => 0 );
 		$cat_crit_pen  = array();

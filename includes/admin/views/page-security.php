@@ -258,6 +258,68 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 		</p>
 
 		<?php
+		$karmcp_pen   = (array) ( $karmcp_sum['penalties'] ?? array() );
+		$karmcp_total = (int) ( $karmcp_sum['total_penalty'] ?? 0 );
+		if ( $karmcp_pen ) :
+			?>
+			<details style="margin:0 0 1.5em;">
+				<summary style="cursor:pointer;"><?php esc_html_e( 'Where the score went', 'karmcp' ); ?></summary>
+				<table class="widefat striped" style="margin-top:.6em;max-width:44em;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Check', 'karmcp' ); ?></th>
+							<th><?php esc_html_e( 'Critical', 'karmcp' ); ?></th>
+							<th><?php esc_html_e( 'Warnings', 'karmcp' ); ?></th>
+							<th style="text-align:right;"><?php esc_html_e( 'Points lost', 'karmcp' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php foreach ( $karmcp_pen as $karmcp_row ) : ?>
+						<tr>
+							<td><?php echo esc_html( ucfirst( (string) $karmcp_row['category'] ) ); ?></td>
+							<td>
+								<?php echo (int) $karmcp_row['criticals']; ?>
+								<?php if ( $karmcp_row['crit_capped'] ) : ?>
+									<span class="description"><?php esc_html_e( '(capped)', 'karmcp' ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td>
+								<?php echo (int) $karmcp_row['warnings']; ?>
+								<?php if ( $karmcp_row['warn_capped'] ) : ?>
+									<span class="description"><?php esc_html_e( '(capped)', 'karmcp' ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td style="text-align:right;">
+								−<?php echo (int) ( $karmcp_row['crit_penalty'] + $karmcp_row['warn_penalty'] ); ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					<tr>
+						<td colspan="3"><strong><?php esc_html_e( 'Total', 'karmcp' ); ?></strong></td>
+						<td style="text-align:right;"><strong>−<?php echo (int) $karmcp_total; ?></strong></td>
+					</tr>
+					</tbody>
+				</table>
+				<p class="description" style="max-width:44em;">
+					<?php
+					esc_html_e( 'Each critical costs 20 points and each warning 5, but a single check can never cost more than 60 for its criticals or 25 for its warnings — so one very bad category cannot bury everything else.', 'karmcp' );
+					if ( $karmcp_total > 100 ) {
+						echo ' ';
+						echo esc_html(
+							sprintf(
+								/* translators: 1: total penalty, 2: how much must be cleared before the score moves. */
+								__( 'This site has lost %1$d points against the 100 available, so the score is sitting on its floor: it will not begin to move until more than %2$d points are cleared. Between 0 and 60 the grade says "act", not "how much".', 'karmcp' ),
+								$karmcp_total,
+								$karmcp_total - 100
+							)
+						);
+					}
+					?>
+				</p>
+			</details>
+		<?php endif; ?>
+
+		<?php
 		/**
 		 * Findings are grouped by id before rendering, and each one shows WHERE.
 		 *
@@ -485,12 +547,13 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 							</td>
 							<td style="width:11em;text-align:right;">
 								<?php if ( '' !== $karmcp_fx['available'] && $karmcp_fx['fixed'] > 0 ) : ?>
-									<form method="post" style="margin:0;">
+									<form method="post" style="margin:0;" class="karmcp-update-form" data-plugin="<?php echo esc_attr( $karmcp_fx['file'] ); ?>">
 										<?php wp_nonce_field( 'karmcp_vuln_update' ); ?>
 										<input type="hidden" name="karmcp_vuln_plugin" value="<?php echo esc_attr( $karmcp_fx['file'] ); ?>" />
 										<button type="submit" name="karmcp_vuln_update" value="1" class="button button-primary">
 											<?php esc_html_e( 'Update', 'karmcp' ); ?>
 										</button>
+										<span class="karmcp-update-state" style="display:none;"></span>
 									</form>
 								<?php else : ?>
 									<span class="description"><?php esc_html_e( 'no update available', 'karmcp' ); ?></span>
@@ -631,3 +694,55 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 		<?php endforeach; ?>
 	</ul>
 </div>
+
+<script>
+( function () {
+	var forms = document.querySelectorAll( '.karmcp-update-form' );
+	if ( ! forms.length || ! window.fetch ) { return; }
+
+	var ajaxUrl = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+	var nonce   = <?php echo wp_json_encode( wp_create_nonce( 'karmcp_scan_progress' ) ); ?>;
+	var working = <?php echo wp_json_encode( __( 'Updating…', 'karmcp' ) ); ?>;
+
+	Array.prototype.forEach.call( forms, function ( form ) {
+		form.addEventListener( 'submit', function ( e ) {
+			e.preventDefault();
+
+			var button = form.querySelector( 'button' );
+			var state  = form.querySelector( '.karmcp-update-state' );
+
+			// An update takes several seconds. Disable first, then say so — a
+			// button that looks inert for that long gets clicked twice, and the
+			// second click would start a second upgrade over the first.
+			button.disabled = true;
+			state.style.display = 'inline-block';
+			state.innerHTML = '<span class="spinner is-active" style="float:none;margin:0 4px 0 0;"></span>' + working;
+
+			var body = new FormData();
+			body.append( 'action', 'karmcp_vuln_update' );
+			body.append( '_wpnonce', nonce );
+			body.append( 'plugin', form.getAttribute( 'data-plugin' ) );
+
+			fetch( ajaxUrl, { method: 'POST', body: body, credentials: 'same-origin' } )
+				.then( function ( r ) { return r.json(); } )
+				.then( function ( res ) {
+					var ok = res && res.success;
+					button.style.display = 'none';
+					state.textContent = ( res && res.data && res.data.message ) || '';
+					state.style.color = ok ? '#00713b' : '#b32d2e';
+					if ( ! ok ) {
+						// A failed update leaves the plugin as it was, so the
+						// button has to come back.
+						button.style.display = '';
+						button.disabled = false;
+					}
+				} )
+				.catch( function ( err ) {
+					state.textContent = String( err );
+					state.style.color = '#b32d2e';
+					button.disabled = false;
+				} );
+		} );
+	} );
+}() );
+</script>

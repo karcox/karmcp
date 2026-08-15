@@ -2,6 +2,16 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.10.0]
+
+### Added
+
+- **"Where the score went": the arithmetic behind the number.** A fold-out table showing, per check, how many criticals and warnings it found, how many points that cost, and — the part that matters — whether the category is **capped**. Capping is why more findings in one place stop costing anything.
+
+  It exists because the score alone misleads once it bottoms out. A site can lose 160 points against the 100 available, and then clearing the single largest block of findings moves the number not at all, which reads as "nothing I do helps". When the total exceeds 100 the panel now says so outright, and says how much has to be cleared before the score will begin to move at all. Between 0 and 60 the grade says *act*, not *how much*.
+
+- **Updating a plugin no longer reloads the page.** The button disables itself, shows a spinner and "Updating…", and the row reports its own outcome in place. An update takes several seconds, and a button that looks inert for that long gets clicked twice — which would have started a second upgrade over the first. A failed update brings the button back, because the plugin is still exactly as it was.
+
 ## [1.9.0]
 
 ### Added

@@ -210,4 +210,77 @@ class SecurityScoringTest extends TestCase {
 		$this->assertArrayHasKey( 'file', $software_findings[0]['value'] );
 		$this->assertArrayHasKey( 'line', $software_findings[0]['value'] );
 	}
+
+	// -----------------------------------------------------------------
+	// The breakdown
+	// -----------------------------------------------------------------
+
+	/**
+	 * The number alone misleads once it bottoms out: a site can lose 160 points
+	 * against the 100 available, and then clearing the largest block of findings
+	 * moves the score not at all. The breakdown is what makes that legible, so
+	 * the arithmetic has to add up to the score exactly.
+	 */
+	public function test_the_breakdown_accounts_for_the_whole_penalty(): void {
+		$mixed = array_merge(
+			$this->findings( 'critical', 'integrity', 1 ),
+			$this->findings( 'warning', 'software', 46 ),
+			$this->findings( 'warning', 'hardening', 3 )
+		);
+		$s = $this->scanner->summarize( $mixed );
+
+		$sum = 0;
+		foreach ( $s['penalties'] as $row ) {
+			$sum += $row['crit_penalty'] + $row['warn_penalty'];
+		}
+
+		$this->assertSame( $s['total_penalty'], $sum );
+		$this->assertSame( max( 0, 100 - $sum ), $s['score'] );
+	}
+
+	public function test_a_capped_category_is_marked_as_capped(): void {
+		$s = $this->scanner->summarize( $this->findings( 'warning', 'software', 46 ) );
+
+		$this->assertCount( 1, $s['penalties'] );
+		$this->assertTrue( $s['penalties'][0]['warn_capped'] );
+		$this->assertSame( 46, $s['penalties'][0]['warnings'] );
+		$this->assertSame( KarMCP_Security_Scanner::CATEGORY_WARN_CAP, $s['penalties'][0]['warn_penalty'] );
+	}
+
+	public function test_an_uncapped_category_is_not_marked_as_capped(): void {
+		$s = $this->scanner->summarize( $this->findings( 'warning', 'software', 2 ) );
+
+		$this->assertFalse( $s['penalties'][0]['warn_capped'] );
+		$this->assertSame( 10, $s['penalties'][0]['warn_penalty'] );
+	}
+
+	/** The total is the raw penalty, not the clamped score — that is the point. */
+	public function test_the_total_penalty_can_exceed_a_hundred(): void {
+		$mixed = array_merge(
+			$this->findings( 'critical', 'vulnerability', 30 ),
+			$this->findings( 'critical', 'integrity', 1 ),
+			$this->findings( 'warning', 'malware', 20 ),
+			$this->findings( 'warning', 'hardening', 20 )
+		);
+		$s = $this->scanner->summarize( $mixed );
+
+		$this->assertSame( 0, $s['score'] );
+		$this->assertGreaterThan( 100, $s['total_penalty'] );
+	}
+
+	public function test_categories_with_nothing_wrong_are_left_out(): void {
+		$s = $this->scanner->summarize( $this->findings( 'pass', 'hardening', 5 ) );
+		$this->assertSame( array(), $s['penalties'] );
+		$this->assertSame( 0, $s['total_penalty'] );
+	}
+
+	public function test_the_worst_category_is_listed_first(): void {
+		$mixed = array_merge(
+			$this->findings( 'warning', 'software', 1 ),
+			$this->findings( 'critical', 'integrity', 3 )
+		);
+		$s = $this->scanner->summarize( $mixed );
+
+		$this->assertSame( 'integrity', $s['penalties'][0]['category'] );
+	}
 }

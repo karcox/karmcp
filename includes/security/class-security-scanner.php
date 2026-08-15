@@ -176,9 +176,11 @@ class KarMCP_Security_Scanner {
 
 		return array(
 			'summary'             => array(
-				'score'  => $summary['score'],
-				'grade'  => $summary['grade'],
-				'counts' => $summary['counts'],
+				'score'         => $summary['score'],
+				'grade'         => $summary['grade'],
+				'counts'        => $summary['counts'],
+				'penalties'     => $summary['penalties'],
+				'total_penalty' => $summary['total_penalty'],
 			),
 			'sections'            => $this->group_by_category( $findings ),
 			'scan_meta'           => $scan_meta,
@@ -310,6 +312,65 @@ class KarMCP_Security_Scanner {
 	 * @param array $findings Finding[]
 	 * @return array { counts, score, grade, top_recommendations }
 	 */
+	/**
+	 * Where the score went, category by category.
+	 *
+	 * Exists because the number alone misleads once it bottoms out. A site can
+	 * accumulate 160 points of penalty against the 100 available, and then
+	 * clearing the single largest block of findings moves the score not at all —
+	 * which reads as "nothing I do helps" unless the arithmetic is visible.
+	 *
+	 * @since 1.10.0
+	 *
+	 * @param array $findings Finding[].
+	 * @param array $crit_pen Per-category critical penalties, already capped.
+	 * @param array $warn_pen Per-category warning penalties, already capped.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function penalty_breakdown( array $findings, array $crit_pen, array $warn_pen ): array {
+		$counts = array();
+		foreach ( $findings as $f ) {
+			$cat    = (string) ( $f['category'] ?? 'malware' );
+			$status = (string) ( $f['status'] ?? '' );
+			if ( ! isset( $counts[ $cat ] ) ) {
+				$counts[ $cat ] = array( 'critical' => 0, 'warning' => 0 );
+			}
+			if ( isset( $counts[ $cat ][ $status ] ) ) {
+				++$counts[ $cat ][ $status ];
+			}
+		}
+
+		$out = array();
+		foreach ( $counts as $cat => $c ) {
+			$cp = (int) ( $crit_pen[ $cat ] ?? 0 );
+			$wp = (int) ( $warn_pen[ $cat ] ?? 0 );
+			if ( 0 === $cp && 0 === $wp ) {
+				continue;
+			}
+			$out[] = array(
+				'category'     => $cat,
+				'criticals'    => (int) $c['critical'],
+				'warnings'     => (int) $c['warning'],
+				'crit_penalty' => $cp,
+				'warn_penalty' => $wp,
+				// "Capped" is the interesting part: it is why more findings in
+				// this category stop costing anything, and why fixing some of
+				// them will not move the score.
+				'crit_capped'  => $cp >= self::CATEGORY_CRIT_CAP,
+				'warn_capped'  => $wp >= self::CATEGORY_WARN_CAP,
+			);
+		}
+
+		usort(
+			$out,
+			static function ( $a, $b ) {
+				return ( $b['crit_penalty'] + $b['warn_penalty'] ) <=> ( $a['crit_penalty'] + $a['warn_penalty'] );
+			}
+		);
+
+		return $out;
+	}
+
 	public function summarize( array $findings ): array {
 		$counts        = array( 'critical' => 0, 'warning' => 0, 'pass' => 0, 'info' => 0 );
 		$cat_crit_pen  = array();
@@ -332,8 +393,8 @@ class KarMCP_Security_Scanner {
 			}
 		}
 
-		$score = 100 - array_sum( $cat_crit_pen ) - array_sum( $cat_warn_pen );
-		$score = max( 0, min( 100, $score ) );
+		$raw_penalty = array_sum( $cat_crit_pen ) + array_sum( $cat_warn_pen );
+		$score       = max( 0, min( 100, 100 - $raw_penalty ) );
 
 		if ( $score >= 90 )     { $grade = 'A'; }
 		elseif ( $score >= 80 ) { $grade = 'B'; }
@@ -344,6 +405,8 @@ class KarMCP_Security_Scanner {
 		return array(
 			'counts'              => $counts,
 			'score'               => $score,
+			'penalties'           => self::penalty_breakdown( $findings, $cat_crit_pen, $cat_warn_pen ),
+			'total_penalty'       => (int) $raw_penalty,
 			'grade'               => $grade,
 			'top_recommendations' => $this->rank_recommendations( $findings ),
 		);

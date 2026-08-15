@@ -145,9 +145,11 @@ class KarMCP_Security_Scan_Run {
 		KarMCP_Security_Monitor::store(
 			array(
 				'summary'             => array(
-					'score'  => $summary['score'],
-					'grade'  => $summary['grade'],
-					'counts' => $summary['counts'],
+					'score'         => $summary['score'],
+					'grade'         => $summary['grade'],
+					'counts'        => $summary['counts'],
+					'penalties'     => $summary['penalties'],
+					'total_penalty' => $summary['total_penalty'],
 				),
 				'sections'            => $scanner->group_by_category( $findings ),
 				'scan_meta'           => $meta,

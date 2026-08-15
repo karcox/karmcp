@@ -237,6 +237,7 @@ class KarMCP_Admin {
 		add_action( 'admin_init', array( $this, 'handle_security_actions' ) );
 		add_action( 'wp_ajax_karmcp_scan_start', array( $this, 'ajax_scan_start' ) );
 		add_action( 'wp_ajax_karmcp_scan_step', array( $this, 'ajax_scan_step' ) );
+		add_action( 'wp_ajax_karmcp_vuln_update', array( $this, 'ajax_vuln_update' ) );
 		add_action( 'admin_init', array( $this, 'maybe_apply_default_disabled_tools' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_head', array( $this, 'print_menu_icon_style' ) );
@@ -1831,6 +1832,39 @@ class KarMCP_Admin {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ), 409 );
 		}
 		wp_send_json_success( $result );
+	}
+
+	/**
+	 * Updates one plugin from the Security tab, without leaving the page.
+	 *
+	 * The row reports its own outcome, which matters here more than elsewhere:
+	 * an update takes several seconds, and a button that looks inert for that
+	 * long gets clicked twice.
+	 *
+	 * @since 1.10.0
+	 * @return void
+	 */
+	public function ajax_vuln_update(): void {
+		check_ajax_referer( 'karmcp_scan_progress' );
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
+		}
+		if ( ! class_exists( 'KarMCP_Vuln_Remediation' ) ) {
+			wp_send_json_error( array( 'message' => __( 'The vulnerability module is not active.', 'karmcp' ) ), 409 );
+		}
+
+		$file   = isset( $_POST['plugin'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin'] ) ) : '';
+		$result = KarMCP_Vuln_Remediation::update( $file );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ), 409 );
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Updated. Scan again to confirm it is cleared.', 'karmcp' ),
+			)
+		);
 	}
 
 	public function handle_security_actions(): void {

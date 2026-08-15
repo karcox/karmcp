@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.9.0
+Stable tag: 1.10.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.10.0 =
+
+* Added **Where the score went**: a fold-out breakdown of the security score showing what each check cost and which categories are capped. When the total penalty exceeds the 100 points available it says so, and says how much must be cleared before the score starts to move — otherwise fixing things appears to do nothing.
+* Updating a plugin from the Security tab no longer reloads the page: the button shows a spinner and the row reports the result in place. A failed update restores the button, since the plugin is unchanged.
 
 = 1.9.0 =
 

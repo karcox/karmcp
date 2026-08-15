@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.7.4
+Stable tag: 1.7.5
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.7.5 =
+
+* Fixed: the fatal-error handler drop-in did not update when the plugin did. It is a copy in `wp-content/`, so the fix shipped in 1.7.4 never reached sites that already had the handler installed — the old file kept recording non-fatal warnings. The drop-in now carries the plugin version and is rewritten automatically when it falls behind.
 
 = 1.7.4 =
 

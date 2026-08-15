@@ -51,6 +51,14 @@ class KarMCP_Security_Monitor {
 		}
 
 		add_action( 'admin_notices', array( __CLASS__, 'critical_notice' ) );
+
+		// Keep the fatal-handler drop-in in step with the plugin. It is a copy in
+		// wp-content, so a plugin update leaves the old one running — which meant
+		// a fix shipped in the template simply never took effect on a site that
+		// already had the handler installed.
+		if ( is_admin() && class_exists( 'KarMCP_Fatal_Handler_Template' ) ) {
+			KarMCP_Fatal_Handler_Template::refresh_if_stale();
+		}
 	}
 
 	/**

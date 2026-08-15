@@ -2,6 +2,12 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.7.5]
+
+### Fixed
+
+- **The fatal-error handler drop-in never updated with the plugin.** It is a copy written into `wp-content/`, so updating KarMCP left the old file running. That turned 1.7.4 into a fix that did not apply: the handler was corrected to ignore non-fatal errors, the plugin was updated, and the file on disk carried on recording `ini_set()` warnings exactly as before — visibly, in the log, seconds after the upgrade. Every future change to the template would have been just as silent, which makes this worse than the bug it hid. The drop-in now carries the plugin version in its header and is rewritten automatically when they diverge. Somebody else's handler is still never touched.
+
 ## [1.7.4]
 
 > Everything here came from reading one real scan. The first of the three was a hazard, not a nuisance.

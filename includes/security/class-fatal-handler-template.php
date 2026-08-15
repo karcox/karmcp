@@ -68,6 +68,43 @@ class KarMCP_Fatal_Handler_Template {
 	}
 
 	/**
+	 * Whether the installed drop-in was written by THIS version of the plugin.
+	 *
+	 * The drop-in is a copy in wp-content, so updating the plugin does not
+	 * update it. That was a real defect and an invisible one: 1.7.4 fixed the
+	 * handler to ignore non-fatal errors, the plugin was updated, and the file
+	 * on disk carried on recording notices exactly as before. Every future fix
+	 * to this template would have been just as silent.
+	 *
+	 * @since 1.7.5
+	 * @return bool
+	 */
+	public static function is_current(): bool {
+		if ( 'ours' !== self::status() ) {
+			return false;
+		}
+		$head = (string) @file_get_contents( self::path(), false, null, 0, 1024 ); // phpcs:ignore WordPress.WP.AlternativeFunctions, WordPress.PHP.NoSilencedErrors
+		$want = self::MARKER . ' v' . ( defined( 'KARMCP_VERSION' ) ? KARMCP_VERSION : '0' );
+		return false !== strpos( $head, $want );
+	}
+
+	/**
+	 * Rewrites the drop-in when the plugin has moved on. Cheap enough to call on
+	 * every admin request: one bounded read of the first kilobyte.
+	 *
+	 * Only ever touches a drop-in that is already ours — somebody else's handler
+	 * is still left alone.
+	 *
+	 * @since 1.7.5
+	 * @return void
+	 */
+	public static function refresh_if_stale(): void {
+		if ( 'ours' === self::status() && ! self::is_current() ) {
+			self::install();
+		}
+	}
+
+	/**
 	 * Installs the drop-in.
 	 *
 	 * Refuses to overwrite somebody else's handler unless told to, and backs it
@@ -153,7 +190,7 @@ class KarMCP_Fatal_Handler_Template {
 	 * @return string
 	 */
 	public static function source(): string {
-		$marker = self::MARKER;
+		$marker  = self::MARKER . ' v' . ( defined( 'KARMCP_VERSION' ) ? KARMCP_VERSION : '0' );
 		$log    = self::OPTION_LOG;
 		$paused = self::OPTION_PAUSED;
 		$config = self::OPTION_CONFIG;

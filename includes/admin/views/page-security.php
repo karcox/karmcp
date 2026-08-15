@@ -40,6 +40,22 @@ if ( ! function_exists( 'karmcp_security_where' ) ) {
 		if ( ! is_array( $value ) ) {
 			return '';
 		}
+		// A vulnerability finding: name the fix and the severity, which is what
+		// the reader has to act on.
+		if ( ! empty( $value['slug'] ) && isset( $value['cvss'] ) ) {
+			$out = (string) $value['slug'] . ' ' . (string) ( $value['installed'] ?? '' );
+			if ( ! empty( $value['fix_version'] ) ) {
+				$out .= ' → ' . (string) $value['fix_version'];
+			} else {
+				$out .= ' — sin parche';
+			}
+			$out .= '   CVSS ' . (string) $value['cvss'];
+			if ( ! empty( $value['cve'] ) ) {
+				$out .= '   ' . (string) $value['cve'];
+			}
+			return $out;
+		}
+
 		foreach ( array( 'location', 'path', 'file' ) as $key ) {
 			if ( ! empty( $value[ $key ] ) && is_string( $value[ $key ] ) ) {
 				return $value[ $key ];
@@ -156,7 +172,12 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 				if ( ! in_array( $karmcp_st, array( 'critical', 'warning' ), true ) ) {
 					continue;
 				}
-				$karmcp_k = $karmcp_st . '|' . (string) ( $karmcp_f['id'] ?? '' ) . '|' . (string) ( $karmcp_f['label'] ?? '' );
+				// El CVE entra en la clave: sin él, quince vulnerabilidades
+				// distintas del mismo plugin se agrupaban en una fila que
+				// mostraba solo la primera y decía "×15", como si fuera la misma
+				// repetida. Agrupar tiene que unir lo idéntico, no lo parecido.
+				$karmcp_cve = is_array( $karmcp_f['value'] ?? null ) ? (string) ( $karmcp_f['value']['cve'] ?? '' ) : '';
+				$karmcp_k   = $karmcp_st . '|' . (string) ( $karmcp_f['id'] ?? '' ) . '|' . (string) ( $karmcp_f['label'] ?? '' ) . '|' . $karmcp_cve;
 				if ( ! isset( $karmcp_groups[ $karmcp_k ] ) ) {
 					$karmcp_groups[ $karmcp_k ] = array(
 						'finding' => $karmcp_f,

@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.7.4]
+
+> Everything here came from reading one real scan. The first of the three was a hazard, not a nuisance.
+
+### Fixed
+
+- **The fatal-error handler recorded errors that were not fatal — and counted them towards deactivating a plugin.** `error_get_last()` returns the last error of *any* severity, and the handler recorded whatever it found. On a live site the log filled with `ini_set()` warnings from `wp-config.php`, an "undefined property" notice, and a deprecation from a bundled library. None of those ends a request. With auto-pause switched on, **Elementor Pro would have been deactivated over a notice** — the outage the feature exists to prevent, caused by the feature. The handler now records only the five types WordPress itself treats as fatal in `WP_Fatal_Error_Handler::detect_error()`.
+
+- **Fifteen distinct vulnerabilities were collapsed into one row.** Findings are grouped by id and label, and every vulnerability shares an id — so JetEngine's fifteen separate CVEs became a single row reading "×15" that showed only the first one, as though it were the same issue repeated. The CVE is now part of the grouping key: grouping should merge what is identical, not what is merely similar.
+
+- **Vulnerability findings showed no detail in the report table.** The location resolver understood file paths and plugin names but not a vulnerability's value, so the rows carried no version, no fix and no score. They now read `slug installed → fix   CVSS n   CVE-…`.
+
 ## [1.7.3]
 
 ### Added

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.7.3
+Stable tag: 1.7.4
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.7.4 =
+
+* Fixed, and this one mattered: the fatal-error handler recorded any error `error_get_last()` returned, not only fatal ones. On a live site the log filled with `ini_set()` warnings, an undefined-property notice and a library deprecation — and the auto-pause counter counted them, so with that option on **Elementor Pro would have been deactivated over a notice**. Only the five types WordPress itself treats as fatal are recorded now.
+* Fixed: fifteen separate JetEngine CVEs were grouped into one row labelled "×15" that showed only the first. The CVE is now part of the grouping key.
+* Fixed: vulnerability findings in the report table showed no version, fix or score. They now read `slug installed → fix   CVSS n   CVE-…`.
 
 = 1.7.3 =
 

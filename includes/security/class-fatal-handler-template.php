@@ -181,10 +181,25 @@ class KarMCP_Fatal_Error_Handler extends WP_Fatal_Error_Handler {
 	const CONFIG_OPTION = '{$config}';
 	const KEEP          = 25;
 
+	/**
+	 * Error types that actually end the request. error_get_last() returns the
+	 * last error of ANY severity, so without this filter a deprecation notice
+	 * or an "undefined property" warning was recorded as a fatal — and, far
+	 * worse, counted towards auto-deactivating the plugin that emitted it.
+	 * Observed on a real site: Elementor Pro would have been switched off for a
+	 * notice.
+	 *
+	 * Deliberately the same five types WordPress itself treats as fatal in
+	 * WP_Fatal_Error_Handler::detect_error(). E_CORE_WARNING and
+	 * E_COMPILE_WARNING are not on that list and do not end the request, so they
+	 * are not on this one either.
+	 */
+	const FATAL_TYPES = array( E_ERROR, E_PARSE, E_USER_ERROR, E_COMPILE_ERROR, E_RECOVERABLE_ERROR );
+
 	public function handle() {
 		try {
 			\$error = error_get_last();
-			if ( is_array( \$error ) ) {
+			if ( is_array( \$error ) && in_array( (int) ( \$error['type'] ?? 0 ), self::FATAL_TYPES, true ) ) {
 				\$this->karmcp_record( \$error );
 			}
 		} catch ( \\Throwable \$ignored ) {

@@ -120,4 +120,28 @@ class FatalHandlerTemplateTest extends TestCase {
 		// Absolute paths leak the server layout to every client that reads the log.
 		$this->assertStringContainsString( 'karmcp_relative', self::$source );
 	}
+
+	/**
+	 * Measured on a real site: the log filled with `ini_set()` warnings, an
+	 * "undefined property" notice and a deprecation — none of them fatal. That
+	 * was noise in the log and a genuine hazard in the auto-pause counter, which
+	 * would have deactivated Elementor Pro over a notice. error_get_last()
+	 * returns the last error of ANY severity, so the type has to be checked.
+	 */
+	public function test_only_genuinely_fatal_error_types_are_recorded(): void {
+		$this->assertStringContainsString( 'FATAL_TYPES', self::$source );
+		$this->assertStringContainsString( "in_array( (int) ( \$error['type'] ?? 0 ), self::FATAL_TYPES, true )", self::$source );
+
+		// E_WARNING, E_NOTICE and E_DEPRECATED must not be in the list, or the
+		// filter is decorative.
+		preg_match( '/const FATAL_TYPES = array\(([^)]*)\)/', self::$source, $m );
+		$list = $m[1] ?? '';
+		$this->assertNotSame( '', $list );
+		foreach ( array( 'E_WARNING', 'E_NOTICE', 'E_DEPRECATED', 'E_USER_WARNING', 'E_USER_NOTICE', 'E_USER_DEPRECATED', 'E_STRICT' ) as $benign ) {
+			$this->assertStringNotContainsString( $benign, $list, $benign . ' must not count as a fatal.' );
+		}
+		foreach ( array( 'E_ERROR', 'E_PARSE', 'E_COMPILE_ERROR' ) as $fatal ) {
+			$this->assertStringContainsString( $fatal, $list, $fatal );
+		}
+	}
 }

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.3.1
+Stable tag: 1.4.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,15 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.4.0 =
+
+* New **Login Guard** module (KarMCP → Modules, off by default): blocks brute-force sign-ins by counting failures per IP address *and* per username separately, with an escalating delay — 15 minutes, then 30, then an hour — that doubles to a hard ceiling of 24 hours and is never permanent.
+* Login Guard handles the reverse-proxy trap explicitly. Behind Cloudflare every visitor shares one address, so a naive guard locks out the world on the fifth failure by anybody; the header that fixes it is forgeable by anyone. The guard uses REMOTE_ADDR by default and reads the forwarded header only from proxy addresses you declare.
+* Login Guard optionally blocks anonymous user enumeration (`/wp-json/wp/v2/users` and `?author=N`) and drops XML-RPC `system.multicall`, which batches hundreds of password guesses into one request. Disabling XML-RPC breaks Jetpack and the mobile app, so it is a switch.
+* New tools `list-login-lockouts` (read-only, enabled) and `clear-login-lockout` (opt-in). Clearing a lockout also forgets its escalation history, so the next lock starts from the base delay.
+* The MCP server and its OAuth endpoints are exempt from the failure count, so a retrying client cannot lock out the agent.
+* Internal: continuous integration on PHP 8.1-8.4 for the 544 tests, plus PHPCS and PHPStan. None of it ships in the plugin.
 
 = 1.3.1 =
 

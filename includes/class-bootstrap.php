@@ -164,6 +164,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/redirects/class-redirect-store.php';
 		require_once KARMCP_DIR . 'includes/redirects/class-redirect-handler.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-redirect-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-login-guard-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-skill-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-content-mirror.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-content-mirror-abilities.php';
@@ -243,6 +244,9 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/security/class-security-hardening-audit.php';
 		require_once KARMCP_DIR . 'includes/security/class-security-software-audit.php';
 		require_once KARMCP_DIR . 'includes/security/class-security-scanner.php';
+		require_once KARMCP_DIR . 'includes/security/class-login-guard-policy.php';
+		require_once KARMCP_DIR . 'includes/security/class-login-guard-store.php';
+		require_once KARMCP_DIR . 'includes/security/class-login-guard.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-security-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-svg-icon-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-custom-code-abilities.php';
@@ -306,6 +310,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/modules/class-brand-kits-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-templates-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-agent-skills-module.php';
+		require_once KARMCP_DIR . 'includes/modules/class-login-guard-module.php';
 		require_once KARMCP_DIR . 'includes/modules/svg-support/class-svg-sanitizer.php';
 		require_once KARMCP_DIR . 'includes/modules/svg-support/class-svg-support-module.php';
 		require_once KARMCP_DIR . 'includes/modules/guardrails/class-guardrails-policy.php';
@@ -407,6 +412,7 @@ class KarMCP_Bootstrap {
 		$karmcp_modules->register( new KarMCP_Agent_Skills_Module() );
 		$karmcp_modules->register( new KarMCP_SVG_Support_Module() );
 		$karmcp_modules->register( new KarMCP_Guardrails_Module() );
+		$karmcp_modules->register( new KarMCP_Login_Guard_Module() );
 		$karmcp_modules->register( new KarMCP_Cloud_Module() );
 		do_action( 'karmcp_register_modules', $karmcp_modules );
 		$karmcp_modules->apply_defaults();

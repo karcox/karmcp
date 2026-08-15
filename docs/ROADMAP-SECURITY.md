@@ -35,10 +35,10 @@ Antes de tocar nada, leer [CLAUDE.md](../CLAUDE.md). Las trampas que más tiempo
   `init:5`.** Por eso el registrar consulta el **estático** `is_enabled()` del módulo, nunca su instancia.
 - **Los stubs compartidos van en `tests/bootstrap.php`**, no en el fichero de test: el bootstrap carga
   primero y un stub declarado en un test aplica o no según el orden de carga.
-- **Toda herramienta que escribe** exige subir `DEFAULTS_VERSION` en `class-admin.php` (hoy `35`) y
+- **Toda herramienta que escribe** exige subir `DEFAULTS_VERSION` en `class-admin.php` (hoy `36`) y
   sembrar su slug como deshabilitada, además de una entrada en el catálogo de la pestaña Tools.
 
-Suite: 526 tests, verdes. En Windows sin Composer:
+Suite: 544 tests, verdes. Ahora también en CI (Pieza 0). En Windows sin Composer:
 
 ```bash
 PHPDIR=$(dirname "$(which php)")
@@ -68,12 +68,12 @@ php -d extension_dir="$PHPDIR/ext" -d extension=mbstring ../phpunit-10.phar
 - **Nada de `fatal-error-handler`, `mu-plugins`, `paused_plugins` ni `recovery_mode`.**
 - **Ninguna herramienta de actualización del core.** Cero ocurrencias de `Core_Upgrader` o `update-core`.
 - **Ninguna base de vulnerabilidades.**
-- **Ningún CI.** `.github/` solo tiene plantillas de issues. `composer.json` solo trae PHPUnit como
-  dependencia de desarrollo: ni PHPCS, ni PHPStan.
+- ~~**Ningún CI.**~~ **Resuelto en la Pieza 0**: `.github/workflows/` tiene `tests.yml` (bloqueante,
+  PHP 8.1-8.4) y `lint.yml` (PHPCS + PHPStan, aún no bloqueante). La cadena vive en `tools/`.
 
 ---
 
-## Pieza 0 — CI y análisis estático
+## Pieza 0 — CI y análisis estático ✅ HECHA (2026-08-15)
 
 **Por qué va primero.** El repo es privado: nadie de fuera va a encontrar un bug nunca. El único
 revisor que queda es la automatización, y hoy no hay ninguna. La prueba está en esta misma sesión:
@@ -382,7 +382,7 @@ afecta a la versión instalada.** No es un permiso general.
 
 ---
 
-## Pieza 7 — Endurecimiento del login
+## Pieza 7 — Endurecimiento del login ✅ HECHA (KarMCP 1.4.0)
 
 **Por qué.** De todo lo que se pierde al quitar Wordfence, esta es la única mitad que **sí** tiene
 sentido absorber en el plugin. No es un WAF: no necesita inteligencia de amenazas ni reglas mantenidas
@@ -451,14 +451,14 @@ resolución de IP con y sin proxy declarado.
 
 | # | Pieza | Esfuerzo | Depende de |
 |---|---|---|---|
-| 0 | CI + análisis estático | ~1 h + medio día | — |
+| ~~0~~ | ~~CI + análisis estático~~ **hecha** | — | — |
 | 1 | Pestaña Security + cron + avisos | 2-3 días | 0 |
 | 2 | `harden-site` | 1-2 días | 1 (para el botón Arreglar) |
 | 3 | Drop-in de fatales + 3 abilities | 1-2 días | — |
 | 4 | `update-core` | Medio día | 3 |
 | 5 | Módulo de vulnerabilidades | 3-5 días | 1 |
 | 6 | Parcheo desde la pestaña | 1-2 días | 1, 3, 5 |
-| 7 | Endurecimiento del login | 2-3 días | — (superficie en 1) |
+| ~~7~~ | ~~Endurecimiento del login~~ **hecha (1.4.0)** | — | superficie pendiente en 1 |
 
 Total: **tres semanas largas** de trabajo real.
 

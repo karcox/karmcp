@@ -26,6 +26,8 @@ KarMCP is a WordPress plugin that exposes your site as **[MCP](https://modelcont
 
 **Run the site.** Content and taxonomies, media, users, settings, plugins and themes, nav menus, the filesystem, and the database, all over MCP. Images can come from a stock provider, from a URL the server can reach, or — with `upload-media` — straight off the machine you are sitting at, sent as base64.
 
+**Defend the login.** The Login Guard module blocks brute-force sign-ins — counting per address *and* per username, with an escalating but always time-limited delay — and closes the reconnaissance that precedes an attack: anonymous user enumeration and the XML-RPC multicall that batches hundreds of guesses into one request. Off by default, and it handles the reverse-proxy case explicitly, because behind Cloudflare a naive counter locks out every visitor at once.
+
 **Understand and undo.** One-call page snapshots, content search across your own pages and templates, a change ledger with rollback, and read-only performance and security scans that return a scored report.
 
 **Speak your plugins.** Integrations that register only when the plugin is active: ACF, Meta Box, WooCommerce, Contact Form 7, Polylang, WPML, SEO plugins, and the Elementor addon packs.

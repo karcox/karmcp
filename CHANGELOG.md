@@ -2,6 +2,31 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.4.0]
+
+> The first piece of the security section, and the one that had to come first: the site it protects had just had Wordfence removed. Of everything that goes away with Wordfence, brute-force protection is the only half worth rebuilding here — it needs no threat intelligence and no maintained rule set, just counting. The firewall stays out on purpose; that belongs in front of PHP, not inside a plugin that boots after WordPress has already started.
+
+### Added
+
+- **Login Guard: brute-force protection that cannot lock you out forever.** A new module (KarMCP → Modules, **off by default**) that counts failed sign-ins and blocks with an escalating delay — 15 minutes, then 30, then an hour, doubling to a hard ceiling of 24 hours. Never permanent: a guard that can permanently lock out its owner gets uninstalled the same afternoon, and then the site has nothing at all.
+
+  Failures are counted **per address and per username, separately**. Only by address and a distributed attack on one account walks straight through; only by username and a single address can sweep the entire user list unhindered.
+
+  The decision half is a pure class with no options, no superglobals and no clock — it is handed the failures and the time and returns a verdict — so all of it is tested without WordPress, the same arrangement as the Guardrails policy. Every setting is clamped on the way in, because a typo in the form must not be able to mean "everyone is locked out forever".
+
+- **The reverse-proxy trap, handled explicitly.** Behind Cloudflare `REMOTE_ADDR` is Cloudflare, so every visitor shares one address and the fifth failure by anybody locks out the world. The forwarded header fixes that and is forgeable by anyone, which would let an attacker mint a fresh identity per request and never be locked at all. So the guard uses `REMOTE_ADDR` by default and reads the header **only** when the request arrives from a proxy address the administrator has declared. Both halves of that trade have a test, because getting either one wrong produces a module that looks like it is working.
+
+- **The reconnaissance that comes before the attack.** Optionally blocks anonymous user enumeration — `/wp-json/wp/v2/users` hands a stranger every username on the site, and `?author=N` leaks one in the redirect — and drops XML-RPC's `system.multicall`, which batches hundreds of password guesses into a single request and is most of why XML-RPC is worth attacking at all. Both are on when the module is, and both are switchable, since disabling XML-RPC breaks Jetpack and the mobile app.
+
+- **`list-login-lockouts` and `clear-login-lockout`.** The Security screen that will own this is a later piece, but a lockout with no visible way out is how an administrator ends up switching off the whole module. Clearing a lockout also forgets its escalation history, so an unblocked user starts from the base delay rather than a doubled one. The read is enabled by default; the write opts in like every other one.
+
+- **The MCP server is exempt from the count.** OAuth already rate-limits its own registration endpoint, and a client retrying a token exchange would otherwise lock out the very agent the plugin exists to serve.
+
+### Infrastructure
+
+- **Continuous integration, at last.** The 544 tests now run on every push and pull request across PHP 8.1 to 8.4, and that check is blocking. This is the compensating control for a private repository: nobody outside will ever find a bug here, so the automation is the only reviewer left — and 1.3.0 proved the point, shipping two defects that survived a careful review and thirteen tests, and surfaced only when the tool was run against a real site.
+- **PHPCS and PHPStan**, deliberately narrow to start: security, correctness and PHP-version compatibility, but not formatting, and PHPStan at level 1. Both are non-blocking until the first run has been triaged and baselined, because a permanently red check is a check everyone learns to ignore. The ratchet is documented in CONTRIBUTING.md. None of it ships: the whole toolchain is `export-ignore`d, and the release zip is byte-for-byte the same shape as before.
+
 ## [1.3.1]
 
 > Both of these were found the same way: by running 1.3.0 against a real site instead of only against the test suite. Neither could have been caught by a unit test, because both are about what WordPress does around the code, not what the code does.

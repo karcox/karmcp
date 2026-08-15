@@ -150,7 +150,7 @@ class KarMCP_Uninstaller {
 	}
 
 	/**
-	 * Drop the five tables the plugin creates.
+	 * Drop the six tables the plugin creates.
 	 *
 	 * The OAuth pair matters most: leaving it behind leaves registered clients
 	 * and live access/refresh tokens on the site after the plugin that
@@ -167,6 +167,7 @@ class KarMCP_Uninstaller {
 			'karmcp_change_blobs',
 			'karmcp_search_index',
 			'karmcp_redirects',
+			'karmcp_login_events',
 		);
 
 		foreach ( $tables as $table ) {

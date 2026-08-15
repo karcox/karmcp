@@ -168,6 +168,15 @@ class KarMCP_Ability_Registrar {
 			$this->ability_names = array_merge( $this->ability_names, $redirects->get_ability_names() );
 		}
 
+		// Login Guard tools (see and lift sign-in lockouts). Gated on its module,
+		// which ships OFF — same reason as above: abilities register before the
+		// module boots, so the gate is the static is_enabled().
+		if ( class_exists( 'KarMCP_Login_Guard_Module' ) && KarMCP_Login_Guard_Module::is_enabled() ) {
+			$login_guard = new KarMCP_Login_Guard_Abilities();
+			$login_guard->register();
+			$this->ability_names = array_merge( $this->ability_names, $login_guard->get_ability_names() );
+		}
+
 		// Gutenberg block abilities (discover blocks/patterns + incremental block-tree edits).
 		$gutenberg = new KarMCP_Gutenberg_Abilities();
 		$gutenberg->register();

@@ -1039,7 +1039,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 35;
+	const DEFAULTS_VERSION = 36;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1605,6 +1605,14 @@ class KarMCP_Admin {
 			// which are site-wide. Its own dry-run default is not enough on its
 			// own: the admin decides whether the tool exists at all.
 			$add[] = 'karmcp/build-site';
+		}
+
+		// v36 — clear-login-lockout decides who may sign in, so it opts in like
+		// every other write. list-login-lockouts stays enabled: it is read-only,
+		// and a lockout nobody can see is a support call. Both only register at
+		// all when the Login Guard module is on, which itself ships off.
+		if ( $applied < 36 ) {
+			$add[] = 'karmcp/clear-login-lockout';
 		}
 
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
@@ -4093,6 +4101,16 @@ class KarMCP_Admin {
 						'label'       => __( 'Scan Security', 'karmcp' ),
 						'description' => __( 'Scans for malware heuristics, core file integrity, configuration hardening, and outdated/abandoned software; returns a scored report with recommendations.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/list-login-lockouts' => array(
+						'label'       => __( 'List Login Lockouts', 'karmcp' ),
+						'description' => __( 'Lists the sign-in lockouts currently in force. Registers only when the Login Guard module is enabled.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/clear-login-lockout' => array(
+						'label'       => __( 'Clear Login Lockout', 'karmcp' ),
+						'description' => __( 'Lifts a sign-in lockout for one IP address or username. Registers only when the Login Guard module is enabled.', 'karmcp' ),
+						'badges'      => array(),
 					),
 				),
 			),

@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.3.1` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.4.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -85,7 +85,7 @@ Los widgets son **datos** en `includes/widgets/` (`catalog-{free,pro,woo}.php`),
 
 Features que el admin enciende y apaga desde la pestaña **Modules**. Base `KarMCP_Module` + `KarMCP_Modules_Registry` en `includes/modules/`. Los activos se guardan en la opción `karmcp_active_modules` y arrancan en `init` (prioridad 5).
 
-Módulos presentes: Themer, Redirects, Prompts, Brand Kits, Templates, Agent Skills, Cloud, Image Optimization, SVG Support, Guardrails.
+Módulos presentes: Themer, Redirects, Prompts, Brand Kits, Templates, Agent Skills, Cloud, Image Optimization, SVG Support, Guardrails, Login Guard.
 
 > **Patrón de gating a respetar:** las abilities se registran en `wp_abilities_api_init`, que corre **antes** de que el módulo arranque en `init:5`. Por eso el registrar consulta el estático `is_enabled()` del módulo, nunca su instancia.
 

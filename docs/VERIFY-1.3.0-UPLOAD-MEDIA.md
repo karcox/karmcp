@@ -1,75 +1,49 @@
-# Verificación en vivo de `upload-media` (1.3.0) — sitionet.com
+# Verificación en vivo de `upload-media` — sitionet.com
 
-> Nota de traspaso. La herramienta se implementó y se instaló en la misma sesión, pero no se pudo
-> ejecutar en ella: el cliente MCP fija su catálogo de herramientas al conectar, así que
-> `karmcp-upload-media` no era invocable hasta reconectar. Este fichero existe para que la sesión
-> siguiente pueda rematarlo sin reconstruir el contexto. **Bórralo cuando esté verificado.**
+> **1.3.0 verificado en real el 2026-08-15.** Los seis casos se ejecutaron contra sitionet.com y dos
+> destaparon defectos, corregidos en 1.3.1. Lo que queda pendiente es reverificar esos dos casos
+> sobre 1.3.1 una vez instalada. Borra este fichero cuando eso esté hecho.
 
-## Estado al cerrar la sesión del 2026-08-15
+## Qué se ejecutó (sobre 1.3.0)
 
-Verificado contra el servidor, no asumido:
+| # | Caso | Resultado |
+|---|---|---|
+| 1 | PNG 2×2 (73 bytes) con `alt` y `title` | **OK** — `attachment_id: 3226`, `mime_type: image/png`, `width/height: 2`, `filesize: 73`, `post_parent: 0`, URL servida |
+| 2 | `list-media` buscándolo | **OK** — aparece con su alt intacto |
+| 3 | PHP renombrado a `.jpg` | **Rechazado**, pero con el mensaje equivocado → defecto, ver abajo |
+| 4 | `payload.php` | **OK** — `disallowed_file_type`, antes de decodificar |
+| 5 | `post_id: 999999999` | **Rechazado**, pero con el mensaje equivocado → defecto, ver abajo |
+| 6 | Ledger + rollback | **OK** — entrada `create-post` reversible; tras el rollback el attachment desapareció de la biblioteca y de `wp_posts` |
 
-- `wp-content/plugins/karmcp/karmcp.php` → `Version: 1.3.0`.
-- El fichero desplegado `includes/abilities/class-media-library-abilities.php` contiene
-  `'karmcp/upload-media'` en `get_ability_names()`.
-- La opción `karmcp_disabled_tools` tiene 24 slugs y **ninguno** es `upload-media`: está habilitada.
-- Modo dispatcher apagado, así que la herramienta se expone individualmente.
+O sea: la ruta real de subida funciona, el contenido se verifica de verdad, y la subida es
+reversible. Lo que falló fue **cómo se cuentan dos de los rechazos**, no si rechazan.
 
-Lo que **no** está verificado: que `media_handle_sideload()` haga su trabajo por esta vía. Los tests
-unitarios (`tests/MediaUploadTest.php`) cubren la delegación de permisos, el resolver del nombre de
-fichero y el decodificador del payload — todo lo que pasa **antes** de que un byte llegue al disco.
-La subida real no la ha ejecutado nadie.
+## Los dos defectos (corregidos en 1.3.1)
 
-El sitio es `cfd3ae1a-4ae3-4053-a527-4d6a80f7daec` (SitioNet, https://sitionet.com).
-Corre Elementor 3.34.4 + Pro 3.31.2, WooCommerce, y **PublishPress Capabilities** — relevante porque
-el fix de 1.2.1 sobre `update-global-colors` / `update-global-typography` va justo de eso.
+**Caso 5 — "Permission denied" a secas para un id inexistente.** `map_meta_cap()` resuelve
+`edit_post` contra un post que no está a `do_not_allow`, así que preguntar por la capacidad antes de
+comprobar la existencia convertía un id mal escrito en un problema de permisos. Además dejaba
+*inalcanzable* la rama `post_not_found` del ejecutor. Es la misma costura del `false` pelado que la
+1.2.1 cerró en `update-post` y `delete-post`, reabierta por la herramienta nueva.
 
-## La batería
+**Caso 3 — el rechazo llegaba en español, de core.** El mensaje era *"Lo siento, no tienes permisos
+para subir este tipo de archivo."*: habla de permisos cuando el problema es el contenido, y depende
+del idioma del sitio, así que ningún cliente puede razonar sobre él. Ahora se verifica antes con
+`wp_check_filetype_and_ext()` y se devuelve `content_type_mismatch` con nombre y extensión. La
+comprobación de WordPress sigue corriendo después: esa es la garantía, la nuestra es la explicación.
 
-Solo los casos 1 y 3 ejercitan código que no ha corrido nunca. El resto ya está cubierto por los
-tests unitarios y se repite en real para confirmar que el cableado es el que se cree.
+De paso: la pista `convert_webp:false` se añadía a *todos* los fallos, incluidos aquellos en los que
+ese flag no puede cambiar nada.
 
-### 1. Caso positivo — PNG 2×2 (73 bytes)
+## Pendiente sobre 1.3.1
 
-```
-filename: probe-upload-media.png
-data:     iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGP4z9ABRAwQCgAsrgYdhRJ3kwAAAABJRU5ErkJggg==
-alt:      Prueba de upload-media 1.3.0
-title:    Probe upload-media
-```
+Reinstalar y **reconectar el servidor MCP** (el catálogo de herramientas se fija al conectar), y
+repetir solo estos dos:
 
-Esperado: `attachment_id` > 0, `url` accesible, `mime_type: image/png`, `width: 2`, `height: 2`,
-`post_parent: 0`, y `filename` de vuelta (puede venir deduplicado si el nombre ya existía).
+- `filename: fake.jpg`, `data: PD9waHAgZWNobyAic2hvdWxkIG5ldmVyIGJlIHN0b3JlZCI7ID8+`
+  → debe dar `content_type_mismatch` nombrando `fake.jpg` y `.jpg`, en inglés, sin hablar de permisos.
+- `filename: orphan.png`, `data: iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGP4z9ABRAwQCgAsrgYdhRJ3kwAAAABJRU5ErkJggg==`, `post_id: 999999999`
+  → debe dar `post_not_found` nombrando el id, no "Permission denied".
 
-### 2. Confirmar que está en la biblioteca
-
-`list-media` con `search: "upload-media"` → debe salir con su alt.
-
-### 3. Caso negativo de contenido — PHP disfrazado de `.jpg`
-
-```
-filename: fake.jpg
-data:     PD9waHAgZWNobyAic2hvdWxkIG5ldmVyIGJlIHN0b3JlZCI7ID8+
-```
-
-Esperado: **error**, y que venga de `media_handle_sideload()` al leer el contenido — no de la
-extensión, que aquí es legítima. Es el caso que demuestra que el chequeo autoritativo está en su
-sitio. Si esto se almacena, hay un agujero.
-
-### 4. Caso negativo de extensión
-
-`filename: payload.php`, cualquier `data` → `disallowed_file_type`, **antes** de decodificar.
-
-### 5. Padre inexistente
-
-`post_id: 999999999` → `post_not_found`.
-
-### 6. Ledger
-
-**KarMCP → Changes** debe listar la subida del caso 1 con rollback disponible. Al hacer rollback, el
-attachment y sus ficheros deben desaparecer (`wp_delete_post()` delega en `wp_delete_attachment()`
-para attachments — comprobado leyendo core, no ejecutado).
-
-## Limpieza
-
-Borrar el attachment del caso 1 (o deshacerlo desde el ledger, que además prueba el punto 6).
+El PNG del caso 1 sirve igual si quieres repetir el positivo:
+`iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGP4z9ABRAwQCgAsrgYdhRJ3kwAAAABJRU5ErkJggg==`

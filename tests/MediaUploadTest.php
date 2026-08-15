@@ -58,9 +58,24 @@ class MediaUploadTest extends TestCase {
 	// check_upload_permission()
 	// -----------------------------------------------------------------
 
+	/**
+	 * Registers post 42 so the existence check passes and the capability is what
+	 * decides. Without it the callback answers post_not_found, correctly.
+	 */
+	private function given_post_42_exists(): void {
+		$GLOBALS['karmcp_test']['posts'][42] = (object) array(
+			'ID'        => 42,
+			'post_type' => 'page',
+		);
+	}
+
 	public function test_upload_requires_the_upload_files_capability(): void {
 		$GLOBALS['karmcp_test']['caps'] = array( 'edit_posts' );
-		$this->assertFalse( $this->abilities->check_upload_permission( array() ) );
+
+		$err = $this->abilities->check_upload_permission( array() );
+		$this->assertInstanceOf( WP_Error::class, $err );
+		$this->assertSame( 'missing_capability', $err->get_error_code() );
+		$this->assertSame( 'upload_files', $err->get_error_data()['required_capability'] );
 	}
 
 	public function test_upload_files_alone_is_enough_when_nothing_is_attached(): void {
@@ -72,13 +87,18 @@ class MediaUploadTest extends TestCase {
 	public function test_attaching_to_a_post_the_user_cannot_edit_is_refused(): void {
 		$GLOBALS['karmcp_test']['caps']      = array( 'edit_posts', 'upload_files' );
 		$GLOBALS['karmcp_test']['post_caps'] = array( 42 => false );
+		$this->given_post_42_exists();
 
-		$this->assertFalse( $this->abilities->check_upload_permission( array( 'post_id' => 42 ) ) );
+		$err = $this->abilities->check_upload_permission( array( 'post_id' => 42 ) );
+		$this->assertInstanceOf( WP_Error::class, $err );
+		$this->assertSame( 'cannot_edit_post', $err->get_error_code() );
+		$this->assertSame( 'page', $err->get_error_data()['post_type'] );
 	}
 
 	public function test_attaching_to_a_post_the_user_can_edit_is_allowed(): void {
 		$GLOBALS['karmcp_test']['caps']      = array( 'edit_posts', 'upload_files' );
 		$GLOBALS['karmcp_test']['post_caps'] = array( 42 => true );
+		$this->given_post_42_exists();
 
 		$this->assertTrue( $this->abilities->check_upload_permission( array( 'post_id' => 42 ) ) );
 	}
@@ -86,8 +106,28 @@ class MediaUploadTest extends TestCase {
 	public function test_edit_rights_on_the_parent_do_not_substitute_for_upload_files(): void {
 		$GLOBALS['karmcp_test']['caps']      = array( 'edit_posts' );
 		$GLOBALS['karmcp_test']['post_caps'] = array( 42 => true );
+		$this->given_post_42_exists();
 
-		$this->assertFalse( $this->abilities->check_upload_permission( array( 'post_id' => 42 ) ) );
+		$err = $this->abilities->check_upload_permission( array( 'post_id' => 42 ) );
+		$this->assertInstanceOf( WP_Error::class, $err );
+		$this->assertSame( 'missing_capability', $err->get_error_code() );
+	}
+
+	/**
+	 * Found by running it against a real site. map_meta_cap() resolves edit_post
+	 * against a post that is not there to do_not_allow, so checking the
+	 * capability before existence answered a bare "Permission denied" for what
+	 * was really a mistyped id — and made the post_not_found branch in the
+	 * executor unreachable. Existence is resolved first.
+	 */
+	public function test_a_parent_that_does_not_exist_says_so_instead_of_denying_permission(): void {
+		$GLOBALS['karmcp_test']['caps'] = array( 'edit_posts', 'upload_files' );
+
+		$err = $this->abilities->check_upload_permission( array( 'post_id' => 999999999 ) );
+		$this->assertInstanceOf( WP_Error::class, $err );
+		$this->assertSame( 'post_not_found', $err->get_error_code() );
+		$this->assertSame( 999999999, $err->get_error_data()['post_id'] );
+		$this->assertStringNotContainsStringIgnoringCase( 'permission', $err->get_error_message() );
 	}
 
 	// -----------------------------------------------------------------

@@ -409,17 +409,66 @@ class KarMCP_Media_Library_Abilities {
 	 * Attaching is a write to that post's media list, so an author who may
 	 * upload must still not be able to hang a file off somebody else's page.
 	 *
+	 * Existence is resolved BEFORE the capability, and that order is the whole
+	 * point: `map_meta_cap()` resolves `edit_post` against a post that is not
+	 * there to `do_not_allow`, so asking the capability first reports a
+	 * permission problem for what is really a mistyped id — the bare
+	 * "Permission denied" that 1.2.1 went and removed everywhere else.
+	 *
 	 * @since 1.3.0
 	 *
 	 * @param array|null $input Tool input; may carry a `post_id`.
-	 * @return bool
+	 * @return true|\WP_Error
 	 */
-	public function check_upload_permission( $input = null ): bool {
+	public function check_upload_permission( $input = null ) {
 		if ( ! current_user_can( 'upload_files' ) ) {
-			return false;
+			return new \WP_Error(
+				'missing_capability',
+				sprintf(
+					/* translators: %s: capability name */
+					__( 'The current user does not have the "%s" capability, which WordPress requires to add anything to the Media Library.', 'karmcp' ),
+					'upload_files'
+				),
+				array( 'required_capability' => 'upload_files' )
+			);
 		}
+
 		$parent = absint( $input['post_id'] ?? 0 );
-		return $parent ? current_user_can( 'edit_post', $parent ) : true;
+		if ( ! $parent ) {
+			return true;
+		}
+
+		if ( ! get_post( $parent ) ) {
+			return new \WP_Error(
+				'post_not_found',
+				sprintf(
+					/* translators: %d: post ID. */
+					__( 'No post with ID %d exists to attach the upload to. Omit post_id to upload without attaching.', 'karmcp' ),
+					$parent
+				),
+				array( 'post_id' => $parent )
+			);
+		}
+
+		if ( ! current_user_can( 'edit_post', $parent ) ) {
+			$post_type = get_post_type( $parent );
+			return new \WP_Error(
+				'cannot_edit_post',
+				sprintf(
+					/* translators: 1: post ID, 2: post type */
+					__( 'The current user may upload files but not edit post %1$d (post type %2$s), so the upload cannot be attached to it. Omit post_id to upload without attaching.', 'karmcp' ),
+					$parent,
+					false !== $post_type ? $post_type : 'unknown'
+				),
+				array(
+					'required_capability' => 'edit_post',
+					'post_id'             => $parent,
+					'post_type'           => false !== $post_type ? $post_type : null,
+				)
+			);
+		}
+
+		return true;
 	}
 
 	private function register_upload_media(): void {
@@ -524,10 +573,9 @@ class KarMCP_Media_Library_Abilities {
 			return $filename;
 		}
 
-		// The parent was already authorised in check_upload_permission(); this only
-		// catches an id that names nothing, which would otherwise silently produce
-		// an unattached upload the agent believes it attached. One indexed read,
-		// so it goes before the decode rather than after it.
+		// Both the existence of the parent and the right to edit it were settled in
+		// check_upload_permission(), which the adapter always runs first (including
+		// through the dispatcher). Kept as a backstop for a direct call from PHP.
 		$parent = absint( $input['post_id'] ?? 0 );
 		if ( $parent && ! get_post( $parent ) ) {
 			return new \WP_Error(
@@ -558,6 +606,28 @@ class KarMCP_Media_Library_Abilities {
 		}
 		unset( $bytes );
 
+		// Read the content and confirm it is what the extension claims. WordPress
+		// does this too, inside media_handle_sideload(), and refuses — but with
+		// core's own translated "you are not allowed to upload this file type",
+		// which on a Spanish site is a locale-specific string that says nothing
+		// about the actual problem and invites an agent to retry the same bytes.
+		// Doing it here lets the refusal name the mismatch, in this plugin's voice
+		// and independent of the site's language.
+		$verified = wp_check_filetype_and_ext( $tmp_file, $filename );
+		if ( empty( $verified['type'] ) ) {
+			wp_delete_file( $tmp_file );
+			return new \WP_Error(
+				'content_type_mismatch',
+				sprintf(
+					/* translators: 1: filename, 2: file extension. */
+					__( 'The contents of %1$s are not a valid ".%2$s" file. WordPress reads the bytes, not just the name, so renaming a file does not change what it is. Send the real file, or the filename that matches these bytes.', 'karmcp' ),
+					$filename,
+					strtolower( (string) pathinfo( $filename, PATHINFO_EXTENSION ) )
+				),
+				array( 'filename' => $filename )
+			);
+		}
+
 		$file_array = array(
 			'name'     => $filename,
 			'tmp_name' => $tmp_file,
@@ -567,8 +637,8 @@ class KarMCP_Media_Library_Abilities {
 		// synchronously, which is where the Image Optimization module compresses
 		// and generates WebP. When the caller asks to skip conversion
 		// (convert_webp:false — for slow shared hosting), suppress it for just
-		// this upload. It also re-checks the content against the extension, which
-		// is the authoritative test: a .jpg holding PHP is refused here.
+		// this upload. It repeats the content check above, which is deliberate:
+		// that one is for the message, this one is the guarantee.
 		$skip_webp = array_key_exists( 'convert_webp', (array) $input ) && false === $input['convert_webp'];
 		if ( $skip_webp ) {
 			add_filter( 'karmcp_optimize_attachment', '__return_false', 99 );
@@ -582,11 +652,15 @@ class KarMCP_Media_Library_Abilities {
 			if ( file_exists( $tmp_file ) ) {
 				wp_delete_file( $tmp_file );
 			}
+			// The type mismatch is already caught above, so what reaches here is a
+			// move or a processing failure — the only case where convert_webp:false
+			// can help. Appending that hint to every failure told the caller to
+			// retry with a flag that could not possibly change the outcome.
 			return new \WP_Error(
 				'upload_failed',
 				sprintf(
 					/* translators: 1: filename, 2: error message. */
-					__( 'Upload of %1$s failed: %2$s. If the file is large, retry with convert_webp:false to skip image processing.', 'karmcp' ),
+					__( 'Upload of %1$s failed: %2$s. If the file is large this may be image processing timing out — retry with convert_webp:false.', 'karmcp' ),
 					$filename,
 					$attachment_id->get_error_message()
 				)

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.3.1 =
+
+* Fixed: `upload-media` answered a bare "Permission denied" when `post_id` named a post that does not exist. `map_meta_cap()` resolves `edit_post` against a missing post to `do_not_allow`, so asking the capability before checking existence reported a permission problem for a mistyped id — and made the tool's own "no such post" message unreachable. Existence is now checked first, and all three refusals (no `upload_files`, no such post, no rights on that post) name the actual cause.
+* Fixed: a file whose contents did not match its extension — PHP named `.jpg` — was refused by WordPress in the site's own language, with a message about permissions rather than about the file. It is now verified and refused before the upload, as `content_type_mismatch`, naming the file and the extension it contradicts. WordPress still runs its own check afterwards.
+* Fixed: every upload failure suggested retrying with `convert_webp:false`, including failures that flag could not affect.
 
 = 1.3.0 =
 

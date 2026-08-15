@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.3.1]
+
+> Both of these were found the same way: by running 1.3.0 against a real site instead of only against the test suite. Neither could have been caught by a unit test, because both are about what WordPress does around the code, not what the code does.
+
+### Fixed
+
+- **`upload-media` answered a bare "Permission denied" for a `post_id` that did not exist.** The permission callback asked `edit_post` on the parent before checking the parent was there — and `map_meta_cap()` resolves `edit_post` against a missing post to `do_not_allow`. So a mistyped id came back as a permission problem, which is the wrong diagnosis and the wrong fix for whoever reads it; worse, it made the executor's own `post_not_found` branch unreachable, so the good message could never be reached. Existence is now resolved first, and the callback returns a `WP_Error` naming the cause in all three cases — no `upload_files`, no such post, or no rights on that post (with its post type, since `edit_post` is a meta capability a capability manager can revoke per type). This is the same bare-`false` seam 1.2.1 closed on `update-post` and `delete-post`; the new tool had reopened it.
+
+- **A file whose contents did not match its extension was refused in a language the caller may not read.** Uploading PHP named `.jpg` was correctly refused — by WordPress, deep inside `media_handle_sideload()`, with core's translated string: on a Spanish site, *"Lo siento, no tienes permisos para subir este tipo de archivo."* That says the caller lacks a permission, which is not what happened, and it is locale-dependent, so no client can reason about it. The contents are now verified before the sideload and refused as `content_type_mismatch`, in this plugin's own words, naming the file and the extension it contradicts. WordPress still runs its own check afterwards — that one is the guarantee, this one is the explanation.
+
+- **Every upload failure suggested `convert_webp:false`.** The hint was appended unconditionally, so a rejected file type was answered with "retry with convert_webp:false", a flag that could not possibly change the outcome — an invitation to a retry loop. Now that type mismatches are caught earlier, what reaches that message really is a move or processing failure, and the hint is worded as the conditional it always was.
+
 ## [1.3.0]
 
 > One tool. The library had four ways to work with a file that was already on the server and none to put one there from the machine the person is sitting at.

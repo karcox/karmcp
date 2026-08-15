@@ -322,6 +322,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-matcher.php';
 		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-store.php';
 		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-audit.php';
+		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-remediation.php';
 		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vulnerabilities-module.php';
 		require_once KARMCP_DIR . 'includes/modules/svg-support/class-svg-sanitizer.php';
 		require_once KARMCP_DIR . 'includes/modules/svg-support/class-svg-support-module.php';

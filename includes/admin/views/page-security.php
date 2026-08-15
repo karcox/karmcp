@@ -81,6 +81,20 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 
 <div class="karmcp-security">
 
+	<?php
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only echo of the redirect result.
+	$karmcp_upd = isset( $_GET['karmcp_updated'] ) ? sanitize_text_field( wp_unslash( $_GET['karmcp_updated'] ) ) : '';
+	if ( '' !== $karmcp_upd ) :
+		?>
+		<div class="notice <?php echo 'ok' === $karmcp_upd ? 'notice-success' : 'notice-error'; ?> inline"><p>
+			<?php
+			echo 'ok' === $karmcp_upd
+				? esc_html__( 'Plugin updated. Scan again to confirm the vulnerabilities are cleared.', 'karmcp' )
+				: esc_html( $karmcp_upd );
+			?>
+		</p></div>
+	<?php endif; ?>
+
 	<form method="post" style="margin-bottom:1.5em;">
 		<?php wp_nonce_field( 'karmcp_security_scan' ); ?>
 		<button type="submit" name="karmcp_security_scan" value="1" class="button button-primary">
@@ -333,7 +347,76 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 				);
 				?>
 			</p>
+			<?php
+			$karmcp_fixable = KarMCP_Vuln_Remediation::plan( $karmcp_vmatch, KarMCP_Vuln_Remediation::offers() );
+			if ( $karmcp_fixable ) :
+				?>
+				<h3><?php esc_html_e( 'Fixable by updating', 'karmcp' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'One button per plugin, not per vulnerability — a single update usually clears several. The count says how many it actually clears, because an available update does not always cover every one.', 'karmcp' ); ?>
+				</p>
+				<table class="widefat striped">
+					<tbody>
+					<?php foreach ( $karmcp_fixable as $karmcp_fx ) : ?>
+						<tr>
+							<td style="width:5em;"><strong><?php echo esc_html( (string) $karmcp_fx['worst'] ); ?></strong></td>
+							<td>
+								<strong><?php echo esc_html( $karmcp_fx['slug'] . ' ' . $karmcp_fx['installed'] ); ?></strong>
+								<?php if ( '' !== $karmcp_fx['available'] ) : ?>
+									→ <strong><?php echo esc_html( $karmcp_fx['available'] ); ?></strong>
+								<?php endif; ?>
+								<br />
+								<?php
+								if ( '' === $karmcp_fx['available'] ) {
+									echo esc_html(
+										sprintf(
+											/* translators: %d: number of vulnerabilities. */
+											__( '%d vulnerability(ies), and WordPress is offering no update. For a premium plugin this usually means the licence is not delivering updates.', 'karmcp' ),
+											(int) $karmcp_fx['total']
+										)
+									);
+								} else {
+									echo esc_html(
+										sprintf(
+											/* translators: 1: fixed count, 2: total count. */
+											__( 'Clears %1$d of %2$d.', 'karmcp' ),
+											(int) $karmcp_fx['fixed'],
+											(int) $karmcp_fx['total']
+										)
+									);
+									if ( $karmcp_fx['remaining'] > 0 ) {
+										echo ' ' . esc_html(
+											sprintf(
+												/* translators: %d: how many remain. */
+												__( '%d would remain — the update does not reach their patched version.', 'karmcp' ),
+												(int) $karmcp_fx['remaining']
+											)
+										);
+									}
+								}
+								?>
+							</td>
+							<td style="width:11em;text-align:right;">
+								<?php if ( '' !== $karmcp_fx['available'] && $karmcp_fx['fixed'] > 0 ) : ?>
+									<form method="post" style="margin:0;">
+										<?php wp_nonce_field( 'karmcp_vuln_update' ); ?>
+										<input type="hidden" name="karmcp_vuln_plugin" value="<?php echo esc_attr( $karmcp_fx['file'] ); ?>" />
+										<button type="submit" name="karmcp_vuln_update" value="1" class="button button-primary">
+											<?php esc_html_e( 'Update', 'karmcp' ); ?>
+										</button>
+									</form>
+								<?php else : ?>
+									<span class="description"><?php esc_html_e( 'no update available', 'karmcp' ); ?></span>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+
 			<?php if ( $karmcp_vmatch ) : ?>
+				<h3><?php esc_html_e( 'All of them', 'karmcp' ); ?></h3>
 				<table class="widefat striped">
 					<tbody>
 					<?php foreach ( array_slice( $karmcp_vmatch, 0, 50 ) as $karmcp_v ) : ?>

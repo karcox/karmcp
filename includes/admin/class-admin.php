@@ -1808,6 +1808,26 @@ class KarMCP_Admin {
 			exit;
 		}
 
+		if ( isset( $_POST['karmcp_vuln_update'], $_POST['karmcp_vuln_plugin'] ) ) {
+			check_admin_referer( 'karmcp_vuln_update' );
+			$karmcp_target = sanitize_text_field( wp_unslash( $_POST['karmcp_vuln_plugin'] ) );
+			$karmcp_msg    = '';
+
+			if ( class_exists( 'KarMCP_Vuln_Remediation' ) ) {
+				$karmcp_done = KarMCP_Vuln_Remediation::update( $karmcp_target );
+				$karmcp_msg  = is_wp_error( $karmcp_done ) ? $karmcp_done->get_error_message() : 'ok';
+			}
+
+			wp_safe_redirect(
+				add_query_arg(
+					'karmcp_updated',
+					rawurlencode( $karmcp_msg ),
+					admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-security' )
+				)
+			);
+			exit;
+		}
+
 		if ( isset( $_POST['karmcp_vuln_refresh'] ) ) {
 			check_admin_referer( 'karmcp_vuln_refresh' );
 			if ( class_exists( 'KarMCP_Vuln_Store' ) ) {

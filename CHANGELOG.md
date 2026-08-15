@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.8.0]
+
+### Added
+
+- **An Update button beside the vulnerabilities an update would fix.** The roadmap called this the biggest return in the whole module — the feed already names the version that fixes each vulnerability, and `update-plugin` already worked — and then nothing joined them, so the report told you what was wrong and left you to go and do it by hand.
+
+  **One button per plugin, not per vulnerability.** Fifteen JetEngine CVEs are one update. The row says how many that update actually clears, which on a real site is often not all of them: an available version may reach the patched version of some and not others, and "clears 3 of 3" when it clears one would send somebody away believing they were finished.
+
+  Where WordPress offers no update at all — which on the test bed is exactly what a premium plugin whose licence has stopped delivering looks like — there is no button and the row says so, rather than a button that would do nothing.
+
+  Updating goes through the same Package Guard as the MCP tool, including the vulnerability exception: Elementor and Elementor Pro are updatable here precisely when a known vulnerability affects the installed version and the update clears it, and never otherwise. A plugin that was active before is reactivated afterwards — `Plugin_Upgrader` deactivates to work, and without that step "update" quietly becomes "update and switch off".
+
 ## [1.7.5]
 
 ### Fixed

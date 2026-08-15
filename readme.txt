@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.7.5
+Stable tag: 1.8.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.8.0 =
+
+* Added an **Update** button beside the vulnerabilities that updating would fix. One button per plugin rather than per vulnerability — fifteen JetEngine CVEs are one update — and the row says how many that update actually clears, since an available version often covers some and not others.
+* Where WordPress offers no update, there is no button and the row explains why; for a premium plugin that usually means the licence has stopped delivering updates.
+* Updating goes through the same guard as the MCP tool, including the exception that lets Elementor and Elementor Pro be updated when a known vulnerability affects the installed version. A plugin that was active before is reactivated afterwards.
 
 = 1.7.5 =
 

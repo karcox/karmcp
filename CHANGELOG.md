@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.11.0]
+
+### Added
+
+- **An Optimize tab, and `clean-database`.** The performance analyzer has measured database bloat since 3.0.0 — size, autoloaded options, accumulated revisions, a stalled cron — and, exactly like the hardening audit before `harden-site`, only ever said so. This is the half that acts.
+
+  Six tasks: old post revisions, expired transients, orphaned metadata, spam and trashed comments, trashed posts, and table overhead reclaimed with `OPTIMIZE TABLE`. Each one shows how much it found, what it would break, and **whether it can be undone** — four of the six are permanent and say so beside the checkbox, in red, before the button.
+
+  **This is not caching, and the distinction is the point.** Caching hides slow work behind a stored copy. This removes work the database is doing for nothing: rows nothing can read, revisions nobody will open, expired options loaded on every single request. It is the kind of speed that survives a cache flush, and the kind a caching plugin cannot give you.
+
+  Revisions, comments and posts are deleted **through the WordPress API**, not with SQL. Deleting a revision row directly leaves its postmeta behind, so the row count drops while the orphan count rises — cleanup that manufactures the mess it exists to remove. Only genuinely orphaned rows, whose owner is already gone, are removed with SQL, because there is no API for a row with no owner.
+
+  Deletions run in **bounded batches**, so one click on a site with a hundred thousand revisions cannot become a request the host kills halfway. Run it again until the counts reach zero.
+
+  Three things it deliberately will not do, listed on the screen rather than left to be discovered: it does not change autoloaded options (switching autoload off on the wrong one breaks the plugin that owns it, and no rule can tell which), it does not remove tables left by uninstalled plugins (recognising those means guessing, and a wrong guess deletes real data), and it does not cache anything.
+
+  `clean-database` ships disabled and requires `apply:true` with `confirm:true`.
+
 ## [1.10.1]
 
 ### Fixed

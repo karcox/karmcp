@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.10.1
+Stable tag: 1.11.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,14 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.11.0 =
+
+* New **Optimize** tab and `clean-database` tool: removes old post revisions, expired transients, orphaned metadata, spam and trashed comments, trashed posts, and reclaims table overhead with OPTIMIZE TABLE. Each task shows what it found, what it can break, and whether it can be undone — four of the six are permanent and are marked as such before the button.
+* This is not caching. It removes work the database is doing for nothing, which is the kind of speed that survives a cache flush.
+* Revisions, comments and posts are deleted through the WordPress API so their metadata goes with them; deleting the rows directly would leave orphans behind. Only rows whose owner is already gone are removed with SQL.
+* Deletions run in bounded batches so a large site cannot time out; run it again until the counts reach zero.
+* It deliberately does not change autoloaded options, does not remove tables left by uninstalled plugins, and does not cache — the reasons are on the screen.
 
 = 1.10.1 =
 

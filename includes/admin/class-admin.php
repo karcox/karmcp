@@ -132,6 +132,7 @@ class KarMCP_Admin {
 			'dashboard'  => 'dashicons-dashboard',
 			'tools'      => 'dashicons-admin-tools',
 			'security'   => 'dashicons-shield',
+			'optimize'   => 'dashicons-performance',
 			'history'    => 'dashicons-undo',
 			'redirects'  => 'dashicons-randomize',
 			'modules'    => 'dashicons-screenoptions',
@@ -162,6 +163,7 @@ class KarMCP_Admin {
 				self::PAGE_SLUG . '-widgets'    => __( 'Sandbox', 'karmcp' ),
 				self::PAGE_SLUG . '-mcp-log'    => __( 'MCP Log', 'karmcp' ),
 				self::PAGE_SLUG . '-security'   => __( 'Security', 'karmcp' ),
+				self::PAGE_SLUG . '-optimize'   => __( 'Optimize', 'karmcp' ),
 				self::PAGE_SLUG . '-history'    => __( 'History', 'karmcp' ),
 				self::PAGE_SLUG . '-changelog'  => __( 'Changelog', 'karmcp' ),
 			);
@@ -193,6 +195,8 @@ class KarMCP_Admin {
 				return 'tools';
 			case self::PAGE_SLUG . '-security':
 				return 'security';
+			case self::PAGE_SLUG . '-optimize':
+				return 'optimize';
 			case self::PAGE_SLUG . '-history':
 				return 'history';
 			case self::PAGE_SLUG . '-redirects':
@@ -1047,7 +1051,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 38;
+	const DEFAULTS_VERSION = 39;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1639,6 +1643,13 @@ class KarMCP_Admin {
 			$add[] = 'karmcp/resume-plugin';
 		}
 
+		// v39 — clean-database deletes content permanently. Its dry-run default
+		// is not enough on its own: the admin decides whether an agent can reach
+		// for it at all.
+		if ( $applied < 39 ) {
+			$add[] = 'karmcp/clean-database';
+		}
+
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
 		update_option( self::OPTION_DISABLED_TOOLS, $merged );
 		update_option( self::OPTION_DEFAULTS_APPLIED, (string) self::DEFAULTS_VERSION );
@@ -1870,6 +1881,20 @@ class KarMCP_Admin {
 	public function handle_security_actions(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
+		}
+
+		if ( isset( $_POST['karmcp_db_clean'] ) ) {
+			check_admin_referer( 'karmcp_db_clean' );
+			if ( class_exists( 'KarMCP_DB_Cleaner' ) ) {
+				$karmcp_tasks = isset( $_POST['karmcp_task'] )
+					? array_map( 'sanitize_key', (array) wp_unslash( $_POST['karmcp_task'] ) )
+					: array();
+				if ( $karmcp_tasks ) {
+					KarMCP_DB_Cleaner::run( $karmcp_tasks );
+				}
+			}
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-optimize&cleaned=1' ) );
+			exit;
 		}
 
 		if ( isset( $_POST['karmcp_security_scan'] ) ) {
@@ -3190,6 +3215,8 @@ class KarMCP_Admin {
 					include KARMCP_DIR . 'includes/admin/views/page-brand-kits.php';
 				} elseif ( 'security' === $active_tab ) {
 					include KARMCP_DIR . 'includes/admin/views/page-security.php';
+				} elseif ( 'optimize' === $active_tab ) {
+					include KARMCP_DIR . 'includes/admin/views/page-optimize.php';
 				} elseif ( 'history' === $active_tab ) {
 					include KARMCP_DIR . 'includes/admin/views/page-history.php';
 				} elseif ( 'redirects' === $active_tab && $this->module_tab_visible( 'redirects' ) ) {
@@ -4307,6 +4334,11 @@ class KarMCP_Admin {
 						'label'       => __( 'Scan Security', 'karmcp' ),
 						'description' => __( 'Scans for malware heuristics, core file integrity, configuration hardening, and outdated/abandoned software; returns a scored report with recommendations.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/clean-database' => array(
+						'label'       => __( 'Clean Database', 'karmcp' ),
+						'description' => __( 'Removes revisions, expired transients, orphaned metadata, spam and trashed content, and reclaims table overhead. Dry-run by default; several tasks are not reversible.', 'karmcp' ),
+						'badges'      => array( 'destructive' ),
 					),
 					'karmcp/list-vulnerabilities' => array(
 						'label'       => __( 'List Vulnerabilities', 'karmcp' ),

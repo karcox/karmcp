@@ -182,6 +182,12 @@ class KarMCP_Ability_Registrar {
 		$recovery->register();
 		$this->ability_names = array_merge( $this->ability_names, $recovery->get_ability_names() );
 
+		// clean-database — the acting half of the performance audit. Always
+		// registered; its dry-run default and confirm gate are the safety.
+		$db_clean = new KarMCP_DB_Cleanup_Abilities();
+		$db_clean->register();
+		$this->ability_names = array_merge( $this->ability_names, $db_clean->get_ability_names() );
+
 		// Known-vulnerability tool. Gated on its module, which ships off because
 		// it is the one part of the plugin that fetches from a third party.
 		if ( class_exists( 'KarMCP_Vulnerabilities_Module' ) && KarMCP_Vulnerabilities_Module::is_enabled() ) {

@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.7.1]
+
+> The first real scan of the new Security tab reported 144 critical findings, of which **none were real**, and scored the site 0 out of 100. Everything here comes from that one run. None of it could have been caught by a unit test: it took a site with a hundred snippets and thirty outdated plugins to show it.
+
+### Fixed
+
+- **142 of the 144 criticals were Code Snippets doing its job.** That plugin stores each snippet as a PHP file under `wp-content/uploads/code-snippets/`, and the malware audit flagged every one as "executable PHP under uploads". WP Staging's cache made the 143rd. PHP under uploads from a plugin that is known to put it there is now collected and reported **once, as information**, with a note that blocking PHP execution in uploads would break it. Anything in a directory nobody recognises is still critical, and every one of these files still goes through the pattern scan — so a webshell dropped *into* one of those directories is still found. The exemption matches the directory, never the filename, so it cannot be claimed by naming a file `2283.php` somewhere else.
+
+- **The report never said which file it meant.** The path lives in the finding's `value`, and the screen rendered the label, the message and the recommendation — but not that. The result was 142 rows of identical text with nothing to act on. Findings now show where, whatever shape the audit's value takes.
+
+- **Repeated findings are grouped** with a count instead of printed one per row.
+
+- **The score could not distinguish "needs updating" from "compromised".** Critical penalties were capped per category; warnings were not, so 46 ordinary warnings cost 230 points and floored the score at zero before anything else was weighed. A site with thirty outdated plugins scored exactly what a site with modified core files scored. Warnings are now capped per category as well, so a maintenance backlog reads as a maintenance backlog.
+
+- **A warning was charged to the wrong category.** The category was resolved inside the critical branch only, so every warning inherited whichever category the previous critical had. Introduced and caught while adding the cap above; now read for both.
+
 ## [1.7.0]
 
 > The last two pieces, and the ones that finish the job Wordfence was doing here.

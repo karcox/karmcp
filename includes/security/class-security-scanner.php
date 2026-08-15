@@ -21,6 +21,16 @@ class KarMCP_Security_Scanner {
 	const CRITICAL_WEIGHT   = 20;
 	const WARNING_WEIGHT    = 5;
 	const CATEGORY_CRIT_CAP = 60;
+
+	/**
+	 * Warnings are capped per category too, and that is a fix rather than a
+	 * tuning choice. Uncapped, a site with thirty outdated plugins scored
+	 * 100 - 150 = 0 before a single other check ran, which made the score
+	 * identical for "needs updating" and "actively compromised" — and a score
+	 * that cannot distinguish those is not worth showing. Measured on a real
+	 * install: 46 warnings, all of them ordinary, forced a hard zero.
+	 */
+	const CATEGORY_WARN_CAP = 25;
 	const TOP_RECS          = 8;
 
 	// The fifth, 'vulnerability', is appended at runtime by checks_available()
@@ -202,22 +212,26 @@ class KarMCP_Security_Scanner {
 	public function summarize( array $findings ): array {
 		$counts        = array( 'critical' => 0, 'warning' => 0, 'pass' => 0, 'info' => 0 );
 		$cat_crit_pen  = array();
-		$warn_penalty  = 0;
+		$cat_warn_pen  = array();
 
 		foreach ( $findings as $f ) {
 			$status = (string) ( $f['status'] ?? 'info' );
 			if ( isset( $counts[ $status ] ) ) {
 				$counts[ $status ]++;
 			}
+			// Resolved for both branches, not just the critical one: reading it
+			// only inside the first would carry the previous finding's category
+			// into every warning, and silently mis-bucket the penalties.
+			$cat = (string) ( $f['category'] ?? 'malware' );
+
 			if ( 'critical' === $status ) {
-				$cat = (string) ( $f['category'] ?? 'malware' );
 				$cat_crit_pen[ $cat ] = min( self::CATEGORY_CRIT_CAP, ( $cat_crit_pen[ $cat ] ?? 0 ) + self::CRITICAL_WEIGHT );
 			} elseif ( 'warning' === $status ) {
-				$warn_penalty += self::WARNING_WEIGHT;
+				$cat_warn_pen[ $cat ] = min( self::CATEGORY_WARN_CAP, ( $cat_warn_pen[ $cat ] ?? 0 ) + self::WARNING_WEIGHT );
 			}
 		}
 
-		$score = 100 - array_sum( $cat_crit_pen ) - $warn_penalty;
+		$score = 100 - array_sum( $cat_crit_pen ) - array_sum( $cat_warn_pen );
 		$score = max( 0, min( 100, $score ) );
 
 		if ( $score >= 90 )     { $grade = 'A'; }

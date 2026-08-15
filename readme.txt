@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,13 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.7.1 =
+
+* Fixed: the malware audit flagged every PHP file that Code Snippets stores under `wp-content/uploads/code-snippets/` — one per snippet — as a critical finding. On a real site that alone was 142 of 144 criticals, all false. PHP under uploads from plugins known to put it there is now reported once as information; anything in an unrecognised directory is still critical, and all of them are still pattern-scanned.
+* Fixed: findings never showed which file they referred to, so the report was 142 identical rows with nothing to act on. Locations are now displayed, and repeated findings are grouped with a count.
+* Fixed: the security score could not tell "needs updating" from "compromised". Warning penalties were uncapped, so 46 ordinary warnings floored the score at 0 before anything else counted. They are now capped per category, like criticals already were.
+* Fixed: warnings were charged to whichever category the previous critical finding belonged to.
 
 = 1.7.0 =
 

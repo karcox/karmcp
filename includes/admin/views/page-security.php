@@ -18,6 +18,44 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! function_exists( 'karmcp_security_where' ) ) {
+	/**
+	 * The human-readable "where" of a finding.
+	 *
+	 * `value` is deliberately loose across the audits — a path string for the
+	 * malware walk, `{location: ...}` for some, `{name, current, new}` for the
+	 * software audit, a bare bool for hardening. This pulls out whatever
+	 * identifies the subject and returns '' when there is nothing worth showing,
+	 * so the caller never has to know which audit produced the finding.
+	 *
+	 * @since 1.7.1
+	 *
+	 * @param mixed $value Finding value.
+	 * @return string
+	 */
+	function karmcp_security_where( $value ): string {
+		if ( is_string( $value ) ) {
+			return ( '' !== $value && '1' !== $value ) ? $value : '';
+		}
+		if ( ! is_array( $value ) ) {
+			return '';
+		}
+		foreach ( array( 'location', 'path', 'file' ) as $key ) {
+			if ( ! empty( $value[ $key ] ) && is_string( $value[ $key ] ) ) {
+				return $value[ $key ];
+			}
+		}
+		if ( ! empty( $value['name'] ) && is_string( $value['name'] ) ) {
+			$out = $value['name'];
+			if ( ! empty( $value['current'] ) && ! empty( $value['new'] ) ) {
+				$out .= '  ' . $value['current'] . ' → ' . $value['new'];
+			}
+			return $out;
+		}
+		return '';
+	}
+}
+
 $karmcp_stored = KarMCP_Security_Monitor::last();
 $karmcp_fresh  = KarMCP_Security_Monitor::freshness( $karmcp_stored, time() );
 $karmcp_sum    = (array) ( $karmcp_stored['summary'] ?? array() );
@@ -103,28 +141,73 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 		</p>
 
 		<?php
+		/**
+		 * Findings are grouped by id before rendering, and each one shows WHERE.
+		 *
+		 * Both halves were learned the hard way on a real site: the first scan
+		 * printed 142 rows of identical text, and not one of them said which
+		 * file it meant, because the path lives in the finding's `value` and
+		 * nothing rendered it. A report you cannot act on is not a report.
+		 */
 		foreach ( (array) ( $karmcp_stored['sections'] ?? array() ) as $karmcp_cat => $karmcp_items ) :
-			$karmcp_bad = array_filter(
-				(array) $karmcp_items,
-				static function ( $f ) {
-					return in_array( ( $f['status'] ?? '' ), array( 'critical', 'warning' ), true );
+			$karmcp_groups = array();
+			foreach ( (array) $karmcp_items as $karmcp_f ) {
+				$karmcp_st = (string) ( $karmcp_f['status'] ?? '' );
+				if ( ! in_array( $karmcp_st, array( 'critical', 'warning' ), true ) ) {
+					continue;
 				}
-			);
-			if ( ! $karmcp_bad ) {
+				$karmcp_k = $karmcp_st . '|' . (string) ( $karmcp_f['id'] ?? '' ) . '|' . (string) ( $karmcp_f['label'] ?? '' );
+				if ( ! isset( $karmcp_groups[ $karmcp_k ] ) ) {
+					$karmcp_groups[ $karmcp_k ] = array(
+						'finding' => $karmcp_f,
+						'count'   => 0,
+						'where'   => array(),
+					);
+				}
+				++$karmcp_groups[ $karmcp_k ]['count'];
+				$karmcp_w = karmcp_security_where( $karmcp_f['value'] ?? null );
+				if ( '' !== $karmcp_w ) {
+					$karmcp_groups[ $karmcp_k ]['where'][] = $karmcp_w;
+				}
+			}
+			if ( ! $karmcp_groups ) {
 				continue;
 			}
 			?>
 			<h3><?php echo esc_html( ucfirst( (string) $karmcp_cat ) ); ?></h3>
 			<table class="widefat striped">
 				<tbody>
-				<?php foreach ( $karmcp_bad as $karmcp_f ) : ?>
+				<?php foreach ( $karmcp_groups as $karmcp_g ) : ?>
+					<?php $karmcp_f = $karmcp_g['finding']; ?>
 					<tr>
 						<td style="width:6em;">
 							<strong><?php echo esc_html( strtoupper( (string) ( $karmcp_f['status'] ?? '' ) ) ); ?></strong>
+							<?php if ( $karmcp_g['count'] > 1 ) : ?>
+								<br /><span class="description">&times;<?php echo (int) $karmcp_g['count']; ?></span>
+							<?php endif; ?>
 						</td>
 						<td>
 							<strong><?php echo esc_html( (string) ( $karmcp_f['label'] ?? '' ) ); ?></strong><br />
 							<?php echo esc_html( (string) ( $karmcp_f['message'] ?? '' ) ); ?>
+							<?php if ( $karmcp_g['where'] ) : ?>
+								<br />
+								<?php foreach ( array_slice( $karmcp_g['where'], 0, 10 ) as $karmcp_where ) : ?>
+									<code style="display:block;"><?php echo esc_html( $karmcp_where ); ?></code>
+								<?php endforeach; ?>
+								<?php if ( count( $karmcp_g['where'] ) > 10 ) : ?>
+									<span class="description">
+										<?php
+										echo esc_html(
+											sprintf(
+												/* translators: %d: how many more locations were not listed. */
+												__( '…and %d more.', 'karmcp' ),
+												count( $karmcp_g['where'] ) - 10
+											)
+										);
+										?>
+									</span>
+								<?php endif; ?>
+							<?php endif; ?>
 							<?php if ( ! empty( $karmcp_f['recommendation'] ) ) : ?>
 								<br /><em><?php echo esc_html( (string) $karmcp_f['recommendation'] ); ?></em>
 							<?php endif; ?>

@@ -1,10 +1,15 @@
 # Extensiones de elemento (Elementor 4.2+)
 
-> **Estado: implementado en 1.13.0.** Este documento se escribió como plan y se
-> conserva como referencia de diseño: las costuras verificadas de §1, los
-> callejones sin salida ya explorados y el porqué de cada regla del spec. Lo que
-> quedaba abierto —si el panel pinta una sección añadida desde PHP sin paquete
-> JS— se resuelve con la primera extensión real, no con una prueba aparte.
+> **Estado: parte atómica implementada en 1.13.0, corregida en 1.13.1.
+> Parte clásica pendiente (§8 bis) — y es la que más se usa.** Este documento se
+> escribió como plan y se conserva como referencia de diseño: las costuras
+> verificadas de §1, los callejones sin salida ya explorados, el porqué de cada
+> regla del spec, y lo que la verificación en un sitio real enseñó.
+>
+> **Nada de esto se aplica a los elementos que la mayoría de sitios tiene hoy.**
+> Los elementos atómicos existen solo con el Editor V4 activado, y solo en lo que
+> se construya después; las páginas ya hechas son `container`/`section`/`column`.
+> La parte 2 es la que las alcanza.
 
 
 Tercera clase de artefacto del sandbox, junto a los widgets y los bloques. Un
@@ -535,6 +540,92 @@ Tamaño estimado: ~1.400 líneas de producción y ~400 de test, del mismo orden 
 el Block Builder.
 
 ---
+
+## 8 bis. Parte 2 — elementos clásicos (pendiente, y probablemente lo más útil)
+
+La v1 solo alcanza elementos atómicos, y la verificación en sitionet dejó claro
+por qué eso es menos de lo que parece: **tener Elementor 4.2 no significa tener
+elementos atómicos**. Hacen falta dos cosas más — activar el opt-in del Editor
+V4 (§1) y construir *después* con él, porque las páginas ya hechas siguen siendo
+`container` / `section` / `column`. En un sitio real, lo que hay son elementos
+clásicos, y ahí una extensión atómica no se aplica a nada.
+
+Por eso esta parte no es un lujo: es donde está la mayoría del trabajo real.
+
+### Las costuras, ya verificadas
+
+Se leyeron del Elementor Pro 4.2.1 instalado, en la misma investigación que dio
+las atómicas:
+
+**Inyectar controles en un elemento clásico** —
+`elementor/element/{tipo}/{sección}/before_section_end`. Motion FX lo usa en tres
+sitios (`modules/motion-fx/module.php:218-220`):
+
+```php
+add_action( 'elementor/element/container/section_background/before_section_end', … );
+add_action( 'elementor/element/section/section_background/before_section_end', … );
+add_action( 'elementor/element/column/section_style/before_section_end', … );
+```
+
+El callback recibe el `Element_Base` y añade controles con la API clásica
+(`modules/sticky/module.php`):
+
+```php
+public function register_controls( Element_Base $element ) {
+    $element->add_control( 'sticky', [
+        'label'   => …,
+        'type'    => Controls_Manager::SELECT,
+        'options' => [ … ],
+        'render_type'        => 'none',   // no re-renderiza al cambiar
+        'frontend_available' => true,     // el valor llega al JS del front
+    ] );
+}
+```
+
+**Escribir en el HTML** — aquí la buena noticia: los clásicos **no** usan Twig,
+así que su wrapper sí sale de `add_render_attribute( '_wrapper', … )` en
+`elementor/frontend/before_render`. Es decir, **el código que la 1.13.1 conservó
+como segunda vía es exactamente el que hace falta aquí**, ya escrito y ya
+probado.
+
+### Qué habría que construir
+
+| Pieza | Estado |
+|---|---|
+| Spec, validación, condiciones, límites | **Se reutiliza tal cual** |
+| Compilación de la salida (clases + atributos en el wrapper) | **Ya está** — es la vía clásica que el generador mantiene |
+| Store, loader, manifest, hash, kill switch, export/import | **Se reutiliza tal cual** |
+| Herramientas MCP y pantalla de admin | **Se reutilizan**, con targets nuevos |
+| Targets clásicos en el spec | Nuevo: `container`, `section`, `column` y tipos de widget clásico |
+| Emisor de controles clásico | Nuevo: `Controls_Manager::*` y `add_control()` sobre el elemento, en vez de `Section::make()` |
+| Elegir la vía por target | Nuevo, pequeño: un target clásico compila hooks clásicos; uno `e-*`, atómicos |
+
+Una extensión debería poder declarar targets de los dos mundos y compilar ambos
+caminos: la misma opción, en un contenedor clásico y en un `e-div-block`.
+
+### Lo que hay que verificar antes de escribirlo
+
+Tres cosas, y ninguna se puede dar por sabida:
+
+1. **En qué sección inyectar.** Motion FX usa `section_background` y
+   `section_style`; para una opción propia probablemente interese la pestaña
+   Avanzado. Hay que leer los `section_id` reales del elemento objetivo, no
+   adivinarlos — el `add_action` con un id inexistente no falla, simplemente
+   nunca se dispara.
+2. **Qué tipos de widget clásico admitir como target.** Son decenas y el
+   catálogo del plugin ya los conoce (`includes/widgets/catalog-*.php`); habría
+   que decidir si se permite cualquiera o solo contenedores.
+3. **Si conviene abrir la generación de CSS por control.** La API clásica trae
+   algo que la atómica no nos deja usar: `'selectors' => [ '{{WRAPPER}}' =>
+   'prop: {{VALUE}};' ]`, con lo que Elementor genera el CSS por elemento sin que
+   nosotros escribamos una regla. Es tentador y es exactamente donde entra el
+   saneado de CSS del que habla §9 — no entra sin diseñarlo.
+
+### Tamaño
+
+Bastante menos que la v1: diría **la mitad**, porque el spec, el store, el
+loader, las herramientas y la mitad del generador se reutilizan sin tocar. Lo
+genuinamente nuevo es el emisor de controles clásico y el enrutado por target.
 
 ## 9. Lo que deliberadamente no hace
 

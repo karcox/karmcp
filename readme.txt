@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.7.2
+Stable tag: 1.7.3
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.7.3 =
+
+* Added a **Refresh vulnerability feed now** button to the Security tab. Enabling the module and entering an API key scheduled the first download two hours later with no way to ask for it sooner, so the data you enabled the module to see stayed empty. The button reports the outcome, including the rate-limit response, which is expected on the free quota and leaves stored data untouched.
 
 = 1.7.2 =
 

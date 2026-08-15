@@ -2,6 +2,12 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.7.3]
+
+### Added
+
+- **A "Refresh vulnerability feed now" button.** Enabling the module and pasting an API key scheduled the first download two hours out and offered no way to ask for it sooner, so the thing you enabled the module to see stayed empty with nothing to click. An oversight in 1.7.0, and the one that mattered most, because it sat directly between the setup and the payoff. The button reports what happened either way — a 429 from the free quota is expected rather than exceptional, and it leaves the stored data untouched.
+
 ## [1.7.2]
 
 > A scan reported `KarMCP security scan failed`, and the whole report was gone. What actually broke was one check out of five — and the two defects that turned that into a total loss are both mine.

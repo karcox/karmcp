@@ -273,6 +273,15 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 		$karmcp_vmatch = empty( $karmcp_vstate['refreshed_at'] ) ? array() : $karmcp_vaudit->match_installed();
 		$karmcp_attrib = KarMCP_Vuln_Store::attribution();
 		?>
+		<form method="post" style="margin-bottom:1em;">
+			<?php wp_nonce_field( 'karmcp_vuln_refresh' ); ?>
+			<button type="submit" name="karmcp_vuln_refresh" value="1" class="button">
+				<?php esc_html_e( 'Refresh vulnerability feed now', 'karmcp' ); ?>
+			</button>
+			<span class="description" style="margin-left:.75em;">
+				<?php esc_html_e( 'Also runs once a day. The free Wordfence quota allows roughly one download an hour, so a 429 here is normal and leaves the stored data untouched.', 'karmcp' ); ?>
+			</span>
+		</form>
 		<?php if ( empty( $karmcp_vstate['refreshed_at'] ) ) : ?>
 			<div class="notice notice-info inline"><p>
 				<?php esc_html_e( 'The vulnerability feed has never been downloaded, so nothing has been checked against it. That is an unknown result, not a clean one. Add an API key under Modules to start.', 'karmcp' ); ?>

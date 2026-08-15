@@ -1808,6 +1808,18 @@ class KarMCP_Admin {
 			exit;
 		}
 
+		if ( isset( $_POST['karmcp_vuln_refresh'] ) ) {
+			check_admin_referer( 'karmcp_vuln_refresh' );
+			if ( class_exists( 'KarMCP_Vuln_Store' ) ) {
+				// The result is read back off the stored state by the view, so a
+				// failure here is not swallowed: refresh() records why it could
+				// not update and leaves the previous rows exactly as they were.
+				KarMCP_Vuln_Store::refresh();
+			}
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-security' ) );
+			exit;
+		}
+
 		if ( isset( $_POST['karmcp_dropin_action'] ) ) {
 			check_admin_referer( 'karmcp_security_dropin' );
 			if ( class_exists( 'KarMCP_Fatal_Handler_Template' ) ) {

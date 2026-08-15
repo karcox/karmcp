@@ -2,6 +2,20 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.9.0]
+
+### Added
+
+- **A progress bar on the scan, and the restructuring that makes one honest.** The scan used to be a single request: click, wait in silence, page reloads. There was nothing to show a bar with because there was nothing to report until it was all over.
+
+  It now runs one check per request — malware, integrity, hardening, software, vulnerabilities — with the browser stepping through them and naming the one in flight. That is not decoration. A malware walk over a large tree can outlast `max_execution_time`, and when it did, the request died with nothing stored and the tab reported a failed scan. Short requests mean a host limit can now cost at most the single category it lands in; everything already finished is banked.
+
+  Both paths share one `run_check()`, and a test pins that stepping the checks adds up to exactly what running them together produces — otherwise the bar and the nightly cron would slowly start reporting different things about the same site.
+
+  The form still posts normally and the script intercepts it, so without JavaScript the original one-shot scan runs unchanged. The button is never dead.
+
+  Progress lives in a transient, not an option: it is scaffolding for the next minute, and closing the tab halfway should not leave anything behind.
+
 ## [1.8.0]
 
 ### Added

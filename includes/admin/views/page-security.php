@@ -95,15 +95,102 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 		</p></div>
 	<?php endif; ?>
 
-	<form method="post" style="margin-bottom:1.5em;">
+	<?php
+	/**
+	 * The form still posts normally. The script below intercepts it and steps
+	 * through the checks one request at a time, so with JavaScript there is a
+	 * bar and without it the original one-shot scan still works — the button is
+	 * never dead.
+	 */
+	$karmcp_labels = array(
+		'malware'       => __( 'Scanning files for malware…', 'karmcp' ),
+		'integrity'     => __( 'Checking core files against official checksums…', 'karmcp' ),
+		'hardening'     => __( 'Checking configuration…', 'karmcp' ),
+		'software'      => __( 'Checking for outdated software…', 'karmcp' ),
+		'vulnerability' => __( 'Matching against known vulnerabilities…', 'karmcp' ),
+	);
+	?>
+	<form method="post" style="margin-bottom:1.5em;" id="karmcp-scan-form">
 		<?php wp_nonce_field( 'karmcp_security_scan' ); ?>
-		<button type="submit" name="karmcp_security_scan" value="1" class="button button-primary">
+		<button type="submit" name="karmcp_security_scan" value="1" class="button button-primary" id="karmcp-scan-button">
 			<?php esc_html_e( 'Scan now', 'karmcp' ); ?>
 		</button>
 		<span class="description" style="margin-left:.75em;">
 			<?php esc_html_e( 'A scan also runs once a day in the background.', 'karmcp' ); ?>
 		</span>
+
+		<div id="karmcp-scan-progress" hidden style="margin-top:1em;max-width:34em;">
+			<progress id="karmcp-scan-bar" value="0" max="1" style="width:100%;height:1.4em;"></progress>
+			<p id="karmcp-scan-status" class="description" style="margin:.4em 0 0;" aria-live="polite"></p>
+		</div>
 	</form>
+
+	<script>
+	( function () {
+		var form = document.getElementById( 'karmcp-scan-form' );
+		if ( ! form || ! window.fetch ) { return; }
+
+		var button   = document.getElementById( 'karmcp-scan-button' );
+		var wrap     = document.getElementById( 'karmcp-scan-progress' );
+		var bar      = document.getElementById( 'karmcp-scan-bar' );
+		var status   = document.getElementById( 'karmcp-scan-status' );
+		var ajaxUrl  = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+		var nonce    = <?php echo wp_json_encode( wp_create_nonce( 'karmcp_scan_progress' ) ); ?>;
+		var labels   = <?php echo wp_json_encode( $karmcp_labels ); ?>;
+		var starting = <?php echo wp_json_encode( __( 'Starting…', 'karmcp' ) ); ?>;
+		var failed   = <?php echo wp_json_encode( __( 'The scan could not continue:', 'karmcp' ) ); ?>;
+
+		function call( action ) {
+			var body = new FormData();
+			body.append( 'action', action );
+			body.append( '_wpnonce', nonce );
+			return fetch( ajaxUrl, { method: 'POST', body: body, credentials: 'same-origin' } )
+				.then( function ( r ) { return r.json(); } );
+		}
+
+		function stop( message ) {
+			status.textContent = failed + ' ' + message;
+			button.disabled = false;
+		}
+
+		function step( total ) {
+			call( 'karmcp_scan_step' ).then( function ( res ) {
+				if ( ! res || ! res.success ) {
+					stop( ( res && res.data && res.data.message ) || '' );
+					return;
+				}
+				bar.value = res.data.done;
+				if ( res.data.complete ) {
+					status.textContent = '';
+					// Reload rather than render here: the report is built server
+					// side and this way there is exactly one way it can look.
+					window.location.reload();
+					return;
+				}
+				status.textContent = labels[ res.data.next ] || '';
+				step( total );
+			} ).catch( function ( e ) { stop( String( e ) ); } );
+		}
+
+		form.addEventListener( 'submit', function ( e ) {
+			e.preventDefault();
+			button.disabled = true;
+			wrap.hidden = false;
+			status.textContent = starting;
+
+			call( 'karmcp_scan_start' ).then( function ( res ) {
+				if ( ! res || ! res.success ) {
+					stop( ( res && res.data && res.data.message ) || '' );
+					return;
+				}
+				bar.max = res.data.total;
+				bar.value = 0;
+				status.textContent = labels[ res.data.checks[0] ] || '';
+				step( res.data.total );
+			} ).catch( function ( e ) { stop( String( e ) ); } );
+		} );
+	}() );
+	</script>
 
 	<?php if ( 'never' === $karmcp_fresh['state'] ) : ?>
 

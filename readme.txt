@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.8.0
+Stable tag: 1.9.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.9.0 =
+
+* Added a **progress bar** to the security scan, which now runs one check per request instead of all of them in one. It names the check in flight, and it is more than cosmetic: a long scan could previously outlast the host's `max_execution_time` and die with nothing stored, reported as a failed scan. Short requests mean a timeout can now cost at most the one category it lands in.
+* Both the stepped and the one-shot scan share the same code, and a test pins that they produce identical reports.
+* Without JavaScript the original single-request scan still runs, so the button is never dead.
 
 = 1.8.0 =
 

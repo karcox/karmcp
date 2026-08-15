@@ -162,57 +162,13 @@ class KarMCP_Security_Scanner {
 			'elapsed_ms'         => 0,
 		);
 
-		// Each audit runs inside its own guard. One of them throwing must not
-		// discard the four that finished: the first real failure came from a
-		// third-party update-checker blowing up inside the software audit, and
-		// it threw away a complete malware, integrity and hardening report to
-		// store nothing but "failed". A category that could not run is reported
-		// as a category that could not run — the same rule as everywhere else in
-		// this section, applied one level down.
-		if ( in_array( 'malware', $checks, true ) ) {
-			try {
-				$m = $this->malware()->run( $deep, $max_files, $max_seconds );
-				$findings = array_merge( $findings, $m['findings'] );
-				$scan_meta['files_scanned']      = (int) $m['stats']['files_scanned'];
-				$scan_meta['files_skipped_size'] = (int) $m['stats']['files_skipped_size'];
-				$scan_meta['truncated']          = (bool) $m['stats']['truncated'];
-				$scan_meta['truncated_reason']   = $m['stats']['truncated_reason'];
-			} catch ( \Throwable $e ) {
-				$findings[] = self::audit_failed( 'malware', $e );
-			}
-		}
-		if ( in_array( 'integrity', $checks, true ) ) {
-			try {
-				$i = $this->integrity()->run();
-				$findings = array_merge( $findings, $i['findings'] );
-				$scan_meta['integrity_api'] = $i['api'];
-			} catch ( \Throwable $e ) {
-				$findings[] = self::audit_failed( 'integrity', $e );
-			}
-		}
-		if ( in_array( 'hardening', $checks, true ) ) {
-			try {
-				$h = $this->hardening()->run();
-				$findings = array_merge( $findings, $h['findings'] );
-				$scan_meta['headers_fetch'] = $h['headers_fetch'];
-			} catch ( \Throwable $e ) {
-				$findings[] = self::audit_failed( 'hardening', $e );
-			}
-		}
-		if ( in_array( 'software', $checks, true ) ) {
-			try {
-				$findings = array_merge( $findings, $this->software()->run() );
-			} catch ( \Throwable $e ) {
-				$findings[] = self::audit_failed( 'software', $e );
-			}
-		}
-		if ( in_array( 'vulnerability', $checks, true ) && class_exists( 'KarMCP_Vuln_Audit' ) ) {
-			try {
-				$vuln     = new KarMCP_Vuln_Audit();
-				$findings = array_merge( $findings, $vuln->run() );
-			} catch ( \Throwable $e ) {
-				$findings[] = self::audit_failed( 'vulnerability', $e );
-			}
+		// One check at a time through run_check(), which owns the guard. The
+		// stepped scan behind the progress bar calls exactly the same method, one
+		// HTTP request per check, so the two paths cannot drift apart.
+		foreach ( $checks as $check ) {
+			$step      = $this->run_check( $check, $deep, $max_files, $max_seconds );
+			$findings  = array_merge( $findings, $step['findings'] );
+			$scan_meta = array_merge( $scan_meta, $step['meta'] );
 		}
 
 		$summary               = $this->summarize( $findings );
@@ -231,11 +187,73 @@ class KarMCP_Security_Scanner {
 	}
 
 	/**
-	 * Pure: counts, score (per-category critical cap), grade, ranked recs.
+	 * Runs exactly one check and returns its findings and its slice of the meta.
 	 *
-	 * @param array $findings Finding[]
-	 * @return array { counts, score, grade, top_recommendations }
+	 * Extracted so the whole scan and the stepped scan share one implementation.
+	 * The stepped version exists because a full scan is a single request that can
+	 * take longer than the host allows: one category per request keeps every one
+	 * of them short, and gives the browser something honest to draw a bar with.
+	 *
+	 * The guard lives here, so a check that throws costs only itself either way.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $check       Category to run.
+	 * @param bool   $deep        Deep malware walk.
+	 * @param int    $max_files   Malware file cap.
+	 * @param int    $max_seconds Malware time budget.
+	 * @return array{findings:array,meta:array}
 	 */
+	public function run_check( string $check, bool $deep = false, int $max_files = 0, int $max_seconds = 0 ): array {
+		$findings = array();
+		$meta     = array();
+
+		try {
+			switch ( $check ) {
+				case 'malware':
+					$m        = $this->malware()->run( $deep, $max_files, $max_seconds );
+					$findings = $m['findings'];
+					$meta     = array(
+						'files_scanned'      => (int) $m['stats']['files_scanned'],
+						'files_skipped_size' => (int) $m['stats']['files_skipped_size'],
+						'truncated'          => (bool) $m['stats']['truncated'],
+						'truncated_reason'   => $m['stats']['truncated_reason'],
+					);
+					break;
+
+				case 'integrity':
+					$i        = $this->integrity()->run();
+					$findings = $i['findings'];
+					$meta     = array( 'integrity_api' => $i['api'] );
+					break;
+
+				case 'hardening':
+					$h        = $this->hardening()->run();
+					$findings = $h['findings'];
+					$meta     = array( 'headers_fetch' => $h['headers_fetch'] );
+					break;
+
+				case 'software':
+					$findings = $this->software()->run();
+					break;
+
+				case 'vulnerability':
+					if ( class_exists( 'KarMCP_Vuln_Audit' ) ) {
+						$vuln     = new KarMCP_Vuln_Audit();
+						$findings = $vuln->run();
+					}
+					break;
+			}
+		} catch ( \Throwable $e ) {
+			$findings = array( self::audit_failed( $check, $e ) );
+		}
+
+		return array(
+			'findings' => $findings,
+			'meta'     => $meta,
+		);
+	}
+
 	/**
 	 * The finding that stands in for an audit that could not run.
 	 *
@@ -286,6 +304,12 @@ class KarMCP_Security_Scanner {
 		);
 	}
 
+	/**
+	 * Pure: counts, score (per-category critical cap), grade, ranked recs.
+	 *
+	 * @param array $findings Finding[]
+	 * @return array { counts, score, grade, top_recommendations }
+	 */
 	public function summarize( array $findings ): array {
 		$counts        = array( 'critical' => 0, 'warning' => 0, 'pass' => 0, 'info' => 0 );
 		$cat_crit_pen  = array();

@@ -235,6 +235,8 @@ class KarMCP_Admin {
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'handle_security_actions' ) );
+		add_action( 'wp_ajax_karmcp_scan_start', array( $this, 'ajax_scan_start' ) );
+		add_action( 'wp_ajax_karmcp_scan_step', array( $this, 'ajax_scan_step' ) );
 		add_action( 'admin_init', array( $this, 'maybe_apply_default_disabled_tools' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_head', array( $this, 'print_menu_icon_style' ) );
@@ -1794,6 +1796,43 @@ class KarMCP_Admin {
 	 * @since 1.5.0
 	 * @return void
 	 */
+	/**
+	 * Starts a stepped scan.
+	 *
+	 * @since 1.9.0
+	 * @return void
+	 */
+	public function ajax_scan_start(): void {
+		check_ajax_referer( 'karmcp_scan_progress' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
+		}
+		wp_send_json_success( KarMCP_Security_Scan_Run::start( false ) );
+	}
+
+	/**
+	 * Runs the next check of a stepped scan.
+	 *
+	 * One category per request, which is the whole point: a host that kills a
+	 * long request can now cost at most the one check it lands in, and the
+	 * browser gets something true to draw with rather than a spinner.
+	 *
+	 * @since 1.9.0
+	 * @return void
+	 */
+	public function ajax_scan_step(): void {
+		check_ajax_referer( 'karmcp_scan_progress' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
+		}
+
+		$result = KarMCP_Security_Scan_Run::step();
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ), 409 );
+		}
+		wp_send_json_success( $result );
+	}
+
 	public function handle_security_actions(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;

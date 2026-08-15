@@ -253,6 +253,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/security/class-security-hardening-fixer.php';
 		require_once KARMCP_DIR . 'includes/security/class-security-hardening-runtime.php';
 		require_once KARMCP_DIR . 'includes/security/class-security-monitor.php';
+		require_once KARMCP_DIR . 'includes/security/class-security-scan-run.php';
 		require_once KARMCP_DIR . 'includes/security/class-fatal-handler-template.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-security-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-svg-icon-abilities.php';

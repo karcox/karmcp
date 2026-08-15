@@ -150,6 +150,7 @@ Fuera de esta lista, sin abordar y verificado el 2026-08-14: **no hay CI** (`.gi
 |---|---|
 | [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) | Plan real de las dos capacidades propias. Themer extendido: **hecho**. SEO y accesibilidad: pendiente, con los seams ya verificados. |
 | [docs/ROADMAP-SECURITY.md](docs/ROADMAP-SECURITY.md) | El apartado de Seguridad, para sustituir a Wordfence: CI, pestaña Security, `harden-site`, drop-in de fatales, `update-core`, módulo de vulnerabilidades y parcheo. Escrito para implementarse desde cero. |
+| [docs/ROADMAP-OPTIMIZE.md](docs/ROADMAP-OPTIMIZE.md) | Continuación de la pestaña Optimize (1.11.0): prevención, autocargadas, cron, índices, coste por plugin. Lo que ya está hecho y lo que no debe entrar. |
 | [docs/MAINTENANCE-UPSTREAM.md](docs/MAINTENANCE-UPSTREAM.md) | Nota interna de mantenimiento: qué se ha revisado del árbol de origen y qué divergencias no deben reimportarse. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Cómo añadir una herramienta o una integración. |
 | `NOTICE` / `LICENSE` | Atribución y licencia. **No tocar.** |

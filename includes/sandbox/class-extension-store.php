@@ -1,22 +1,22 @@
 <?php
 /**
- * Block Store — source of truth + sandbox for AI-generated Gutenberg blocks.
+ * Extension Store — source of truth + sandbox for AI-generated element
+ * extensions.
  *
- * The Gutenberg counterpart of `KarMCP_Widget_Store`, built on
- * `KarMCP_Sandbox_Store` so it inherits the cloud-ready artifact plumbing
- * (uuid, version, sync state) the widget store predates.
+ * Same shape as the block store: a private `karmcp_extension` post holds the
+ * spec, the compiled PHP lives under `wp-content/karmcp-sandbox/extensions/<id>/`,
+ * and a manifest lists only the active ones so the loader never queries the
+ * database on a render.
  *
- * The canonical record is a private `karmcp_block` post whose `_karmcp_spec`
- * meta holds the structured spec the files are compiled from, so the code is
- * always regenerable. The compiled `block.json` + `render.php` live in an
- * isolated sandbox under `wp-content/karmcp-sandbox/blocks/<id>/`, guarded
- * from direct web access. A derived manifest lists only ACTIVE blocks; the
- * loader reads it (no DB query per request) while the post stays authoritative.
- *
- * Post status is the activation flag: `publish` = active, `draft` = inactive.
+ * One rule is specific to this artifact kind. An extension declares props into
+ * Elementor's shared schema, so **two active extensions may not declare the
+ * same prop name**: the second filter would win and the first extension would
+ * quietly stop working. The check happens at activation, where it can still be
+ * refused, and the manifest carries each extension's prop names so it costs no
+ * queries.
  *
  * @package KarMCP
- * @since   1.12.0
+ * @since   1.13.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,35 +24,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Stores, compiles, and tracks AI-generated custom blocks.
+ * Stores, compiles, and tracks AI-generated element extensions.
  *
- * @since 1.12.0
+ * @since 1.13.0
  */
-class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
+class KarMCP_Extension_Store extends KarMCP_Sandbox_Store {
 
-	const POST_TYPE = 'karmcp_block';
+	const POST_TYPE = 'karmcp_extension';
 
-	const META_SPEC        = '_karmcp_spec';
-	const META_BLOCK_NAME  = '_karmcp_block_name';
-	const META_JSON_HASH   = '_karmcp_json_hash';
-	const META_RENDER_HASH = '_karmcp_render_hash';
-	const META_CSS_HASH    = '_karmcp_css_hash';
-	const META_JS_HASH     = '_karmcp_js_hash';
-	const META_LAST_ERROR  = '_karmcp_last_error';
+	const META_SPEC       = '_karmcp_spec';
+	const META_CLASS_NAME = '_karmcp_class_name';
+	const META_PHP_HASH   = '_karmcp_php_hash';
+	const META_CSS_HASH   = '_karmcp_css_hash';
+	const META_JS_HASH    = '_karmcp_js_hash';
+	const META_PROPS      = '_karmcp_props';
+	const META_LAST_ERROR = '_karmcp_last_error';
 
-	/** The files a block owns inside its sandbox directory. */
-	const ASSETS = array( 'block.json', 'render.php', 'style.css', 'script.js' );
+	/** The files an extension owns inside its sandbox directory. */
+	const ASSETS = array( 'extension.php', 'style.css', 'script.js' );
 
 	/**
-	 * Shared instance. The admin screen, the loader and the cloud resolver all
-	 * reach for the same store, and it holds no per-call state.
+	 * Shared instance.
 	 *
 	 * @var self|null
 	 */
 	private static $instance = null;
 
 	/**
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @return self
 	 */
@@ -68,15 +67,15 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	// -------------------------------------------------------------------------
 
 	public function kind(): string {
-		return 'block';
+		return 'extension';
 	}
 
 	protected function sandbox_subdir(): string {
-		return 'blocks';
+		return 'extensions';
 	}
 
 	protected function manifest_filename(): string {
-		return 'blocks-manifest.json';
+		return 'extensions-manifest.json';
 	}
 
 	// -------------------------------------------------------------------------
@@ -86,7 +85,7 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	/**
 	 * Registers the CPT. Hooked on `init`.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 */
 	public static function register_post_type(): void {
 		register_post_type(
@@ -105,17 +104,17 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 				'map_meta_cap'        => true,
 				'supports'            => array( 'title', 'author' ),
 				'labels'              => array(
-					'name' => __( 'KarMCP Custom Blocks', 'karmcp' ),
+					'name' => __( 'KarMCP Element Extensions', 'karmcp' ),
 				),
 			)
 		);
 	}
 
 	/**
-	 * Whether the current user may manage generated blocks. Same reasoning as
-	 * the widget store: a generated block is executable PHP.
+	 * An extension is executable PHP that runs on every page its target
+	 * elements appear on, so this is the edit-code capability.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @return bool
 	 */
@@ -128,11 +127,11 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Absolute path to one of a block's files.
+	 * Absolute path to one of an extension's files.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int    $id    Block post ID.
+	 * @param int    $id    Extension post ID.
 	 * @param string $asset One of self::ASSETS.
 	 * @return string
 	 */
@@ -141,40 +140,39 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * Path of a block's directory relative to the sandbox base, as recorded in
-	 * the manifest so the sandbox can be relocated without a rebuild.
+	 * Directory relative to the sandbox base, as recorded in the manifest.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return string
 	 */
 	public function relative_dir( int $id ): string {
-		return 'blocks/' . $id;
+		return 'extensions/' . $id;
 	}
 
 	/**
-	 * Base handle for a block's assets; '-style' / '-script' are appended.
+	 * Base handle for an extension's assets.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return string
 	 */
 	public static function asset_handle( int $id ): string {
-		return 'karmcp-block-' . $id;
+		return 'karmcp-extension-' . $id;
 	}
 
 	/**
-	 * The block type name for a post: unique, and stable for its lifetime.
+	 * The generated class name for an extension.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return string
 	 */
-	public static function block_name( int $id ): string {
-		return 'karmcp/custom-' . $id;
+	public static function class_name( int $id ): string {
+		return 'KarMCP_Extension_' . $id;
 	}
 
 	// -------------------------------------------------------------------------
@@ -182,17 +180,17 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Creates a block from a spec.
+	 * Creates an extension from a spec.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param array $spec   Structured block spec.
+	 * @param array $spec   Structured extension spec.
 	 * @param bool  $active Whether to activate immediately (default true).
-	 * @return array|WP_Error Block summary on success.
+	 * @return array|WP_Error
 	 */
 	public function create( array $spec, bool $active = true ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to create blocks.', 'karmcp' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to create element extensions.', 'karmcp' ) );
 		}
 
 		$ensured = $this->ensure_sandbox();
@@ -202,12 +200,19 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 
 		// Compile before inserting anything: a spec that cannot compile should
 		// not leave a post behind.
-		$compiled = KarMCP_Block_Generator::generate( $spec, 'karmcp/custom-preview' );
+		$compiled = KarMCP_Extension_Generator::generate( $spec, 'KarMCP_Extension_Preview' );
 		if ( is_wp_error( $compiled ) ) {
 			return $compiled;
 		}
 
-		$title = isset( $spec['meta']['title'] ) ? sanitize_text_field( (string) $spec['meta']['title'] ) : __( 'Custom Block', 'karmcp' );
+		if ( $active ) {
+			$clash = $this->find_prop_clash( $spec, 0 );
+			if ( is_wp_error( $clash ) ) {
+				return $clash;
+			}
+		}
+
+		$title = isset( $spec['meta']['title'] ) ? sanitize_text_field( (string) $spec['meta']['title'] ) : __( 'Element extension', 'karmcp' );
 
 		$post_id = wp_insert_post(
 			array(
@@ -223,7 +228,7 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 			return $post_id;
 		}
 
-		$written = $this->write_block( (int) $post_id, $spec );
+		$written = $this->write_extension( (int) $post_id, $spec );
 		if ( is_wp_error( $written ) ) {
 			wp_delete_post( (int) $post_id, true );
 			return $written;
@@ -237,22 +242,22 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * Replaces a block's spec and regenerates its files.
+	 * Replaces an extension's spec and regenerates its code.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int   $id   Block post ID.
+	 * @param int   $id   Extension post ID.
 	 * @param array $spec New spec.
 	 * @return array|WP_Error
 	 */
 	public function update( int $id, array $spec ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to update blocks.', 'karmcp' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to update element extensions.', 'karmcp' ) );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Block not found.', 'karmcp' ) );
+			return new WP_Error( 'not_found', __( 'Element extension not found.', 'karmcp' ) );
 		}
 
 		$ensured = $this->ensure_sandbox();
@@ -260,7 +265,14 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 			return $ensured;
 		}
 
-		$written = $this->write_block( $id, $spec );
+		if ( 'publish' === $post->post_status ) {
+			$clash = $this->find_prop_clash( $spec, $id );
+			if ( is_wp_error( $clash ) ) {
+				return $clash;
+			}
+		}
+
+		$written = $this->write_extension( $id, $spec );
 		if ( is_wp_error( $written ) ) {
 			return $written;
 		}
@@ -273,7 +285,6 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 			)
 		);
 
-		// A successful regenerate clears any prior failure.
 		delete_post_meta( $id, self::META_LAST_ERROR );
 
 		$this->bump_version( $id );
@@ -283,36 +294,41 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * Compiles and writes a block's files, then records their hashes.
+	 * Compiles and writes an extension's files.
 	 *
-	 * @param int   $id   Block post ID.
+	 * @param int   $id   Extension post ID.
 	 * @param array $spec The spec.
 	 * @return true|WP_Error
 	 */
-	private function write_block( int $id, array $spec ) {
-		$compiled = KarMCP_Block_Generator::generate( $spec, self::block_name( $id ) );
-		if ( is_wp_error( $compiled ) ) {
-			return $compiled;
+	private function write_extension( int $id, array $spec ) {
+		$handle = self::asset_handle( $id );
+
+		$deferred = KarMCP_Extension_Generator::deferred_css( $spec );
+		$script   = isset( $spec['scripts'] ) && is_string( $spec['scripts'] ) ? trim( $spec['scripts'] ) : '';
+
+		$php = KarMCP_Extension_Generator::generate(
+			$spec,
+			self::class_name( $id ),
+			array(
+				'style_handle'  => '' !== $deferred ? $handle . '-style' : '',
+				'script_handle' => '' !== $script ? $handle . '-script' : '',
+			)
+		);
+		if ( is_wp_error( $php ) ) {
+			return $php;
 		}
 
-		$syntax = self::syntax_check( $compiled['render.php'] );
+		$syntax = self::syntax_check( $php );
 		if ( is_wp_error( $syntax ) ) {
 			return $syntax;
 		}
 
-		if ( ! $this->write_file( $this->asset_path( $id, 'block.json' ), $compiled['block.json'] ) ) {
-			return new WP_Error( 'write_failed', __( 'Could not write block.json to the sandbox.', 'karmcp' ) );
-		}
-		if ( ! $this->write_file( $this->asset_path( $id, 'render.php' ), $compiled['render.php'] ) ) {
-			return new WP_Error( 'write_failed', __( 'Could not write render.php to the sandbox.', 'karmcp' ) );
+		if ( ! $this->write_file( $this->asset_path( $id, 'extension.php' ), $php ) ) {
+			return new WP_Error( 'write_failed', __( 'Could not write the extension file to the sandbox.', 'karmcp' ) );
 		}
 
-		// Assets are served statically, so a PHP open tag in them could be
-		// executed on a server with short_open_tag on. The spec validator
-		// rejects them; this strip is the belt to that braces.
-		foreach ( array( 'styles' => 'style.css', 'scripts' => 'script.js' ) as $key => $filename ) {
-			$source = ( isset( $spec[ $key ] ) && is_string( $spec[ $key ] ) ) ? trim( $spec[ $key ] ) : '';
-			$meta   = ( 'styles' === $key ) ? self::META_CSS_HASH : self::META_JS_HASH;
+		foreach ( array( 'style.css' => $deferred, 'script.js' => $script ) as $filename => $source ) {
+			$meta = ( 'style.css' === $filename ) ? self::META_CSS_HASH : self::META_JS_HASH;
 
 			if ( '' === $source ) {
 				$this->delete_file( $this->asset_path( $id, $filename ) );
@@ -320,64 +336,105 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 				continue;
 			}
 
+			// The validator already refuses PHP tags; this is the belt to that
+			// braces, because these are served as static files.
 			$clean = (string) preg_replace( '/<\?(?:php|=)?/i', '', $source );
 			$this->write_file( $this->asset_path( $id, $filename ), $clean );
 			update_post_meta( $id, $meta, hash( 'sha256', $clean ) );
 		}
 
 		update_post_meta( $id, self::META_SPEC, wp_slash( wp_json_encode( $spec ) ) );
-		update_post_meta( $id, self::META_BLOCK_NAME, self::block_name( $id ) );
-		update_post_meta( $id, self::META_JSON_HASH, hash( 'sha256', $compiled['block.json'] ) );
-		update_post_meta( $id, self::META_RENDER_HASH, hash( 'sha256', $compiled['render.php'] ) );
+		update_post_meta( $id, self::META_CLASS_NAME, self::class_name( $id ) );
+		update_post_meta( $id, self::META_PHP_HASH, hash( 'sha256', $php ) );
+		update_post_meta( $id, self::META_PROPS, wp_slash( wp_json_encode( array_keys( KarMCP_Extension_Spec::prop_map( $spec ) ) ) ) );
 
 		return true;
 	}
 
 	/**
-	 * Parses generated PHP without running it, so a compiler bug becomes an
-	 * error message here instead of a fatal on someone's page.
+	 * Refuses a spec whose props are already claimed by another ACTIVE
+	 * extension.
 	 *
-	 * @since 1.12.0
+	 * Elementor's props schema is one shared array: two filters declaring the
+	 * same key means the last one wins and the other extension silently stops
+	 * working. Better to refuse the activation than to debug that later.
 	 *
-	 * @param string $php Generated source.
+	 * @param array $spec    The incoming spec.
+	 * @param int   $self_id Extension being updated, excluded from the check.
 	 * @return true|WP_Error
 	 */
-	public static function syntax_check( string $php ) {
-		// Lives on the sandbox base now, shared with the extension store.
-		return parent::syntax_check( $php );
+	private function find_prop_clash( array $spec, int $self_id ) {
+		$incoming = array_keys( KarMCP_Extension_Spec::prop_map( $spec ) );
+		if ( empty( $incoming ) ) {
+			return true;
+		}
+
+		foreach ( $this->read_manifest() as $entry ) {
+			$other_id = isset( $entry['post_id'] ) ? (int) $entry['post_id'] : 0;
+			if ( ! $other_id || $other_id === $self_id ) {
+				continue;
+			}
+
+			$clashes = array_intersect( $incoming, (array) ( $entry['props'] ?? array() ) );
+			if ( empty( $clashes ) ) {
+				continue;
+			}
+
+			return new WP_Error(
+				'prop_clash',
+				sprintf(
+					/* translators: 1: comma-separated prop names, 2: the other extension's title */
+					__( 'These props are already declared by the active extension "%2$s": %1$s. Prop names are shared across the whole site, so rename them or deactivate the other extension first.', 'karmcp' ),
+					implode( ', ', $clashes ),
+					get_the_title( $other_id )
+				)
+			);
+		}
+
+		return true;
 	}
 
 	/**
-	 * Activates or deactivates a block.
+	 * Activates or deactivates an extension.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int    $id     Block post ID.
+	 * @param int    $id     Extension post ID.
 	 * @param string $status 'active' or 'draft'.
 	 * @return array|WP_Error
 	 */
 	public function set_status( int $id, string $status ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to change block status.', 'karmcp' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to change extension status.', 'karmcp' ) );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Block not found.', 'karmcp' ) );
+			return new WP_Error( 'not_found', __( 'Element extension not found.', 'karmcp' ) );
 		}
 
 		$post_status = ( 'active' === $status ) ? 'publish' : 'draft';
 
 		if ( 'publish' === $post_status ) {
-			$render = $this->get_asset( $id, 'render.php' );
-			if ( '' === $render ) {
-				return new WP_Error( 'missing_file', __( 'The generated block files are missing; update the block to regenerate them.', 'karmcp' ) );
+			$php = $this->get_asset( $id, 'extension.php' );
+			if ( '' === $php ) {
+				return new WP_Error( 'missing_file', __( 'The generated file is missing; update the extension to regenerate it.', 'karmcp' ) );
 			}
-			$syntax = self::syntax_check( $render );
+
+			$syntax = self::syntax_check( $php );
 			if ( is_wp_error( $syntax ) ) {
 				update_post_meta( $id, self::META_LAST_ERROR, sanitize_text_field( $syntax->get_error_message() ) );
 				return $syntax;
 			}
+
+			$spec = $this->get_spec( $id );
+			if ( is_array( $spec ) ) {
+				$clash = $this->find_prop_clash( $spec, $id );
+				if ( is_wp_error( $clash ) ) {
+					return $clash;
+				}
+			}
+
 			delete_post_meta( $id, self::META_LAST_ERROR );
 		}
 
@@ -394,21 +451,21 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * Deletes a block: its post, its sandbox directory, and its manifest entry.
+	 * Deletes an extension: post, sandbox directory, manifest entry.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return array|WP_Error
 	 */
 	public function delete( int $id ) {
 		if ( ! self::user_has_access() ) {
-			return new WP_Error( 'forbidden', __( 'You do not have permission to delete blocks.', 'karmcp' ) );
+			return new WP_Error( 'forbidden', __( 'You do not have permission to delete element extensions.', 'karmcp' ) );
 		}
 
 		$post = get_post( $id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Block not found.', 'karmcp' ) );
+			return new WP_Error( 'not_found', __( 'Element extension not found.', 'karmcp' ) );
 		}
 
 		$this->rmdir_recursive( $this->artifact_dir( $id ) );
@@ -416,18 +473,17 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 		$this->rebuild_manifest();
 
 		return array(
-			'success'  => true,
-			'block_id' => $id,
+			'success'      => true,
+			'extension_id' => $id,
 		);
 	}
 
 	/**
-	 * Flags a block as having crashed and deactivates it. Called by the loader's
-	 * shutdown handler.
+	 * Flags an extension as having crashed and deactivates it.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int    $id    Block post ID.
+	 * @param int    $id    Extension post ID.
 	 * @param string $error The captured error message.
 	 */
 	public function mark_error( int $id, string $error ): void {
@@ -446,11 +502,9 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Returns the decoded spec for a block.
+	 * @since 1.13.0
 	 *
-	 * @since 1.12.0
-	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return array|null
 	 */
 	public function get_spec( int $id ): ?array {
@@ -463,11 +517,9 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * Returns one of a block's generated files, or '' if absent.
+	 * @since 1.13.0
 	 *
-	 * @since 1.12.0
-	 *
-	 * @param int    $id    Block post ID.
+	 * @param int    $id    Extension post ID.
 	 * @param string $asset One of self::ASSETS.
 	 * @return string
 	 */
@@ -479,38 +531,39 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * Summary for one block.
+	 * @since 1.13.0
 	 *
-	 * @since 1.12.0
-	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return array|WP_Error
 	 */
 	public function summary( int $id ) {
 		$post = get_post( $id );
 		if ( ! $post || self::POST_TYPE !== $post->post_type ) {
-			return new WP_Error( 'not_found', __( 'Block not found.', 'karmcp' ) );
+			return new WP_Error( 'not_found', __( 'Element extension not found.', 'karmcp' ) );
 		}
 
+		$spec = $this->get_spec( $id );
+
 		return array(
-			'block_id'   => (int) $id,
-			'title'      => (string) $post->post_title,
-			'block_name' => (string) get_post_meta( $id, self::META_BLOCK_NAME, true ),
-			'status'     => ( 'publish' === $post->post_status ) ? 'active' : 'draft',
-			'last_error' => (string) get_post_meta( $id, self::META_LAST_ERROR, true ),
-			'updated'    => (string) $post->post_modified,
+			'extension_id' => (int) $id,
+			'title'        => (string) $post->post_title,
+			'status'       => ( 'publish' === $post->post_status ) ? 'active' : 'draft',
+			'targets'      => is_array( $spec ) ? array_values( (array) ( $spec['targets'] ?? array() ) ) : array(),
+			'props'        => is_array( $spec ) ? array_keys( KarMCP_Extension_Spec::prop_map( $spec ) ) : array(),
+			'last_error'   => (string) get_post_meta( $id, self::META_LAST_ERROR, true ),
+			'updated'      => (string) $post->post_modified,
 		);
 	}
 
 	/**
-	 * Lists generated blocks.
+	 * Lists generated extensions.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @param string $status 'active' | 'draft' | 'any' (default 'any').
 	 * @return array<int, array>
 	 */
-	public function list_blocks( string $status = 'any' ): array {
+	public function list_extensions( string $status = 'any' ): array {
 		$post_status = 'any';
 		if ( 'active' === $status ) {
 			$post_status = 'publish';
@@ -544,9 +597,9 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Rebuilds the manifest from the active blocks.
+	 * Rebuilds the manifest from the active extensions.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 */
 	public function rebuild_manifest(): void {
 		$query = new WP_Query(
@@ -560,24 +613,18 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 
 		$entries = array();
 		foreach ( $query->posts as $post ) {
-			$id   = (int) $post->ID;
-			$name = (string) get_post_meta( $id, self::META_BLOCK_NAME, true );
-
-			// The editor descriptor is baked in here, at rebuild time, so the
-			// loader never has to read a spec out of the database on a request
-			// that is only rendering a page.
-			$spec   = $this->get_spec( $id );
-			$editor = is_array( $spec ) ? KarMCP_Block_Generator::editor_payload( $spec, $name ) : array();
+			$id    = (int) $post->ID;
+			$props = json_decode( (string) get_post_meta( $id, self::META_PROPS, true ), true );
 
 			$entries[] = array(
-				'post_id'     => $id,
-				'block_name'  => $name,
-				'dir'         => $this->relative_dir( $id ),
-				'json_hash'   => (string) get_post_meta( $id, self::META_JSON_HASH, true ),
-				'render_hash' => (string) get_post_meta( $id, self::META_RENDER_HASH, true ),
-				'css'         => (string) get_post_meta( $id, self::META_CSS_HASH, true ),
-				'js'          => (string) get_post_meta( $id, self::META_JS_HASH, true ),
-				'editor'      => $editor,
+				'post_id'    => $id,
+				'class_name' => (string) get_post_meta( $id, self::META_CLASS_NAME, true ),
+				'dir'        => $this->relative_dir( $id ),
+				'hash'       => (string) get_post_meta( $id, self::META_PHP_HASH, true ),
+				'css'        => (string) get_post_meta( $id, self::META_CSS_HASH, true ),
+				'js'         => (string) get_post_meta( $id, self::META_JS_HASH, true ),
+				// Carried so the clash check and the loader never need a query.
+				'props'      => is_array( $props ) ? $props : array(),
 			);
 		}
 
@@ -588,7 +635,7 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	/**
 	 * Reads the manifest.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @return array<int, array>
 	 */
@@ -602,13 +649,13 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	// -------------------------------------------------------------------------
-	// Sandbox_Artifact contract (export / import)
+	// Sandbox_Artifact contract
 	// -------------------------------------------------------------------------
 
 	/**
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return string
 	 */
 	public function checksum( int $id ): string {
@@ -616,9 +663,7 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * The block's generated files, for the bundle envelope.
-	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return array<string, string>
 	 */
 	private function assets( int $id ): array {
@@ -633,9 +678,9 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
-	 * @param int $id Block post ID.
+	 * @param int $id Extension post ID.
 	 * @return array|WP_Error
 	 */
 	public function to_bundle( int $id ) {
@@ -647,7 +692,7 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 		$sync = $this->sync_meta( $id );
 
 		return KarMCP_Sandbox_Bundle::build(
-			'block',
+			'extension',
 			$sync['uuid'],
 			array(
 				'title'       => (string) ( $summary['title'] ?? '' ),
@@ -663,22 +708,21 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	}
 
 	/**
-	 * Imports a bundle as a NEW draft block. The spec is recompiled locally
-	 * rather than trusting the bundled files — an imported artifact is code, and
-	 * this way the code that runs is always the code this build produces.
+	 * Imports a bundle as a NEW draft extension, recompiling from the spec
+	 * rather than trusting the bundled PHP.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @param array $bundle Bundle to import.
-	 * @return int|WP_Error New local block post ID.
+	 * @return int|WP_Error
 	 */
 	public function apply_bundle( array $bundle ) {
 		$valid = KarMCP_Sandbox_Bundle::validate( $bundle );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
 		}
-		if ( 'block' !== $bundle['kind'] ) {
-			return new WP_Error( 'kind_mismatch', __( 'Bundle is not a block.', 'karmcp' ) );
+		if ( 'extension' !== $bundle['kind'] ) {
+			return new WP_Error( 'kind_mismatch', __( 'Bundle is not an element extension.', 'karmcp' ) );
 		}
 
 		$result = $this->create( is_array( $bundle['spec'] ) ? $bundle['spec'] : array(), false );
@@ -686,7 +730,7 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 			return $result;
 		}
 
-		$new_id = (int) $result['block_id'];
+		$new_id = (int) $result['extension_id'];
 		update_post_meta( $new_id, self::META_UUID, sanitize_text_field( (string) $bundle['uuid'] ) );
 		update_post_meta( $new_id, self::META_ORIGIN, 'imported' );
 
@@ -698,12 +742,9 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Deletes every generated block. The sandbox tree itself is removed by the
-	 * widget store's cleanup, which owns the shared base directory — this only
-	 * has to take the posts with it, because a block post IS the source of
-	 * executable code.
+	 * Deletes every generated extension.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 */
 	public static function uninstall_cleanup(): void {
 		$query = new WP_Query(
@@ -720,6 +761,6 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 			wp_delete_post( (int) $id, true );
 		}
 
-		self::instance()->rmdir_recursive( self::instance()->sandbox_base() . '/blocks' );
+		self::instance()->rmdir_recursive( self::instance()->sandbox_base() . '/extensions' );
 	}
 }

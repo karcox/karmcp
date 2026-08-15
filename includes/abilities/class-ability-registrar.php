@@ -615,11 +615,20 @@ class KarMCP_Ability_Registrar {
 				$this->ability_names = array_merge( $this->ability_names, $a11y->get_ability_names() );
 			}
 
-			// Widget Builder (Pro; self-guards on license).
+			// Widget Builder — compiles custom Elementor widgets from a spec.
 			if ( class_exists( 'KarMCP_Widget_Builder_Abilities' ) ) {
 				$widget_builder = new KarMCP_Widget_Builder_Abilities();
 				$widget_builder->register();
 				$this->ability_names = array_merge( $this->ability_names, $widget_builder->get_ability_names() );
+			}
+
+			// Element extensions — options added to elements Elementor already
+			// ships. Atomic-only, so it needs Elementor like the rest of this
+			// block; the version check lives in the tools themselves.
+			if ( class_exists( 'KarMCP_Extension_Builder_Abilities' ) ) {
+				$extensions = new KarMCP_Extension_Builder_Abilities();
+				$extensions->register();
+				$this->ability_names = array_merge( $this->ability_names, $extensions->get_ability_names() );
 			}
 		}
 

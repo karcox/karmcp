@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.12.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.13.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -83,17 +83,21 @@ Los widgets son **datos** en `includes/widgets/` (`catalog-{free,pro,woo}.php`),
 
 ### El sandbox: compilar, no ejecutar lo que escribe el agente
 
-Tres artefactos viven en `wp-content/karmcp-sandbox/` (`KarMCP_Sandbox_Paths`): snippets PHP, widgets de Elementor y bloques de Gutenberg. Los dos últimos los **compila el plugin** desde un spec; el agente no escribe PHP en ningún momento, y eso es la línea que no se cruza.
+Cuatro artefactos viven en `wp-content/karmcp-sandbox/` (`KarMCP_Sandbox_Paths`): snippets PHP, widgets de Elementor, bloques de Gutenberg y **extensiones de elemento**. Los tres últimos los **compila el plugin** desde un spec; el agente no escribe PHP en ningún momento, y eso es la línea que no se cruza.
 
 El spec es datos: metadatos, campos tipados y una plantilla HTML con `{{marcadores}}`. `KarMCP_Sandbox_Template` la convierte en PHP y ahí está la propiedad clave: **todo lo que no es un marcador se emite con `var_export()` como literal de cadena**, así que el texto de la plantilla no puede volverse código aunque lo parezca. El escape de cada marcador lo decide el **tipo declarado** del campo, no quien escribió el spec, y no existe modificador `raw`. El compilador no elige el escape: se lo pregunta a su llamante (`KarMCP_Widget_Generator` / `KarMCP_Block_Generator`), que es quien conoce la forma de los valores de su plataforma.
 
-| Pieza | Widgets | Bloques |
-|---|---|---|
-| Vocabulario + validación | `KarMCP_Widget_Spec` | `KarMCP_Block_Spec` |
-| Compilador (puro) | `KarMCP_Widget_Generator` | `KarMCP_Block_Generator` |
-| Almacén | `KarMCP_Widget_Store` | `KarMCP_Block_Store` (sobre `KarMCP_Sandbox_Store`) |
-| Carga | `KarMCP_Widget_Loader` | `KarMCP_Block_Loader` |
-| Herramientas MCP | `KarMCP_Widget_Builder_Abilities` | `KarMCP_Block_Builder_Abilities` |
+| Pieza | Widgets | Bloques | Extensiones |
+|---|---|---|---|
+| Vocabulario + validación | `KarMCP_Widget_Spec` | `KarMCP_Block_Spec` | `KarMCP_Extension_Spec` |
+| Compilador (puro) | `KarMCP_Widget_Generator` | `KarMCP_Block_Generator` | `KarMCP_Extension_Generator` |
+| Almacén | `KarMCP_Widget_Store` | `KarMCP_Block_Store` | `KarMCP_Extension_Store` (los dos últimos sobre `KarMCP_Sandbox_Store`) |
+| Carga | `KarMCP_Widget_Loader` | `KarMCP_Block_Loader` | `KarMCP_Extension_Loader` |
+| Herramientas MCP | `KarMCP_Widget_Builder_Abilities` | `KarMCP_Block_Builder_Abilities` | `KarMCP_Extension_Builder_Abilities` |
+
+**Las extensiones son distintas de las otras dos** y conviene tenerlo claro antes de tocarlas: un widget o un bloque se insertan; una extensión **modifica elementos que ya existen**, añadiendo una sección al panel de los contenedores de Elementor 4.2+. Eso la obliga a escribir en un espacio de nombres ajeno, y de ahí sus dos reglas: las props llevan prefijo `karmcp_` (el schema de props es un array compartido con Elementor y con Pro, y una colisión tapa la prop del otro en silencio; el store rechaza activar dos extensiones que declaren el mismo nombre) y la salida solo puede escribir atributos `data-` y `aria-`. Las costuras que usa y las que no sirven están en [docs/ROADMAP-ELEMENT-EXTENSIONS.md](docs/ROADMAP-ELEMENT-EXTENSIONS.md).
+
+> **La trampa del default, que solo aparece al ejecutarlo:** las props se declaran en *todos* los elementos, y casi ninguno tendrá nada guardado. Si un valor ausente se leyera como cadena vacía, una regla `not: "none"` sería cierta en todas partes y el efecto caería sobre cada contenedor del sitio. El código generado cae al **default declarado** de la prop, no a `''`.
 
 Los generadores son **puros a propósito** (arrays entran, strings salen, sin WordPress): es lo que permite que `validate-widget-spec` haga un dry-run del compilador de verdad y no de una aproximación, y que los tests ejecuten el código generado con `eval` para comprobar el escapado contra payloads hostiles. Si alguna vez hay que tocarlos, esa pureza es el activo.
 
@@ -173,6 +177,7 @@ Fuera de esta lista, sin abordar y verificado el 2026-08-14: **no hay CI** (`.gi
 | [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) | Plan real de las dos capacidades propias. Themer extendido: **hecho**. SEO y accesibilidad: pendiente, con los seams ya verificados. |
 | [docs/ROADMAP-SECURITY.md](docs/ROADMAP-SECURITY.md) | El apartado de Seguridad, para sustituir a Wordfence: CI, pestaña Security, `harden-site`, drop-in de fatales, `update-core`, módulo de vulnerabilidades y parcheo. Escrito para implementarse desde cero. |
 | [docs/ROADMAP-OPTIMIZE.md](docs/ROADMAP-OPTIMIZE.md) | Continuación de la pestaña Optimize (1.11.0): prevención, autocargadas, cron, índices, coste por plugin. Lo que ya está hecho y lo que no debe entrar. |
+| [docs/ROADMAP-ELEMENT-EXTENSIONS.md](docs/ROADMAP-ELEMENT-EXTENSIONS.md) | Tercera clase de artefacto del sandbox: opciones propias en cualquier elemento de Elementor 4.2+. Investigación cerrada contra 4.2.2/Pro 4.2.1, con las cuatro costuras verificadas y los dos callejones sin salida ya explorados. Sin implementar. |
 | [docs/MAINTENANCE-UPSTREAM.md](docs/MAINTENANCE-UPSTREAM.md) | Nota interna de mantenimiento: qué se ha revisado del árbol de origen y qué divergencias no deben reimportarse. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Cómo añadir una herramienta o una integración. |
 | `NOTICE` / `LICENSE` | Atribución y licencia. **No tocar.** |

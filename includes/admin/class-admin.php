@@ -251,6 +251,8 @@ class KarMCP_Admin {
 		add_action( 'wp_ajax_karmcp_delete_widget', array( $this, 'ajax_delete_widget' ) );
 		add_action( 'wp_ajax_karmcp_toggle_block', array( $this, 'ajax_toggle_block' ) );
 		add_action( 'wp_ajax_karmcp_delete_block', array( $this, 'ajax_delete_block' ) );
+		add_action( 'wp_ajax_karmcp_toggle_extension', array( $this, 'ajax_toggle_extension' ) );
+		add_action( 'wp_ajax_karmcp_delete_extension', array( $this, 'ajax_delete_extension' ) );
 		add_action( 'wp_ajax_karmcp_backup_artifact', array( $this, 'ajax_backup_artifact' ) );
 		add_action( 'wp_ajax_karmcp_bulk_backup_artifacts', array( $this, 'ajax_bulk_backup_artifacts' ) );
 		add_action( 'wp_ajax_karmcp_resync_cloud', array( $this, 'ajax_resync_cloud' ) );
@@ -1052,7 +1054,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 39;
+	const DEFAULTS_VERSION = 40;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1115,6 +1117,27 @@ class KarMCP_Admin {
 	}
 
 	/**
+	 * The element extension tool slugs. They author executable code, so they
+	 * ship disabled-by-default and the admin opts in on the Tools tab.
+	 *
+	 * @since 1.13.0
+	 *
+	 * @return string[]
+	 */
+	public static function extension_tool_slugs(): array {
+		return array(
+			'karmcp/list-element-targets',
+			'karmcp/validate-extension-spec',
+			'karmcp/create-element-extension',
+			'karmcp/update-element-extension',
+			'karmcp/get-element-extension',
+			'karmcp/list-element-extensions',
+			'karmcp/set-extension-status',
+			'karmcp/delete-element-extension',
+		);
+	}
+
+	/**
 	 * Which internal Sandbox pillar to render. The Sandbox parent page
 	 * (?page=karmcp-widgets) is a 3-card overview; each pillar's full
 	 * management UI lives at ?page=karmcp-widgets&view=<pillar> — a route
@@ -1127,7 +1150,7 @@ class KarMCP_Admin {
 	public static function sandbox_view(): string {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch, no state change.
 		$view = isset( $_GET['view'] ) ? sanitize_key( wp_unslash( $_GET['view'] ) ) : 'overview';
-		return in_array( $view, array( 'overview', 'blocks', 'widgets', 'snippets' ), true ) ? $view : 'overview';
+		return in_array( $view, array( 'overview', 'blocks', 'widgets', 'snippets', 'extensions' ), true ) ? $view : 'overview';
 	}
 
 	/**
@@ -1649,6 +1672,12 @@ class KarMCP_Admin {
 		// for it at all.
 		if ( $applied < 39 ) {
 			$add[] = 'karmcp/clean-database';
+		}
+
+		// v40 — Element extension tools ship disabled-by-default: they author
+		// executable code, same posture as the widget and block builders.
+		if ( $applied < 40 ) {
+			$add = array_merge( $add, self::extension_tool_slugs() );
 		}
 
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
@@ -2686,6 +2715,49 @@ class KarMCP_Admin {
 			wp_send_json_error( array( 'message' => __( 'Invalid request.', 'karmcp' ) ), 400 );
 		}
 		$res = KarMCP_Block_Store::instance()->delete( $block_id );
+		if ( is_wp_error( $res ) ) {
+			wp_send_json_error( array( 'message' => $res->get_error_message() ), 400 );
+		}
+		wp_send_json_success( $res );
+	}
+
+	/**
+	 * AJAX: activate/deactivate an element extension from the Sandbox tab.
+	 *
+	 * @since 1.13.0
+	 */
+	public function ajax_toggle_extension(): void {
+		check_ajax_referer( 'karmcp_extensions', 'nonce' );
+		if ( ! class_exists( 'KarMCP_Extension_Store' ) || ! KarMCP_Extension_Store::user_has_access() ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to do this.', 'karmcp' ) ), 403 );
+		}
+		$extension_id = isset( $_POST['extension_id'] ) ? absint( wp_unslash( $_POST['extension_id'] ) ) : 0;
+		$status       = isset( $_POST['status'] ) ? sanitize_key( wp_unslash( $_POST['status'] ) ) : '';
+		if ( ! $extension_id || ! in_array( $status, array( 'active', 'draft' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid request.', 'karmcp' ) ), 400 );
+		}
+		$res = KarMCP_Extension_Store::instance()->set_status( $extension_id, $status );
+		if ( is_wp_error( $res ) ) {
+			wp_send_json_error( array( 'message' => $res->get_error_message() ), 400 );
+		}
+		wp_send_json_success( $res );
+	}
+
+	/**
+	 * AJAX: delete an element extension from the Sandbox tab.
+	 *
+	 * @since 1.13.0
+	 */
+	public function ajax_delete_extension(): void {
+		check_ajax_referer( 'karmcp_extensions', 'nonce' );
+		if ( ! class_exists( 'KarMCP_Extension_Store' ) || ! KarMCP_Extension_Store::user_has_access() ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to do this.', 'karmcp' ) ), 403 );
+		}
+		$extension_id = isset( $_POST['extension_id'] ) ? absint( wp_unslash( $_POST['extension_id'] ) ) : 0;
+		if ( ! $extension_id ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid request.', 'karmcp' ) ), 400 );
+		}
+		$res = KarMCP_Extension_Store::instance()->delete( $extension_id );
 		if ( is_wp_error( $res ) ) {
 			wp_send_json_error( array( 'message' => $res->get_error_message() ), 400 );
 		}
@@ -4043,6 +4115,7 @@ class KarMCP_Admin {
 				// Widget Builder needs Elementor; the Block Builder does not, so
 				// a missing block tool is genuine drift and should be reported.
 				self::widget_builder_tool_slugs(),
+				self::extension_tool_slugs(),
 				self::redirect_tool_slugs(),
 				self::migrate_tool_slugs(),
 				array( 'karmcp/list-redirects', 'karmcp/find-broken-links', 'karmcp/resize-media' )
@@ -6038,6 +6111,53 @@ class KarMCP_Admin {
 					'karmcp/delete-custom-widget' => array(
 						'label'       => __( 'Delete Custom Widget', 'karmcp' ),
 						'description' => __( 'Permanently deletes a custom widget and its sandbox files. Needs confirm:true.', 'karmcp' ),
+						'badges'      => array( 'destructive' ),
+					),
+				),
+			);
+
+			$tools['element_extensions'] = array(
+				'platform' => 'elementor',
+				'label' => __( 'Element Extensions', 'karmcp' ),
+				'tools' => array(
+					'karmcp/list-element-targets'     => array(
+						'label'       => __( 'List Element Targets', 'karmcp' ),
+						'description' => __( 'Returns this site\'s Elementor 4 atomic element types plus the extension spec vocabulary.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/validate-extension-spec'  => array(
+						'label'       => __( 'Validate Extension Spec', 'karmcp' ),
+						'description' => __( 'Validates an extension spec and dry-runs the compiler without saving.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/create-element-extension' => array(
+						'label'       => __( 'Create Element Extension', 'karmcp' ),
+						'description' => __( 'Adds an option to Elementor elements: a section in the panel of the targeted elements, compiled into the sandbox.', 'karmcp' ),
+						'badges'      => array(),
+					),
+					'karmcp/update-element-extension' => array(
+						'label'       => __( 'Update Element Extension', 'karmcp' ),
+						'description' => __( 'Replaces an extension\'s spec and regenerates its code.', 'karmcp' ),
+						'badges'      => array(),
+					),
+					'karmcp/get-element-extension'    => array(
+						'label'       => __( 'Get Element Extension', 'karmcp' ),
+						'description' => __( 'Returns an extension\'s spec, generated PHP, status and last error.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/list-element-extensions'  => array(
+						'label'       => __( 'List Element Extensions', 'karmcp' ),
+						'description' => __( 'Lists every element extension with its status, targets and props.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/set-extension-status'     => array(
+						'label'       => __( 'Set Extension Status', 'karmcp' ),
+						'description' => __( 'Activates or deactivates an element extension.', 'karmcp' ),
+						'badges'      => array(),
+					),
+					'karmcp/delete-element-extension' => array(
+						'label'       => __( 'Delete Element Extension', 'karmcp' ),
+						'description' => __( 'Permanently deletes an element extension and its sandbox files. Needs confirm:true.', 'karmcp' ),
 						'badges'      => array( 'destructive' ),
 					),
 				),

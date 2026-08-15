@@ -155,6 +155,17 @@ class KarMCP_Uninstaller {
 			KarMCP_Block_Store::uninstall_cleanup();
 		}
 
+		// Element extensions: same reasoning as the blocks — the post is the
+		// source of executable code, so it goes too.
+		if ( ! class_exists( 'KarMCP_Extension_Store' ) ) {
+			require_once KARMCP_DIR . 'includes/sandbox/class-extension-spec.php';
+			require_once KARMCP_DIR . 'includes/sandbox/class-extension-generator.php';
+			require_once KARMCP_DIR . 'includes/sandbox/class-extension-store.php';
+		}
+		if ( class_exists( 'KarMCP_Extension_Store' ) ) {
+			KarMCP_Extension_Store::uninstall_cleanup();
+		}
+
 		// Both routines above delete their own posts as well as their files,
 		// because a widget or snippet post IS the source of executable code.
 		//

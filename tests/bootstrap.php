@@ -41,6 +41,10 @@ function karmcp_test_reset(): void {
 		'posts'              => array(),   // post_id => post-ish object.
 		'options_pages'      => array(),
 		'abilities'          => array(),   // name => registration args.
+		'registered_styles'  => array(),   // Handles wp_style_is() reports as registered.
+		'registered_scripts' => array(),   // Handles wp_script_is() reports as registered.
+		'enqueued_styles'    => array(),   // Handles the code under test enqueued.
+		'enqueued_scripts'   => array(),
 		'now'                => null,      // format => value, pinning current_time().
 		'cpt_posts'          => array(),   // post_type => WP_Post[] for get_posts().
 		'options'            => array(),   // option name => value (get_option/update_option).
@@ -157,6 +161,26 @@ function esc_url( $value ): string {
 		return '';
 	}
 	return str_replace( array( '"', "'", '<', '>' ), array( '&quot;', '&#039;', '&lt;', '&gt;' ), $url );
+}
+
+/*
+ * Asset registration. The sandbox loaders register handles and enqueue them
+ * only where an artifact is used, so the fixture just records the calls.
+ */
+function wp_style_is( $handle, $list = 'enqueued' ): bool {
+	return in_array( $handle, $GLOBALS['karmcp_test']['registered_styles'] ?? array(), true );
+}
+
+function wp_script_is( $handle, $list = 'enqueued' ): bool {
+	return in_array( $handle, $GLOBALS['karmcp_test']['registered_scripts'] ?? array(), true );
+}
+
+function wp_enqueue_style( $handle, ...$rest ): void {
+	$GLOBALS['karmcp_test']['enqueued_styles'][] = $handle;
+}
+
+function wp_enqueue_script( $handle, ...$rest ): void {
+	$GLOBALS['karmcp_test']['enqueued_scripts'][] = $handle;
 }
 
 function wp_kses_post( $value ): string {

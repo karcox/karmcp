@@ -2,7 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
-## [1.12.0]
+## [1.13.0]
+
+### Added
+
+- **Element extensions: the agent can now add its own options to Elementor's elements.** The two builders shipped in 1.12.0 make things you *insert* — a widget, a block. This makes something that was missing: an option that appears **on elements Elementor already ships**. A control in the settings panel of any container, that switches an effect on. It is the third artifact kind of the sandbox, with the same shape as the other two: a spec, a compiler, a hash-verified manifest, a kill switch and its own screen.
+
+  The spec declares four things — which element types it attaches to, which props it adds, which controls edit them, and what ends up in the element's HTML. From that, the plugin compiles a class that hooks Elementor's three seams: `props-schema` so the value is declared and therefore saved, `controls` so the section shows up in the panel, and `frontend/before_render` to put a class and `data-` attributes on the element and bring in its CSS and JavaScript. **Requires Elementor 4.2 or newer**: extensions attach to atomic elements, not to classic sections and columns.
+
+  Two rules make writing into someone else's namespace defensible, and both are enforced by the compiler. **Prop names carry a `karmcp_` prefix**, because Elementor's props schema is a single shared array where a collision would silently shadow a core prop — and two active extensions may not declare the same name either, which the store refuses at activation rather than leaving as a bug to find later. **Only `data-` and `aria-` attributes can be written**: an extension able to emit `onclick`, `style` or `href` would be an XSS vector with a nice interface. The CSS class of a rule is a literal validated at compile time, never a value that came from a control.
+
+  A detail that only shows up when you run it: props are declared on *every* element, and most elements will have nothing stored. If an absent value read as an empty string, a rule like `not: "none"` would be true everywhere and the effect would land on every container nobody ever configured. The compiled code falls back to each prop's **declared default** instead, so an element that never met the extension evaluates as if the control were at rest.
+
+  Styles are split into `critical` and `deferred` because there is no `get_style_depends()` for something that decorates an element it does not own: the critical part is inlined once per page so the effect does not flash, the rest is a file enqueued only where a rule applies.
+
+### Changed
+
+- `syntax_check()` — parse generated PHP without running it — moved from the block store to the sandbox base, so both compilers share it.
+- Sandbox bundles gained the `extension` kind: extensions export, import and back up like blocks, widgets and snippets. An imported extension is **recompiled locally from its spec** rather than trusting the PHP in the bundle.
 
 ### Added
 

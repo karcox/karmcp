@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class KarMCP_Sandbox_Bundle {
 	const SCHEMA_VERSION = 1;
-	const KINDS = array( 'block', 'widget', 'snippet' );
+	const KINDS = array( 'block', 'widget', 'snippet', 'extension' );
 
 	public static function build( string $kind, string $uuid, array $meta, array $spec, array $assets, int $version, string $updated_at ): array {
 		return array(

@@ -48,6 +48,12 @@ list( $karmcp_sb_wd_active, $karmcp_sb_wd_draft ) = $karmcp_sb_counts(
 	$karmcp_sb_widgets_ok ? KarMCP_Widget_Store::list_widgets( 'any' ) : array()
 );
 
+// ----- Element extensions -----
+$karmcp_sb_ext_ok = class_exists( 'KarMCP_Extension_Store' ) && KarMCP_Extension_Store::user_has_access();
+list( $karmcp_sb_ex_active, $karmcp_sb_ex_draft ) = $karmcp_sb_counts(
+	$karmcp_sb_ext_ok ? KarMCP_Extension_Store::instance()->list_extensions( 'any' ) : array()
+);
+
 // ----- PHP Snippets (capability-gated) -----
 $karmcp_sb_snip_ok = class_exists( 'KarMCP_PHP_Snippet_Store' ) && KarMCP_PHP_Snippet_Store::can_edit();
 list( $karmcp_sb_sn_active, $karmcp_sb_sn_draft ) = $karmcp_sb_counts(
@@ -75,6 +81,17 @@ $karmcp_sb_cards = array(
 		'available'   => $karmcp_sb_widgets_ok,
 		'active'      => $karmcp_sb_wd_active,
 		'draft'       => $karmcp_sb_wd_draft,
+		'note'        => __( 'Needs permission', 'karmcp' ),
+	),
+	array(
+		'view'        => 'extensions',
+		'label'       => __( 'Extensions', 'karmcp' ),
+		'icon'        => 'dashicons-admin-plugins',
+		'ico_mod'     => 'sandbox',
+		'desc'        => __( 'Options your AI agent added to Elementor\'s own elements: a control in the panel of any container that switches an effect on.', 'karmcp' ),
+		'available'   => $karmcp_sb_ext_ok,
+		'active'      => $karmcp_sb_ex_active,
+		'draft'       => $karmcp_sb_ex_draft,
 		'note'        => __( 'Needs permission', 'karmcp' ),
 	),
 	array(

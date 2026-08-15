@@ -89,6 +89,31 @@ abstract class KarMCP_Sandbox_Store implements KarMCP_Sandbox_Artifact {
 		}
 		@rmdir( $dir ); // phpcs:ignore
 	}
+	/**
+	 * Parses generated PHP without running it, so a compiler bug becomes an
+	 * error message at save time instead of a fatal on someone's page.
+	 *
+	 * @since 1.13.0
+	 *
+	 * @param string $php Generated source.
+	 * @return true|WP_Error
+	 */
+	public static function syntax_check( string $php ) {
+		try {
+			token_get_all( $php, TOKEN_PARSE );
+		} catch ( \ParseError $e ) {
+			return new WP_Error(
+				'generated_syntax',
+				sprintf(
+					/* translators: %s: the parser's message */
+					__( 'The generated code does not parse: %s', 'karmcp' ),
+					$e->getMessage()
+				)
+			);
+		}
+		return true;
+	}
+
 	protected function ensure_sandbox() {
 		$dir = $this->subdir_path();
 		if ( ! wp_mkdir_p( $dir ) ) {

@@ -295,6 +295,14 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/sandbox/class-block-store.php';
 		require_once KARMCP_DIR . 'includes/sandbox/class-block-loader.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-block-builder-abilities.php';
+		// Element extensions (Elementor 4.2+). Same pairing rule as the blocks:
+		// store and loader load together, because boot() instantiates the
+		// loader as soon as the store class exists.
+		require_once KARMCP_DIR . 'includes/sandbox/class-extension-spec.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-extension-generator.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-extension-store.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-extension-loader.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-extension-builder-abilities.php';
 		// Sandbox Cloud abilities — export/import any sandbox artifact (block/
 		// widget/snippet) as a portable bundle over the cloud contract. Free tree;
 		// registration is wired by the ability registrar (a later task).
@@ -423,6 +431,13 @@ class KarMCP_Bootstrap {
 		if ( class_exists( 'KarMCP_Block_Store' ) && class_exists( 'KarMCP_Block_Loader' ) ) {
 			add_action( 'init', array( 'KarMCP_Block_Store', 'register_post_type' ) );
 			( new KarMCP_Block_Loader() )->register_hooks();
+		}
+		// Element extensions. The CPT registers on init like the rest; the
+		// loader hooks earlier on init, because Elementor asks elements for
+		// their schema as soon as it builds one.
+		if ( class_exists( 'KarMCP_Extension_Store' ) && class_exists( 'KarMCP_Extension_Loader' ) ) {
+			add_action( 'init', array( 'KarMCP_Extension_Store', 'register_post_type' ) );
+			( new KarMCP_Extension_Loader() )->register_hooks();
 		}
 		// Background refresh of the Pro Prompts / Brand Kits libraries — registered
 		// unconditionally (cron runs in a non-admin context) so an expired 24h

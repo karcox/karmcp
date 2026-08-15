@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.12.0
+Stable tag: 1.13.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,14 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.13.0 =
+
+* New **element extensions**: the third kind of sandbox artifact. Widgets and blocks are things you insert; an extension is an option that appears **on elements Elementor already ships** — a control in the settings panel of any container that switches an effect on. Requires Elementor 4.2+ (it attaches to atomic elements, not classic sections).
+* The agent supplies a spec — target element types, typed props, and what ends up in the HTML — and the plugin compiles the class that hooks Elementor's props schema, its panel controls, and its render.
+* Two rules keep writing into a shared namespace defensible: prop names carry a `karmcp_` prefix so they cannot shadow one of Elementor's (and two active extensions cannot declare the same one), and only `data-` and `aria-` attributes can be written — never `onclick`, `style` or `href`. A rule's CSS class is a compile-time literal, never a value from a control.
+* An element that never touched an extension evaluates as the prop's declared default, so a rule like "not none" does not quietly apply to every container on the site.
+* Extensions export, import and back up like the other artifacts; an imported one is recompiled locally from its spec rather than trusting the bundled PHP.
 
 = 1.12.0 =
 

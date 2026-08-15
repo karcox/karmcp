@@ -106,6 +106,8 @@ class KarMCP_Sandbox_Cloud_Abilities {
 				return new KarMCP_Widget_Bundle_Adapter();
 			case 'snippet':
 				return new KarMCP_Snippet_Bundle_Adapter();
+			case 'extension':
+				return class_exists( 'KarMCP_Extension_Store' ) ? KarMCP_Extension_Store::instance() : null;
 			default:
 				return null;
 		}

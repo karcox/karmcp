@@ -175,6 +175,13 @@ class KarMCP_Ability_Registrar {
 		$security_fix->register();
 		$this->ability_names = array_merge( $this->ability_names, $security_fix->get_ability_names() );
 
+		// Recovery tools (fatal log, paused plugins, resume) plus update-core.
+		// Always registered: they are how a site that came back tells you why it
+		// went down, and update-core's own confirm gate is what makes it safe.
+		$recovery = new KarMCP_Recovery_Abilities();
+		$recovery->register();
+		$this->ability_names = array_merge( $this->ability_names, $recovery->get_ability_names() );
+
 		// Login Guard tools (see and lift sign-in lockouts). Gated on its module,
 		// which ships OFF — same reason as above: abilities register before the
 		// module boots, so the gate is the static is_enabled().

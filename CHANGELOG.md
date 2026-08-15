@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.6.0]
+
+> Pieces three and four, and they belong together: the second is only reasonable to offer because the first exists to catch the fall.
+
+### Added
+
+- **A fatal-error handler that brings the site back on its own.** WordPress loads `wp-content/fatal-error-handler.php` in place of its own when the file exists, which means our code runs *at the moment of the crash*. That is the only place it can help, because once PHP has died the REST API is gone and MCP with it — the agent cannot reach a broken site at exactly the moment it is most wanted.
+
+  Worth correcting a common assumption: **Recovery Mode does not fix the site.** WordPress emails a link and pauses the extension for that one recovery session; every visitor keeps seeing the error. Hence this.
+
+  The handler records each fatal — message, file, line, and which plugin owns the file — and can deactivate the offender so the next request succeeds. Deactivation needs **three fatals in ten minutes**, never the first: one transient error must not be able to take a shop offline in a different way than the bug would have. It is off until switched on, honours a protected list, and KarMCP can never deactivate itself.
+
+  It runs on shutdown with memory possibly exhausted and WordPress half-loaded, so it carries **no autoloader, no plugin classes and no dependencies**, and wraps its own work in a catch that swallows everything: a handler that becomes the failure leaves the site worse off than no handler at all. It is generated from a template and **the test suite compiles it** — a parse error there is a fatal on every request with nothing in the output to say why, and reading is not a reliable way to catch that.
+
+- **`get-fatal-log`, `list-paused-plugins` and `resume-plugin`.** How an agent finds out what happened once it can connect again — which it can, precisely because the site came back. Resuming requires `confirm:true`, since reactivating an unfixed plugin simply crashes the site again.
+
+- **`update-core`.** WordPress core updates were detected and never applied. This is the most consequential write in the plugin: it replaces the code serving the very request that asked for it, so a failure takes the site down rather than returning an error. It ships disabled, requires `confirm:true`, checks the filesystem is writable first, and reports whether the fatal-error handler is installed — because that is what makes this offer reasonable rather than reckless.
+
 ## [1.5.0]
 
 > Two pieces of the security roadmap, shipped together because neither is much use alone: the screen without the fixes is a list of complaints, and the fixes without the screen are a tool nobody finds.

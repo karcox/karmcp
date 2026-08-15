@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.5.0
+Stable tag: 1.6.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,14 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.6.0 =
+
+* New **fatal-error handler** (install it from the Security tab). WordPress loads `wp-content/fatal-error-handler.php` instead of its own when it exists, so this runs at the moment of the crash — the only place it can help, since once PHP dies the REST API and MCP die with it. It records what broke and, optionally, deactivates the plugin responsible so the next request succeeds.
+* Deactivation needs **three fatals in ten minutes**, never the first: one transient error must not take a shop offline in a different way than the bug would have. Off until switched on, honours a protected list, and KarMCP can never deactivate itself.
+* Note: the Recovery Mode built into WordPress does not fix a broken site — it emails a link and pauses the extension for that recovery session while visitors keep seeing the error.
+* New tools `get-fatal-log`, `list-paused-plugins` (read-only) and `resume-plugin` (requires confirm).
+* New tool `update-core`: updates WordPress itself. Ships disabled and requires confirm — it replaces the code serving the request, so a failure takes the site down rather than returning an error. It reports whether the fatal-error handler is installed, which is what makes the offer reasonable.
 
 = 1.5.0 =
 

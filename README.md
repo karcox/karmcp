@@ -30,6 +30,8 @@ KarMCP is a WordPress plugin that exposes your site as **[MCP](https://modelcont
 
 **See the state of your security.** A Security tab with the score, the grade and the critical findings from the four audits that were previously MCP-only, refreshed daily in the background — and `harden-site` to apply what can be applied, dry-run first and reversible from a checkbox. An old or failed scan is always shown as exactly that, never as a clean bill of health.
 
+**Come back from a crash.** An optional fatal-error handler records what broke and can deactivate the plugin responsible after repeated crashes, so the site is up again by the next request — and the agent, which cannot reach a dead site at all, can then read `get-fatal-log` and fix the cause. `update-core` is offered on the strength of it.
+
 **Understand and undo.** One-call page snapshots, content search across your own pages and templates, a change ledger with rollback, and read-only performance and security scans that return a scored report.
 
 **Speak your plugins.** Integrations that register only when the plugin is active: ACF, Meta Box, WooCommerce, Contact Form 7, Polylang, WPML, SEO plugins, and the Elementor addon packs.

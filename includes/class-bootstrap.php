@@ -166,6 +166,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/abilities/class-redirect-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-login-guard-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-security-fix-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-recovery-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-skill-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-content-mirror.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-content-mirror-abilities.php';
@@ -251,6 +252,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/security/class-security-hardening-fixer.php';
 		require_once KARMCP_DIR . 'includes/security/class-security-hardening-runtime.php';
 		require_once KARMCP_DIR . 'includes/security/class-security-monitor.php';
+		require_once KARMCP_DIR . 'includes/security/class-fatal-handler-template.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-security-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-svg-icon-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-custom-code-abilities.php';

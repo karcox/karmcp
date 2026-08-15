@@ -35,7 +35,7 @@ Antes de tocar nada, leer [CLAUDE.md](../CLAUDE.md). Las trampas que más tiempo
   `init:5`.** Por eso el registrar consulta el **estático** `is_enabled()` del módulo, nunca su instancia.
 - **Los stubs compartidos van en `tests/bootstrap.php`**, no en el fichero de test: el bootstrap carga
   primero y un stub declarado en un test aplica o no según el orden de carga.
-- **Toda herramienta que escribe** exige subir `DEFAULTS_VERSION` en `class-admin.php` (hoy `37`) y
+- **Toda herramienta que escribe** exige subir `DEFAULTS_VERSION` en `class-admin.php` (hoy `38`) y
   sembrar su slug como deshabilitada, además de una entrada en el catálogo de la pestaña Tools.
 
 Suite: 544 tests, verdes. Ahora también en CI (Pieza 0). En Windows sin Composer:
@@ -167,7 +167,7 @@ añadirla al catálogo de la pestaña Tools.
 
 ---
 
-## Pieza 3 — Drop-in `fatal-error-handler` y recuperación
+## Pieza 3 — Drop-in `fatal-error-handler` y recuperación ✅ HECHA (KarMCP 1.6.0)
 
 **Por qué.** Cuando WordPress peta, la REST API muere, y con ella MCP: el agente no puede ayudar justo
 cuando más falta hace. Y una corrección a lo que suele creerse — **el Recovery Mode de WP 5.2 no
@@ -200,7 +200,7 @@ se prueba a mano provocando un fatal en un plugin de juguete en local.
 
 ---
 
-## Pieza 4 — `update-core`
+## Pieza 4 — `update-core` ✅ HECHA (KarMCP 1.6.0)
 
 **Por qué.** Hoy el core viejo solo se detecta (`evaluate_core_update()`), no se actualiza.
 
@@ -454,8 +454,8 @@ resolución de IP con y sin proxy declarado.
 | ~~0~~ | ~~CI + análisis estático~~ **hecha** | — | — |
 | ~~1~~ | ~~Pestaña Security + cron + avisos~~ **hecha (1.5.0)** | — | — |
 | ~~2~~ | ~~`harden-site`~~ **hecha (1.5.0)** | — | — |
-| 3 | Drop-in de fatales + 3 abilities | 1-2 días | — |
-| 4 | `update-core` | Medio día | 3 |
+| ~~3~~ | ~~Drop-in de fatales + 3 abilities~~ **hecha (1.6.0)** | — | — |
+| ~~4~~ | ~~`update-core`~~ **hecha (1.6.0)** | — | — |
 | 5 | Módulo de vulnerabilidades | 3-5 días | 1 |
 | 6 | Parcheo desde la pestaña | 1-2 días | 1, 3, 5 |
 | ~~7~~ | ~~Endurecimiento del login~~ **hecha (1.4.0)** | — | superficie pendiente en 1 |

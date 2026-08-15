@@ -1044,7 +1044,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 37;
+	const DEFAULTS_VERSION = 38;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1627,6 +1627,15 @@ class KarMCP_Admin {
 			$add[] = 'karmcp/harden-site';
 		}
 
+		// v38 — update-core replaces the code serving the request, and
+		// resume-plugin re-enables something the handler switched off for a
+		// reason. The two reads beside them stay on: a fatal log nobody can
+		// reach is a fatal log that helps nobody.
+		if ( $applied < 38 ) {
+			$add[] = 'karmcp/update-core';
+			$add[] = 'karmcp/resume-plugin';
+		}
+
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
 		update_option( self::OPTION_DISABLED_TOOLS, $merged );
 		update_option( self::OPTION_DEFAULTS_APPLIED, (string) self::DEFAULTS_VERSION );
@@ -1794,6 +1803,28 @@ class KarMCP_Admin {
 			check_admin_referer( 'karmcp_security_scan' );
 			if ( class_exists( 'KarMCP_Security_Monitor' ) ) {
 				KarMCP_Security_Monitor::run_scheduled();
+			}
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-security' ) );
+			exit;
+		}
+
+		if ( isset( $_POST['karmcp_dropin_action'] ) ) {
+			check_admin_referer( 'karmcp_security_dropin' );
+			if ( class_exists( 'KarMCP_Fatal_Handler_Template' ) ) {
+				$karmcp_action = sanitize_key( wp_unslash( $_POST['karmcp_dropin_action'] ) );
+
+				$karmcp_cfg = (array) get_option( KarMCP_Fatal_Handler_Template::OPTION_CONFIG, array() );
+				$karmcp_cfg['auto_pause'] = ! empty( $_POST['karmcp_fatal_auto_pause'] );
+				$karmcp_cfg['strikes']    = 3;
+				$karmcp_cfg['window']     = 600;
+				$karmcp_cfg['protected']  = KarMCP_Fatal_Handler_Template::ALWAYS_PROTECTED;
+				update_option( KarMCP_Fatal_Handler_Template::OPTION_CONFIG, $karmcp_cfg, false );
+
+				if ( 'uninstall' === $karmcp_action ) {
+					KarMCP_Fatal_Handler_Template::uninstall();
+				} else {
+					KarMCP_Fatal_Handler_Template::install();
+				}
 			}
 			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-security' ) );
 			exit;
@@ -4171,6 +4202,26 @@ class KarMCP_Admin {
 						'label'       => __( 'Scan Security', 'karmcp' ),
 						'description' => __( 'Scans for malware heuristics, core file integrity, configuration hardening, and outdated/abandoned software; returns a scored report with recommendations.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/get-fatal-log' => array(
+						'label'       => __( 'Get Fatal Error Log', 'karmcp' ),
+						'description' => __( 'Reads the fatal errors the KarMCP error handler recorded — message, file, line, and which plugin owns the file.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/list-paused-plugins' => array(
+						'label'       => __( 'List Paused Plugins', 'karmcp' ),
+						'description' => __( 'Lists plugins the fatal-error handler deactivated after repeated crashes.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/resume-plugin' => array(
+						'label'       => __( 'Resume Paused Plugin', 'karmcp' ),
+						'description' => __( 'Reactivates a plugin the fatal-error handler deactivated. Requires confirm.', 'karmcp' ),
+						'badges'      => array(),
+					),
+					'karmcp/update-core' => array(
+						'label'       => __( 'Update WordPress Core', 'karmcp' ),
+						'description' => __( 'Updates WordPress itself. Replaces the code serving the request, so a failure takes the site down rather than returning an error. Requires confirm.', 'karmcp' ),
+						'badges'      => array( 'destructive' ),
 					),
 					'karmcp/harden-site' => array(
 						'label'       => __( 'Harden Site', 'karmcp' ),

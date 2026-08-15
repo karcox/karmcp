@@ -181,6 +181,96 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 		</p>
 	</form>
 
+	<hr style="margin:2em 0;" />
+
+	<h2><?php esc_html_e( 'Recovery from fatal errors', 'karmcp' ); ?></h2>
+	<?php
+	$karmcp_dropin = KarMCP_Fatal_Handler_Template::status();
+	$karmcp_fcfg   = (array) get_option( KarMCP_Fatal_Handler_Template::OPTION_CONFIG, array() );
+	$karmcp_fatals = (array) get_option( KarMCP_Fatal_Handler_Template::OPTION_LOG, array() );
+	$karmcp_pausd  = (array) get_option( KarMCP_Fatal_Handler_Template::OPTION_PAUSED, array() );
+	?>
+	<p class="description">
+		<?php esc_html_e( 'When PHP fatals, the REST API dies and MCP with it — so the agent cannot help at exactly the moment you need it. The Recovery Mode built into WordPress does not fix this: it emails a link and pauses the plugin for that recovery session, while visitors keep seeing the error. This handler records what broke and, optionally, deactivates the plugin responsible so the next request succeeds.', 'karmcp' ); ?>
+	</p>
+
+	<form method="post">
+		<?php wp_nonce_field( 'karmcp_security_dropin' ); ?>
+		<p>
+			<strong><?php esc_html_e( 'Handler:', 'karmcp' ); ?></strong>
+			<?php
+			if ( 'ours' === $karmcp_dropin ) {
+				esc_html_e( 'installed', 'karmcp' );
+			} elseif ( 'foreign' === $karmcp_dropin ) {
+				esc_html_e( 'another plugin owns wp-content/fatal-error-handler.php', 'karmcp' );
+			} else {
+				esc_html_e( 'not installed', 'karmcp' );
+			}
+			?>
+		</p>
+		<p>
+			<label>
+				<input type="checkbox" name="karmcp_fatal_auto_pause" value="1" <?php checked( ! empty( $karmcp_fcfg['auto_pause'] ) ); ?> />
+				<?php esc_html_e( 'Deactivate a plugin after it fatals 3 times in 10 minutes', 'karmcp' ); ?>
+			</label>
+			<br />
+			<span class="description"><?php esc_html_e( 'Repeated, never on the first crash: one transient fatal must not be able to take the site offline in a different way. KarMCP can never deactivate itself.', 'karmcp' ); ?></span>
+		</p>
+		<p>
+			<button type="submit" name="karmcp_dropin_action" value="install" class="button">
+				<?php echo 'ours' === $karmcp_dropin ? esc_html__( 'Reinstall handler', 'karmcp' ) : esc_html__( 'Install handler', 'karmcp' ); ?>
+			</button>
+			<?php if ( 'ours' === $karmcp_dropin ) : ?>
+				<button type="submit" name="karmcp_dropin_action" value="uninstall" class="button">
+					<?php esc_html_e( 'Remove handler', 'karmcp' ); ?>
+				</button>
+			<?php endif; ?>
+		</p>
+	</form>
+
+	<?php if ( $karmcp_pausd ) : ?>
+		<h3><?php esc_html_e( 'Plugins the handler deactivated', 'karmcp' ); ?></h3>
+		<ul class="ul-disc">
+			<?php foreach ( $karmcp_pausd as $karmcp_pf => $karmcp_pm ) : ?>
+				<li>
+					<code><?php echo esc_html( (string) $karmcp_pf ); ?></code> —
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: 1: number of fatals, 2: relative time. */
+							__( '%1$d fatals, %2$s ago', 'karmcp' ),
+							(int) ( $karmcp_pm['hits'] ?? 0 ),
+							human_time_diff( (int) ( $karmcp_pm['at'] ?? time() ), time() )
+						)
+					);
+					?>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+	<?php endif; ?>
+
+	<?php if ( $karmcp_fatals ) : ?>
+		<h3><?php esc_html_e( 'Recent fatal errors', 'karmcp' ); ?></h3>
+		<table class="widefat striped">
+			<tbody>
+			<?php foreach ( array_reverse( $karmcp_fatals ) as $karmcp_e ) : ?>
+				<tr>
+					<td style="width:9em;"><?php echo esc_html( human_time_diff( (int) ( $karmcp_e['at'] ?? time() ), time() ) ); ?></td>
+					<td>
+						<?php if ( ! empty( $karmcp_e['plugin'] ) ) : ?>
+							<strong><?php echo esc_html( (string) $karmcp_e['plugin'] ); ?></strong><br />
+						<?php endif; ?>
+						<?php echo esc_html( (string) ( $karmcp_e['message'] ?? '' ) ); ?><br />
+						<code><?php echo esc_html( (string) ( $karmcp_e['file'] ?? '' ) . ':' . (int) ( $karmcp_e['line'] ?? 0 ) ); ?></code>
+					</td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+	<?php endif; ?>
+
+	<hr style="margin:2em 0;" />
+
 	<h3><?php esc_html_e( 'Not fixed automatically', 'karmcp' ); ?></h3>
 	<ul class="ul-disc">
 		<?php foreach ( KarMCP_Security_Hardening_Fixer::unfixable() as $karmcp_id => $karmcp_why ) : ?>

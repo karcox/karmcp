@@ -35,7 +35,7 @@ Antes de tocar nada, leer [CLAUDE.md](../CLAUDE.md). Las trampas que más tiempo
   `init:5`.** Por eso el registrar consulta el **estático** `is_enabled()` del módulo, nunca su instancia.
 - **Los stubs compartidos van en `tests/bootstrap.php`**, no en el fichero de test: el bootstrap carga
   primero y un stub declarado en un test aplica o no según el orden de carga.
-- **Toda herramienta que escribe** exige subir `DEFAULTS_VERSION` en `class-admin.php` (hoy `36`) y
+- **Toda herramienta que escribe** exige subir `DEFAULTS_VERSION` en `class-admin.php` (hoy `37`) y
   sembrar su slug como deshabilitada, además de una entrada en el catálogo de la pestaña Tools.
 
 Suite: 544 tests, verdes. Ahora también en CI (Pieza 0). En Windows sin Composer:
@@ -96,7 +96,7 @@ cosa que endurezcamos aquí.
 
 ---
 
-## Pieza 1 — Pestaña Security en el admin
+## Pieza 1 — Pestaña Security en el admin ✅ HECHA (KarMCP 1.5.0)
 
 **Por qué.** Un escáner que solo corre cuando alguien pregunta **no es monitorización**. Un CVE sale
 un martes; si esa semana no abres sesión con el agente, no te enteras. Es exactamente la mitad que se
@@ -135,7 +135,7 @@ función pura.
 
 ---
 
-## Pieza 2 — `harden-site`
+## Pieza 2 — `harden-site` ✅ HECHA (KarMCP 1.5.0)
 
 **Por qué.** `hardening` hoy detecta y recomienda, pero no arregla. Cerrar ese bucle **no necesita
 ninguna llamada saliente, ningún tercero y ninguna clave**: son datos que el plugin ya calcula.
@@ -452,8 +452,8 @@ resolución de IP con y sin proxy declarado.
 | # | Pieza | Esfuerzo | Depende de |
 |---|---|---|---|
 | ~~0~~ | ~~CI + análisis estático~~ **hecha** | — | — |
-| 1 | Pestaña Security + cron + avisos | 2-3 días | 0 |
-| 2 | `harden-site` | 1-2 días | 1 (para el botón Arreglar) |
+| ~~1~~ | ~~Pestaña Security + cron + avisos~~ **hecha (1.5.0)** | — | — |
+| ~~2~~ | ~~`harden-site`~~ **hecha (1.5.0)** | — | — |
 | 3 | Drop-in de fatales + 3 abilities | 1-2 días | — |
 | 4 | `update-core` | Medio día | 3 |
 | 5 | Módulo de vulnerabilidades | 3-5 días | 1 |

@@ -2,6 +2,26 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.5.0]
+
+> Two pieces of the security roadmap, shipped together because neither is much use alone: the screen without the fixes is a list of complaints, and the fixes without the screen are a tool nobody finds.
+
+### Added
+
+- **A Security tab, at last.** The four audits have existed since 3.0.0 — malware heuristics, core-file integrity against wordpress.org checksums, configuration hardening, outdated and abandoned software — and **none of it has ever been visible inside WordPress**. `scan-security` returned its report to an agent and nowhere else. Now there is a screen: score out of 100, letter grade, what is critical, and how old the answer is.
+
+- **A scan that runs whether or not anyone asks.** Once a day by WP-Cron, plus a *Scan now* button. This is the half that made the tab necessary rather than nice: a scanner that only runs when someone asks is not monitoring. A vulnerability lands on a Tuesday, and if nobody opens a session that week, nobody finds out. An admin notice fires on a critical finding — and, just as importantly, on a scan that could not finish.
+
+- **The rule the whole screen is built around.** A scan that never ran, failed, or is more than two days old is shown as exactly that, never as a clean bill of health. Freshness is a four-state answer rather than a boolean, and a failed scan deliberately discards the previous report's data so it cannot masquerade as yesterday's good news. Confusing *"I don't know"* with *"nothing found"* is the failure that leaves somebody compromised and reassured.
+
+- **`harden-site`: the audit finally does something.** The hardening checks have always known what was wrong and only ever said so. This applies four of them — disable the dashboard file editor, disable XML-RPC, stop disclosing the WordPress version, send the missing security headers — dry-run by default like `build-site`, and recorded in the change ledger.
+
+  Each fix is a switch this plugin owns, **not an edit to `wp-config.php`**: the filesystem guard refuses to read that file, let alone write it, and that is not an oversight to route around. Which means every one of them is reversible from a checkbox, and `DISALLOW_FILE_EDIT` becomes a constant defined early on each request rather than a line someone has to remember they added.
+
+  Three findings are **never** fixed automatically and the plan says which and why: `WP_DEBUG_DISPLAY` is read before any plugin loads, so no plugin can change it; renaming the `admin` account breaks whatever authenticates as it; and HTTPS needs a certificate on the server. An unfixable finding that quietly vanished from the output would be the same lie as calling it fixed.
+
+  Two details worth naming. The version fix **substitutes a hash for `?ver=`** rather than stripping it — the usual advice removes the query argument outright, which also removes the cache busting and leaves visitors on stale CSS after an upgrade. And **no Content-Security-Policy is generated**: a CSP a machine guessed breaks page builders and embeds, and one loosened until the site worked again protects nothing while looking like it does.
+
 ## [1.4.0]
 
 > The first piece of the security section, and the one that had to come first: the site it protects had just had Wordfence removed. Of everything that goes away with Wordfence, brute-force protection is the only half worth rebuilding here — it needs no threat intelligence and no maintained rule set, just counting. The firewall stays out on purpose; that belongs in front of PHP, not inside a plugin that boots after WordPress has already started.

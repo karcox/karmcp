@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,14 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.5.0 =
+
+* New **Security** tab. The four audits — malware heuristics, core-file integrity against wordpress.org checksums, configuration hardening, outdated and abandoned software — have existed since 3.0.0 and were never visible inside WordPress; `scan-security` returned its report to an agent and nowhere else. Now there is a screen with the score, the grade, the critical findings and how old the answer is.
+* Scans run **once a day in the background**, not only when someone asks, with an admin notice on critical findings. A scanner that only runs on request is not monitoring.
+* A scan that never ran, failed, or is more than two days old is shown as exactly that — never as a clean bill of health. A failed scan discards the previous report so it cannot masquerade as yesterday's good news.
+* New tool `harden-site`: applies four of the hardening findings (dashboard file editor, XML-RPC, version disclosure, security headers). Dry-run by default, reversible from a checkbox, and recorded in History. Each fix is a switch the plugin owns rather than an edit to `wp-config.php`.
+* Three hardening findings are never fixed automatically and the plan says why: `WP_DEBUG_DISPLAY` is read before plugins load, renaming the `admin` account breaks whatever signs in as it, and HTTPS needs a certificate on the server.
 
 = 1.4.0 =
 

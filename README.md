@@ -28,6 +28,8 @@ KarMCP is a WordPress plugin that exposes your site as **[MCP](https://modelcont
 
 **Defend the login.** The Login Guard module blocks brute-force sign-ins — counting per address *and* per username, with an escalating but always time-limited delay — and closes the reconnaissance that precedes an attack: anonymous user enumeration and the XML-RPC multicall that batches hundreds of guesses into one request. Off by default, and it handles the reverse-proxy case explicitly, because behind Cloudflare a naive counter locks out every visitor at once.
 
+**See the state of your security.** A Security tab with the score, the grade and the critical findings from the four audits that were previously MCP-only, refreshed daily in the background — and `harden-site` to apply what can be applied, dry-run first and reversible from a checkbox. An old or failed scan is always shown as exactly that, never as a clean bill of health.
+
 **Understand and undo.** One-call page snapshots, content search across your own pages and templates, a change ledger with rollback, and read-only performance and security scans that return a scored report.
 
 **Speak your plugins.** Integrations that register only when the plugin is active: ACF, Meta Box, WooCommerce, Contact Form 7, Polylang, WPML, SEO plugins, and the Elementor addon packs.

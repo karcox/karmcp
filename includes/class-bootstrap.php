@@ -165,6 +165,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/redirects/class-redirect-handler.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-redirect-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-login-guard-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-security-fix-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-skill-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-content-mirror.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-content-mirror-abilities.php';
@@ -247,6 +248,9 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/security/class-login-guard-policy.php';
 		require_once KARMCP_DIR . 'includes/security/class-login-guard-store.php';
 		require_once KARMCP_DIR . 'includes/security/class-login-guard.php';
+		require_once KARMCP_DIR . 'includes/security/class-security-hardening-fixer.php';
+		require_once KARMCP_DIR . 'includes/security/class-security-hardening-runtime.php';
+		require_once KARMCP_DIR . 'includes/security/class-security-monitor.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-security-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-svg-icon-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-custom-code-abilities.php';
@@ -420,6 +424,12 @@ class KarMCP_Bootstrap {
 
 		// Admin-bar MCP status + exposure toggle (front-end + wp-admin; the class
 		// self-gates on capability + is_admin_bar_showing()).
+		// Hardening the admin switched on, plus the scheduled scan. Both are
+		// unconditional: the runtime no-ops when nothing is applied, and the
+		// monitor's cron has to exist even on a site nobody visits in wp-admin.
+		KarMCP_Security_Hardening_Runtime::init();
+		KarMCP_Security_Monitor::init();
+
 		( new KarMCP_Admin_Bar() )->init();
 	}
 

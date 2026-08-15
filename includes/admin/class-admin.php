@@ -131,6 +131,7 @@ class KarMCP_Admin {
 		$icons = array(
 			'dashboard'  => 'dashicons-dashboard',
 			'tools'      => 'dashicons-admin-tools',
+			'security'   => 'dashicons-shield',
 			'history'    => 'dashicons-undo',
 			'redirects'  => 'dashicons-randomize',
 			'modules'    => 'dashicons-screenoptions',
@@ -160,6 +161,7 @@ class KarMCP_Admin {
 				self::PAGE_SLUG . '-brand-kits' => __( 'Brand Kits', 'karmcp' ),
 				self::PAGE_SLUG . '-widgets'    => __( 'Sandbox', 'karmcp' ),
 				self::PAGE_SLUG . '-mcp-log'    => __( 'MCP Log', 'karmcp' ),
+				self::PAGE_SLUG . '-security'   => __( 'Security', 'karmcp' ),
 				self::PAGE_SLUG . '-history'    => __( 'History', 'karmcp' ),
 				self::PAGE_SLUG . '-changelog'  => __( 'Changelog', 'karmcp' ),
 			);
@@ -189,6 +191,8 @@ class KarMCP_Admin {
 		switch ( $page ) {
 			case self::PAGE_SLUG . '-tools':
 				return 'tools';
+			case self::PAGE_SLUG . '-security':
+				return 'security';
 			case self::PAGE_SLUG . '-history':
 				return 'history';
 			case self::PAGE_SLUG . '-redirects':
@@ -230,6 +234,7 @@ class KarMCP_Admin {
 	public function init(): void {
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_init', array( $this, 'handle_security_actions' ) );
 		add_action( 'admin_init', array( $this, 'maybe_apply_default_disabled_tools' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_head', array( $this, 'print_menu_icon_style' ) );
@@ -1039,7 +1044,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 36;
+	const DEFAULTS_VERSION = 37;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1615,6 +1620,13 @@ class KarMCP_Admin {
 			$add[] = 'karmcp/clear-login-lockout';
 		}
 
+		// v37 — harden-site changes how the site answers every visitor. Its
+		// dry-run default is not enough on its own: the admin decides whether an
+		// agent can reach for it at all.
+		if ( $applied < 37 ) {
+			$add[] = 'karmcp/harden-site';
+		}
+
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
 		update_option( self::OPTION_DISABLED_TOOLS, $merged );
 		update_option( self::OPTION_DEFAULTS_APPLIED, (string) self::DEFAULTS_VERSION );
@@ -1762,6 +1774,62 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.0.0
 	 */
+	/**
+	 * Handles the two Security-tab forms: "Scan now" and "Save hardening".
+	 *
+	 * Both write, so both carry a nonce and a capability check. The hardening
+	 * form submits the full set of checkboxes, so the difference against what is
+	 * currently applied is what gets applied and reverted — which makes
+	 * unchecking a box a real revert rather than a no-op.
+	 *
+	 * @since 1.5.0
+	 * @return void
+	 */
+	public function handle_security_actions(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		if ( isset( $_POST['karmcp_security_scan'] ) ) {
+			check_admin_referer( 'karmcp_security_scan' );
+			if ( class_exists( 'KarMCP_Security_Monitor' ) ) {
+				KarMCP_Security_Monitor::run_scheduled();
+			}
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-security' ) );
+			exit;
+		}
+
+		if ( isset( $_POST['karmcp_security_harden'] ) ) {
+			check_admin_referer( 'karmcp_security_harden' );
+			if ( ! class_exists( 'KarMCP_Security_Hardening_Fixer' ) ) {
+				return;
+			}
+
+			$wanted = isset( $_POST['karmcp_harden'] )
+				? array_map( 'sanitize_key', (array) wp_unslash( $_POST['karmcp_harden'] ) )
+				: array();
+
+			$before  = KarMCP_Security_Hardening_Fixer::applied();
+			$revert  = array_values( array_diff( $before, $wanted ) );
+
+			KarMCP_Security_Hardening_Fixer::apply( $wanted );
+			KarMCP_Security_Hardening_Fixer::revert( $revert );
+
+			if ( $before !== KarMCP_Security_Hardening_Fixer::applied() && class_exists( 'KarMCP_Change_Recorder' ) ) {
+				KarMCP_Change_Recorder::record_options(
+					array( KarMCP_Security_Hardening_Fixer::OPTION_APPLIED => $before ),
+					__( 'Hardening changed from the Security tab', 'karmcp' ),
+					__( 'Site hardening', 'karmcp' ),
+					'settings',
+					'harden-site'
+				);
+			}
+
+			wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-security' ) );
+			exit;
+		}
+	}
+
 	public function register_settings(): void {
 		register_setting(
 			self::SETTINGS_GROUP,
@@ -2984,6 +3052,8 @@ class KarMCP_Admin {
 					include KARMCP_DIR . 'includes/admin/views/page-templates.php';
 				} elseif ( 'brand-kits' === $active_tab && $this->module_tab_visible( 'brand-kits' ) ) {
 					include KARMCP_DIR . 'includes/admin/views/page-brand-kits.php';
+				} elseif ( 'security' === $active_tab ) {
+					include KARMCP_DIR . 'includes/admin/views/page-security.php';
 				} elseif ( 'history' === $active_tab ) {
 					include KARMCP_DIR . 'includes/admin/views/page-history.php';
 				} elseif ( 'redirects' === $active_tab && $this->module_tab_visible( 'redirects' ) ) {
@@ -4101,6 +4171,11 @@ class KarMCP_Admin {
 						'label'       => __( 'Scan Security', 'karmcp' ),
 						'description' => __( 'Scans for malware heuristics, core file integrity, configuration hardening, and outdated/abandoned software; returns a scored report with recommendations.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/harden-site' => array(
+						'label'       => __( 'Harden Site', 'karmcp' ),
+						'description' => __( 'Applies the configuration hardening that scan-security reports — file editor, XML-RPC, version disclosure, security headers. Dry-run by default; every fix is reversible.', 'karmcp' ),
+						'badges'      => array(),
 					),
 					'karmcp/list-login-lockouts' => array(
 						'label'       => __( 'List Login Lockouts', 'karmcp' ),

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.13.0
+Stable tag: 1.13.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.13.1 =
+
+* Fixed: an element extension applied nothing to the page. Atomic elements with a template render their opening tag from Twig, off `settings.classes` and `settings.attributes`, and their `before_render()` is empty on purpose — so the wrapper attributes the compiled code was writing never reached the HTML. The symptom was misleading: the hook ran, the stylesheet and script were enqueued, and the element still came out without the class. The generated code now writes into the element's own props, and keeps writing the wrapper for elements that render without a template.
+* Fixed: the `kind` enum on the export and cloud-backup tools was written by hand and lacked `extension`, so exporting one failed validation even though the code supported it. Both now read the bundle's own list of kinds.
 
 = 1.13.0 =
 

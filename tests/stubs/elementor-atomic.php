@@ -115,14 +115,44 @@ namespace KarMCP\Tests {
 
 		public array $wrapper = array();
 
+		/** Raw props, the `$$type`-wrapped shape Elementor stores. */
+		public array $props = array();
+
 		private array $settings;
 
-		public function __construct( array $settings = array() ) {
+		public function __construct( array $settings = array(), array $props = array() ) {
 			$this->settings = $settings;
+			$this->props    = $props;
 		}
 
 		public function get_atomic_settings(): array {
 			return $this->settings;
+		}
+
+		public function get_settings( $key = null ) {
+			return $this->props;
+		}
+
+		public function set_settings( $key, $value = null ): void {
+			$this->props[ $key ] = $value;
+		}
+
+		/** The class list as the Twig template would read it. */
+		public function classes(): array {
+			return $this->props['classes']['value'] ?? array();
+		}
+
+		/** Attributes as name => value, flattened from the key-value shape. */
+		public function attributes(): array {
+			$out = array();
+			foreach ( $this->props['attributes']['value'] ?? array() as $item ) {
+				$name  = $item['value']['key']['value'] ?? '';
+				$value = $item['value']['value']['value'] ?? '';
+				if ( '' !== $name ) {
+					$out[ $name ] = $value;
+				}
+			}
+			return $out;
 		}
 
 		/** Elementor accumulates rather than overwrites; so does this. */

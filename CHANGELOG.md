@@ -2,6 +2,20 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.13.1]
+
+### Fixed
+
+- **An element extension applied nothing to the page.** Verifying the first real extension on a live Elementor 4.2 site turned up a mistake in how the compiled code wrote to the element: it used `add_render_attribute( '_wrapper', … )`, the way a classic widget would.
+
+  Atomic elements with a template do not work that way. Their `before_render()` is empty on purpose — *"Twig template handles full rendering"* — and the opening tag comes from `_macros.html.twig`, which reads `settings.classes` and `settings.attributes`. The wrapper attributes never reach the HTML.
+
+  The symptom was misleading enough to be worth recording: the hook **did** run — the extension's stylesheet and script were enqueued and the critical CSS was printed — and the element still came out without the class. Everything looked wired up except the one thing that mattered.
+
+  The generated code now writes into the element's own props, in the shape each prop type declares, and keeps writing the wrapper too for any atomic element that renders without a template. Whichever path an element takes, one of the two lands.
+
+- The `kind` enum on `export-sandbox-artifact` and on the cloud backup tool was written by hand and never grew an `extension` entry, so exporting an extension failed input validation even though the code supported it. Both now read `KarMCP_Sandbox_Bundle::KINDS`.
+
 ## [1.13.0]
 
 ### Added

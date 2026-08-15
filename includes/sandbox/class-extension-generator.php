@@ -289,7 +289,7 @@ class KarMCP_Extension_Generator {
 			$applied = '';
 
 			if ( isset( $rule['class'] ) ) {
-				$applied .= $indent . "\$element->add_render_attribute( '_wrapper', 'class', " . self::literal( (string) $rule['class'] ) . " );\n";
+				$applied .= $indent . "\$classes[] = " . self::literal( (string) $rule['class'] ) . ";\n";
 			}
 
 			foreach ( (array) ( $rule['attributes'] ?? array() ) as $attribute => $value ) {
@@ -297,7 +297,7 @@ class KarMCP_Extension_Generator {
 				if ( is_wp_error( $expression ) ) {
 					return $expression;
 				}
-				$applied .= $indent . "\$element->add_render_attribute( '_wrapper', " . self::literal( (string) $attribute ) . ', ' . $expression . " );\n";
+				$applied .= $indent . "\$attributes[" . self::literal( (string) $attribute ) . '] = ' . $expression . ";\n";
 			}
 
 			$applied .= $indent . "\$applied = true;\n";
@@ -311,13 +311,17 @@ class KarMCP_Extension_Generator {
 
 		$out = "\tpublic function render( \$element ) {\n"
 			. "\t\tif ( ! \$this->applies_to( \$element ) || ! method_exists( \$element, 'get_atomic_settings' ) ) {\n\t\t\treturn;\n\t\t}\n\n"
-			. "\t\t\$settings = \$element->get_atomic_settings();\n"
-			. "\t\t\$applied  = false;\n\n"
+			. "\t\t\$settings   = \$element->get_atomic_settings();\n"
+			. "\t\t\$classes    = array();\n"
+			. "\t\t\$attributes = array();\n"
+			. "\t\t\$applied    = false;\n\n"
 			. $body;
 
 		$out .= "\t\tif ( ! \$applied ) {\n\t\t\treturn;\n\t\t}\n\n";
+		$out .= "\t\t\$this->apply( \$element, \$classes, \$attributes );\n\n";
 		$out .= self::assets_block( $style, $script, $critical );
 		$out .= "\t}\n\n";
+		$out .= self::apply_method();
 
 		return $out;
 	}
@@ -356,6 +360,61 @@ class KarMCP_Extension_Generator {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * apply(): puts the classes and attributes where the element will read them.
+	 *
+	 * Atomic elements with a template render their whole opening tag from Twig,
+	 * off `settings.classes` and `settings.attributes` — their `before_render()`
+	 * is empty on purpose ("Twig template handles full rendering"), so the
+	 * wrapper attributes never reach the HTML. The values therefore go into the
+	 * element's own props, in the shape their prop types declare
+	 * (Classes_Prop_Type: a list of class names; Attributes_Prop_Type: a list of
+	 * key-value objects).
+	 *
+	 * The wrapper is written too, for any atomic element that renders without a
+	 * template. Whichever path the element takes, one of the two lands.
+	 *
+	 * @return string
+	 */
+	private static function apply_method(): string {
+		return "\tprivate function apply( \$element, array \$classes, array \$attributes ) {\n"
+			. "\t\tif ( method_exists( \$element, 'get_settings' ) && method_exists( \$element, 'set_settings' ) ) {\n"
+			. "\t\t\t\$props = \$element->get_settings();\n"
+			. "\t\t\t\$props = is_array( \$props ) ? \$props : array();\n\n"
+			. "\t\t\tif ( ! empty( \$classes ) ) {\n"
+			. "\t\t\t\t\$current = ( isset( \$props['classes']['value'] ) && is_array( \$props['classes']['value'] ) ) ? \$props['classes']['value'] : array();\n"
+			. "\t\t\t\t\$element->set_settings(\n"
+			. "\t\t\t\t\t'classes',\n"
+			. "\t\t\t\t\tarray(\n"
+			. "\t\t\t\t\t\t'\$\$type' => 'classes',\n"
+			. "\t\t\t\t\t\t'value'  => array_values( array_unique( array_merge( \$current, \$classes ) ) ),\n"
+			. "\t\t\t\t\t)\n"
+			. "\t\t\t\t);\n"
+			. "\t\t\t}\n\n"
+			. "\t\t\tif ( ! empty( \$attributes ) ) {\n"
+			. "\t\t\t\t\$current = ( isset( \$props['attributes']['value'] ) && is_array( \$props['attributes']['value'] ) ) ? \$props['attributes']['value'] : array();\n"
+			. "\t\t\t\tforeach ( \$attributes as \$name => \$value ) {\n"
+			. "\t\t\t\t\t\$current[] = array(\n"
+			. "\t\t\t\t\t\t'\$\$type' => 'key-value',\n"
+			. "\t\t\t\t\t\t'value'  => array(\n"
+			. "\t\t\t\t\t\t\t'key'   => array( '\$\$type' => 'string', 'value' => (string) \$name ),\n"
+			. "\t\t\t\t\t\t\t'value' => array( '\$\$type' => 'string', 'value' => (string) \$value ),\n"
+			. "\t\t\t\t\t\t),\n"
+			. "\t\t\t\t\t);\n"
+			. "\t\t\t\t}\n"
+			. "\t\t\t\t\$element->set_settings( 'attributes', array( '\$\$type' => 'attributes', 'value' => \$current ) );\n"
+			. "\t\t\t}\n"
+			. "\t\t}\n\n"
+			. "\t\tif ( ! method_exists( \$element, 'add_render_attribute' ) ) {\n\t\t\treturn;\n\t\t}\n\n"
+			. "\t\tforeach ( \$classes as \$class_name ) {\n"
+			. "\t\t\t\$element->add_render_attribute( '_wrapper', 'class', \$class_name );\n"
+			. "\t\t}\n"
+			. "\t\tforeach ( \$attributes as \$name => \$value ) {\n"
+			. "\t\t\t\$element->add_render_attribute( '_wrapper', \$name, \$value );\n"
+			. "\t\t}\n"
+			. "\t}\n\n";
 	}
 
 	/**

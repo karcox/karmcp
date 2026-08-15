@@ -165,9 +165,14 @@ class ExtensionGeneratorTest extends TestCase {
 
 		$this->render( $this->build( $this->spec() ), $element );
 
+		// Atomic elements render their opening tag from settings, not from the
+		// wrapper attributes, so the props are what actually reach the HTML.
+		$this->assertSame( array( 'karmcp-fx-particles' ), $element->classes() );
+		$this->assertSame( 'snow', $element->attributes()['data-karmcp-particles'] );
+		$this->assertSame( '40', $element->attributes()['data-karmcp-density'] );
+
+		// And the wrapper is written too, for atomic elements with no template.
 		$this->assertSame( 'karmcp-fx-particles', $element->attribute( 'class' ) );
-		$this->assertSame( 'snow', $element->attribute( 'data-karmcp-particles' ) );
-		$this->assertSame( '40', $element->attribute( 'data-karmcp-density' ) );
 	}
 
 	public function test_nothing_is_applied_when_the_condition_fails(): void {
@@ -176,6 +181,7 @@ class ExtensionGeneratorTest extends TestCase {
 		$this->render( $this->build( $this->spec() ), $element );
 
 		$this->assertSame( array(), $element->wrapper );
+		$this->assertSame( array(), $element->props );
 	}
 
 	public function test_an_element_outside_the_targets_is_never_touched(): void {
@@ -184,6 +190,7 @@ class ExtensionGeneratorTest extends TestCase {
 		$this->render( $this->build( $this->spec() ), $heading );
 
 		$this->assertSame( array(), $heading->wrapper );
+		$this->assertSame( array(), $heading->props );
 	}
 
 	public function test_missing_settings_do_not_fatal(): void {
@@ -206,7 +213,7 @@ class ExtensionGeneratorTest extends TestCase {
 
 		$this->render( $this->build( $this->spec() ), $element );
 
-		$this->assertSame( '0', $element->attribute( 'data-karmcp-density' ) );
+		$this->assertSame( '0', $element->attributes()['data-karmcp-density'] );
 	}
 
 	public function test_a_size_prop_is_rebuilt_from_a_number_and_a_known_unit(): void {
@@ -221,12 +228,12 @@ class ExtensionGeneratorTest extends TestCase {
 
 		$element = $this->div_block( array( 'karmcp_blur' => array( 'size' => 12, 'unit' => 'px' ) ) );
 		$this->render( $this->build( $spec ), $element );
-		$this->assertSame( '12px', $element->attribute( 'data-karmcp-blur' ) );
+		$this->assertSame( '12px', $element->attributes()['data-karmcp-blur'] );
 
 		// An unknown unit falls back rather than reaching the attribute.
 		$hostile = $this->div_block( array( 'karmcp_blur' => array( 'size' => '9;}evil', 'unit' => '"><script>' ) ) );
 		$this->render( $this->build( $spec ), $hostile );
-		$this->assertSame( '9px', $hostile->attribute( 'data-karmcp-blur' ) );
+		$this->assertSame( '9px', $hostile->attributes()['data-karmcp-blur'] );
 	}
 
 	public function test_literal_text_around_a_placeholder_is_preserved(): void {
@@ -241,7 +248,7 @@ class ExtensionGeneratorTest extends TestCase {
 		$element = $this->div_block( array( 'karmcp_particles' => 'snow' ) );
 		$this->render( $this->build( $spec ), $element );
 
-		$this->assertSame( 'fx-snow-v2', $element->attribute( 'data-karmcp-preset' ) );
+		$this->assertSame( 'fx-snow-v2', $element->attributes()['data-karmcp-preset'] );
 	}
 
 	// -------------------------------------------------------------------------

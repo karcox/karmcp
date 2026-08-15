@@ -63,7 +63,7 @@ class KarMCP_Cloud_Abilities {
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'kind' => array( 'type' => 'string', 'enum' => array( 'block', 'widget', 'snippet' ) ),
+						'kind' => array( 'type' => 'string', 'enum' => KarMCP_Sandbox_Bundle::KINDS ),
 						'id'   => array( 'type' => 'integer' ),
 					),
 					'required'   => array( 'kind', 'id' ),

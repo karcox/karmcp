@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.13.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.13.1` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -96,6 +96,8 @@ El spec es datos: metadatos, campos tipados y una plantilla HTML con `{{marcador
 | Herramientas MCP | `KarMCP_Widget_Builder_Abilities` | `KarMCP_Block_Builder_Abilities` | `KarMCP_Extension_Builder_Abilities` |
 
 **Las extensiones son distintas de las otras dos** y conviene tenerlo claro antes de tocarlas: un widget o un bloque se insertan; una extensión **modifica elementos que ya existen**, añadiendo una sección al panel de los contenedores de Elementor 4.2+. Eso la obliga a escribir en un espacio de nombres ajeno, y de ahí sus dos reglas: las props llevan prefijo `karmcp_` (el schema de props es un array compartido con Elementor y con Pro, y una colisión tapa la prop del otro en silencio; el store rechaza activar dos extensiones que declaren el mismo nombre) y la salida solo puede escribir atributos `data-` y `aria-`. Las costuras que usa y las que no sirven están en [docs/ROADMAP-ELEMENT-EXTENSIONS.md](docs/ROADMAP-ELEMENT-EXTENSIONS.md).
+
+> **`add_render_attribute( '_wrapper', … )` no funciona en elementos atómicos con plantilla.** Su `before_render()` está vacío a propósito y el HTML sale de Twig, que lee `settings.classes` y `settings.attributes`. El generador muta esas props (y escribe el wrapper igualmente, por si el elemento no usa plantilla). Costó la 1.13.1 descubrirlo: el síntoma es que el hook corre —los assets se encolan— y aun así el atributo no aparece.
 
 > **La trampa del default, que solo aparece al ejecutarlo:** las props se declaran en *todos* los elementos, y casi ninguno tendrá nada guardado. Si un valor ausente se leyera como cadena vacía, una regla `not: "none"` sería cierta en todas partes y el efecto caería sobre cada contenedor del sitio. El código generado cae al **default declarado** de la prop, no a `''`.
 

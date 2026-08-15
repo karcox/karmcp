@@ -92,7 +92,7 @@ class KarMCP_Sandbox_Cloud_Abilities {
 	 *
 	 * @since 3.7.0
 	 *
-	 * @param string $kind One of 'block', 'widget', 'snippet'.
+	 * @param string $kind One of KarMCP_Sandbox_Bundle::KINDS.
 	 * @return KarMCP_Sandbox_Artifact|null Null when the kind is unknown,
 	 *                                          or when its backing class is
 	 *                                          unavailable (block store is
@@ -128,7 +128,7 @@ class KarMCP_Sandbox_Cloud_Abilities {
 			'karmcp/export-sandbox-artifact',
 			array(
 				'label'               => __( 'Export Sandbox Artifact', 'karmcp' ),
-				'description'         => __( 'Exports a sandbox artifact (custom block, custom widget, or PHP snippet) as a portable, checksum-verified bundle suitable for sharing or cloud sync.', 'karmcp' ),
+				'description'         => __( 'Exports a sandbox artifact (custom block, custom widget, element extension, or PHP snippet) as a portable, checksum-verified bundle suitable for sharing or cloud sync.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_export' ),
 				'permission_callback' => array( $this, 'check_permission' ),
@@ -137,7 +137,11 @@ class KarMCP_Sandbox_Cloud_Abilities {
 					'properties' => array(
 						'kind' => array(
 							'type'        => 'string',
-							'enum'        => array( 'block', 'widget', 'snippet' ),
+							// From the bundle's own list, so a new artifact kind
+							// cannot be exportable in code and rejected by the
+							// schema — which is exactly what happened to
+							// `extension` in 1.13.0.
+							'enum'        => KarMCP_Sandbox_Bundle::KINDS,
 							'description' => __( 'The kind of sandbox artifact to export.', 'karmcp' ),
 						),
 						'id'   => array(

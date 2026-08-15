@@ -94,11 +94,43 @@ registrada en el editor (`modules/atomic-widgets/controls/types/`):
 ```php
 add_action( 'elementor/frontend/before_render', function ( $element ) {
     $settings = $element->get_atomic_settings();
-    if ( ! empty( $settings['karmcp_particles'] ) ) {
-        $element->add_render_attribute( '_wrapper', 'data-karmcp-particles', $value );
+    if ( 'none' !== $settings['karmcp_particles'] ) {
+        // NO con add_render_attribute(): ver el aviso de abajo.
+        $props = $element->get_settings();
+        $element->set_settings( 'classes', array( '$$type' => 'classes', 'value' => array( 'karmcp-fx-particles' ) ) );
     }
 } );
 ```
+
+> **La trampa que costó una versión: `add_render_attribute( '_wrapper', … )` no
+> sirve en los elementos atómicos con plantilla.** Su `before_render()` está
+> vacío a propósito —*"Twig template handles full rendering"*
+> (`has-element-template.php:108`)— y la etiqueta de apertura se pinta desde
+> `_macros.html.twig`, que lee **`settings.classes`** y **`settings.attributes`**,
+> nunca los atributos del wrapper. El síntoma es desconcertante: el hook corre
+> (los assets se encolan, el CSS crítico se imprime) y aun así el HTML sale sin
+> la clase.
+>
+> Lo que sí llega es mutar las props del propio elemento en ese mismo hook, que
+> corre antes de que se construya el contexto de la plantilla. Los shapes, leídos
+> de sus prop types:
+>
+> ```php
+> // Classes_Prop_Type: lista de nombres de clase
+> array( '$$type' => 'classes', 'value' => array( 'mi-clase' ) )
+>
+> // Attributes_Prop_Type: lista de Key_Value_Prop_Type
+> array( '$$type' => 'attributes', 'value' => array(
+>     array( '$$type' => 'key-value', 'value' => array(
+>         'key'   => array( '$$type' => 'string', 'value' => 'data-x' ),
+>         'value' => array( '$$type' => 'string', 'value' => 'y' ),
+>     ) ),
+> ) )
+> ```
+>
+> El generador escribe **las dos vías**: las props (para los elementos con
+> plantilla, que son la mayoría) y el wrapper (para los que rendericen sin
+> ella). Una de las dos aterriza siempre.
 
 `includes/base/element-base.php:500` dispara `elementor/frontend/before_render`
 y `elementor/frontend/{$element_type}/before_render` **antes** de que el

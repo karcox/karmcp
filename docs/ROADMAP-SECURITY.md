@@ -13,6 +13,20 @@ Cada pieza trae: qué es, por qué, **dónde encaja en el código que ya existe*
 qué se testea y qué puede salir mal. El orden del final no es decorativo: cada pieza apoya a la
 siguiente.
 
+### ⚠️ sitionet.com es el banco de pruebas — NO actualizar nada allí
+
+**Los plugins desactualizados de sitionet.com son deliberados: son la fixture con la que se desarrolla
+y se valida este apartado.** Es un dominio de pruebas, no un sitio en producción que haya que proteger.
+
+Medido el 2026-08-15 contra el feed real: **53 vulnerabilidades activas repartidas en 12 plugins**,
+con SQL injection sin autenticar, inyección de objetos PHP, XSS almacenado y CSRF a RCE, y rangos de
+CVSS de 4.3 a 8.8. Es un juego de pruebas mucho mejor que cualquier sitio limpio: cubre severidades
+altas y bajas, plugins con parche disponible y plugins sin él, y versiones de cuatro componentes
+(`3.5.6.1`) que ejercitan el comparador de rangos.
+
+**No ejecutar `update-plugin` ni `harden-site` contra sitionet sin pedirlo.** Actualizar destruiría la
+fixture. Si algún escaneo devuelve esa lista, es la salida esperada, no una incidencia.
+
 Antes de tocar nada, leer [CLAUDE.md](../CLAUDE.md). Las trampas que más tiempo cuestan aquí:
 
 - **`'category' => 'karmcp'` es obligatorio** al registrar una ability. Si falta,

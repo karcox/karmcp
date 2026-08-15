@@ -167,6 +167,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/abilities/class-login-guard-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-security-fix-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-recovery-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-vulnerability-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-skill-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-content-mirror.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-content-mirror-abilities.php';
@@ -317,6 +318,11 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/modules/class-templates-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-agent-skills-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-login-guard-module.php';
+		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-stream-parser.php';
+		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-matcher.php';
+		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-store.php';
+		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-audit.php';
+		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vulnerabilities-module.php';
 		require_once KARMCP_DIR . 'includes/modules/svg-support/class-svg-sanitizer.php';
 		require_once KARMCP_DIR . 'includes/modules/svg-support/class-svg-support-module.php';
 		require_once KARMCP_DIR . 'includes/modules/guardrails/class-guardrails-policy.php';
@@ -419,6 +425,7 @@ class KarMCP_Bootstrap {
 		$karmcp_modules->register( new KarMCP_SVG_Support_Module() );
 		$karmcp_modules->register( new KarMCP_Guardrails_Module() );
 		$karmcp_modules->register( new KarMCP_Login_Guard_Module() );
+		$karmcp_modules->register( new KarMCP_Vulnerabilities_Module() );
 		$karmcp_modules->register( new KarMCP_Cloud_Module() );
 		do_action( 'karmcp_register_modules', $karmcp_modules );
 		$karmcp_modules->apply_defaults();

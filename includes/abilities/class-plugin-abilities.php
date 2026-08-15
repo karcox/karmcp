@@ -368,11 +368,26 @@ class KarMCP_Plugin_Abilities {
 		}
 		// Protected packages (KarMCP, Elementor, Elementor Pro) are never
 		// mutated via MCP — including updates — matching deactivate/delete.
-		if ( KarMCP_Package_Guard::is_protected_plugin( $file ) ) {
+		//
+		// One exception, and it has to be earned rather than asserted: when a
+		// known vulnerability affects the installed version AND the update on
+		// offer genuinely leaves the affected range, Elementor and Elementor Pro
+		// may be updated. The Vulnerabilities module answers this filter; with
+		// the module off — which is the default — nothing changes.
+		//
+		// It is a filter and not a direct call on purpose: the guard is core
+		// plumbing and must not depend on an optional module. KarMCP itself is
+		// never eligible, because replacing your own code mid-request is not the
+		// same problem as updating a dependency.
+		if ( KarMCP_Package_Guard::is_protected_plugin( $file )
+			&& ! apply_filters( 'karmcp_allow_protected_update', false, $file ) ) {
 			return new \WP_Error(
 				'protected_plugin',
-				/* translators: %s: plugin file */
-				sprintf( __( '"%s" is protected and cannot be updated via MCP.', 'karmcp' ), $file )
+				sprintf(
+					/* translators: %s: plugin file */
+					__( '"%s" is protected and cannot be updated via MCP. The one exception is a security update: with the Known Vulnerabilities module enabled, an update that clears a vulnerability affecting the installed version is permitted.', 'karmcp' ),
+					$file
+				)
 			);
 		}
 		$ready = KarMCP_Package_Guard::filesystem_ready();

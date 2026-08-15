@@ -182,6 +182,14 @@ class KarMCP_Ability_Registrar {
 		$recovery->register();
 		$this->ability_names = array_merge( $this->ability_names, $recovery->get_ability_names() );
 
+		// Known-vulnerability tool. Gated on its module, which ships off because
+		// it is the one part of the plugin that fetches from a third party.
+		if ( class_exists( 'KarMCP_Vulnerabilities_Module' ) && KarMCP_Vulnerabilities_Module::is_enabled() ) {
+			$vulns = new KarMCP_Vulnerability_Abilities();
+			$vulns->register();
+			$this->ability_names = array_merge( $this->ability_names, $vulns->get_ability_names() );
+		}
+
 		// Login Guard tools (see and lift sign-in lockouts). Gated on its module,
 		// which ships OFF — same reason as above: abilities register before the
 		// module boots, so the gate is the static is_enabled().

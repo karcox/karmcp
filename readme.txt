@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,15 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.7.0 =
+
+* New **Known Vulnerabilities** module (off by default): checks every installed plugin and theme against the Wordfence Intelligence database and adds a fifth category — CVE, CVSS score, and the version that fixes it — to the Security report. Needs a free API key from a wordfence.com account, under Integrations.
+* **Nothing about your site is sent anywhere.** The endpoint only serves the complete feed and takes no parameters, so the whole database is downloaded once a day and matched locally; there is no per-plugin query that could leak an inventory.
+* The feed is 11.2 MB gzipped and 150 MB decoded, which is far too large to decode in PHP, so it is streamed and written record by record — verified against the real feed at 18 MB of peak memory.
+* Elementor and Elementor Pro, normally not updatable over MCP, may now be updated **when a known vulnerability affects the installed version and the available update actually clears it**. Both conditions are required. KarMCP still never updates itself.
+* New tool `list-vulnerabilities`: worst CVSS first, with the fixing version and whether an available update really resolves that specific vulnerability. A feed that was never downloaded reports itself as unknown rather than returning an empty list.
+* Vulnerability records carry the Defiant copyright notice and a link to the record, which is the condition the data is licensed under.
 
 = 1.6.0 =
 

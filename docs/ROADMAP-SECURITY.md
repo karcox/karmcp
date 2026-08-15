@@ -216,7 +216,7 @@ sitio levanta solo.
 
 ---
 
-## Pieza 5 — Módulo de vulnerabilidades
+## Pieza 5 — Módulo de vulnerabilidades ✅ HECHA (KarMCP 1.7.0)
 
 **Por qué.** Es lo que de verdad sustituye a Wordfence. Hoy sabes *"JetFormBuilder 3.5.6.1 está
 desactualizado"*; quieres *"CVE-XXXX, subida sin autenticar, CVSS 9.8, parcheado en 3.6.0"*.
@@ -312,7 +312,7 @@ comparables con los de versiones anteriores. Documentarlo en el changelog.
 
 ---
 
-## Pieza 6 — Aplicar parches desde la pestaña
+## Pieza 6 — Aplicar parches desde la pestaña ✅ HECHA (KarMCP 1.7.0)
 
 Tres niveles, y solo dos son automatizables.
 
@@ -456,11 +456,11 @@ resolución de IP con y sin proxy declarado.
 | ~~2~~ | ~~`harden-site`~~ **hecha (1.5.0)** | — | — |
 | ~~3~~ | ~~Drop-in de fatales + 3 abilities~~ **hecha (1.6.0)** | — | — |
 | ~~4~~ | ~~`update-core`~~ **hecha (1.6.0)** | — | — |
-| 5 | Módulo de vulnerabilidades | 3-5 días | 1 |
-| 6 | Parcheo desde la pestaña | 1-2 días | 1, 3, 5 |
+| ~~5~~ | ~~Módulo de vulnerabilidades~~ **hecha (1.7.0)** | — | — |
+| ~~6~~ | ~~Parcheo desde la pestaña~~ **hecha (1.7.0)** | — | — |
 | ~~7~~ | ~~Endurecimiento del login~~ **hecha (1.4.0)** | — | superficie pendiente en 1 |
 
-Total: **tres semanas largas** de trabajo real.
+**Las siete piezas están hechas** (KarMCP 1.4.0 a 1.7.0, más la Pieza 0 sin release). Lo que queda es lo de "Decisiones abiertas", abajo.
 
 **Dos condiciones de salida antes de desinstalar Wordfence:** la Pieza 5, o te quedas sin datos de
 vulnerabilidad; y la Pieza 7, o te quedas sin protección de fuerza bruta. El WAF va aparte, ver abajo.

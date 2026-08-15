@@ -2,6 +2,30 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.7.0]
+
+> The last two pieces, and the ones that finish the job Wordfence was doing here.
+
+### Added
+
+- **Known Vulnerabilities: a fifth category in the security report.** Every installed plugin and theme is checked against the Wordfence Intelligence database — CVE, CVSS score, severity, and the version that fixes it. A new module, **off by default**, because it is the one part of KarMCP that fetches from a third party.
+
+  **Nothing about this site is ever sent anywhere.** Not by policy — by construction. The endpoint serves the complete feed and accepts no parameters, so there is no per-plugin query to leak an inventory through even if one wanted to.
+
+- **The feed is streamed, never loaded.** Measured against the live API: 11.2 MB gzipped is **150.87 MB decoded**, 38,701 records. `json_decode()` on that wants about a gigabyte, which no ordinary host has. So a hand-written splitter walks the stream counting braces and decodes one record at a time — verified end to end against the real feed at a peak of **18 MB under a 128 MB limit**, producing exactly the 38,701 records a full decode finds.
+
+  The splitter is hand-written for one reason: a `{` inside a string is not a delimiter, and a `"` after a backslash does not end a string. A naive counter breaks on the first vulnerability whose description contains a brace, and breaks silently. Both cases have a test.
+
+- **Rows are keyed by `(type, slug)`, not slug.** Nineteen slugs in the real feed exist as both a theme and a plugin — `canvas`, `automotive`, `cardealer` — and conflating them would attribute a theme's vulnerability to an unrelated plugin.
+
+- **The version matcher, tested against the cases that actually occur.** Ranges carry explicit inclusivity on each end, so `to_inclusive: false` on 3.8.9.1 means that exact version is already patched; `*` means unbounded, and treating it literally would make every comparison fail and report a clean site; four-component versions like `3.5.6.1` are routine; and `1.0.0-beta2` sorts below `1.0.0`. Every one of those is a way to be silently wrong in the reassuring direction, which is the only direction that matters here.
+
+- **The Package Guard exception, as decided.** Elementor and Elementor Pro are normally unupdatable over MCP. That now lifts when a known vulnerability affects the installed version **and** the update on offer genuinely leaves the affected range — both halves required, because updating to something still vulnerable fixes nothing and would have spent the exception for nothing. It is wired as a filter so the guard, which is core plumbing, never depends on a module that ships disabled. KarMCP still never updates itself.
+
+- **Attribution, because the licence requires it.** Defiant grants a perpetual, irrevocable licence to reproduce these records on condition that a link to the record and their copyright notice travel with any copy. Every finding carries both, and the Security tab prints them. That is a term of use, not a courtesy.
+
+- **`list-vulnerabilities`.** Worst CVSS first, each with the fixing version, whether an update is available, and whether that update actually clears *this* vulnerability. A feed that was never downloaded reports itself as unknown rather than returning an empty list — an empty list reads as "you are clean", and that is the one thing it must not say when it does not know.
+
 ## [1.6.0]
 
 > Pieces three and four, and they belong together: the second is only reasonable to offer because the first exists to catch the fall.

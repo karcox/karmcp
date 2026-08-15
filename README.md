@@ -32,6 +32,8 @@ KarMCP is a WordPress plugin that exposes your site as **[MCP](https://modelcont
 
 **Come back from a crash.** An optional fatal-error handler records what broke and can deactivate the plugin responsible after repeated crashes, so the site is up again by the next request — and the agent, which cannot reach a dead site at all, can then read `get-fatal-log` and fix the cause. `update-core` is offered on the strength of it.
 
+**Know what is vulnerable.** An optional module checks every installed plugin and theme against the Wordfence Intelligence database — CVE, CVSS, and the version that fixes it — by downloading the whole feed once a day and matching locally, so your site never tells anyone what it runs.
+
 **Understand and undo.** One-call page snapshots, content search across your own pages and templates, a change ledger with rollback, and read-only performance and security scans that return a scored report.
 
 **Speak your plugins.** Integrations that register only when the plugin is active: ACF, Meta Box, WooCommerce, Contact Form 7, Polylang, WPML, SEO plugins, and the Elementor addon packs.

@@ -4203,6 +4203,11 @@ class KarMCP_Admin {
 						'description' => __( 'Scans for malware heuristics, core file integrity, configuration hardening, and outdated/abandoned software; returns a scored report with recommendations.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
 					),
+					'karmcp/list-vulnerabilities' => array(
+						'label'       => __( 'List Vulnerabilities', 'karmcp' ),
+						'description' => __( 'Known vulnerabilities affecting the installed plugins and themes, with CVE, CVSS and the version that fixes each. Registers only when the Known Vulnerabilities module is enabled.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
 					'karmcp/get-fatal-log' => array(
 						'label'       => __( 'Get Fatal Error Log', 'karmcp' ),
 						'description' => __( 'Reads the fatal errors the KarMCP error handler recorded — message, file, line, and which plugin owns the file.', 'karmcp' ),

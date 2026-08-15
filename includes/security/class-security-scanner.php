@@ -23,6 +23,9 @@ class KarMCP_Security_Scanner {
 	const CATEGORY_CRIT_CAP = 60;
 	const TOP_RECS          = 8;
 
+	// The fifth, 'vulnerability', is appended at runtime by checks_available()
+	// when the module that supplies it is on: a category with no data behind it
+	// would score the site down for a check it never actually made.
 	const ALL_CHECKS = array( 'malware', 'integrity', 'hardening', 'software' );
 
 	/** @var KarMCP_Security_Malware_Audit|null Built on first use. */
@@ -92,12 +95,29 @@ class KarMCP_Security_Scanner {
 	 * @param array|null $requested
 	 * @return string[]
 	 */
+	/**
+	 * Every check that can actually run here. The vulnerability category only
+	 * exists when its module is enabled — otherwise the scanner would report a
+	 * category it has no data for, and an empty category reads as a pass.
+	 *
+	 * @since 1.7.0
+	 * @return string[]
+	 */
+	public static function checks_available(): array {
+		$checks = self::ALL_CHECKS;
+		if ( class_exists( 'KarMCP_Vulnerabilities_Module' ) && KarMCP_Vulnerabilities_Module::is_enabled() ) {
+			$checks[] = 'vulnerability';
+		}
+		return $checks;
+	}
+
 	public function resolve_checks( ?array $requested ): array {
+		$available = self::checks_available();
 		if ( empty( $requested ) ) {
-			return self::ALL_CHECKS;
+			return $available;
 		}
 		$valid = array();
-		foreach ( self::ALL_CHECKS as $check ) {
+		foreach ( $available as $check ) {
 			if ( in_array( $check, $requested, true ) ) {
 				$valid[] = $check;
 			}
@@ -152,6 +172,10 @@ class KarMCP_Security_Scanner {
 		}
 		if ( in_array( 'software', $checks, true ) ) {
 			$findings = array_merge( $findings, $this->software()->run() );
+		}
+		if ( in_array( 'vulnerability', $checks, true ) && class_exists( 'KarMCP_Vuln_Audit' ) ) {
+			$vuln     = new KarMCP_Vuln_Audit();
+			$findings = array_merge( $findings, $vuln->run() );
 		}
 
 		$summary               = $this->summarize( $findings );
@@ -215,7 +239,7 @@ class KarMCP_Security_Scanner {
 	 * @return array category => Finding[]
 	 */
 	public function group_by_category( array $findings ): array {
-		$sections = array( 'malware' => array(), 'integrity' => array(), 'hardening' => array(), 'software' => array() );
+		$sections = array( 'malware' => array(), 'integrity' => array(), 'hardening' => array(), 'software' => array(), 'vulnerability' => array() );
 		foreach ( $findings as $f ) {
 			$cat = (string) ( $f['category'] ?? 'malware' );
 			if ( ! isset( $sections[ $cat ] ) ) {

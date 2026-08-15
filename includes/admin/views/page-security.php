@@ -181,6 +181,76 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 		</p>
 	</form>
 
+	<?php if ( class_exists( 'KarMCP_Vulnerabilities_Module' ) && KarMCP_Vulnerabilities_Module::is_enabled() ) : ?>
+		<hr style="margin:2em 0;" />
+		<h2><?php esc_html_e( 'Known vulnerabilities', 'karmcp' ); ?></h2>
+		<?php
+		$karmcp_vstate = KarMCP_Vuln_Store::state();
+		$karmcp_vaudit = new KarMCP_Vuln_Audit();
+		$karmcp_vmatch = empty( $karmcp_vstate['refreshed_at'] ) ? array() : $karmcp_vaudit->match_installed();
+		$karmcp_attrib = KarMCP_Vuln_Store::attribution();
+		?>
+		<?php if ( empty( $karmcp_vstate['refreshed_at'] ) ) : ?>
+			<div class="notice notice-info inline"><p>
+				<?php esc_html_e( 'The vulnerability feed has never been downloaded, so nothing has been checked against it. That is an unknown result, not a clean one. Add an API key under Modules to start.', 'karmcp' ); ?>
+			</p></div>
+		<?php else : ?>
+			<?php if ( empty( $karmcp_vstate['ok'] ) ) : ?>
+				<div class="notice notice-warning inline"><p>
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: %s: error message. */
+							__( 'The last feed refresh failed, so this is based on older data: %s', 'karmcp' ),
+							(string) ( $karmcp_vstate['error'] ?? '' )
+						)
+					);
+					?>
+				</p></div>
+			<?php endif; ?>
+			<p>
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: 1: number affecting this site, 2: relative time. */
+						__( '%1$d affecting this site. Feed refreshed %2$s ago.', 'karmcp' ),
+						count( $karmcp_vmatch ),
+						human_time_diff( (int) $karmcp_vstate['refreshed_at'], time() )
+					)
+				);
+				?>
+			</p>
+			<?php if ( $karmcp_vmatch ) : ?>
+				<table class="widefat striped">
+					<tbody>
+					<?php foreach ( array_slice( $karmcp_vmatch, 0, 50 ) as $karmcp_v ) : ?>
+						<tr>
+							<td style="width:5em;"><strong><?php echo esc_html( (string) $karmcp_v['cvss_score'] ); ?></strong><br /><?php echo esc_html( (string) $karmcp_v['cvss_rating'] ); ?></td>
+							<td>
+								<strong><?php echo esc_html( (string) $karmcp_v['slug'] . ' ' . (string) $karmcp_v['installed'] ); ?></strong>
+								<?php if ( ! empty( $karmcp_v['fix_version'] ) ) : ?>
+									→ <?php echo esc_html( (string) $karmcp_v['fix_version'] ); ?>
+								<?php else : ?>
+									— <em><?php esc_html_e( 'no fix yet', 'karmcp' ); ?></em>
+								<?php endif; ?>
+								<br />
+								<?php echo esc_html( (string) $karmcp_v['title'] ); ?>
+								<?php if ( ! empty( $karmcp_v['reference'] ) ) : ?>
+									<a href="<?php echo esc_url( (string) $karmcp_v['reference'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'record', 'karmcp' ); ?></a>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		<?php endif; ?>
+		<p class="description" style="margin-top:1em;">
+			<?php echo esc_html( $karmcp_attrib['notice'] ); ?>
+			<a href="<?php echo esc_url( $karmcp_attrib['license_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Licence terms', 'karmcp' ); ?></a>
+		</p>
+	<?php endif; ?>
+
 	<hr style="margin:2em 0;" />
 
 	<h2><?php esc_html_e( 'Recovery from fatal errors', 'karmcp' ); ?></h2>

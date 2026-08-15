@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.3.0 =
+
+* New tool `upload-media`: uploads a file from the client machine into the Media Library by sending its bytes as base64. The companion to `sideload-image`, which can only fetch a URL the server already reaches — so until now an agent could not upload the photo sitting on the user's own disk. Accepts optional alt text, title, caption, description, and a `post_id` to attach it to. It goes through `media_handle_sideload()` like every other upload, so the type allowlist, the SVG sanitizer and the WebP/compression pass all still apply.
+* `upload-media` refuses three things before writing: a file type this site does not accept (checked from the extension before the payload is decoded), a payload over the site's upload limit (estimated from the encoded length, with the limit named in the error), and attaching to a post the caller cannot edit — `upload_files` says a user may add files, not whose pages they may attach them to.
 
 = 1.2.1 =
 

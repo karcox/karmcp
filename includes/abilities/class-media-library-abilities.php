@@ -2,12 +2,17 @@
 /**
  * WordPress Media Library MCP ability for Elementor.
  *
- * Registers a single read-only tool, `list-media`, that lets an AI agent
- * discover and query images already uploaded to the WordPress Media Library.
- * This fills the gap left by the stock-image search tools: those find generic
- * stock photos, but can't surface a client's own photos (e.g. 300+
- * job-site images already in their library). Backed by a direct WP_Query on
- * attachments — no HTTP round-trip.
+ * Registers the Media Library CRUD tools — `list-media`, `get-media`,
+ * `upload-media`, `update-media` and `delete-media` — so an AI agent can work
+ * with the site's own uploads rather than only with stock photos: those find
+ * generic images, but can't surface a client's own (e.g. 300+ job-site photos
+ * already in their library). The reads are a direct WP_Query on attachments,
+ * no HTTP round-trip.
+ *
+ * `upload-media` is the companion to `sideload-image`: that one fetches a URL
+ * the *server* can already reach, this one takes the bytes from the *client*
+ * machine as base64, which is the only way an agent can put a file the user
+ * has locally into the library.
  *
  * @package KarMCP
  * @since   2.0.2
@@ -53,6 +58,7 @@ class KarMCP_Media_Library_Abilities {
 		return array(
 			'karmcp/list-media',
 			'karmcp/get-media',
+			'karmcp/upload-media',
 			'karmcp/update-media',
 			'karmcp/delete-media',
 		);
@@ -66,6 +72,7 @@ class KarMCP_Media_Library_Abilities {
 	public function register(): void {
 		$this->register_list_media();
 		$this->register_get_media();
+		$this->register_upload_media();
 		$this->register_update_media();
 		$this->register_delete_media();
 	}
@@ -389,6 +396,403 @@ class KarMCP_Media_Library_Abilities {
 			'sizes'       => $sizes,
 			'metadata'    => $meta,
 		);
+	}
+
+	// -------------------------------------------------------------------------
+	// upload-media
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Upload permission: `upload_files`, plus edit rights on the parent post
+	 * when the caller attaches the upload to one.
+	 *
+	 * Attaching is a write to that post's media list, so an author who may
+	 * upload must still not be able to hang a file off somebody else's page.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param array|null $input Tool input; may carry a `post_id`.
+	 * @return bool
+	 */
+	public function check_upload_permission( $input = null ): bool {
+		if ( ! current_user_can( 'upload_files' ) ) {
+			return false;
+		}
+		$parent = absint( $input['post_id'] ?? 0 );
+		return $parent ? current_user_can( 'edit_post', $parent ) : true;
+	}
+
+	private function register_upload_media(): void {
+		karmcp_register_ability(
+			'karmcp/upload-media',
+			array(
+				'label'               => __( 'Upload Media', 'karmcp' ),
+				'description'         => __( 'Uploads a file from the CLIENT machine into the WordPress Media Library by passing its raw bytes as base64. Use this for a file the user has locally; use sideload-image instead when the image is at a public URL the server can fetch itself. Only file types WordPress accepts are allowed (executables are refused), and the content is verified against the extension. Returns the attachment ID and URL, ready to pass to add-free-widget, or to update-post as featured_image:{id}.', 'karmcp' ),
+				'category'            => 'karmcp',
+				'execute_callback'    => array( $this, 'execute_upload_media' ),
+				'permission_callback' => array( $this, 'check_upload_permission' ),
+				'input_schema'        => array(
+					'type'       => 'object',
+					'properties' => array(
+						'filename'     => array(
+							'type'        => 'string',
+							'description' => __( 'File name WITH its extension (e.g. "team-photo.jpg"). The extension decides the accepted type, so it must match the real content. Any directory part is stripped.', 'karmcp' ),
+						),
+						'data'         => array(
+							'type'        => 'string',
+							'description' => __( 'The file contents, base64-encoded. A "data:<mime>;base64," prefix is accepted and stripped.', 'karmcp' ),
+						),
+						'alt'          => array(
+							'type'        => 'string',
+							'description' => __( 'Alt text (accessibility/SEO). Strongly recommended for images.', 'karmcp' ),
+						),
+						'title'        => array(
+							'type'        => 'string',
+							'description' => __( 'Attachment title. Defaults to the filename.', 'karmcp' ),
+						),
+						'caption'      => array(
+							'type'        => 'string',
+							'description' => __( 'Attachment caption.', 'karmcp' ),
+						),
+						'description'  => array(
+							'type'        => 'string',
+							'description' => __( 'Attachment description.', 'karmcp' ),
+						),
+						'post_id'      => array(
+							'type'        => 'integer',
+							'description' => __( 'Attach the upload to this post/page (sets post_parent). Requires edit rights on it. Omit to leave it unattached.', 'karmcp' ),
+						),
+						'convert_webp' => array(
+							'type'        => 'boolean',
+							'description' => __( 'Convert the uploaded image to WebP (default true, and only when the Image Optimization module is active). Set false to skip conversion when it is timing out on shared hosting.', 'karmcp' ),
+						),
+					),
+					'required'   => array( 'filename', 'data' ),
+				),
+				'output_schema'       => array(
+					'type'       => 'object',
+					'properties' => array(
+						'attachment_id' => array( 'type' => 'integer' ),
+						'url'           => array( 'type' => 'string' ),
+						'filename'      => array( 'type' => 'string' ),
+						'title'         => array( 'type' => 'string' ),
+						'mime_type'     => array( 'type' => 'string' ),
+						'filesize'      => array( 'type' => 'integer' ),
+						'width'         => array( 'type' => 'integer' ),
+						'height'        => array( 'type' => 'integer' ),
+						'post_parent'   => array( 'type' => 'integer' ),
+					),
+				),
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => false,
+						'destructive' => false,
+						'idempotent'  => false,
+					),
+					'show_in_rest' => true,
+				),
+			)
+		);
+	}
+
+	/**
+	 * Executes the upload-media ability.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param array $input The input parameters.
+	 * @return array|\WP_Error
+	 */
+	public function execute_upload_media( $input ) {
+		// These live in wp-admin/includes, which the REST/WP-CLI requests the MCP
+		// server runs in do not load. Each is guarded on its own file's function:
+		// wp_tempnam() is in file.php and media_handle_sideload() in media.php, so
+		// keying both off the latter would fatal on a request where something else
+		// had already pulled in media.php alone.
+		if ( ! function_exists( 'wp_tempnam' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		if ( ! function_exists( 'media_handle_sideload' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+		}
+		if ( ! function_exists( 'wp_generate_attachment_metadata' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+		}
+
+		$filename = $this->resolve_upload_filename( $input['filename'] ?? '' );
+		if ( is_wp_error( $filename ) ) {
+			return $filename;
+		}
+
+		// The parent was already authorised in check_upload_permission(); this only
+		// catches an id that names nothing, which would otherwise silently produce
+		// an unattached upload the agent believes it attached. One indexed read,
+		// so it goes before the decode rather than after it.
+		$parent = absint( $input['post_id'] ?? 0 );
+		if ( $parent && ! get_post( $parent ) ) {
+			return new \WP_Error(
+				'post_not_found',
+				sprintf(
+					/* translators: %d: post ID. */
+					__( 'No post with ID %d exists to attach the upload to.', 'karmcp' ),
+					$parent
+				)
+			);
+		}
+
+		$bytes = $this->decode_upload_payload( $input['data'] ?? '' );
+		if ( is_wp_error( $bytes ) ) {
+			return $bytes;
+		}
+
+		$tmp_file = wp_tempnam( $filename );
+		if ( ! $tmp_file ) {
+			return new \WP_Error( 'temp_file_failed', __( 'Could not create a temporary file for the upload.', 'karmcp' ) );
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- A temp file outside ABSPATH, exactly as core's download_url() writes it; WP_Filesystem is not initialised on this path.
+		$written = file_put_contents( $tmp_file, $bytes );
+		if ( false === $written || $written !== strlen( $bytes ) ) {
+			wp_delete_file( $tmp_file );
+			return new \WP_Error( 'temp_write_failed', __( 'Could not write the decoded file to disk (check the temp directory is writable and has space).', 'karmcp' ) );
+		}
+		unset( $bytes );
+
+		$file_array = array(
+			'name'     => $filename,
+			'tmp_name' => $tmp_file,
+		);
+
+		// media_handle_sideload() runs wp_generate_attachment_metadata()
+		// synchronously, which is where the Image Optimization module compresses
+		// and generates WebP. When the caller asks to skip conversion
+		// (convert_webp:false — for slow shared hosting), suppress it for just
+		// this upload. It also re-checks the content against the extension, which
+		// is the authoritative test: a .jpg holding PHP is refused here.
+		$skip_webp = array_key_exists( 'convert_webp', (array) $input ) && false === $input['convert_webp'];
+		if ( $skip_webp ) {
+			add_filter( 'karmcp_optimize_attachment', '__return_false', 99 );
+		}
+		$attachment_id = media_handle_sideload( $file_array, $parent );
+		if ( $skip_webp ) {
+			remove_filter( 'karmcp_optimize_attachment', '__return_false', 99 );
+		}
+
+		if ( is_wp_error( $attachment_id ) ) {
+			if ( file_exists( $tmp_file ) ) {
+				wp_delete_file( $tmp_file );
+			}
+			return new \WP_Error(
+				'upload_failed',
+				sprintf(
+					/* translators: 1: filename, 2: error message. */
+					__( 'Upload of %1$s failed: %2$s. If the file is large, retry with convert_webp:false to skip image processing.', 'karmcp' ),
+					$filename,
+					$attachment_id->get_error_message()
+				)
+			);
+		}
+
+		$attachment_id = (int) $attachment_id;
+		$this->apply_attachment_fields( $attachment_id, $input );
+
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			KarMCP_Change_Recorder::record_post_create(
+				$attachment_id,
+				sprintf(
+					/* translators: 1: filename, 2: attachment ID. */
+					__( 'Uploaded media %1$s (#%2$d)', 'karmcp' ),
+					$filename,
+					$attachment_id
+				),
+				$filename . ' (#' . $attachment_id . ')'
+			);
+		}
+
+		$meta = wp_get_attachment_metadata( $attachment_id );
+		$meta = is_array( $meta ) ? $meta : array();
+		$post = get_post( $attachment_id );
+
+		$filesize = isset( $meta['filesize'] ) ? (int) $meta['filesize'] : 0;
+		if ( ! $filesize ) {
+			$path = get_attached_file( $attachment_id );
+			if ( $path && file_exists( $path ) ) {
+				$filesize = (int) filesize( $path );
+			}
+		}
+
+		return array(
+			'attachment_id' => $attachment_id,
+			'url'           => (string) wp_get_attachment_url( $attachment_id ),
+			// Not necessarily what was passed: WordPress dedupes a colliding name
+			// and corrects an extension that misnames the content.
+			'filename'      => (string) wp_basename( (string) get_attached_file( $attachment_id ) ),
+			'title'         => (string) ( $post->post_title ?? '' ),
+			'mime_type'     => (string) ( $post->post_mime_type ?? '' ),
+			'filesize'      => $filesize,
+			'width'         => isset( $meta['width'] ) ? (int) $meta['width'] : 0,
+			'height'        => isset( $meta['height'] ) ? (int) $meta['height'] : 0,
+			'post_parent'   => (int) ( $post->post_parent ?? 0 ),
+		);
+	}
+
+	/**
+	 * Reduces the caller's `filename` to a bare, accepted filename — or explains
+	 * why it cannot be one.
+	 *
+	 * Everything here runs before the payload is decoded, so a name that could
+	 * never be stored costs nothing.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param mixed $raw The `filename` input value.
+	 * @return string|\WP_Error Sanitized filename, or an error.
+	 */
+	private function resolve_upload_filename( $raw ) {
+		// A path is never meaningful here — the bytes come over the wire, so any
+		// directory part is either an agent leaking its local layout or an attempt
+		// at traversal. The backslashes are normalised first because basename() is
+		// separator-aware only for the platform it runs on, so a Windows client's
+		// "C:\Users\me\photo.jpg" would otherwise survive as one long "name" and
+		// come out of sanitize_file_name() as "CUsersmephoto.jpg".
+		$filename = sanitize_file_name( basename( str_replace( '\\', '/', (string) $raw ) ) );
+
+		if ( '' === $filename ) {
+			return new \WP_Error( 'missing_params', __( 'A "filename" is required, with its extension (e.g. "photo.jpg").', 'karmcp' ) );
+		}
+		if ( ! preg_match( '/\.[A-Za-z0-9]{1,10}$/', $filename ) ) {
+			return new \WP_Error(
+				'missing_extension',
+				sprintf(
+					/* translators: %s: the filename that was passed. */
+					__( 'The filename "%s" has no extension. WordPress decides what a file is by its extension, so it must be present (e.g. "photo.jpg").', 'karmcp' ),
+					$filename
+				)
+			);
+		}
+
+		// Reject a type this site (and this user) cannot accept BEFORE decoding
+		// what may be megabytes. wp_check_filetype() resolves against
+		// get_allowed_mime_types(), so the SVG Support module widening the list is
+		// honoured, and so is the narrowing core applies to a user without
+		// `unfiltered_html` (it drops html, js and css for them). The authoritative
+		// test is still the one media_handle_sideload() runs on the content.
+		$checked = wp_check_filetype( $filename );
+		if ( empty( $checked['type'] ) ) {
+			return new \WP_Error(
+				'disallowed_file_type',
+				sprintf(
+					/* translators: %s: the file extension that was rejected. */
+					__( 'WordPress does not accept ".%s" uploads on this site. Executable and unknown types are refused; for SVG, enable the SVG Support module first.', 'karmcp' ),
+					strtolower( (string) ( empty( $checked['ext'] ) ? pathinfo( $filename, PATHINFO_EXTENSION ) : $checked['ext'] ) )
+				)
+			);
+		}
+
+		return $filename;
+	}
+
+	/**
+	 * Decodes the base64 payload, refusing anything the site would not accept as
+	 * an upload anyway.
+	 *
+	 * The size is estimated from the encoded length first: base64 costs 4 bytes
+	 * per 3, so a payload over the limit can be refused without allocating the
+	 * decoded copy alongside it.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param mixed $raw The `data` input value.
+	 * @return string|\WP_Error Decoded bytes, or an error.
+	 */
+	private function decode_upload_payload( $raw ) {
+		if ( ! is_string( $raw ) || '' === $raw ) {
+			return new \WP_Error( 'missing_params', __( 'A base64-encoded "data" payload is required.', 'karmcp' ) );
+		}
+
+		// Accept a data: URI as pasted by most clients, and drop the whitespace
+		// that line-wrapped base64 carries (strict decoding rejects it). The
+		// media-type part is matched up to the comma, not up to the first
+		// semicolon, so a URI carrying extra parameters is stripped too.
+		$payload = preg_replace( '#^data:[^,]*;base64,#i', '', $raw );
+		$payload = preg_replace( '/\s+/', '', (string) $payload );
+
+		if ( '' === $payload ) {
+			return new \WP_Error( 'missing_params', __( 'The "data" payload is empty once the data: prefix is removed.', 'karmcp' ) );
+		}
+
+		$limit = function_exists( 'wp_max_upload_size' ) ? (int) wp_max_upload_size() : 0;
+		if ( $limit > 0 && (int) ( strlen( $payload ) * 3 / 4 ) > $limit ) {
+			return $this->too_large_error( $limit );
+		}
+
+		$bytes = base64_decode( $payload, true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Decoding the caller's file payload is this tool's whole purpose; strict mode rejects anything that is not base64.
+		if ( false === $bytes || '' === $bytes ) {
+			return new \WP_Error( 'invalid_base64', __( 'The "data" payload is not valid base64. Send the raw file bytes base64-encoded, not a file path, a URL, or JSON.', 'karmcp' ) );
+		}
+		if ( $limit > 0 && strlen( $bytes ) > $limit ) {
+			return $this->too_large_error( $limit );
+		}
+
+		return $bytes;
+	}
+
+	/**
+	 * The "over the upload limit" error, with the limit named so an agent can act
+	 * on it (resize the image) instead of retrying the same payload.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param int $limit Maximum upload size in bytes.
+	 * @return \WP_Error
+	 */
+	private function too_large_error( int $limit ): \WP_Error {
+		return new \WP_Error(
+			'file_too_large',
+			sprintf(
+				/* translators: %s: human-readable size, e.g. "8 MB". */
+				__( 'The file is larger than this site accepts (%s). Resize or recompress it, or raise the PHP upload_max_filesize / post_max_size limits.', 'karmcp' ),
+				size_format( $limit )
+			)
+		);
+	}
+
+	/**
+	 * Applies the optional title/alt/caption/description to a fresh upload.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param int   $attachment_id The new attachment ID.
+	 * @param array $input         The tool input.
+	 * @return void
+	 */
+	private function apply_attachment_fields( int $attachment_id, array $input ): void {
+		$postarr = array( 'ID' => $attachment_id );
+
+		$title = sanitize_text_field( (string) ( $input['title'] ?? '' ) );
+		if ( '' !== $title ) {
+			$postarr['post_title'] = $title;
+		}
+		$caption = sanitize_text_field( (string) ( $input['caption'] ?? '' ) );
+		if ( '' !== $caption ) {
+			$postarr['post_excerpt'] = $caption;
+		}
+		if ( array_key_exists( 'description', $input ) && '' !== (string) $input['description'] ) {
+			// Description maps to post_content, which allows HTML by design;
+			// wp_update_post applies wp_filter_post_kses for users without
+			// unfiltered_html. Title and caption are plain text, so they are
+			// sanitized above — this deliberately is not.
+			$postarr['post_content'] = (string) $input['description'];
+		}
+
+		if ( count( $postarr ) > 1 ) {
+			wp_update_post( wp_slash( $postarr ) );
+		}
+
+		$alt = sanitize_text_field( (string) ( $input['alt'] ?? '' ) );
+		if ( '' !== $alt ) {
+			update_post_meta( $attachment_id, '_wp_attachment_image_alt', $alt );
+		}
 	}
 
 	// -------------------------------------------------------------------------

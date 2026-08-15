@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.3.0]
+
+> One tool. The library had four ways to work with a file that was already on the server and none to put one there from the machine the person is sitting at.
+
+### Added
+
+- **`upload-media`: put a local file into the Media Library.** `sideload-image` fetches a URL *the server* can already reach, which covers stock photos and anything public and covers nothing else — so the one thing an agent could not do was upload the photo the user has on their own disk. This tool takes the bytes as base64 and hands them to `media_handle_sideload()`, the same path every other upload takes, so the type allowlist, the SVG sanitizer and the Image Optimization module's compress/WebP pass all apply unchanged (`convert_webp:false` skips the last one, as on its sibling). Optional `alt`, `title`, `caption`, `description`, and `post_id` to attach it to a page.
+
+  Three things it refuses before writing anything, each because the alternative is worse than an error:
+
+  - **A type this site does not accept**, checked from the extension against `get_allowed_mime_types()` *before* decoding. That resolves per user and per site, so the SVG Support module widening the list is honoured, and so is the narrowing core applies to a user without `unfiltered_html`. The authoritative check still happens inside `media_handle_sideload()`, which reads the content and rejects a `.jpg` holding PHP; this one only avoids decoding megabytes to learn what the filename already said.
+  - **A payload over the site's upload limit**, estimated from the *encoded* length — base64 costs four bytes per three, so refusing early is what keeps an oversized upload from being a memory fatal instead of a message. The limit is named in the error so an agent resizes rather than retrying the same bytes.
+  - **Attaching to a post the caller cannot edit.** `upload_files` says a user may add files; it does not say whose pages they may hang them off. When `post_id` is present the permission callback also requires `edit_post` on it.
+
+  Enabled by default, like `sideload-image`: it writes one attachment, gated on the capability WordPress itself gates uploads on. The upload is recorded in the change ledger, so it is reversible from **KarMCP → Changes**.
+
 ## [1.2.1]
 
 > Three failures, two causes, and one thing in common: the error said nothing you could act on. Nothing here changes what the plugin does — only what it tells you when it cannot do it.

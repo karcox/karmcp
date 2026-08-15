@@ -24,7 +24,7 @@ KarMCP is a WordPress plugin that exposes your site as **[MCP](https://modelcont
 
 **Build a whole site, not just a page.** `build-site` lays down the pages, the menu, the front page and the global palette in one call — dry-run by default, idempotent by slug. Contact forms that actually deliver mail, whether you run Contact Form 7 or Elementor Pro. Products, categories and store setup for WooCommerce. Translations for Polylang and WPML, duplicated and linked so the language switcher finds them. Validated Schema.org JSON-LD in the page head.
 
-**Run the site.** Content and taxonomies, media, users, settings, plugins and themes, nav menus, the filesystem, and the database, all over MCP.
+**Run the site.** Content and taxonomies, media, users, settings, plugins and themes, nav menus, the filesystem, and the database, all over MCP. Images can come from a stock provider, from a URL the server can reach, or — with `upload-media` — straight off the machine you are sitting at, sent as base64.
 
 **Understand and undo.** One-call page snapshots, content search across your own pages and templates, a change ledger with rollback, and read-only performance and security scans that return a scored report.
 

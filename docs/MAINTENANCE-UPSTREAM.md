@@ -14,7 +14,7 @@ It is a **source of ideas, not a source of code**. We never rebase or merge; cha
 |---|---|
 | Baseline tag | `baseline-3.12.0` |
 | Upstream commit | `73c9b92` |
-| Reviewed up to | 3.12.0 (fork point) |
+| Reviewed up to | 3.12.1 (reviewed from the published release notes and file tree, not a fetched commit — see the log row) |
 
 `baseline-<version>` marks the last upstream commit that has been **reviewed** — not merged. Everything after it is unread.
 
@@ -92,3 +92,19 @@ See [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) for the g
 | Version | Date reviewed | Adopted | Rejected / notes |
 |---|---|---|---|
 | 3.12.0 | 2026-08-13 | Fork point — full tree adopted as the baseline. | Auto-updater, Freemius SDK, upsell banners and the Cloud endpoint removed; see Permanent divergences. |
+| 3.12.1 | 2026-08-15 | `upload-media`, reimplemented rather than transcribed (KarMCP 1.3.0). | Nothing else in the release. |
+
+### 3.12.1 — notes
+
+Reviewed from the release notes and the public file tree; the baseline tag was **not** moved, because the local clone has no `upstream` remote to fetch and the tag must point at a commit that has actually been read. Move it on the next review that fetches.
+
+`upload-media` was written against the same seam upstream uses (`media_handle_sideload()`), not copied. Three things here that upstream's version does not do, so an upstream diff should not "fix" them back:
+
+- The permission callback requires `edit_post` on `post_id` in addition to `upload_files`. Upstream gates on `upload_files` alone, which lets an Author attach a file to somebody else's page.
+- The payload is size-checked against `wp_max_upload_size()` from the **encoded** length before decoding. Without it an oversized base64 blob is a memory fatal rather than an error.
+- The new attachment is recorded via `KarMCP_Change_Recorder::record_post_create()`, so it is reversible from the change ledger. Upstream has no ledger. Note the asymmetry this leaves: `sideload-image` and `upload-svg-icon` also create attachments and still do **not** record — worth closing, but it is a change to those tools, not this one.
+
+Everything else in 3.12.0/3.12.1 was either already present or unavailable:
+
+- The **Backup / Sync / Migrate** suite (the headline of 3.12.0, seven MCP tools plus a paired connector) is Pro-only and **its source is not in the public repository** — there is no such directory under `includes/` or `includes/modules/`. It is also on the "dropped, not deferred" list above. Nothing to port even if we wanted it.
+- The three bug fixes in 3.12.0 were already in this tree at the fork point: dynamic-value paragraphs locking Theme Builder documents (#112, `KarMCP_Elementor_Data::is_atomic_validation_rejection()`), empty renders with the Flexbox Container experiment off (#111, `KarMCP_Atomic_Props::is_container_supported()`), and OAuth tokens issued without being persisted (`KarMCP_OAuth_Store::issue_token()` verifies the insert and self-heals the schema). Verified in the code, not assumed from the log.

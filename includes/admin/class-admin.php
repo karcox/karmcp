@@ -5236,6 +5236,11 @@ class KarMCP_Admin {
 						'description' => __( 'Full detail of one attachment (sizes, metadata, alt/caption).', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
 					),
+					'karmcp/upload-media'     => array(
+						'label'       => __( 'Upload Media', 'karmcp' ),
+						'description' => __( 'Uploads a file from the client machine into the Media Library (bytes sent as base64). The companion to Sideload Image, which fetches a URL the server can reach.', 'karmcp' ),
+						'badges'      => array(),
+					),
 					'karmcp/update-media'     => array(
 						'label'       => __( 'Update Media', 'karmcp' ),
 						'description' => __( 'Edit an attachment\'s alt text, title, caption, description.', 'karmcp' ),

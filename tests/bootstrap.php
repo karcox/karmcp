@@ -52,6 +52,8 @@ function karmcp_test_reset(): void {
 		'imported_types'     => array(),   // recorded acf_import_post_type() args.
 		'imported_taxes'     => array(),   // recorded acf_import_taxonomy() args.
 		'updated_internal'   => array(),   // recorded acf_update_internal_post_type() args.
+		'max_upload'         => 0,         // wp_max_upload_size() in bytes; 0 = unknown.
+		'allowed_ext'        => null,      // ext => mime for wp_check_filetype(); null = the default map.
 	);
 }
 karmcp_test_reset();
@@ -135,6 +137,45 @@ function sanitize_key( $value ): string {
 
 function esc_url_raw( $value ): string {
 	return (string) $value;
+}
+
+/**
+ * Reproduces core's character class and collapsing — the half the upload
+ * filename resolver leans on — rather than standing in for it.
+ */
+function sanitize_file_name( $name ): string {
+	$name = str_replace(
+		array( '?', '[', ']', '/', '\\', '=', '<', '>', ':', ';', ',', "'", '"', '&', '$', '#', '*', '(', ')', '|', '~', '`', '!', '{', '}', '%', '+', chr( 0 ) ),
+		'',
+		(string) $name
+	);
+	return trim( preg_replace( '/[\r\n\t -]+/', '-', $name ), '.-_' );
+}
+
+/**
+ * Stands in for get_allowed_mime_types(): the extensions the fixture treats as
+ * uploadable. Override the whole map via ['allowed_ext'].
+ */
+function wp_check_filetype( $filename, $mimes = null ): array {
+	$allowed = $GLOBALS['karmcp_test']['allowed_ext'] ?? array(
+		'jpg'  => 'image/jpeg',
+		'jpeg' => 'image/jpeg',
+		'png'  => 'image/png',
+		'pdf'  => 'application/pdf',
+	);
+	$ext = strtolower( (string) pathinfo( $filename, PATHINFO_EXTENSION ) );
+	return isset( $allowed[ $ext ] )
+		? array( 'ext' => $ext, 'type' => $allowed[ $ext ] )
+		: array( 'ext' => false, 'type' => false );
+}
+
+/** Bytes the fixture says this site accepts as an upload; 0 = unknown. */
+function wp_max_upload_size(): int {
+	return (int) ( $GLOBALS['karmcp_test']['max_upload'] ?? 0 );
+}
+
+function size_format( $bytes, $decimals = 0 ) {
+	return round( ( (int) $bytes ) / 1048576, $decimals ) . ' MB';
 }
 
 /**

@@ -36,19 +36,19 @@ $karmcp_sb_counts = static function ( array $list ): array {
 	return array( $active, $draft );
 };
 
-// ----- Blocks (Pro) -----
+// ----- Blocks -----
 $karmcp_sb_blocks_ok = class_exists( 'KarMCP_Block_Store' ) && KarMCP_Block_Store::user_has_access();
 list( $karmcp_sb_bl_active, $karmcp_sb_bl_draft ) = $karmcp_sb_counts(
 	$karmcp_sb_blocks_ok ? KarMCP_Block_Store::instance()->list_blocks( 'any' ) : array()
 );
 
-// ----- Widgets (Pro) -----
+// ----- Widgets -----
 $karmcp_sb_widgets_ok = class_exists( 'KarMCP_Widget_Store' ) && KarMCP_Widget_Store::user_has_access();
 list( $karmcp_sb_wd_active, $karmcp_sb_wd_draft ) = $karmcp_sb_counts(
 	$karmcp_sb_widgets_ok ? KarMCP_Widget_Store::list_widgets( 'any' ) : array()
 );
 
-// ----- PHP Snippets (Free, capability-gated) -----
+// ----- PHP Snippets (capability-gated) -----
 $karmcp_sb_snip_ok = class_exists( 'KarMCP_PHP_Snippet_Store' ) && KarMCP_PHP_Snippet_Store::can_edit();
 list( $karmcp_sb_sn_active, $karmcp_sb_sn_draft ) = $karmcp_sb_counts(
 	class_exists( 'KarMCP_PHP_Snippet_Store' ) ? KarMCP_PHP_Snippet_Store::list_snippets( 'any' ) : array()
@@ -58,34 +58,28 @@ $karmcp_sb_cards = array(
 	array(
 		'view'        => 'blocks',
 		'label'       => __( 'Blocks', 'karmcp' ),
-		'badge'       => 'pro',
-		'badge_label' => __( 'PRO', 'karmcp' ),
 		'icon'        => 'dashicons-block-default',
 		'ico_mod'     => 'usage',
 		'desc'        => __( 'AI-generated custom Gutenberg blocks, compiled from a spec and reviewed here before they go live.', 'karmcp' ),
 		'available'   => $karmcp_sb_blocks_ok,
 		'active'      => $karmcp_sb_bl_active,
 		'draft'       => $karmcp_sb_bl_draft,
-		'note'        => __( 'Requires Pro', 'karmcp' ),
+		'note'        => __( 'Needs permission', 'karmcp' ),
 	),
 	array(
 		'view'        => 'widgets',
 		'label'       => __( 'Widgets', 'karmcp' ),
-		'badge'       => 'pro',
-		'badge_label' => __( 'PRO', 'karmcp' ),
 		'icon'        => 'dashicons-screenoptions',
 		'ico_mod'     => 'tools',
 		'desc'        => __( 'AI-generated custom Elementor widgets, sandboxed and shown in the panel under "Custom (KarMCP)".', 'karmcp' ),
 		'available'   => $karmcp_sb_widgets_ok,
 		'active'      => $karmcp_sb_wd_active,
 		'draft'       => $karmcp_sb_wd_draft,
-		'note'        => __( 'Requires Pro', 'karmcp' ),
+		'note'        => __( 'Needs permission', 'karmcp' ),
 	),
 	array(
 		'view'        => 'snippets',
 		'label'       => __( 'PHP Snippets', 'karmcp' ),
-		'badge'       => 'free',
-		'badge_label' => __( 'FREE', 'karmcp' ),
 		'icon'        => 'dashicons-editor-code',
 		'ico_mod'     => 'sandbox',
 		'desc'        => __( 'Small PHP snippets an AI agent can draft, run as a shortcode or on a hook, that stay inactive until you review and activate them.', 'karmcp' ),
@@ -112,7 +106,6 @@ $karmcp_sb_cards = array(
 					</span>
 					<span class="karmcp-sb-card-titles">
 						<span class="karmcp-sb-card-title"><?php echo esc_html( $karmcp_c['label'] ); ?></span>
-						<span class="elementor-mcp-badge elementor-mcp-badge--<?php echo esc_attr( $karmcp_c['badge'] ); ?>"><?php echo esc_html( $karmcp_c['badge_label'] ); ?></span>
 					</span>
 					<span class="karmcp-sb-card-arrow" aria-hidden="true">&rarr;</span>
 				</span>

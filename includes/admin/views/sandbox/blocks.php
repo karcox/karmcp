@@ -2,11 +2,10 @@
 /**
  * Sandbox > Blocks view.
  *
- * Pro users: a table of AI-generated custom Gutenberg blocks with status,
- * last-error, view spec (block.json + render.php), activate/deactivate, and
- * delete. The blocks are created by AI agents through the MCP tools and live
- * in an isolated uploads sandbox — this screen is the human management /
- * kill-switch surface. Free users: upgrade CTA.
+ * A table of AI-generated custom Gutenberg blocks with status, last-error, view
+ * spec (block.json + render.php), activate/deactivate, and delete. The blocks
+ * are created by AI agents through the MCP tools and live in an isolated
+ * sandbox — this screen is the human management / kill-switch surface.
  *
  * Modeled on sandbox/widgets.php (same markup/JS pattern, widget → block).
  *
@@ -18,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$karmcp_bb_pro = class_exists( 'KarMCP_Block_Store' ) && KarMCP_Block_Store::user_has_access();
+$karmcp_bb_can = class_exists( 'KarMCP_Block_Store' ) && KarMCP_Block_Store::user_has_access();
 
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only notice render after a redirect, no state change.
 $karmcp_bb_imported = isset( $_GET['imported'] ) ? sanitize_text_field( wp_unslash( $_GET['imported'] ) ) : '';
@@ -44,21 +43,18 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 	<div class="elementor-mcp-pro-prompts">
 		<div class="elementor-mcp-pro-prompts-header">
 			<div class="elementor-mcp-pro-prompts-heading">
-				<h2>
-					<?php esc_html_e( 'Blocks', 'karmcp' ); ?>
-					<span class="elementor-mcp-badge elementor-mcp-badge--pro">PRO</span>
-				</h2>
+				<h2><?php esc_html_e( 'Blocks', 'karmcp' ); ?></h2>
 				<p class="description">
 					<?php esc_html_e( 'Custom Gutenberg blocks your AI agent generated through the MCP tools, starting from a structured spec. Everything lives in an isolated sandbox under wp-content/karmcp-sandbox, never in your theme, core, or other plugins. Active blocks appear in the block editor inserter under "KarMCP Custom".', 'karmcp' ); ?>
 				</p>
 			</div>
 		</div>
 
-		<?php if ( ! $karmcp_bb_pro ) : ?>
+		<?php if ( ! $karmcp_bb_can ) : ?>
 
 			<div class="elementor-mcp-pro-cta">
 				<p>
-					<?php esc_html_e( 'Custom Blocks is not available in this build: the generator and sandbox compiler are not part of KarMCP.', 'karmcp' ); ?>
+					<?php esc_html_e( 'Managing custom blocks requires an administrator account: a generated block is executable code that runs on every page it is placed on.', 'karmcp' ); ?>
 				</p>
 			</div>
 

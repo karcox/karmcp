@@ -135,6 +135,37 @@ function sanitize_key( $value ): string {
 	return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) );
 }
 
+/*
+ * Output escaping. These are close enough to WordPress's behaviour for the
+ * property the sandbox generators are tested on — that a stored value cannot
+ * carry markup into a rendered widget or block.
+ */
+function esc_html( $value ): string {
+	return htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' );
+}
+
+function esc_attr( $value ): string {
+	return htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' );
+}
+
+function esc_url( $value ): string {
+	$url = trim( (string) $value );
+	if ( '' === $url ) {
+		return '';
+	}
+	if ( preg_match( '#^\s*(javascript|data|vbscript)\s*:#i', $url ) ) {
+		return '';
+	}
+	return str_replace( array( '"', "'", '<', '>' ), array( '&quot;', '&#039;', '&lt;', '&gt;' ), $url );
+}
+
+function wp_kses_post( $value ): string {
+	// Strips exactly what matters here: script/style elements and event handlers.
+	$out = preg_replace( '#<\s*(script|style)\b.*?<\s*/\s*\1\s*>#is', '', (string) $value );
+	$out = preg_replace( '#<\s*(script|style)\b[^>]*>#i', '', (string) $out );
+	return (string) preg_replace( '/\son[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', (string) $out );
+}
+
 function esc_url_raw( $value ): string {
 	return (string) $value;
 }

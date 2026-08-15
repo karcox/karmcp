@@ -4040,8 +4040,9 @@ class KarMCP_Admin {
 				self::addon_tool_slugs(),
 				self::theme_tool_slugs(),
 				self::seo_a11y_tool_slugs(),
+				// Widget Builder needs Elementor; the Block Builder does not, so
+				// a missing block tool is genuine drift and should be reported.
 				self::widget_builder_tool_slugs(),
-				self::block_tool_slugs(),
 				self::redirect_tool_slugs(),
 				self::migrate_tool_slugs(),
 				array( 'karmcp/list-redirects', 'karmcp/find-broken-links', 'karmcp/resize-media' )
@@ -5932,11 +5933,13 @@ class KarMCP_Admin {
 			);
 		}
 
-		// SEO & Accessibility toolkit (Pro) + Widget Builder (Pro). ALWAYS added
-		// to the catalog so free users see the (locked) Pro surface; get_all_tools()
-		// flags each 'pro' category "Requires KarMCP Pro" and disables its toggles on
-		// free builds, and the abilities themselves stay license-gated. Bare block
-		// keeps the two category assignments grouped.
+		// SEO & Accessibility describe abilities that are not in this build, so
+		// they stay 'pro'-flagged and get_all_tools() drops them — listing a
+		// toggle for a tool that can never register would be a lie the Tools
+		// screen tells the admin. The Widget and Block Builders below are NOT
+		// flagged: they are implemented here, so they belong on the screen where
+		// an administrator can switch them on. Bare block keeps the group
+		// assignments together.
 		{
 			$tools['seo'] = array(
 				'platform' => 'wordpress',
@@ -5995,96 +5998,94 @@ class KarMCP_Admin {
 
 			$tools['widget_builder'] = array(
 				'platform' => 'elementor',
-				'pro'      => true,
-				'label' => __( 'Widget Builder (Pro)', 'karmcp' ),
+				'label' => __( 'Widget Builder', 'karmcp' ),
 				'tools' => array(
 					'karmcp/list-control-types'   => array(
 						'label'       => __( 'List Control Types', 'karmcp' ),
 						'description' => __( 'Returns the control types and template syntax for building widget specs.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/validate-widget-spec' => array(
 						'label'       => __( 'Validate Widget Spec', 'karmcp' ),
 						'description' => __( 'Validates a widget spec and dry-runs the generator without saving.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/create-custom-widget' => array(
 						'label'       => __( 'Create Custom Widget', 'karmcp' ),
-						'description' => __( 'Generates a custom Elementor widget from a spec into an isolated sandbox and activates it.', 'karmcp' ),
-						'badges'      => array( 'pro' ),
+						'description' => __( 'Compiles a custom Elementor widget from a spec into an isolated sandbox and activates it.', 'karmcp' ),
+						'badges'      => array(),
 					),
 					'karmcp/update-custom-widget' => array(
 						'label'       => __( 'Update Custom Widget', 'karmcp' ),
 						'description' => __( 'Replaces a custom widget\'s spec and regenerates its code.', 'karmcp' ),
-						'badges'      => array( 'pro' ),
+						'badges'      => array(),
 					),
 					'karmcp/get-custom-widget'    => array(
 						'label'       => __( 'Get Custom Widget', 'karmcp' ),
 						'description' => __( 'Returns a custom widget\'s spec, generated PHP, status, and last error.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/list-custom-widgets'  => array(
 						'label'       => __( 'List Custom Widgets', 'karmcp' ),
 						'description' => __( 'Lists all generated custom widgets with their status.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/set-widget-status'    => array(
 						'label'       => __( 'Set Widget Status', 'karmcp' ),
 						'description' => __( 'Activates or deactivates a custom widget.', 'karmcp' ),
-						'badges'      => array( 'pro' ),
+						'badges'      => array(),
 					),
 					'karmcp/delete-custom-widget' => array(
 						'label'       => __( 'Delete Custom Widget', 'karmcp' ),
-						'description' => __( 'Permanently deletes a custom widget and its sandbox file.', 'karmcp' ),
-						'badges'      => array( 'pro', 'destructive' ),
+						'description' => __( 'Permanently deletes a custom widget and its sandbox files. Needs confirm:true.', 'karmcp' ),
+						'badges'      => array( 'destructive' ),
 					),
 				),
 			);
 
 			$tools['block_builder'] = array(
 				'platform' => 'gutenberg',
-				'pro'      => true,
-				'label' => __( 'Block Builder (Pro)', 'karmcp' ),
+				'label' => __( 'Block Builder', 'karmcp' ),
 				'tools' => array(
 					'karmcp/list-block-control-types' => array(
 						'label'       => __( 'List Block Control Types', 'karmcp' ),
 						'description' => __( 'Returns the attribute types and template syntax for building block specs.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/validate-block-spec'      => array(
 						'label'       => __( 'Validate Block Spec', 'karmcp' ),
 						'description' => __( 'Validates a block spec and dry-runs the generator without saving.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/create-custom-block'      => array(
 						'label'       => __( 'Create Custom Block', 'karmcp' ),
-						'description' => __( 'Generates a custom Gutenberg block from a spec into an isolated sandbox and activates it.', 'karmcp' ),
-						'badges'      => array( 'pro' ),
+						'description' => __( 'Compiles a custom Gutenberg block from a spec into an isolated sandbox and activates it.', 'karmcp' ),
+						'badges'      => array(),
 					),
 					'karmcp/update-custom-block'      => array(
 						'label'       => __( 'Update Custom Block', 'karmcp' ),
 						'description' => __( 'Replaces a custom block\'s spec and regenerates its code.', 'karmcp' ),
-						'badges'      => array( 'pro' ),
+						'badges'      => array(),
 					),
 					'karmcp/get-custom-block'          => array(
 						'label'       => __( 'Get Custom Block', 'karmcp' ),
 						'description' => __( 'Returns a custom block\'s spec, generated code, status, and last error.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/list-custom-blocks'        => array(
 						'label'       => __( 'List Custom Blocks', 'karmcp' ),
 						'description' => __( 'Lists all generated custom blocks with their status.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/set-block-status'          => array(
 						'label'       => __( 'Set Block Status', 'karmcp' ),
 						'description' => __( 'Activates or deactivates a custom block.', 'karmcp' ),
-						'badges'      => array( 'pro' ),
+						'badges'      => array(),
 					),
 					'karmcp/delete-custom-block'       => array(
 						'label'       => __( 'Delete Custom Block', 'karmcp' ),
-						'description' => __( 'Permanently deletes a custom block and its sandbox file.', 'karmcp' ),
-						'badges'      => array( 'pro', 'destructive' ),
+						'description' => __( 'Permanently deletes a custom block and its sandbox files. Needs confirm:true.', 'karmcp' ),
+						'badges'      => array( 'destructive' ),
 					),
 				),
 			);

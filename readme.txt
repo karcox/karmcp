@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.11.1
+Stable tag: 1.12.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,15 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.12.0 =
+
+* The **Widget Builder** and **Block Builder** now work. Both screens shipped complete — store, loader, admin table, export/import — but the compiler that turns a design into code was missing and the access gates always returned false. The compilers are written, the gates are open to administrators, and the sixteen MCP tools the catalog listed are real.
+* The AI never writes PHP. It supplies a spec — metadata, typed fields, and an HTML template with `{{placeholders}}` — and the plugin compiles it into an Elementor widget or a Gutenberg block. **The escape function is chosen by the field's declared type**, and there is no raw output modifier. Template text that is not a placeholder becomes a PHP string literal, so it cannot turn into code.
+* Specs carrying PHP tags, `<script>` elements, inline event handlers or `javascript:` URLs are refused. Behaviour belongs in the spec's `scripts` field, which is served as a static file.
+* Generated blocks are server-rendered: no build step, no per-block JavaScript, and the editor previews the same PHP the visitor gets. Editing a block's spec updates every post already using it.
+* Artifacts load only from a hash-verified manifest; a fatal deactivates the offending artifact rather than the site; a widget Elementor rejects is demoted to draft with the reason recorded. New filters `karmcp_load_generated_widgets` and `karmcp_load_generated_blocks` are site-wide kill switches.
+* Fixed: those sixteen tools were seeded disabled and then hidden from the Tools screen by the Pro-category filter, so they could not be enabled at all. Fixed: the uninstaller left generated block posts behind.
 
 = 1.11.1 =
 

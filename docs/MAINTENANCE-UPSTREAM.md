@@ -75,8 +75,9 @@ These are deliberate. Do **not** re-import them from upstream:
 
 ## Own features
 
-KarMCP builds two of the upstream Pro capabilities itself. Everything else from that Pro (AI Chat, Backup/Migrate, Project Memory, Widget & Block Builder, the form/SEO plugin adapters, the Elementor addon packs) is **dropped, not deferred**.
+KarMCP builds three of the upstream Pro capabilities itself. Everything else from that Pro (AI Chat, Backup/Migrate, Project Memory, the form/SEO plugin adapters, the Elementor addon packs) is **dropped, not deferred**.
 
+- **Widget & Block Builder — done in 1.12.0.** `includes/sandbox/`: spec vocabulary, template compiler, one generator per platform, the block store/loader, and the two ability classes. **Written from scratch, not ported** — the upstream free tree never had the generator either, so there was nothing to import. The design is ours: a spec is data, the escape function comes from the declared type, and the generators are pure so the dry-run tool runs the real compiler. Never overwrite it from an upstream diff.
 - **Themer extended tier — done.** `includes/themer/class-themer-extended.php`: unlimited templates per type, granular matchers (`post`, `in-term`, `author`, `term`, `author-archive`, `date`), Exclude rules, working priority, and the object-search endpoint. Covered by `tests/ThemerExtendedTest.php`. This is **ours, not upstream's** — never overwrite it from an upstream diff.
 - **SEO & Accessibility — not started.** Plan in the roadmap.
 

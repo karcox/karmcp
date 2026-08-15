@@ -2,11 +2,10 @@
 /**
  * Sandbox > Widget Builder view.
  *
- * Pro users: a table of AI-generated custom Elementor widgets with status,
- * last-error, view spec/PHP, activate/deactivate, and delete. The widgets are
- * created by AI agents through the MCP tools and live in an isolated uploads
- * sandbox — this screen is the human management / kill-switch surface.
- * Free users: upgrade CTA.
+ * A table of AI-generated custom Elementor widgets with status, last-error,
+ * view spec/PHP, activate/deactivate, and delete. The widgets are created by AI
+ * agents through the MCP tools and live in an isolated sandbox — this screen is
+ * the human management / kill-switch surface.
  *
  * Moved out of page-widgets.php (now a view=-routed thin router) so the
  * Sandbox parent page can show a 3-card overview instead. Markup/logic below
@@ -20,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$karmcp_wb_pro = class_exists( 'KarMCP_Widget_Store' ) && KarMCP_Widget_Store::user_has_access();
+$karmcp_wb_can = class_exists( 'KarMCP_Widget_Store' ) && KarMCP_Widget_Store::user_has_access();
 
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only notice render after a redirect, no state change.
 $karmcp_wb_imported = isset( $_GET['imported'] ) ? sanitize_text_field( wp_unslash( $_GET['imported'] ) ) : '';
@@ -46,21 +45,18 @@ $karmcp_wb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 	<div class="elementor-mcp-pro-prompts">
 		<div class="elementor-mcp-pro-prompts-header">
 			<div class="elementor-mcp-pro-prompts-heading">
-				<h2>
-					<?php esc_html_e( 'Widgets', 'karmcp' ); ?>
-					<span class="elementor-mcp-badge elementor-mcp-badge--pro">PRO</span>
-				</h2>
+				<h2><?php esc_html_e( 'Widgets', 'karmcp' ); ?></h2>
 				<p class="description">
 					<?php esc_html_e( 'Code your AI agent generated through the MCP tools, starting with custom Elementor widgets. Everything lives in an isolated sandbox under wp-content/karmcp-sandbox, never in your theme, core, or other plugins. Active widgets appear in the Elementor panel under "Custom (KarMCP)".', 'karmcp' ); ?>
 				</p>
 			</div>
 		</div>
 
-		<?php if ( ! $karmcp_wb_pro ) : ?>
+		<?php if ( ! $karmcp_wb_can ) : ?>
 
 			<div class="elementor-mcp-pro-cta">
 				<p>
-					<?php esc_html_e( 'Custom Widgets is not available in this build: the generator and sandbox compiler are not part of KarMCP.', 'karmcp' ); ?>
+					<?php esc_html_e( 'Managing custom widgets requires an administrator account: a generated widget is executable code that runs on every page it is placed on.', 'karmcp' ); ?>
 				</p>
 			</div>
 

@@ -1,6 +1,8 @@
 # Roadmap: SEO & Accesibilidad · Themer extendido
 
-Plan para construir internamente las dos capacidades que sí justificaban la licencia Pro del upstream. Todo lo demás de aquel Pro (AI Chat, Migrate, Memory, Widget/Block Builder, integraciones de formularios y SEO, packs de Elementor) queda **descartado**.
+Plan para construir internamente las dos capacidades que sí justificaban la licencia Pro del upstream. Todo lo demás de aquel Pro (AI Chat, Migrate, Memory, integraciones de formularios y SEO, packs de Elementor) queda **descartado**.
+
+> El Widget/Block Builder salió de esa lista de descartes: se implementó en 1.12.0 (`includes/sandbox/`), con un diseño propio y sin nada que importar del upstream, que tampoco lo tenía en su árbol libre.
 
 Este documento está escrito contra el código real de este árbol tras la limpieza. Cada costura citada existe y está verificada.
 

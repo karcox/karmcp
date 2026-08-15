@@ -267,14 +267,17 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/class-system-kit-writer.php';
 		require_once KARMCP_DIR . 'includes/class-kit-backup-store.php';
 		require_once KARMCP_DIR . 'includes/class-free-brand-kits.php';
-		// Widget Builder infra (free base). The store + loader load unconditionally
-		// so the MCP surface + CPT registration can reach them; the generator +
-		// builder abilities ship in the Pro overlay (loaded via Pro_Loader).
-		// Central sandbox storage location (wp-content/karmcp-sandbox). Every store
-		// resolves paths through this, so it must load before them.
+		// Widget Builder. Central sandbox storage location
+		// (wp-content/karmcp-sandbox) first: every store resolves paths through
+		// it. Then the spec vocabulary + template compiler + generator (pure,
+		// no WordPress), then the store and the loader.
 		require_once KARMCP_DIR . 'includes/sandbox/class-sandbox-paths.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-sandbox-template.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-widget-spec.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-widget-generator.php';
 		require_once KARMCP_DIR . 'includes/class-widget-store.php';
 		require_once KARMCP_DIR . 'includes/class-widget-loader.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-widget-builder-abilities.php';
 		// Sandbox Bundle — portable cloud-ready format for blocks/widgets/snippets.
 		require_once KARMCP_DIR . 'includes/sandbox/class-sandbox-bundle.php';
 		require_once KARMCP_DIR . 'includes/sandbox/interface-sandbox-artifact.php';
@@ -284,6 +287,14 @@ class KarMCP_Bootstrap {
 		// block store, without touching either store's internals.
 		require_once KARMCP_DIR . 'includes/sandbox/class-widget-bundle-adapter.php';
 		require_once KARMCP_DIR . 'includes/sandbox/class-snippet-bundle-adapter.php';
+		// Block Builder. The store extends KarMCP_Sandbox_Store, so it loads
+		// after it; the loader loads in the same breath as the store, because
+		// boot() instantiates the loader as soon as the store class exists.
+		require_once KARMCP_DIR . 'includes/sandbox/class-block-spec.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-block-generator.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-block-store.php';
+		require_once KARMCP_DIR . 'includes/sandbox/class-block-loader.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-block-builder-abilities.php';
 		// Sandbox Cloud abilities — export/import any sandbox artifact (block/
 		// widget/snippet) as a portable bundle over the cloud contract. Free tree;
 		// registration is wired by the ability registrar (a later task).
@@ -406,10 +417,10 @@ class KarMCP_Bootstrap {
 		( new KarMCP_Widget_Loader() )->register_hooks();
 		add_action( 'init', array( 'KarMCP_PHP_Snippet_Store', 'register_post_type' ) );
 		( new KarMCP_PHP_Snippet_Loader() )->register_hooks();
-		// Block Builder (Pro overlay). Registers the karmcp_block CPT + Gutenberg
-		// block-category/init hooks only when the Pro class is present; the
-		// loader self-gates on license internally.
-		if ( class_exists( 'KarMCP_Block_Store' ) ) {
+		// Block Builder: the karmcp_block CPT plus the loader that registers
+		// active blocks with Gutenberg. Guarded because the uninstaller and the
+		// tests load parts of this tree on their own.
+		if ( class_exists( 'KarMCP_Block_Store' ) && class_exists( 'KarMCP_Block_Loader' ) ) {
 			add_action( 'init', array( 'KarMCP_Block_Store', 'register_post_type' ) );
 			( new KarMCP_Block_Loader() )->register_hooks();
 		}

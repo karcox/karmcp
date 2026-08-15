@@ -2,6 +2,30 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.12.0]
+
+### Added
+
+- **The Widget Builder and the Block Builder work.** Both screens existed and neither did anything: the store, the manifest loader, the admin table, the export/import and the cloud backup were all there, but the compiler that turns a design into code was not, and two access gates returned `false` unconditionally. An agent could reach the Sandbox and find a locked door with no key anywhere. The compilers are now written, the gates are open to administrators, and the sixteen MCP tools the catalog had always listed are real.
+
+  **The agent never writes PHP.** It supplies a spec: metadata, a list of typed fields, and an HTML template with `{{placeholder}}` references. The plugin compiles that into an `\Elementor\Widget_Base` subclass, or into a `block.json` plus a `render.php`, and **the escape function is chosen by the declared type** — `esc_html` for text, `esc_url` for links, `esc_attr` in attributes, a cast for numbers, `wp_kses_post` for the one rich-text type that is allowed to emit markup. There is deliberately no raw modifier. Everything in the template that is not a placeholder is emitted as a PHP string literal, so template text cannot become executable code even when it looks exactly like it: a template containing `<?php echo "pwned"; ?>` renders those characters on the page. The tests assert that by running the compiler's own output.
+
+  Specs are rejected before compiling if they carry a PHP tag, a `<script>` element, an inline `onclick=`-style handler, or a `javascript:` URL. Each of those has a legitimate home in the spec's `scripts` field, which is written out as a static file and enqueued only where the artifact appears.
+
+  Specs carry a `spec_version` from the first release. The stored spec is the regenerable source of truth for the code, so the format has to be able to move without orphaning what people already saved.
+
+  Generated blocks are **server-rendered**: one shared editor script, no build step and no JavaScript per block, and a ServerSideRender preview of the same PHP the visitor gets. Editing a block's spec updates every post already using it, because the markup lives in the render file rather than in post content.
+
+  The existing safety machinery now has something to guard. Artifacts load only from a hash-verified manifest, so a file edited on disk is skipped rather than executed. A fatal during load or render is attributed to the artifact that caused it and deactivates that one artifact, so the next request is clean. A widget that errors when Elementor builds its controls is demoted to draft with the reason recorded, instead of white-screening the editor. Two new filters, `karmcp_load_generated_widgets` and `karmcp_load_generated_blocks`, are the site-wide kill switches.
+
+  Both tool groups ship **disabled**, like everything else that writes executable code, and are switched on from **KarMCP → Tools**.
+
+### Fixed
+
+- **Tool groups flagged as Pro were removed from the Tools screen entirely**, which is right for a group whose abilities do not exist in this build — but the Widget and Block Builders were flagged too. Their sixteen tools were seeded disabled by default and then hidden from the only screen that could enable them, so they were unreachable by construction. The two implemented groups are no longer flagged, and the "PRO" badges and upgrade copy are gone from the Sandbox screens, which now say what is actually required: an administrator account.
+
+- **The uninstaller left generated block posts behind.** The sandbox files went with the shared tree, but a block post is itself the source of executable code and would have resurrected the block on reinstall.
+
 ## [1.11.1]
 
 ### Changed

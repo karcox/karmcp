@@ -67,17 +67,18 @@ class KarMCP_Widget_Store {
 	}
 
 	/**
-	 * Whether the current user/site may manage generated widgets. Requires the
-	 * Pro gate plus `manage_options`.
+	 * Whether the current user may manage generated widgets.
+	 *
+	 * A generated widget is executable PHP that runs on every page it is placed
+	 * on, so this is the capability that already means "may edit code", not an
+	 * editor-level one.
 	 *
 	 * @since 1.9.0
 	 *
 	 * @return bool
 	 */
 	public static function user_has_access(): bool {
-		// See KarMCP_Widget_Loader::has_access() — the generator/compiler that
-		// produced these artifacts is not part of this build.
-		return false;
+		return current_user_can( 'manage_options' );
 	}
 
 	// -------------------------------------------------------------------------
@@ -366,10 +367,10 @@ class KarMCP_Widget_Store {
 	 * @return true|WP_Error
 	 */
 	private static function write_widget( int $post_id, array $spec ) {
-		// The generator ships in the private Pro overlay. Guard defensively so a
-		// free build (pro/ absent) returns a clean error instead of fataling.
+		// Defensive: the store is loaded before the compiler on some paths (the
+		// uninstaller loads this file alone), so fail cleanly rather than fatal.
 		if ( ! class_exists( 'KarMCP_Widget_Generator' ) ) {
-			return new WP_Error( 'karmcp_pro_required', __( 'Widget Builder requires KarMCP Pro.', 'karmcp' ) );
+			return new WP_Error( 'generator_missing', __( 'The widget compiler is not loaded.', 'karmcp' ) );
 		}
 		$class_name  = 'KarMCP_Widget_' . $post_id;
 		$widget_name = 'karmcp_custom_' . $post_id;

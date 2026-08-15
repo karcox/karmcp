@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.11.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.12.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -44,7 +44,7 @@ PHPDIR=$(dirname "$(which php)")
 php -d extension_dir="$PHPDIR/ext" -d extension=mbstring /ruta/a/phpunit.phar
 ```
 
-Estado de referencia: **496 tests, 1.120 aserciones, todo en verde** (2026-08-14). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+Estado de referencia: **734 tests, 1.782 aserciones, todo en verde** (2026-08-15). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
 
 El harness comparte stubs en `tests/bootstrap.php`, y ahí está la trampa: **un stub del harness gana al que declare un fichero de test**, porque el bootstrap carga primero. Si añades ahí una función que un test ya simulaba por su cuenta, ese test empieza a leer una fixture distinta y falla lejos del cambio. Pasó con `wp_get_object_terms()` y los menús.
 
@@ -81,6 +81,28 @@ Las integraciones exponen dos herramientas (`<id>-read` / `<id>-write`) que reci
 
 Los widgets son **datos** en `includes/widgets/` (`catalog-{free,pro,woo}.php`), servidos por `KarMCP_Widget_Catalog`. El flujo es **descubrir → inspeccionar → actuar**: `list-widgets` → `get-widget-schema` → `add-free-widget` / `add-pro-widget` → `update-widget`. Cualquier control válido de Elementor pasa aunque no esté en el catálogo.
 
+### El sandbox: compilar, no ejecutar lo que escribe el agente
+
+Tres artefactos viven en `wp-content/karmcp-sandbox/` (`KarMCP_Sandbox_Paths`): snippets PHP, widgets de Elementor y bloques de Gutenberg. Los dos últimos los **compila el plugin** desde un spec; el agente no escribe PHP en ningún momento, y eso es la línea que no se cruza.
+
+El spec es datos: metadatos, campos tipados y una plantilla HTML con `{{marcadores}}`. `KarMCP_Sandbox_Template` la convierte en PHP y ahí está la propiedad clave: **todo lo que no es un marcador se emite con `var_export()` como literal de cadena**, así que el texto de la plantilla no puede volverse código aunque lo parezca. El escape de cada marcador lo decide el **tipo declarado** del campo, no quien escribió el spec, y no existe modificador `raw`. El compilador no elige el escape: se lo pregunta a su llamante (`KarMCP_Widget_Generator` / `KarMCP_Block_Generator`), que es quien conoce la forma de los valores de su plataforma.
+
+| Pieza | Widgets | Bloques |
+|---|---|---|
+| Vocabulario + validación | `KarMCP_Widget_Spec` | `KarMCP_Block_Spec` |
+| Compilador (puro) | `KarMCP_Widget_Generator` | `KarMCP_Block_Generator` |
+| Almacén | `KarMCP_Widget_Store` | `KarMCP_Block_Store` (sobre `KarMCP_Sandbox_Store`) |
+| Carga | `KarMCP_Widget_Loader` | `KarMCP_Block_Loader` |
+| Herramientas MCP | `KarMCP_Widget_Builder_Abilities` | `KarMCP_Block_Builder_Abilities` |
+
+Los generadores son **puros a propósito** (arrays entran, strings salen, sin WordPress): es lo que permite que `validate-widget-spec` haga un dry-run del compilador de verdad y no de una aproximación, y que los tests ejecuten el código generado con `eval` para comprobar el escapado contra payloads hostiles. Si alguna vez hay que tocarlos, esa pureza es el activo.
+
+Los bloques se renderizan en servidor: un único script de editor genérico (`assets/js/sandbox-blocks.js`, sin build step) los registra desde el payload del manifest y previsualiza con `ServerSideRender`. El patrón viene de `KarMCP_Themer_Blocks`, que ya lo hacía.
+
+> **Trampa del bootstrap:** `boot()` instancia `KarMCP_Block_Loader` en cuanto existe `KarMCP_Block_Store`. Las dos clases se cargan juntas o el sitio fatalea en cada request.
+
+> **El descriptor del editor se hornea en el manifest** durante `rebuild_manifest()`, no se lee de la base de datos en cada carga. El manifest existe justamente para que renderizar una página no consulte nada.
+
 ### Módulos
 
 Features que el admin enciende y apaga desde la pestaña **Modules**. Base `KarMCP_Module` + `KarMCP_Modules_Registry` en `includes/modules/`. Los activos se guardan en la opción `karmcp_active_modules` y arrancan en `init` (prioridad 5).
@@ -100,8 +122,7 @@ Esto ahorra horas: hay guards por todo el código que comprueban clases que **nu
 - **No hay `pro/`**, ni submódulo, ni `pro-manifest.txt`, ni `KarMCP_Pro_Loader`. Un solo tier.
 - **No hay Freemius ni licenciamiento.** `KarMCP_License` y `karmcp_fs()` no existen (0 ocurrencias).
 - **No hay auto-updater.** La cabecera lleva `Update URI: false`; se actualiza sustituyendo la carpeta.
-- **Clases ausentes** que sus guards siempre resuelven a falso: `KarMCP_Migrate_Abilities`, `KarMCP_Block_Store`, `KarMCP_Widget_Generator`, y los grupos GeneratePress / Blocksy / EssentialAddons / PremiumAddons / UAE / Block Builder / System Kit / SEO / A11y / Widget Builder / Memory. **Skills y Woo ya no están en esta lista**: Skills se implementó en `includes/skills/` y `KarMCP_Woo_Integration` en `includes/abilities/woo/` (catálogo de productos, no pedidos).
-- **Guards que devuelven `false` literal:** `KarMCP_Widget_Loader::has_access()`, `KarMCP_Widget_Store::user_has_access()`.
+- **Clases ausentes** que sus guards siempre resuelven a falso: `KarMCP_Migrate_Abilities` y los grupos GeneratePress / Blocksy / EssentialAddons / PremiumAddons / UAE / System Kit / SEO / A11y / Memory. **Skills, Woo y los dos builders del sandbox ya no están en esta lista**: Skills vive en `includes/skills/`, `KarMCP_Woo_Integration` en `includes/abilities/woo/`, y el Widget/Block Builder se implementó en 1.12.0 (ver abajo).
 - **Cloud está inerte:** `KarMCP_Cloud::DEFAULT_BASE_URL` está vacío a propósito, así que el plugin **no hace ninguna llamada saliente** salvo que se configure (`KARMCP_CLOUD_URL`, la opción `karmcp_cloud_base_url`, o el filtro homónimo).
 
 ## Seguridad: el modelo
@@ -131,7 +152,8 @@ Al añadir una herramienta que escribe: súbele `DEFAULTS_VERSION` en `class-adm
 - **`post_type` tiene un límite duro de 20 caracteres** (`wp_posts.post_type` es `varchar(20)`). El prefijo `karmcp_` es largo; un CPT que se pase **no se registra y falla en silencio**. Por eso el CPT del Themer es `karmcp_theme_tpl`, no `karmcp_theme_template`.
 - **Nunca adivines nombres de campos o controles.** Elementor y Spectra aceptan cualquier clave que les mandes sin quejarse, así que un nombre erróneo parece funcionar y no hace nada. Léelo del plugin.
 - **Nunca escribas firmas de malware íntegras en disco** (ni en tests). Los escáneres del hosting ponen el archivo en cuarentena, lo cual lo **deja a cero sin borrarlo**: el `require_once` tiene éxito, la clase nunca se declara, y el fatal aparece lejos del origen. Por eso `class-security-malware-audit.php` ensambla sus patrones desde fragmentos en tiempo de ejecución.
-- **`render.php` de un bloque debe hacer `echo`, no `return`** — WordPress lo envuelve en su propio buffer e ignora el retorno.
+- **`render.php` de un bloque debe hacer `echo`, no `return`** — WordPress lo envuelve en su propio buffer e ignora el retorno. Hay un test que lo fija sobre el código que genera `KarMCP_Block_Generator`.
+- **Las categorías marcadas `'pro' => true` en el catálogo de herramientas desaparecen de la pestaña Tools** (`get_all_tools()` las filtra). Eso es correcto para grupos cuyas abilities no existen, pero marcar así un grupo implementado lo vuelve inalcanzable: sus slugs se siembran deshabilitados y luego se ocultan de la única pantalla que podría activarlos. Pasó con el Widget y el Block Builder hasta 1.12.0.
 
 ## Deuda conocida
 

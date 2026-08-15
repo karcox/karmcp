@@ -139,6 +139,22 @@ class KarMCP_Uninstaller {
 			KarMCP_PHP_Snippet_Store::uninstall_cleanup();
 		}
 
+		// Generated blocks. The widget cleanup above already removed the shared
+		// sandbox tree, so this is mostly about the posts — but a block post IS
+		// the source of executable code, and leaving one behind would resurrect
+		// the block on reinstall.
+		if ( ! class_exists( 'KarMCP_Block_Store' ) ) {
+			require_once KARMCP_DIR . 'includes/sandbox/interface-sandbox-artifact.php';
+			require_once KARMCP_DIR . 'includes/sandbox/class-sandbox-paths.php';
+			require_once KARMCP_DIR . 'includes/sandbox/class-sandbox-store.php';
+			require_once KARMCP_DIR . 'includes/sandbox/class-block-spec.php';
+			require_once KARMCP_DIR . 'includes/sandbox/class-block-generator.php';
+			require_once KARMCP_DIR . 'includes/sandbox/class-block-store.php';
+		}
+		if ( class_exists( 'KarMCP_Block_Store' ) ) {
+			KarMCP_Block_Store::uninstall_cleanup();
+		}
+
 		// Both routines above delete their own posts as well as their files,
 		// because a widget or snippet post IS the source of executable code.
 		//

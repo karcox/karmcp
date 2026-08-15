@@ -56,11 +56,22 @@ class KarMCP_Widget_Loader {
 	 * @return bool
 	 */
 	private function has_access(): bool {
-		// The sandbox widget generator/compiler lived in the upstream Pro overlay
-		// and is absent from this build, so generated widgets can never be
-		// compiled or loaded. Kept as a single seam: when KarMCP grows its own
-		// widget builder, this is the one method to reopen.
-		return false;
+		/**
+		 * Whether generated widgets may load on this site.
+		 *
+		 * Loading is not a per-user decision — a widget renders for logged-out
+		 * visitors too — so there is no capability check here. What gates a
+		 * widget is the manifest: only widgets an administrator activated reach
+		 * it, and only files matching their recorded hash are included. This
+		 * filter is the site-wide kill switch, for an owner who wants the
+		 * builder available in wp-admin but nothing of it executing on the
+		 * front end.
+		 *
+		 * @since 1.12.0
+		 *
+		 * @param bool $enabled Whether to load generated widgets.
+		 */
+		return (bool) apply_filters( 'karmcp_load_generated_widgets', true );
 	}
 
 	/**

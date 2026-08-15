@@ -1,0 +1,55 @@
+# Análisis estático de KarMCP.
+#
+# Nivel 1 a propósito para empezar. En los niveles bajos PHPStan busca lo que
+# no se discute: funciones y métodos que no existen, clases mal escritas,
+# número de argumentos incorrecto. Eso es exactamente la clase de fallo que un
+# repo sin CI acumula en silencio y que ningún test unitario coge, porque el
+# camino ni se ejecuta.
+#
+# El plan es de trinquete: limpiar el nivel 1, subir a 2, limpiar, y así. Subir
+# a 6 de golpe sobre 75.000 líneas produce un muro que nadie lee.
+#
+# Uso:
+#   composer --working-dir=tools update
+#   tools/vendor/bin/phpstan analyse
+#
+# Para congelar lo que ya hay y que solo falle lo nuevo:
+#   tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon
+
+includes:
+    - tools/vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 1
+
+    paths:
+        - includes
+        - karmcp.php
+
+    excludePaths:
+        analyse:
+            - vendor
+            - tools
+
+    # El plugin se integra con software que puede no estar instalado, y por eso
+    # todos estos usos van tras un class_exists(). PHPStan no puede saberlo, así
+    # que sin esto el informe es una lista de "clase no encontrada" que tapa los
+    # fallos de verdad. Ver "Lo que NO existe en este árbol" en CLAUDE.md.
+    ignoreErrors:
+        -
+            identifier: class.notFound
+            message: '#\\?(Elementor|ElementorPro|ACF|Kadence|Spectra|Astra|WP_CLI|WooCommerce|WC_)#'
+        -
+            message: '#Class (\\)?(Elementor|WP_CLI|WooCommerce|Jet)#'
+        # Clases con guard que nunca están presentes en este árbol — restos de
+        # una separación de tiers eliminada, documentados en CLAUDE.md.
+        -
+            message: '#Class KarMCP_(Migrate_Abilities|Block_Store|Widget_Generator|Pro_Loader|License)#'
+
+    # Los stubs de WordPress vienen de php-stubs/wordpress-stubs vía la
+    # extensión de arriba; aquí solo van las constantes que define el plugin.
+    bootstrapFiles:
+        - tools/phpstan-bootstrap.php
+
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false

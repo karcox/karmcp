@@ -142,6 +142,27 @@ WordPress coding standards, strictly.
 - **Security is not optional.** Sanitize input, escape output, `$wpdb->prepare()` for SQL, verify nonces, check capabilities before anything privileged.
 - **PHP 8.1+.** Typed properties, union types, and named arguments are all fine.
 
+### Static analysis
+
+The toolchain lives in `tools/` with its own `composer.json`, deliberately separate from the plugin's: linters are not runtime dependencies and must never touch the lock file that builds the release zip.
+
+```bash
+composer --working-dir=tools update
+tools/vendor/bin/phpcs          # tools/vendor/bin/phpcbf fixes what is auto-fixable
+tools/vendor/bin/phpstan analyse
+```
+
+Both configs start **deliberately narrow** — `phpcs.xml.dist` runs the security, correctness and PHP-compatibility sniffs but not the formatting ones, and PHPStan starts at level 1. This is not modesty: 75,000 lines written without either tool would produce thousands of findings, and a report that large is a report nobody reads.
+
+The plan is a ratchet. Clean the current level, then raise it, then clean again. Freeze what is left with a baseline (`tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon`) so new debt fails while old debt waits its turn.
+
+## Continuous integration
+
+Two workflows in `.github/workflows/`:
+
+- **`tests.yml` — blocking.** The suite on PHP 8.1 through 8.4, on every push and pull request. It does not run `composer install`: `tests/bootstrap.php` loads plugin files with direct `require_once` and never touches the autoloader, so the suite has no dependencies and CI does not depend on every package still resolving on Packagist.
+- **`lint.yml` — not blocking yet.** PHPCS and PHPStan both run with `continue-on-error`. Once the first run has been triaged and baselined, remove those two lines; a permanently red check is a check everyone ignores.
+
 ## Testing
 
 The suite runs against a self-contained WordPress stub harness — no WordPress install needed:

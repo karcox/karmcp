@@ -25,6 +25,12 @@
 /phpunit.xml     export-ignore
 /bin/mcp-proxy.test.mjs export-ignore
 
+# Static analysis. The toolchain lives in tools/ with its own composer.json so
+# its dependencies never touch the lock that builds the zip.
+/phpcs.xml.dist    export-ignore
+/phpstan.neon.dist export-ignore
+/tools             export-ignore
+
 # Contributor docs, not user docs
 /CLAUDE.md       export-ignore
 /CONTRIBUTING.md export-ignore

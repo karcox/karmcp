@@ -87,3 +87,8 @@ skills/*
 .playwright-mcp/
 /services-final.png
 /services-page.png
+
+# Cadena de análisis estático (tools/composer.json). Herramientas, no runtime:
+# se reinstalan con `composer --working-dir=tools update`.
+/tools/vendor/
+/tools/composer.lock

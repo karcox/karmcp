@@ -1,0 +1,67 @@
+name: Lint
+
+# NO BLOQUEANTE TODAVÍA — y a propósito.
+#
+# Son 75.000 líneas escritas sin PHPCS ni PHPStan. La primera ejecución va a
+# devolver mucho ruido, y hasta que ese ruido esté triado no tiene sentido que
+# esto tumbe un push: un check rojo permanente es un check que se ignora, y
+# entonces no sirve de nada.
+#
+# El plan es de trinquete:
+#   1. Mirar la salida de este job.
+#   2. Arreglar lo real, y congelar el resto con un baseline
+#      (tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon).
+#   3. QUITAR los `continue-on-error` de abajo. A partir de ahí, deuda nueva no
+#      entra.
+#
+# Mientras tanto la suite de tests (tests.yml) SÍ es bloqueante.
+
+on:
+  push:
+    branches: [ karmcp, main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyse:
+    name: PHPCS + PHPStan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, json
+          coverage: none
+          tools: composer
+
+      # La cadena de análisis vive en tools/ y no en el composer.json raíz: sus
+      # dependencias no son del plugin y no deben tocar el lock que produce el
+      # zip. Se usa `update` y no `install` porque tools/composer.lock no se
+      # versiona — son herramientas, no runtime.
+      - name: Cachear las herramientas
+        uses: actions/cache@v4
+        with:
+          path: tools/vendor
+          key: tools-${{ runner.os }}-${{ hashFiles('tools/composer.json') }}
+
+      - name: Instalar la cadena de análisis
+        run: composer --working-dir=tools update --no-interaction --no-progress
+
+      - name: PHPCS
+        continue-on-error: true
+        run: tools/vendor/bin/phpcs --report=full --report-width=120
+
+      - name: PHPStan
+        continue-on-error: true
+        run: tools/vendor/bin/phpstan analyse --no-progress --error-format=table

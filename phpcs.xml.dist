@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<ruleset name="KarMCP">
+	<description>
+		Reglas de análisis estático de KarMCP.
+
+		DELIBERADAMENTE ESTRECHO. Son 75.000 líneas escritas sin PHPCS, así que
+		activar WordPress-Extra entero devuelve miles de avisos de formato y el
+		resultado es que nadie los mira. Aquí solo están los sniffs que señalan
+		un fallo real: inyección, salida sin escapar, nonces, y compatibilidad
+		de versión de PHP.
+
+		El plan es de trinquete: cuando esto esté limpio y bloqueando, se añade
+		el siguiente bloque (Docs, luego NamingConventions, luego el formato) y
+		se vuelve a limpiar. No al revés.
+
+		Uso:
+			composer --working-dir=tools update
+			tools/vendor/bin/phpcs
+			tools/vendor/bin/phpcbf   (arregla lo autoarreglable)
+	</description>
+
+	<file>includes</file>
+	<file>karmcp.php</file>
+
+	<!-- Terceros y generados: no son nuestros. -->
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/tools/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg name="basepath" value="."/>
+	<arg value="sp"/>
+	<arg name="parallel" value="8"/>
+
+	<!--
+		Seguridad: lo que de verdad importa. Escapado de salida, saneado de
+		entrada, nonces en las acciones, y SQL preparado.
+	-->
+	<rule ref="WordPress.Security"/>
+	<rule ref="WordPress.DB.PreparedSQL"/>
+	<rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
+
+	<!--
+		Corrección, no estilo: asignaciones dentro de condiciones, comparaciones
+		laxas peligrosas, variables no usadas.
+	-->
+	<rule ref="Generic.CodeAnalysis.AssignmentInCondition"/>
+	<rule ref="Generic.CodeAnalysis.EmptyStatement"/>
+	<rule ref="Generic.CodeAnalysis.ForLoopShouldBeWhileLoop"/>
+	<rule ref="Generic.CodeAnalysis.UnconditionalIfStatement"/>
+	<rule ref="Generic.CodeAnalysis.UselessOverridingMethod"/>
+	<rule ref="Squiz.PHP.NonExecutableCode"/>
+
+	<!-- La cabecera declara "Requires PHP: 8.1". Que sea verdad. -->
+	<config name="testVersion" value="8.1-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!-- El text domain es uno y solo uno. Un typo aquí no se traduce nunca. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="karmcp"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!--
+		El prefijo global. Una función o constante sin prefijar en un plugin de
+		WordPress es una colisión esperando a pasar.
+	-->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="karmcp"/>
+				<element value="KarMCP"/>
+				<element value="KARMCP"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!--
+		Los tests declaran stubs de funciones de WordPress a propósito: ahí el
+		sniff de prefijos no aplica.
+	-->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<exclude-pattern>*/tests/*</exclude-pattern>
+	</rule>
+</ruleset>

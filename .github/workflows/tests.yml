@@ -1,0 +1,55 @@
+name: Tests
+
+# El repo es privado: nadie de fuera va a encontrar un bug nunca, así que la
+# automatización es el único revisor que queda. Esto corre en cada push y en
+# cada PR, y es bloqueante — la suite está verde y tiene que seguir estándolo.
+#
+# No hay `composer install` a propósito. tests/bootstrap.php carga los ficheros
+# del plugin con require_once directo y no usa el autoloader, así que la suite
+# no necesita las dependencias — y así el CI no depende de que
+# `wordpress/mcp-adapter` siga resolviéndose en Packagist.
+
+on:
+  push:
+    branches: [ karmcp, main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phpunit:
+    name: PHPUnit · PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.1 es el mínimo que declara la cabecera del plugin; el resto son las
+        # versiones en las que puede acabar corriendo en un hosting real.
+        php: [ '8.1', '8.2', '8.3', '8.4' ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # mbstring es la que hay que activar a mano en la máquina de
+          # desarrollo; aquí se pide explícitamente para que el entorno sea el
+          # mismo.
+          extensions: mbstring, json
+          coverage: none
+          tools: phpunit:10.5
+
+      - name: Versión de PHP
+        run: php -v
+
+      - name: Ejecutar la suite
+        run: phpunit --colors=never

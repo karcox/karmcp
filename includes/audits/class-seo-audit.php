@@ -77,8 +77,9 @@ class KarMCP_Seo_Audit {
 
 		self::check_render( $digest, $findings );
 		self::check_plugin_conflict( $ctx, $findings );
+		self::check_plugin_present( $ctx, $findings );
 		self::check_title( $title, $findings );
-		self::check_description( $description, $findings );
+		self::check_description( $description, $findings, self::has_seo_plugin( $ctx ) );
 		self::check_headings( $digest, $scope, $findings );
 		self::check_content( $digest, $findings );
 		self::check_images( $digest, $findings );
@@ -260,6 +261,50 @@ class KarMCP_Seo_Audit {
 	}
 
 	/**
+	 * Whether a plugin capable of storing SEO metadata is active.
+	 *
+	 * Without one, several findings stay true but their usual advice becomes
+	 * impossible to follow: WordPress core has no meta description field and no
+	 * social image field, so telling somebody to "write one" sends them looking
+	 * for a screen that is not there. Worse than saying nothing.
+	 *
+	 * @param array $ctx Audit context.
+	 * @return bool
+	 */
+	private static function has_seo_plugin( array $ctx ): bool {
+		$source = isset( $ctx['seo']['source'] ) ? (string) $ctx['seo']['source'] : 'none';
+
+		return '' !== $source && 'none' !== $source;
+	}
+
+	/**
+	 * Names the root cause once, so the findings below it are not each left
+	 * recommending a fix that has nowhere to be applied.
+	 *
+	 * Graded `info` rather than a warning on purpose: the consequence already
+	 * costs points through `description-missing`, and charging for the cause as
+	 * well would penalize the same fact twice.
+	 *
+	 * @param array $ctx      Audit context.
+	 * @param array $findings Findings, by reference.
+	 */
+	private static function check_plugin_present( array $ctx, array &$findings ): void {
+		if ( self::has_seo_plugin( $ctx ) ) {
+			return;
+		}
+
+		$findings[] = self::finding(
+			'seo-plugin-missing',
+			'config',
+			__( 'SEO metadata storage', 'karmcp' ),
+			'info',
+			'none',
+			__( 'No SEO plugin is active. WordPress on its own has no field for a meta description, a social image or a per-page robots setting, so those cannot be set on this page at all.', 'karmcp' ),
+			__( 'Install one — Yoast, Rank Math and Slim SEO are all read by this audit — or accept that the pages will be described by whatever text a search engine picks out first.', 'karmcp' )
+		);
+	}
+
+	/**
 	 * @param array $title    Effective title.
 	 * @param array $findings Findings, by reference.
 	 */
@@ -345,8 +390,9 @@ class KarMCP_Seo_Audit {
 	/**
 	 * @param array $description Effective description.
 	 * @param array $findings    Findings, by reference.
+	 * @param bool  $has_plugin  Whether an SEO plugin can store one.
 	 */
-	private static function check_description( array $description, array &$findings ): void {
+	private static function check_description( array $description, array &$findings, bool $has_plugin = true ): void {
 		if ( $description['templated'] ) {
 			$findings[] = self::finding(
 				'description-template-only',
@@ -368,7 +414,9 @@ class KarMCP_Seo_Audit {
 				'critical',
 				'',
 				__( 'The page has no meta description, so the search engine writes its own from whatever text it finds first.', 'karmcp' ),
-				__( 'Write one sentence that answers what this page is for, around 150 characters.', 'karmcp' )
+				$has_plugin
+					? __( 'Write one sentence that answers what this page is for, around 150 characters.', 'karmcp' )
+					: __( 'There is nowhere to store one on this site yet — see the SEO metadata storage finding. With that resolved, one sentence of around 150 characters answering what this page is for.', 'karmcp' )
 			);
 			return;
 		}
@@ -697,7 +745,9 @@ class KarMCP_Seo_Audit {
 				'warning',
 				'',
 				__( 'The served page has no canonical link. WordPress emits one by default, so something has removed it.', 'karmcp' ),
-				__( 'Check the SEO plugin settings and the theme header. Without it, duplicate URLs of this page compete with each other.', 'karmcp' )
+				self::has_seo_plugin( $ctx )
+					? __( 'Check the SEO plugin settings and the theme header. Without it, duplicate URLs of this page compete with each other.', 'karmcp' )
+					: __( 'Nothing here overrides it, so look at the theme header: something is dropping rel_canonical. Without it, duplicate URLs of this page compete with each other.', 'karmcp' )
 			);
 		} else {
 			$findings[] = self::finding(
@@ -742,7 +792,10 @@ class KarMCP_Seo_Audit {
 	 * @param array $findings Findings, by reference.
 	 */
 	private static function check_social( array $ctx, array &$findings ): void {
-		if ( empty( $ctx['seo']['readable'] ) ) {
+		// With no SEO plugin there is no per-page social image to be missing:
+		// the cause is already reported once by `seo-plugin-missing`, and
+		// repeating it here would be the same fact charged twice.
+		if ( empty( $ctx['seo']['readable'] ) || ! self::has_seo_plugin( $ctx ) ) {
 			return;
 		}
 

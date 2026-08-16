@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.14.0
+Stable tag: 1.14.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.14.1 =
+
+* Fixed: the SEO audit gave advice you could not follow on a site with no SEO plugin. It reported the missing meta description and the missing social image — both true — and told the reader to write one and to configure a fallback "in the SEO plugin", when there was no plugin and no screen to do either in. WordPress on its own has neither field.
+* The audit now names the cause once as `seo-plugin-missing` and the findings underneath stop pointing at something that is not installed. Graded `info`, not a warning: the consequence already costs points through the missing description, and charging for the cause too would penalize the same fact twice. The social-image finding is suppressed in that case, and `canonical-missing` points at the theme instead of at plugin settings.
 
 = 1.14.0 =
 

@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.14.1]
+
+### Fixed
+
+- **The SEO audit gave advice you could not follow on a site with no SEO plugin.** Running 1.14.0 against a real site turned this up immediately: the site had no SEO plugin at all, and the report still said *"write one sentence"* for the missing meta description and *"configure a site-wide fallback in the SEO plugin"* for the missing social image.
+
+  Both findings were true and neither was actionable. WordPress on its own has no meta description field and no social image field, so the reader was being sent to look for a screen that does not exist — which is worse than saying nothing, because it costs a search before the dead end.
+
+  The audit now names the cause once, as `seo-plugin-missing`, and the findings underneath it stop pointing at a plugin that is not installed. It is graded `info` rather than a warning on purpose: the consequence already costs points through `description-missing`, and charging for the cause as well would penalize the same fact twice. The social-image finding is suppressed entirely in that case, since there is nowhere for a per-page image to live. `canonical-missing` also stops blaming SEO-plugin settings and points at the theme, which is the only thing that can be dropping `rel_canonical` when no plugin is active.
+
+  A test now fails the build if any recommendation mentions an SEO plugin while none is active.
+
 ## [1.14.0]
 
 ### Added

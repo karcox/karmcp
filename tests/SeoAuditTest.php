@@ -472,6 +472,69 @@ final class SeoAuditTest extends TestCase {
 		$this->assertFinding( $report, 'seo-plugin-conflict', 'critical' );
 	}
 
+	// ------------------------------------------------- no SEO plugin at all
+
+	/**
+	 * A site with no SEO plugin has nowhere to put a meta description or a
+	 * social image — WordPress core ships neither field. Found on a real site
+	 * after 1.14.0: the audit was telling the reader to "write one sentence"
+	 * and to "configure a fallback in the SEO plugin" when there was no plugin
+	 * and no screen to do it in.
+	 */
+	private function ctxWithoutPlugin(): array {
+		return $this->ctx(
+			array(),
+			array( 'seo' => array( 'source' => 'none', 'readable' => true ) )
+		);
+	}
+
+	public function test_missing_seo_plugin_is_named_once_as_the_root_cause(): void {
+		$report = KarMCP_Seo_Audit::run( $this->digest(), $this->ctxWithoutPlugin() );
+
+		$this->assertFinding( $report, 'seo-plugin-missing', 'info' );
+	}
+
+	public function test_no_advice_points_at_an_seo_plugin_that_is_not_installed(): void {
+		$report = KarMCP_Seo_Audit::run(
+			$this->digest(),
+			array_replace_recursive( $this->ctxWithoutPlugin(), array( 'scope' => 'full' ) )
+		);
+
+		foreach ( $report['findings'] as $finding ) {
+			if ( 'seo-plugin-missing' === $finding['id'] ) {
+				// This one is allowed to name them: recommending you install one
+				// is the whole point of it.
+				continue;
+			}
+
+			$this->assertStringNotContainsStringIgnoringCase(
+				'SEO plugin',
+				$finding['recommendation'],
+				"finding '{$finding['id']}' sends the reader to a plugin this site does not have"
+			);
+		}
+	}
+
+	public function test_social_image_is_not_reported_when_there_is_nowhere_to_set_one(): void {
+		$report = KarMCP_Seo_Audit::run( $this->digest(), $this->ctxWithoutPlugin() );
+
+		$this->assertNoFinding( $report, 'og-image-missing' );
+	}
+
+	public function test_missing_description_is_still_reported_without_a_plugin(): void {
+		$report = KarMCP_Seo_Audit::run( $this->digest(), $this->ctxWithoutPlugin() );
+
+		// The fact stays true and keeps costing points; only the advice changes.
+		$this->assertFinding( $report, 'description-missing', 'critical' );
+	}
+
+	public function test_a_site_with_a_plugin_still_gets_the_social_finding(): void {
+		$report = KarMCP_Seo_Audit::run( $this->digest(), $this->ctx() );
+
+		$this->assertFinding( $report, 'og-image-missing', 'info' );
+		$this->assertNoFinding( $report, 'seo-plugin-missing' );
+	}
+
 	// --------------------------------------------------------------- shape
 
 	public function test_every_non_pass_finding_carries_a_recommendation(): void {

@@ -1,100 +1,24 @@
-# Roadmap: SEO & Accesibilidad · Themer extendido
+# Roadmap: SEO y Accesibilidad
 
-Plan para construir internamente las dos capacidades que sí justificaban la licencia Pro del upstream. Todo lo demás de aquel Pro (AI Chat, Migrate, Memory, integraciones de formularios y SEO, packs de Elementor) queda **descartado**.
+Plan para darle al plugin lo único que hoy le falta: **juzgar su propio resultado**.
 
-> El Widget/Block Builder salió de esa lista de descartes: se implementó en 1.12.0 (`includes/sandbox/`), con un diseño propio y sin nada que importar del upstream, que tampoco lo tenía en su árbol libre.
+KarMCP ya sabe construir —son la mayoría de sus herramientas— y desde `render-page` ya sabe mirar. Lo que no sabe es decir si lo que acaba de construir está bien. Este trabajo cierra ese bucle:
 
-Este documento está escrito contra el código real de este árbol tras la limpieza. Cada costura citada existe y está verificada.
-
----
-
-## Contexto: qué se borró y qué se conservó
-
-La limpieza eliminó la maquinaria de licenciamiento (`KarMCP_License`, `karmcp_fs()`, `KarMCP_Pro_Loader`, `pro-manifest.txt`, vistas de upsell, guard free⇄premium). **No se tocó el motor**, y ese es el punto: las dos features que queremos construir no requieren reconstruir infraestructura, solo enchufarse a filtros que ya están ahí.
-
-Un solo flag sobrevive como seam nombrado:
-
-```php
-// includes/themer/class-themer-cpt.php
-apply_filters( 'karmcp_themer_extended_tier', false )
+```
+construir → renderizar → auditar → arreglar → volver a auditar
 ```
 
-Solo controla el aviso de administración. **No lo uses como puerta de funcionalidad** — la funcionalidad se enchufa por los filtros de abajo.
+Ninguna de las dos familias vecinas puede cerrarlo. A un plugin de SEO o a un escáner de accesibilidad les faltan las manos: pintan el semáforo en rojo y ahí se acaban. A los demás servidores MCP les faltan los ojos: escriben lo que les pidas y no opinan del resultado. Aquí están las dos mitades en el mismo proceso.
+
+Y las manos **ya están escritas**: "este H2 no dice nada" se arregla con `update-widget`, "falta la meta descripción" con `seo-write`, "esta imagen no tiene alt" con la capa de medios. Todas existen. La auditoría no añade capacidad de ejecución — **desbloquea la que ya hay**, porque hasta ahora el agente no sabía qué había que arreglar.
+
+Este documento está escrito contra el código real. Cada costura citada existe y está verificada.
+
+> El **Themer extendido**, que compartía documento con esto, está **implementado**: `includes/themer/class-themer-extended.php`, cubierto por `tests/ThemerExtendedTest.php` (20 tests). Su referencia de mantenimiento está en el [apéndice](#apéndice--referencia-del-themer-extendido), al final.
 
 ---
 
-## Parte 1 — Themer extendido ✅ IMPLEMENTADO
-
-**Estado: hecho.** `includes/themer/class-themer-extended.php`, enganchado desde `KarMCP_Themer_Module::register()`. Cobertura en `tests/ThemerExtendedTest.php` (20 tests). Lo que sigue documenta el diseño y sirve de referencia para mantenerlo.
-
-Un hallazgo durante la implementación que no estaba en el plan original: `KarMCP_Themer_Index` **ya persistía** una `priority` por plantilla, pero el ranker por defecto del render controller devuelve `0` para toda fila. La prioridad era inerte. Hizo falta un quinto enganche, `karmcp_themer_rank`, o el constructor habría dejado fijar una prioridad que no hacía nada.
-
-Otro: el JS del constructor (`assets/js/themer-conditions.js`) **ya soportaba** Exclude, prioridad y el buscador de objetos — es data-driven desde el esquema. No hubo que tocar una línea de JS. Solo faltaba el endpoint AJAX `karmcp_themer_object_search`, que ahora existe (nonce + `edit_posts`).
-
-
-
-### Lo que ya funciona (y sorprende)
-
-El motor libre **ya implementa** casi todo lo que el upstream vendía como Pro. Verificado leyendo el código:
-
-- `KarMCP_Themer_Conditions::evaluate()` ya soporta **include y exclude**: *"A template matches when at least one include rule matches AND no exclude rule matches"*.
-- `KarMCP_Themer_Resolver::resolve()` ya ordena por **especificidad → prioridad → id más reciente**, y recibe un `callable $ranker` para la prioridad.
-- `KarMCP_Themer_Matcher_Registry` ya resuelve reglas por clave con especificidad asociada.
-
-Es decir: exclude, prioridad y ranking **no hay que construirlos**. Están escritos y son parte del árbol libre. Lo único que faltaba en el tier libre era (a) la cuota, (b) matchers granulares, y (c) exponerlo en la UI.
-
-### Los cuatro puntos de enganche
-
-| Filtro | Fichero | Qué controla |
-|---|---|---|
-| `karmcp_themer_quota` | `class-themer-cpt.php:369` | `apply_filters( 'karmcp_themer_quota', 1, $type )` — máximo de plantillas por tipo. Devuelve `PHP_INT_MAX` para ilimitado. |
-| `karmcp_themer_matchers` | `class-themer-matcher-registry.php:40` | El mapa de matchers. Añade entradas nuevas al array. |
-| `karmcp_themer_selectors` | `class-themer-metabox.php:49` | Qué selectores acepta el guardado. Un selector no listado se rechaza al validar. |
-| `karmcp_themer_condition_schema` | `class-themer-condition-schema.php:89` | El árbol de opciones del constructor de condiciones en el metabox. |
-
-### Contrato de un matcher
-
-Cada entrada del registry es:
-
-```php
-'<clave>' => array(
-    'specificity' => <int>,
-    'callback'    => static function ( array $rule, array $ctx ): bool { ... },
-),
-```
-
-Los matchers libres y su especificidad, como referencia de escala:
-
-| Clave | Especificidad |
-|---|---|
-| `entire-site` | 0 |
-| `all-singular`, `all-archives` | 10 |
-| `front-page`, `post-type`, `post-type-archive`, `tax-archive` | 20 |
-
-`$rule['object']` es una cadena `clave:parametro`; usa `KarMCP_Themer_Matcher_Registry::param()` y `::param2()` para extraerlos. `$ctx` es el snapshot de la petición que produce `KarMCP_Themer_Context::from_query()` (`is_singular`, `post_type`, `queried_taxonomy`, `is_front_page`, …).
-
-### Plan de implementación
-
-1. **Cuota.** Engancha `karmcp_themer_quota` y devuelve `PHP_INT_MAX`. Una línea. Con eso ya tienes plantillas ilimitadas por tipo.
-2. **Matchers granulares.** Añade vía `karmcp_themer_matchers`, con especificidad **por encima de 20** para que ganen a los amplios:
-   - `post:<id>` — una entrada concreta (specificity 40)
-   - `term:<taxonomia>:<term_id>` — un término concreto (30)
-   - `author:<id>` / `author-archive:<id>` (30)
-   - `date` — archivos por fecha (20)
-3. **Selectores.** Registra las mismas claves en `karmcp_themer_selectors` o el guardado las rechazará. **Este es el paso que más se olvida**: un matcher sin selector funciona en el resolver pero no se puede guardar desde el metabox.
-4. **UI.** Extiende `karmcp_themer_condition_schema` para exponer Exclude, prioridad y el buscador de objetos. Ojo: el buscador AJAX del upstream (`wp_ajax_karmcp_themer_object_search`) vivía en el overlay Pro y **no está aquí**; habrá que escribirlo.
-
-**Estimación realista:** los pasos 1–3 son media jornada. El paso 4 (UI del constructor) es el grueso.
-
-### Dónde vive
-
-Crea `includes/themer/class-themer-extended.php` y engánchalo desde `KarMCP_Themer_Module::register()`. No reintroduzcas un `pro/` overlay: hay un solo nivel.
-
----
-
-## Parte 2 — SEO y Accesibilidad
-
-### El punto de enganche
+## El punto de enganche
 
 `KarMCP_Page_Snapshot` ya reserva dos secciones para esto:
 
@@ -116,13 +40,33 @@ para que un plugin SEO que no guarda en postmeta (All in One SEO usa tabla propi
 
 ### Lo que hay que escribir desde cero
 
-Estas clases **no están** en el árbol (eran del overlay privado) y son la dependencia real:
+> **Actualizado 2026-08-15: la dependencia cara ya no lo es.** Este apartado listaba tres clases; `KarMCP_Content_Extractor` se escribió para `render-page` (1.1.0) y vive en `includes/class-content-extractor.php`. Era la pieza central y el motivo por el que este trabajo se aplazaba una y otra vez. **Ya no bloquea nada.**
 
-- `KarMCP_Color_Contrast` — matemática WCAG de ratio de contraste
-- `KarMCP_Content_Extractor` — vista normalizada del contenido de la página
-- `KarMCP_Seo_Meta` — lectura/escritura de meta en Yoast / Rank Math / core
+- ~~`KarMCP_Seo_Meta`~~ — **hecho**, `includes/class-seo-meta.php`. Una sola línea de campos sobre Yoast, Rank Math y Slim SEO. AIOSEO y SEOPress se detectan pero **no se leen**, a propósito: guardan en tablas propias y adivinar un esquema ajeno produce un lector que devuelve cadenas vacías para siempre. El seam para ellos es el filtro `karmcp_seo_meta`.
+- `KarMCP_Color_Contrast` — matemática WCAG de ratio de contraste. Función pura, especificación cerrada, se testea sin WordPress. **Pendiente.**
 
-`KarMCP_Content_Extractor` es la pieza central: las auditorías de SEO y de a11y consumen la misma vista normalizada. Escríbela primero.
+Y una que no estaba en la lista original porque no se había pensado el diseño:
+
+- ~~`KarMCP_Audit_Rules`~~ — **hecho**, aunque con otra forma: `KarMCP_Audit_Score` (`includes/audits/class-audit-score.php`) es la parte compartida —pesos, nota, recuento— y las reglas viven con su auditoría, en `KarMCP_Seo_Audit`. Un registro de reglas con callbacks habría sido maquinaria para un solo consumidor; cuando llegue a11y, lo que tiene que compartir ya está separado.
+
+### El motor de reglas
+
+`KarMCP_Content_Extractor::analyze()` ya devuelve la vista que las dos auditorías necesitan: outline de encabezados, enlaces, imágenes, formularios, texto visible y las advertencias del render. **Una auditoría es una lista de reglas sobre ese digest**, no un analizador nuevo.
+
+Contrato de una regla, calcado del que ya funciona en `includes/performance/class-performance-finding.php`:
+
+```php
+array(
+    'id'          => 'img-missing-alt',
+    'standard'    => 'wcag-1.1.1',   // o 'seo' / 'aeo'
+    'severity'    => 'error',        // error | warning | notice
+    'callback'    => static function ( array $digest, array $ctx ): array { ... },
+)
+```
+
+Cada regla es **pura**: digest entra, hallazgos salen. Esa es la propiedad que hace que la suite las cubra entera sin WordPress, y es la misma apuesta que ya se hizo con los generadores del sandbox. Una regla que necesite consultar la base de datos está mal planteada: el dato que le falta debe entrar por `$ctx`, que lo reúne el llamante.
+
+> **No reinventes el reporte.** `KarMCP_Performance_Finding` ya define la forma de un hallazgo y la pestaña Optimize ya sabe pintarla. Reutiliza esa estructura o acabarás con dos vocabularios de severidad que no casan.
 
 ### Las herramientas MCP
 
@@ -142,37 +86,149 @@ karmcp_register_ability(
 );
 ```
 
-> **Trampa documentada por el upstream:** si omites `'category' => 'karmcp'`, `wp_register_ability()` descarta la ability **en silencio**. No hay error; la herramienta simplemente no aparece.
+> **Trampa:** si omites `'category' => 'karmcp'`, `wp_register_ability()` descarta la ability **en silencio**. No hay error; la herramienta simplemente no aparece.
 
 Instancia el grupo en `KarMCP_Ability_Registrar` (el patrón está en la línea 177 con `KarMCP_Snapshot_Abilities`) y carga el fichero desde `KarMCP_Bootstrap::load_classes()`.
 
 ### Orden sugerido
 
-1. `KarMCP_Content_Extractor` — base compartida.
-2. `audit-page-seo` — solo lectura, sin dependencias nuevas más allá del extractor. Es la que antes da valor.
-3. `KarMCP_Color_Contrast` + `audit-page-a11y`.
-4. `add-alt-text-from-context` y `fix-color-contrast` — los dos que escriben.
+~~1. `KarMCP_Content_Extractor` — base compartida.~~ **Hecho** (`includes/class-content-extractor.php`).
+
+~~1. **`KarMCP_Seo_Meta` + `audit-page-seo`**~~ — **hecho.** `includes/audits/class-seo-audit.php` y `includes/abilities/class-seo-audit-abilities.php`, cubiertos por `tests/SeoAuditTest.php` y `tests/SeoMetaTest.php` (56 tests). Rellena además la sección `seo` de `get-page-snapshot`, que llevaba desde el principio reservando el seam y devolviendo un stub vacío.
+
+Lo que queda, renumerado:
+
+1. **Legibilidad**, dentro del informe de SEO. No como herramienta suelta: es una métrica del mismo análisis. Ver la decisión de idioma más abajo.
+2. **`KarMCP_Color_Contrast` + `audit-page-a11y`.**
+3. **Persistencia de escaneos** — listar, abrir uno viejo, comparar. Ver abajo; a esta altura ya sirve para las dos auditorías a la vez.
+4. **`add-alt-text-from-context` y `fix-color-contrast`** — los dos que escriben.
+5. **AEO** — opcional. Ya no hay que montar nada para ello: las reglas se añaden al mismo sitio que las de SEO. Ver abajo.
+6. **Core Web Vitals** — fuera de este plan. Ver abajo.
+
+### Cuánto es esto, honestamente
+
+Estimación en sesiones de trabajo enfocado, no en días de calendario:
+
+| Pieza | Coste | Riesgo |
+|---|---|---|
+| ~~`KarMCP_Seo_Meta`~~ | ~~1~~ | **Hecho** |
+| ~~Motor de reglas + `audit-page-seo`~~ | ~~2–3~~ | **Hecho** |
+| Legibilidad | ½ | Bajo — función pura |
+| `KarMCP_Color_Contrast` | ½ | Bajo — fórmula WCAG cerrada |
+| Reglas a11y + `audit-page-a11y` | 2–3 | Medio — muchas reglas pequeñas; el coste es la cantidad |
+| Persistencia + pestaña | 1–2 | Bajo — se copia el patrón de Security |
+| Las dos que escriben | 2 | **Medio-alto** — tocan render real, los stubs no lo cubren |
+| **Total pendiente** | **6–9** | |
+
+Lo importante no es el total sino que **es incremental de verdad**, y el primer paso ya lo demostró: `audit-page-seo` sola es una herramienta completa y útil, y nada de lo que queda es requisito suyo. No hay un punto en el que haya que tenerlo todo para que algo funcione. Se puede parar después de cualquier paso.
+
+Lo que no está en la tabla porque no se ha diseñado: la pestaña de administración si se quiere que esto se vea sin un agente delante. Súmale 1–2 sesiones si se decide hacerla.
+
+> **La incertidumbre real está en el paso 4**, y conviene decirla antes de empezar: todo lo demás es lógica pura que la suite cubre. Las dos herramientas que escriben tocan el render del front-end, donde `tests/` no llega, y necesitan verificación manual en un WordPress local.
 
 ### Regla no negociable para las dos que escriben
 
-`fix-color-contrast` y `add-alt-text-from-context` deben ser **dry-run por defecto** y mutar solo con `apply: true`. Es el patrón del upstream y es el correcto: un agente propone en lote, un humano revisa, y solo entonces se escribe. Las escrituras van por la capa de datos de Elementor (nunca `update_post_meta` en crudo) para que queden en revisiones y sean reversibles.
+`fix-color-contrast` y `add-alt-text-from-context` deben ser **dry-run por defecto** y mutar solo con `apply: true`: un agente propone en lote, un humano revisa, y solo entonces se escribe. Las escrituras van por la capa de datos de Elementor (nunca `update_post_meta` en crudo) para que queden en revisiones y sean reversibles.
 
 ### Límite conocido, asúmelo desde el principio
 
-El cálculo de contraste es **best-effort**. Cuando el color de fondo se hereda y no se puede resolver, el resultado correcto es `inconclusive`, no un aprobado. El upstream lo documentaba así y es honesto: no prometas cobertura total. Un `inconclusive` marcado es útil; un falso "pasa" es peor que no auditar.
+El cálculo de contraste es **best-effort**. Cuando el color de fondo se hereda y no se puede resolver, el resultado correcto es `inconclusive`, no un aprobado. No prometas cobertura total: un `inconclusive` marcado es útil, y un falso "pasa" es peor que no auditar, porque cierra el tema.
+
+En un sitio de Elementor esto va a pasar **mucho**: colores globales, fondos heredados de un contenedor padre, degradados, imágenes de fondo. Cuenta con que una parte grande de los textos salga `inconclusive` y diséñalo para que eso no parezca un fallo de la herramienta, porque no lo es.
+
+### Quién escribe el texto alternativo
+
+`add-alt-text-from-context` **no genera el texto**. La tentación es que PHP invente un alt a partir del nombre del fichero, y eso produce basura plausible, que es peor que un hueco visible.
+
+El reparto correcto, que además es el que ya usa el resto del plugin:
+
+1. La herramienta **encuentra los huecos** y devuelve el contexto de cada imagen: dónde está, qué encabezado la precede, qué texto la rodea, el nombre del fichero, si es decorativa por su rol.
+2. El **agente propone** los textos, que es exactamente para lo que sirve.
+3. Un **humano aprueba**.
+4. La herramienta **escribe** los valores aprobados, por la capa de datos de Elementor.
+
+Es el mismo reparto que en el sandbox: el agente declara, el plugin compila. Aquí el agente redacta y el plugin persiste.
+
+### Legibilidad: decide la fórmula antes de escribir la función
+
+El **Flesch Reading Ease está calibrado para el inglés**. Aplicado a un texto en español devuelve un número que parece válido y no lo es: el español tiene más sílabas por palabra de media, así que todo sale artificialmente "difícil".
+
+Para español la fórmula correcta es **Fernández Huerta** o **Szigriszt-Pazos** (perspicuidad), interpretada con la escala INFLESZ. Es la misma forma con otras constantes, así que el coste extra de hacerlo bien es cero — pero hay que decidirlo antes, no después.
+
+Ventaja inesperada: **contar sílabas en español es más fiable que en inglés**. Las reglas de grupo vocálico, diptongo e hiato son regulares y se implementan exactas; en inglés hace falta un diccionario o una heurística que falla. Sale un contador correcto donde el resto del mercado tiene una aproximación.
+
+El idioma se resuelve por post: `get_locale()`, o Polylang / WPML si están activos — las dos integraciones ya existen. Si el idioma no tiene fórmula conocida, el resultado es `unsupported`, no un número inventado. Misma regla que el `inconclusive` del contraste.
+
+### Persistencia: una auditoría es un registro, no un mensaje
+
+Un escaneo que solo existe dentro de la conversación se pierde. Hay que poder listarlos, abrir uno viejo y ver si el sitio mejoró.
+
+**El patrón ya está montado en la pestaña Security**: guarda score, grado y hallazgos, se refresca a diario en segundo plano, y muestra un escaneo viejo o fallido **como exactamente eso**, nunca como un aprobado. Esa última propiedad es la que hay que conservar al copiarlo.
+
+Herramientas: `list-audits` y `get-audit`, con filtro por tipo (`seo` / `a11y`) y por post. Se implementa una vez y sirve para las dos auditorías; por eso va después de la de accesibilidad y no antes.
+
+### AEO — opcional, barato si va pegado al SEO
+
+Comprobaciones de si la página es legible por un motor de búsqueda con modelo detrás. Casi todo sale del mismo digest, más dos lecturas de fichero:
+
+- Existencia y forma de `llms.txt`
+- Si `robots.txt` deja pasar a GPTBot / ClaudeBot / PerplexityBot — **informar, no decidir**: bloquearlos es una postura legítima del dueño del sitio, y la herramienta no debe tener opinión
+- Encabezados con forma de pregunta
+- Secciones que se sostienen solas al arrancarlas del documento, que es como las lee un modelo
+- Fechas, autoría y entidades declaradas en el schema
+
+Está aquí porque es la única parte de esta familia que no está ya inventada en otros diez plugins, y porque su coste marginal es pequeño: las reglas se añaden a `KarMCP_Seo_Audit`, que ya existe, y salen en el mismo informe. **No es un requisito**: si hay que recortar, esto es lo primero que sale.
+
+### Core Web Vitals — fuera de aquí, y por qué
+
+No entra en este plan: no es una auditoría, es infraestructura. Queda anotado lo que no hay que redescubrir:
+
+- Es **INP**, no FID — Google lo sustituyó en marzo de 2024. Una implementación que hable de FID nace caducada.
+- LCP, INP y CLS son métricas **de campo**: salen de visitas reales y **no se calculan desde PHP**.
+- La vía fácil (API de PageSpeed / CrUX) tiene dos taras: **le dice a un tercero qué URL auditas en cada auditoría** —incoherente con el módulo de vulnerabilidades, que se baja el feed entero de Wordfence justo para no contar nada— y **CrUX no tiene datos** para sitios con poco tráfico, que son la mayoría de los de cliente.
+- La vía coherente es RUM propio, y cuesta tabla, endpoint, JS en el front, cron y retención. El día 1 no hay datos.
+
+Si alguna vez se hace, se decide en [ROADMAP-OPTIMIZE.md](ROADMAP-OPTIMIZE.md). `analyze-performance` ya existe y contesta ahora.
 
 ---
 
-## Orden entre las dos partes
-
-Empieza por **Themer extendido**. Razón: el 80% ya está construido y probado en el motor libre, así que son días, no semanas, y levanta un tope duro que hoy limita el uso real. SEO/A11y requiere escribir tres clases desde cero y es un proyecto de verdad.
-
 ## Tests
 
-`tests/` corre sin WordPress sobre stubs (`tests/bootstrap.php`). Los matchers, la especificidad, la resolución de ganador y la matemática de contraste son **funciones puras** — cúbrelas ahí. Ejecuta con:
+`tests/` corre sin WordPress sobre stubs (`tests/bootstrap.php`). **Cada regla del motor de auditoría**, la matemática de contraste y el contador de sílabas son funciones puras — cúbrelas ahí. Es la mayor parte de este trabajo. Ejecuta con:
 
 ```bash
 vendor/bin/phpunit
 ```
 
-Cualquier cosa que toque el render real del front-end necesita verificación manual en un WordPress local; los stubs no la cubren.
+Cualquier cosa que toque el render real del front-end necesita verificación manual en un WordPress local; los stubs no la cubren. Es el riesgo de las dos herramientas que escriben.
+
+Estado tras `audit-page-seo`: **838 tests, 2.095 aserciones, todo en verde** (2026-08-16), de los cuales 56 son de esta parte (`tests/SeoAuditTest.php`, `tests/SeoMetaTest.php`).
+
+---
+
+## Apéndice — referencia del Themer extendido
+
+Implementado; esto no es plan, es mantenimiento. Vive en `includes/themer/class-themer-extended.php`, enganchado desde `KarMCP_Themer_Module::register()`.
+
+> `apply_filters( 'karmcp_themer_extended_tier', false )` (`class-themer-cpt.php`) **solo controla el aviso de administración**. No lo uses como puerta de funcionalidad: la funcionalidad se enchufa por los filtros de abajo.
+
+| Filtro | Fichero | Qué controla |
+|---|---|---|
+| `karmcp_themer_quota` | `class-themer-cpt.php:369` | Máximo de plantillas por tipo. `PHP_INT_MAX` para ilimitado. |
+| `karmcp_themer_matchers` | `class-themer-matcher-registry.php:40` | El mapa de matchers. |
+| `karmcp_themer_selectors` | `class-themer-metabox.php:49` | Qué selectores acepta el guardado. **Un matcher sin selector funciona en el resolver pero no se puede guardar desde el metabox** — es lo que más se olvida. |
+| `karmcp_themer_condition_schema` | `class-themer-condition-schema.php:89` | El árbol de opciones del constructor en el metabox. |
+| `karmcp_themer_rank` | — | Quinto enganche, añadido durante la implementación: `KarMCP_Themer_Index` ya persistía una `priority`, pero el ranker por defecto devuelve `0` para toda fila. Sin esto, la prioridad es inerte. |
+
+Contrato de un matcher:
+
+```php
+'<clave>' => array(
+    'specificity' => <int>,
+    'callback'    => static function ( array $rule, array $ctx ): bool { ... },
+),
+```
+
+Escala de especificidad de los matchers base: `entire-site` 0; `all-singular` y `all-archives` 10; `front-page`, `post-type`, `post-type-archive` y `tax-archive` 20. Los granulares van por encima de 20 para ganarles.
+
+`$rule['object']` es una cadena `clave:parametro`; extráela con `KarMCP_Themer_Matcher_Registry::param()` y `::param2()`. `$ctx` es el snapshot que produce `KarMCP_Themer_Context::from_query()`.

@@ -223,6 +223,19 @@ class KarMCP_Ability_Registrar {
 			$this->ability_names = array_merge( $this->ability_names, $render->get_ability_names() );
 		}
 
+		// audit-page-seo — grades the rendered digest against the stored SEO
+		// metadata. Read-only, and deliberately not Elementor-gated: it audits
+		// whatever the page renders to, whoever built it.
+		if ( class_exists( 'KarMCP_Seo_Audit_Abilities' ) ) {
+			$seo_audit = new KarMCP_Seo_Audit_Abilities();
+			$seo_audit->register();
+			$this->ability_names = array_merge( $this->ability_names, $seo_audit->get_ability_names() );
+
+			// Also fills the `seo` heavy section of get-page-snapshot, which
+			// reserved the seam for it and until now returned an empty stub.
+			KarMCP_Seo_Audit_Abilities::register_snapshot_section();
+		}
+
 		// AI-safe transactions — change ledger + rollback (always-on, write foundation).
 		$transactions = new KarMCP_Transaction_Abilities();
 		$transactions->register();

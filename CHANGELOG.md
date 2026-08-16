@@ -2,6 +2,28 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.14.0]
+
+### Added
+
+- **`audit-page-seo`: the plugin can finally judge its own work.** Every tool up to now either wrote a page or described it. `render-page` was the first that could disagree with the agent about what came out. This one goes further and says whether what came out is any good: it renders the page, reduces it to the same digest, reads whatever the active SEO plugin has stored, and grades the two **together** — because the gap between them is where the real findings live. A title template that expands to nothing, a description the theme never emits, a noindex nobody meant to leave on.
+
+  Every finding carries a recommendation, not just a verdict. Title and description presence and length, H1 and heading outline, content depth, image alt text, links still pointing at `#`, leftover shortcodes and placeholder text, indexability, canonical, declared language, and focus keyword placement when one is stored. Scored 0-100 with a letter grade so two runs can be compared.
+
+  `scope: "content"` works on drafts. `scope: "full"` fetches the served page and is the only one that can judge the real title, the canonical and the `lang` attribute — the report says which it used rather than quietly grading a fragment as if it were the page.
+
+  Two decisions worth knowing about. Lengths are counted in **characters, not bytes**, because every accent in a Spanish title is two bytes and byte-counting would fail a title that displays perfectly. And a stored value still carrying `%%variables%%` is reported as a template rather than measured, because measuring it would grade the template instead of what the visitor reads.
+
+- **`KarMCP_Seo_Meta`** — one vocabulary over Yoast, Rank Math and Slim SEO, reusing the field names the Slim SEO integration already used rather than inventing a second set. It handles the encodings each plugin chose: Yoast's tri-state robots value where only `1` is a noindex and `2` is an explicit index, Rank Math's robots array, which is merged rather than overwritten so a `noarchive` somebody set on purpose survives.
+
+  All in One SEO and SEOPress are **detected but deliberately not read**: they keep their data in their own tables, and guessing at a foreign schema is how you ship a reader that silently returns empty strings forever. The `karmcp_seo_meta` filter is there for an integration that actually knows.
+
+- `get-page-snapshot` now fills its `seo` section, which had reserved the seam and returned an empty stub since the beginning. Passing `include: ["seo"]` returns the score, the grade and the findings that need acting on.
+
+### Changed
+
+- The unresolved heavy sections of `get-page-snapshot` reported themselves as `pro_gated`, a leftover from a tier split this build does not have. They now say `reason: "not_implemented"`, which is true. Nothing consumed the old key.
+
 ## [1.13.1]
 
 ### Fixed

@@ -44,7 +44,7 @@ PHPDIR=$(dirname "$(which php)")
 php -d extension_dir="$PHPDIR/ext" -d extension=mbstring /ruta/a/phpunit.phar
 ```
 
-Estado de referencia: **734 tests, 1.782 aserciones, todo en verde** (2026-08-15). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+Estado de referencia: **838 tests, 2.095 aserciones, todo en verde** (2026-08-16). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
 
 El harness comparte stubs en `tests/bootstrap.php`, y ahí está la trampa: **un stub del harness gana al que declare un fichero de test**, porque el bootstrap carga primero. Si añades ahí una función que un test ya simulaba por su cuenta, ese test empieza a leer una fixture distinta y falla lejos del cambio. Pasó con `wp_get_object_terms()` y los menús.
 
@@ -71,7 +71,22 @@ Tres hooks, en este orden:
 
 `KarMCP_Content_Extractor` (`includes/class-content-extractor.php`) renderiza un post como lo recibe un visitante y lo reduce a un digest normalizado. Está partido a propósito: `analyze()` es **puro** (HTML entra, digest sale, sin WordPress) y es lo que se testea; `extract()` es la mitad que resuelve un post a HTML. No reinventa nada: el render delega en `KarMCP_Themer_Content_Renderer::render()` y el `scope: full` en `KarMCP_Performance_Page_Audit::fetch()`, que ya revalida cada salto de redirección contra el host de origen.
 
-Es la base compartida que pide la Parte 2 del roadmap: `audit-page-seo` y `audit-page-a11y` consumen esta misma vista.
+Es la base compartida que pedía el roadmap de SEO y accesibilidad. **`audit-page-seo` ya la consume** (`includes/audits/class-seo-audit.php`); `audit-page-a11y` está pendiente y consumirá la misma vista.
+
+### Las auditorías: reglas puras sobre el digest
+
+`KarMCP_Seo_Audit::run( $digest, $ctx )` es **pura**: no llama a WordPress, no consulta nada. Todo lo que una regla no puede ver del digest entra por `$ctx`, que reúne el llamante. Es lo que permite que las 56 pruebas de esta parte corran sin WordPress, y la propiedad que hay que conservar al añadir reglas.
+
+Dos piezas alrededor:
+
+- `KarMCP_Audit_Score` (`includes/audits/class-audit-score.php`) — pesos, nota y recuento. Separado **para que la auditoría de accesibilidad gradúe en la misma curva**; dos auditorías con su propio 0-100 dan números que nadie puede comparar.
+- `KarMCP_Seo_Meta` (`includes/class-seo-meta.php`) — un solo vocabulario sobre Yoast, Rank Math y Slim SEO. Reutiliza los nombres de campo que ya usaba la integración de Slim SEO; no inventes un segundo.
+
+> **Intención guardada contra resultado renderizado.** `KarMCP_Seo_Meta` dice lo que hay *guardado*; el digest dice lo que *sale*. La auditoría compara los dos, y ahí es donde aparecen los hallazgos que importan: una plantilla `%%title%%` que expande a nada, una descripción que el tema nunca emite. Un valor con variables sin expandir **se reporta como plantilla, no se mide**: medir su longitud sería graduar la plantilla en vez de lo que lee el visitante.
+
+> **Las longitudes se cuentan en caracteres, no en bytes.** Cada acento de un título en español ocupa dos bytes; contar bytes suspendería un título que se ve perfecto. Hay un test que lo fija con un fixture que cabe en caracteres y no en bytes.
+
+> **AIOSEO y SEOPress se detectan pero no se leen**, a propósito: guardan en tablas propias. Adivinar un esquema ajeno produce un lector que devuelve cadenas vacías para siempre sin fallar nunca. El seam es el filtro `karmcp_seo_meta`.
 
 ### Integraciones de plugin: el trait
 
@@ -176,7 +191,7 @@ Fuera de esta lista, sin abordar y verificado el 2026-08-14: **no hay CI** (`.gi
 
 | Archivo | Qué es |
 |---|---|
-| [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) | Plan real de las dos capacidades propias. Themer extendido: **hecho**. SEO y accesibilidad: pendiente, con los seams ya verificados. |
+| [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) | Themer extendido: **hecho** (referencia en el apéndice). SEO: **`audit-page-seo` hecho**. Accesibilidad: pendiente, con los seams verificados y el motor de reglas ya construido. |
 | [docs/ROADMAP-SECURITY.md](docs/ROADMAP-SECURITY.md) | El apartado de Seguridad, para sustituir a Wordfence: CI, pestaña Security, `harden-site`, drop-in de fatales, `update-core`, módulo de vulnerabilidades y parcheo. Escrito para implementarse desde cero. |
 | [docs/ROADMAP-OPTIMIZE.md](docs/ROADMAP-OPTIMIZE.md) | Continuación de la pestaña Optimize (1.11.0): prevención, autocargadas, cron, índices, coste por plugin. Lo que ya está hecho y lo que no debe entrar. |
 | [docs/ROADMAP-ELEMENT-EXTENSIONS.md](docs/ROADMAP-ELEMENT-EXTENSIONS.md) | Extensiones de elemento. Parte atómica **hecha** (1.13.0/1.13.1); **parte clásica pendiente y es la que más se usa** — los elementos atómicos solo existen con el Editor V4 activado y solo en lo construido después. Las costuras de ambos mundos están verificadas contra 4.2.2/Pro 4.2.1. |

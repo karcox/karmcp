@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.13.1
+Stable tag: 1.14.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,15 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.14.0 =
+
+* New **`audit-page-seo`**: the plugin can now judge its own work, not just describe it. It renders the page, reduces it to the same digest `render-page` uses, reads whatever the active SEO plugin has stored, and grades the two **together** — because the gap between stored intent and rendered result is where the real findings live: a title template that expands to nothing, a description the theme never emits, a noindex nobody meant to leave on.
+* Every finding carries a recommendation, not just a verdict: title and description presence and length, H1 and heading outline, content depth, image alt text, links still pointing at `#`, leftover shortcodes, indexability, canonical, declared language, and focus keyword placement. Scored 0-100 with a letter grade, so two runs can be compared.
+* `scope: "content"` works on drafts; `scope: "full"` fetches the served page and is the only one that can judge the real title, canonical and `lang`. The report says which it used rather than grading a fragment as if it were the page.
+* Lengths are counted in characters, not bytes — every accent in a Spanish title is two bytes, and byte-counting would fail a title that displays perfectly.
+* New `KarMCP_Seo_Meta`: one vocabulary over Yoast, Rank Math and Slim SEO, handling each one's encoding — Yoast's tri-state robots value where only `1` is a noindex, Rank Math's robots array, merged rather than overwritten so directives you set on purpose survive. All in One SEO and SEOPress are detected but not read: they keep their data in their own tables, and the `karmcp_seo_meta` filter is there for an integration that knows the schema.
+* `get-page-snapshot` now fills its `seo` section, which had reserved the seam and returned an empty stub since the beginning.
 
 = 1.13.1 =
 

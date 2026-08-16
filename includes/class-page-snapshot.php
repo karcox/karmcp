@@ -161,9 +161,10 @@ class KarMCP_Page_Snapshot {
 	}
 
 	/**
-	 * Resolve opt-in heavy sections. Free-core supplies `performance`; the Pro overlay
-	 * hooks `karmcp_page_snapshot_sections` for `a11y` + deep `seo`. Anything still
-	 * unresolved degrades to a pro-gated/unavailable stub. Heavy sections are
+	 * Resolve opt-in heavy sections. `performance` is built here; `seo` and
+	 * `a11y` arrive through the `karmcp_page_snapshot_sections` seam, which
+	 * `KarMCP_Seo_Audit_Abilities` fills for `seo`. Anything still unresolved
+	 * degrades to an unavailable stub that says why. Heavy sections are
 	 * transient-cached (15 min) unless $args['fresh'].
 	 *
 	 * @param int   $post_id Post ID.
@@ -217,7 +218,7 @@ class KarMCP_Page_Snapshot {
 			);
 		}
 
-		// Pro sections via the seam.
+		// Audit sections via the seam.
 		$seam = apply_filters( 'karmcp_page_snapshot_sections', array(), $post_id, $include, $args );
 		foreach ( array( 'a11y', 'seo' ) as $key ) {
 			if ( ! in_array( $key, $include, true ) ) {
@@ -227,8 +228,8 @@ class KarMCP_Page_Snapshot {
 				$sections[ $key ] = $seam[ $key ];
 			} else {
 				$sections[ $key ] = array(
-					'available'  => false,
-					'pro_gated'  => true,
+					'available' => false,
+					'reason'    => 'not_implemented',
 				);
 			}
 		}

@@ -4216,6 +4216,11 @@ class KarMCP_Admin {
 						'description' => __( 'Renders a page the way a visitor gets it and returns a digest of the output: heading outline, links, images, forms, visible text, and warnings for empty containers, missing alt text, placeholder links and unresolved shortcodes. Read-only.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
 					),
+					'karmcp/audit-page-seo' => array(
+						'label'       => __( 'Audit Page SEO', 'karmcp' ),
+						'description' => __( 'Grades one page for SEO and returns findings with a recommendation on each: title and description presence and length, H1 and heading outline, content depth, image alt text, placeholder links, indexability, canonical and focus keyword. Reads the stored metadata from Yoast, Rank Math or Slim SEO when present. Read-only.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
 				),
 			),
 			'scaffold'         => array(

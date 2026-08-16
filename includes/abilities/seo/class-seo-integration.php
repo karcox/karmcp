@@ -11,9 +11,13 @@
  *
  * SEO integrations read and write the SEO metadata (title, description,
  * canonical, robots, social, focus keyword, and — where supported — redirects
- * and schema) that each SEO plugin stores. This is distinct from the Pro SEO &
- * Accessibility toolkit (audit-page-seo / generate-meta-tags), which analyses
- * and generates rather than reading/writing a plugin's stored data.
+ * and schema) that each SEO plugin stores, exposing that plugin's own
+ * vocabulary and operations.
+ *
+ * Distinct from two neighbours worth not confusing it with:
+ * `KarMCP_Seo_Meta` reduces the same data to one vocabulary across plugins for
+ * internal use, and `audit-page-seo` grades a page rather than reading or
+ * writing anything.
  *
  * @package KarMCP
  * @since   3.5.0

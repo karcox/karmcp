@@ -59,7 +59,7 @@ class KarMCP_Snapshot_Abilities {
 			'karmcp/get-page-snapshot',
 			array(
 				'label'               => __( 'Get Page Snapshot', 'karmcp' ),
-				'description'         => __( 'Returns ONE normalized digest of a page: structure tree + counts, global colors/typography/classes actually in use, per-device responsive overrides, content outline, and an SEO-lite summary, so you can reason about a page from a single call instead of chaining get-page-structure/get-global-settings/list-global-classes. Pass include:[performance,a11y,seo] for heavy audit summaries (a11y/seo are Pro). Read-only.', 'karmcp' ),
+				'description'         => __( 'Returns ONE normalized digest of a page: structure tree + counts, global colors/typography/classes actually in use, per-device responsive overrides, content outline, and an SEO-lite summary, so you can reason about a page from a single call instead of chaining get-page-structure/get-global-settings/list-global-classes. Pass include:[performance,seo] for heavy audit summaries. Read-only.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
@@ -76,7 +76,7 @@ class KarMCP_Snapshot_Abilities {
 								'type' => 'string',
 								'enum' => array( 'performance', 'a11y', 'seo' ),
 							),
-							'description' => __( 'Heavy opt-in sections. performance is free (needs manage_options); a11y and seo are Pro.', 'karmcp' ),
+							'description' => __( 'Heavy opt-in sections. performance needs manage_options; seo returns the scored SEO audit for this page; a11y is not implemented yet and returns an unavailable stub.', 'karmcp' ),
 						),
 						'sections' => array(
 							'type'        => 'array',

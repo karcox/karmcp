@@ -230,6 +230,13 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/performance/class-performance-page-audit.php';
 		require_once KARMCP_DIR . 'includes/performance/class-performance-analyzer.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-performance-abilities.php';
+		// Page audits — normalized SEO metadata plus the rule set that grades a
+		// page against it. The rules are pure and consume the render digest that
+		// `KarMCP_Content_Extractor` already produces.
+		require_once KARMCP_DIR . 'includes/class-seo-meta.php';
+		require_once KARMCP_DIR . 'includes/audits/class-audit-score.php';
+		require_once KARMCP_DIR . 'includes/audits/class-seo-audit.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-seo-audit-abilities.php';
 		// Filesystem tools (read/scan + write/edit/delete; writes off by default).
 		require_once KARMCP_DIR . 'includes/class-filesystem-guard.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-filesystem-abilities.php';

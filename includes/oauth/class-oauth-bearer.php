@@ -49,6 +49,7 @@ class KarMCP_OAuth_Bearer {
 
 		// No Bearer token: preserve the adapter's default behaviour so
 		// Application-Password / cookie auth continues to work.
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- the MCP Adapter's own filter; we honour its name, we don't own it.
 		$cap = apply_filters( 'mcp_adapter_default_transport_permission_user_capability', 'read', $request );
 		if ( ! is_string( $cap ) || '' === $cap ) {
 			$cap = 'read';
@@ -67,11 +68,16 @@ class KarMCP_OAuth_Bearer {
 		if ( is_object( $request ) && method_exists( $request, 'get_header' ) ) {
 			$header = (string) $request->get_header( 'authorization' );
 		}
+		// Not sanitized on the way in, deliberately: parse_bearer() below runs it
+		// through a regex that admits only the base64url credential alphabet,
+		// which is stricter than any sanitizer — and a sanitizer that silently
+		// rewrote a character would turn a valid token into a failed login with
+		// nothing to show for it.
 		if ( '' === $header && isset( $_SERVER['HTTP_AUTHORIZATION'] ) ) {
-			$header = (string) wp_unslash( $_SERVER['HTTP_AUTHORIZATION'] );
+			$header = (string) wp_unslash( $_SERVER['HTTP_AUTHORIZATION'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by parse_bearer(), see above.
 		}
 		if ( '' === $header && isset( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ) {
-			$header = (string) wp_unslash( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] );
+			$header = (string) wp_unslash( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated by parse_bearer(), see above.
 		}
 		return self::parse_bearer( $header );
 	}

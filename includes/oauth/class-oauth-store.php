@@ -179,7 +179,8 @@ class KarMCP_OAuth_Store {
 		global $wpdb;
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT client_id FROM ' . self::clients_table() . ' WHERE client_name = %s AND redirect_uris = %s LIMIT 1',
+				'SELECT client_id FROM %i WHERE client_name = %s AND redirect_uris = %s LIMIT 1',
+				self::clients_table(),
 				mb_substr( $name, 0, 191 ),
 				(string) wp_json_encode( $uris )
 			),
@@ -197,7 +198,7 @@ class KarMCP_OAuth_Store {
 	public static function get_client( string $client_id ): ?array {
 		global $wpdb;
 		$row = $wpdb->get_row(
-			$wpdb->prepare( 'SELECT * FROM ' . self::clients_table() . ' WHERE client_id = %s', $client_id ),
+			$wpdb->prepare( 'SELECT * FROM %i WHERE client_id = %s', self::clients_table(), $client_id ),
 			ARRAY_A
 		);
 		if ( ! $row ) {
@@ -304,7 +305,8 @@ class KarMCP_OAuth_Store {
 		global $wpdb;
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT * FROM ' . self::tokens_table() . ' WHERE token_hash = %s AND token_type = %s AND expires_at > %d',
+				'SELECT * FROM %i WHERE token_hash = %s AND token_type = %s AND expires_at > %d',
+				self::tokens_table(),
 				KarMCP_OAuth_Util::hash_token( $token ),
 				$type,
 				time()
@@ -358,7 +360,8 @@ class KarMCP_OAuth_Store {
 		$until = time() + $grace;
 		$wpdb->query(
 			$wpdb->prepare(
-				'UPDATE ' . self::tokens_table() . ' SET expires_at = %d WHERE id = %d AND expires_at > %d',
+				'UPDATE %i SET expires_at = %d WHERE id = %d AND expires_at > %d',
+				self::tokens_table(),
 				$until,
 				$id,
 				$until
@@ -385,19 +388,19 @@ class KarMCP_OAuth_Store {
 	 */
 	public static function list_authorized_clients(): array {
 		global $wpdb;
-		$clients = self::clients_table();
-		$tokens  = self::tokens_table();
 
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT c.client_id, c.client_name, c.created_at,
+				'SELECT c.client_id, c.client_name, c.created_at,
 					COUNT( t.id ) AS active_tokens,
 					MAX( t.user_id ) AS user_id
-				FROM {$clients} c
-				INNER JOIN {$tokens} t
+				FROM %i c
+				INNER JOIN %i t
 					ON t.client_id = c.client_id AND t.expires_at > %d
 				GROUP BY c.client_id, c.client_name, c.created_at
-				ORDER BY c.created_at DESC",
+				ORDER BY c.created_at DESC',
+				self::clients_table(),
+				self::tokens_table(),
 				time()
 			),
 			ARRAY_A
@@ -427,23 +430,23 @@ class KarMCP_OAuth_Store {
 	 */
 	public static function gc(): void {
 		global $wpdb;
-		$now     = time();
-		$clients = self::clients_table();
-		$tokens  = self::tokens_table();
+		$now = time();
 
 		// 1) Expired access/refresh tokens.
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$tokens} WHERE expires_at < %d", $now ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE expires_at < %d', self::tokens_table(), $now ) );
 
 		// 2) Orphan clients — repeat DCR (or an abandoned registration retry)
 		// leaves token-less rows; drop those older than the grace window. A
 		// just-registered client is protected until it finishes authorizing.
 		$wpdb->query(
 			$wpdb->prepare(
-				"DELETE c FROM {$clients} c
-				 LEFT JOIN {$tokens} t ON t.client_id = c.client_id
-				 WHERE t.id IS NULL AND c.created_at < %d",
+				'DELETE c FROM %i c
+				 LEFT JOIN %i t ON t.client_id = c.client_id
+				 WHERE t.id IS NULL AND c.created_at < %d',
+				self::clients_table(),
+				self::tokens_table(),
 				$now - self::ORPHAN_CLIENT_GRACE
-			) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			)
 		);
 	}
 

@@ -8,6 +8,11 @@
  * @var array|false $notice   One-shot { type, message } notice, or false.
  */
 
+// Included from inside a method (KarMCP_Themer_PHP_Admin::render_page), so
+// everything here is a local, not a global. The prefix sniff can't see the
+// include site.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }

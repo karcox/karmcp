@@ -751,7 +751,8 @@ class KarMCP_Layout_Abilities {
 			if ( ! isset( $children_by_id[ $eid ] ) ) {
 				return new \WP_Error(
 					'invalid_element_id',
-					sprintf( __( 'Element "%s" is not a direct child of the container.', 'karmcp' ), $eid )
+					/* translators: %s: the element id. */
+				sprintf( __( 'Element "%s" is not a direct child of the container.', 'karmcp' ), $eid )
 				);
 			}
 		}

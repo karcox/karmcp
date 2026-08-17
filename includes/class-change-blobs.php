@@ -107,7 +107,7 @@ class KarMCP_Change_Blobs {
 		}
 		global $wpdb;
 		$json = $wpdb->get_var(
-			$wpdb->prepare( 'SELECT data FROM ' . self::table() . ' WHERE blob_id = %s', $id )
+			$wpdb->prepare( 'SELECT data FROM %i WHERE blob_id = %s', self::table(), $id )
 		);
 		if ( null === $json || '' === $json ) {
 			return null;
@@ -138,7 +138,7 @@ class KarMCP_Change_Blobs {
 	public static function prune_before( int $ts ): int {
 		global $wpdb;
 		return (int) $wpdb->query(
-			$wpdb->prepare( 'DELETE FROM ' . self::table() . ' WHERE created_at < %d', $ts )
+			$wpdb->prepare( 'DELETE FROM %i WHERE created_at < %d', self::table(), $ts )
 		);
 	}
 
@@ -151,14 +151,18 @@ class KarMCP_Change_Blobs {
 	 */
 	public static function prune_orphans( array $referenced_ids ): int {
 		global $wpdb;
-		$table = self::table();
-		$ids   = array_values( array_unique( array_filter( array_map( 'strval', $referenced_ids ), 'strlen' ) ) );
+		$ids = array_values( array_unique( array_filter( array_map( 'strval', $referenced_ids ), 'strlen' ) ) );
 		if ( empty( $ids ) ) {
-			return (int) $wpdb->query( "DELETE FROM {$table}" );
+			return (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i', self::table() ) );
 		}
+		// The IN list is one %s per id, built from the id COUNT and never from
+		// their content; the values themselves go through prepare() below. This
+		// is the documented way to prepare a variable-length IN, and the only
+		// interpolation left in this file.
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%s' ) );
 		return (int) $wpdb->query(
-			$wpdb->prepare( "DELETE FROM {$table} WHERE blob_id NOT IN ({$placeholders})", ...$ids )
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $placeholders is a generated run of %s (see above); the count is 1 + count($ids) on both sides, which the sniff cannot see through the interpolation and the spread.
+			$wpdb->prepare( "DELETE FROM %i WHERE blob_id NOT IN ({$placeholders})", self::table(), ...$ids )
 		);
 	}
 

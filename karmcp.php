@@ -1,9 +1,9 @@
-<?php
+﻿<?php
 /**
  * Plugin Name:       KarMCP
  * Plugin URI:        https://github.com/karcox/karmcp
  * Description:       Extends the WordPress MCP Adapter to expose Elementor data, widgets, and page design tools as MCP tools for AI agents.
- * Version:           1.16.2
+ * Version:           1.16.3
  * Requires at least: 6.9
  * Tested up to:      7.0
  * Requires PHP:      8.1
@@ -38,7 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * includes/class-migration.php below) and fatal. This runs BEFORE any require,
  * so it can never redeclare.
  *
- * KarMCP has a single tier, so this is a plain re-entry check — there is no
+ * KarMCP has a single tier, so this is a plain re-entry check â€” there is no
  * free/premium arbitration to do.
  */
 if ( defined( 'KARMCP_VERSION' ) ) {
@@ -50,7 +50,7 @@ if ( defined( 'KARMCP_VERSION' ) ) {
  *
  * A site upgrading from the older `elementor-mcp` plugin may still have it
  * active alongside this one. Every PHP symbol here is prefixed KarMCP_/karmcp_,
- * so the two never collide at load time — but both would register an MCP
+ * so the two never collide at load time â€” but both would register an MCP
  * server over the same data, which the MCP client cannot disambiguate. So
  * while the old plugin is active we do NOT boot: we snapshot its settings
  * (admin only) and show a notice, then bail before defining constants or
@@ -60,7 +60,7 @@ require_once __DIR__ . '/includes/class-migration.php';
 
 if ( KarMCP_Migration::is_legacy_plugin_active() ) {
 	// Snapshot the old plugin's settings into the new keys WHILE it's still
-	// installed — once the user deletes it, its uninstall hook wipes them.
+	// installed â€” once the user deletes it, its uninstall hook wipes them.
 	if ( is_admin() ) {
 		KarMCP_Migration::migrate();
 	}
@@ -86,21 +86,21 @@ if ( KarMCP_Migration::is_legacy_plugin_active() ) {
 }
 
 // Plugin constants.
-define( 'KARMCP_VERSION', '1.16.2' );
+define( 'KARMCP_VERSION', '1.16.3' );
 define( 'KARMCP_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KARMCP_URL', plugin_dir_url( __FILE__ ) );
 define( 'KARMCP_BASENAME', plugin_basename( __FILE__ ) );
 
-// Claim the WP\MCP namespace for our bundled MCP Adapter copy, at file-load —
+// Claim the WP\MCP namespace for our bundled MCP Adapter copy, at file-load â€”
 // BEFORE any other plugin can autoload an adapter class. Other plugins bundle
-// the adapter behind their own autoloaders (Rank Math SEO, …) and PHP allows
+// the adapter behind their own autoloaders (Rank Math SEO, â€¦) and PHP allows
 // only one class of a given name per request, so without this the namespace
 // can shear across two adapter versions and the MCP session dies mid-request
 // ("Session terminated", -32600). Lazy: registers a resolver, loads nothing.
 require_once KARMCP_DIR . 'includes/class-mcp-adapter-bootstrap.php';
 KarMCP_Adapter_Bootstrap::preload_bundled_namespace();
 
-// Uninstall cleanup on WordPress's own hook — without it, removing the plugin
+// Uninstall cleanup on WordPress's own hook â€” without it, removing the plugin
 // would leave every option and table behind.
 require_once KARMCP_DIR . 'includes/class-uninstaller.php';
 register_uninstall_hook( __FILE__, array( 'KarMCP_Uninstaller', 'run' ) );

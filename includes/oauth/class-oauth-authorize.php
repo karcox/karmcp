@@ -63,7 +63,7 @@ class KarMCP_OAuth_Authorize {
 	 * @param WP $wp Current environment (unused).
 	 */
 	public static function maybe_serve( $wp = null ): void {
-		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
 		if ( ! self::path_matches( $path, self::site_path_prefix() ) ) {
 			return;
@@ -72,7 +72,8 @@ class KarMCP_OAuth_Authorize {
 			self::error_page( __( 'OAuth sign-in is not enabled on this site.', 'karmcp' ) );
 		}
 
-		if ( 'POST' === strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) ) ) {
+		$method = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'GET';
+		if ( 'POST' === strtoupper( $method ) ) {
 			self::handle_post();
 		} else {
 			self::handle_get();
@@ -173,7 +174,9 @@ class KarMCP_OAuth_Authorize {
 		}
 
 		if ( ! is_user_logged_in() ) {
-			wp_redirect( wp_login_url( self::current_url() ) );
+			// This one goes to our own login screen, so it takes the safe
+			// variant — unlike the two client redirects below, which cannot.
+			wp_safe_redirect( wp_login_url( self::current_url() ) );
 			exit;
 		}
 		if ( ! current_user_can( self::required_cap() ) ) {
@@ -228,6 +231,14 @@ class KarMCP_OAuth_Authorize {
 			)
 		);
 
+		// wp_redirect, not wp_safe_redirect, and that is the protocol: the
+		// authorization code goes back to the CLIENT's redirect_uri, which is by
+		// definition an external address. wp_safe_redirect() would restrict it to
+		// this host and break every sign-in. What makes it safe is not the
+		// redirect function but redirect_registered() above, which matched this
+		// URI against the ones the client registered — an unregistered URI never
+		// reaches this line.
+		// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- see above: external by protocol, validated against the client's registered URIs.
 		wp_redirect( self::build_redirect( $redirect_uri, array( 'code' => $code, 'state' => $state ) ) );
 		exit;
 	}
@@ -406,11 +417,14 @@ class KarMCP_OAuth_Authorize {
 	/**
 	 * Redirect back to the client with an OAuth error, then exit.
 	 *
-	 * @param string $redirect_uri Validated redirect URI.
+	 * @param string $redirect_uri Validated redirect URI. Callers MUST have run
+	 *                             redirect_registered() first — this is an
+	 *                             unrestricted redirect by protocol.
 	 * @param string $error        OAuth error code.
 	 * @param string $state        Opaque state to echo back.
 	 */
 	private static function redirect_error( string $redirect_uri, string $error, string $state ): void {
+		// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- external by protocol; the caller validated this URI against the client's registered set.
 		wp_redirect( self::build_redirect( $redirect_uri, array( 'error' => $error, 'state' => $state ) ) );
 		exit;
 	}
@@ -440,8 +454,8 @@ class KarMCP_OAuth_Authorize {
 	 */
 	private static function current_url(): string {
 		$scheme = ( function_exists( 'is_ssl' ) && is_ssl() ) ? 'https' : 'http';
-		$host   = isset( $_SERVER['HTTP_HOST'] ) ? (string) wp_unslash( $_SERVER['HTTP_HOST'] ) : '';
-		$uri    = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		$host   = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
+		$uri    = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 		return esc_url_raw( $scheme . '://' . $host . $uri );
 	}
 }

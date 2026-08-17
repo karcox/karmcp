@@ -91,7 +91,7 @@ class KarMCP_Webp_Rewriter {
 
 	/** @return bool Whether the current request should get WebP. */
 	private function allowed(): bool {
-		$accept = isset( $_SERVER['HTTP_ACCEPT'] ) ? (string) $_SERVER['HTTP_ACCEPT'] : '';
+		$accept = isset( $_SERVER['HTTP_ACCEPT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ACCEPT'] ) ) : '';
 		return self::should_rewrite( $accept, $this->is_rest_context(), $this->serve_frontend );
 	}
 

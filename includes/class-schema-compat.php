@@ -249,6 +249,7 @@ class KarMCP_Schema_Compat {
 	 */
 	public static function use_strict_schemas(): bool {
 		$enabled = '1' === (string) get_option( self::STRICT_OPTION, '0' );
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- STRICT_OPTION is the literal 'karmcp_strict_schemas'; the sniff cannot resolve the constant.
 		return (bool) apply_filters( self::STRICT_OPTION, $enabled );
 	}
 

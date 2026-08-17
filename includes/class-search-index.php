@@ -129,14 +129,18 @@ class KarMCP_Search_Index {
 	 */
 	public static function search( string $query, array $types = array(), int $limit = 20 ): array {
 		global $wpdb;
-		$table = self::table();
 		$types = array_values( array_intersect( self::OBJECT_TYPES, $types ) );
 		if ( $types ) {
+			// The IN list is one %s per type, built from the COUNT of an
+			// already-whitelisted set (array_intersect against OBJECT_TYPES),
+			// never from caller text; the values go through prepare().
 			$place = implode( ',', array_fill( 0, count( $types ), '%s' ) );
-			$sql   = $wpdb->prepare( "SELECT object_type,object_id,title,content,meta FROM {$table} WHERE object_type IN ({$place})", $types ); // phpcs:ignore WordPress.DB
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $place is a generated run of %s (see above); the count is 1 + count($types) on both sides, which the sniff cannot see through the interpolation and the spread.
+			$sql = $wpdb->prepare( "SELECT object_type,object_id,title,content,meta FROM %i WHERE object_type IN ({$place})", self::table(), ...$types );
 		} else {
-			$sql = "SELECT object_type,object_id,title,content,meta FROM {$table}"; // phpcs:ignore WordPress.DB
+			$sql = $wpdb->prepare( 'SELECT object_type,object_id,title,content,meta FROM %i', self::table() );
 		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql is the output of prepare() in both branches above.
 		$rows = (array) $wpdb->get_results( $sql, ARRAY_A );
 
 		$docs = array();

@@ -239,6 +239,7 @@ class KarMCP_Global_Classes_Write_Abilities {
 		}
 		list( $items, $order ) = $state;
 		if ( ! isset( $items[ $id ] ) ) {
+			/* translators: %s: the global class id. */
 			return new \WP_Error( 'not_found', sprintf( __( 'Global class not found: %s', 'karmcp' ), $id ), array( 'status' => 404 ) );
 		}
 
@@ -294,6 +295,7 @@ class KarMCP_Global_Classes_Write_Abilities {
 		}
 		list( $items, $order ) = $state;
 		if ( ! isset( $items[ $id ] ) ) {
+			/* translators: %s: the global class id. */
 			return new \WP_Error( 'not_found', sprintf( __( 'Global class not found: %s', 'karmcp' ), $id ), array( 'status' => 404 ) );
 		}
 		unset( $items[ $id ] );
@@ -352,7 +354,8 @@ class KarMCP_Global_Classes_Write_Abilities {
 		if ( ! empty( $unknown ) ) {
 			return new \WP_Error(
 				'unknown_class',
-				sprintf( __( 'Unknown global class id(s): %s', 'karmcp' ), implode( ', ', $unknown ) ),
+				/* translators: %s: comma-separated list of global class ids. */
+			sprintf( __( 'Unknown global class id(s): %s', 'karmcp' ), implode( ', ', $unknown ) ),
 				array( 'status' => 404 )
 			);
 		}

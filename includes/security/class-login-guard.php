@@ -287,7 +287,7 @@ class KarMCP_Login_Guard {
 			return;
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only probe check on a public request.
-		if ( isset( $_GET['author'] ) && is_numeric( wp_unslash( $_GET['author'] ) ) ) {
+		if ( isset( $_GET['author'] ) && is_numeric( sanitize_text_field( wp_unslash( $_GET['author'] ) ) ) ) {
 			wp_die(
 				esc_html__( 'Not available.', 'karmcp' ),
 				esc_html__( 'Forbidden', 'karmcp' ),

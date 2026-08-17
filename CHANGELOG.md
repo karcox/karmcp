@@ -2,6 +2,26 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.16.3]
+
+### Changed
+
+- **The static-analysis ruleset is clean and now blocks.** PHPCS went from 87 errors and 17 warnings to **zero**, and `bin/check.ps1` fails on any new one. The ruleset was written a while ago and deliberately narrow — injection, unescaped output, nonces, prepared SQL, i18n, global prefixes, PHP 8.1 compatibility — but until 1.16.2 nothing had ever run it, so the findings had been accumulating unread. The first ratchet in `phpcs.xml.dist` is now closed; the next block to add is Docs.
+
+  Most of the work was separating the two kinds of finding, because they need opposite treatments and a baseline would have flattened both:
+
+- **`%i` for every table name.** 37 findings were `$wpdb->prepare( 'SELECT … FROM ' . self::table() . ' …' )` — values properly bound, table name concatenated, which the sniff cannot verify. Rather than silence them, they now use `%i`, the identifier placeholder WordPress has had since 6.2 (this plugin requires 6.9). Two of those were not cosmetic: `describe-table` and the database guard's before-image build SQL from a **caller-supplied** table and column names, and were escaping them with a hand-rolled backtick strip. That is now WordPress's job.
+
+- **What is genuinely intentional says so, at the line.** An OAuth `redirect_uri` must go to an external host — that is the protocol, and `wp_safe_redirect()` would break every sign-in — so it stays `wp_redirect()` with the reason written down and a pointer to the `redirect_registered()` check that makes it safe. The `Authorization` header is not sanitized because `parse_bearer()` already restricts it to the base64url alphabet, and a sanitizer that quietly rewrote a character would turn a valid token into an unexplained failed login. A PHP template's source cannot be sanitized without destroying it. Third-party hooks (WPML's, the adapter's, core's `the_content`) cannot be prefixed without ceasing to be those hooks.
+
+  Each of those is a place where the obvious "fix" is the wrong one, and each now carries the argument in a comment rather than reading as an oversight to whoever looks next.
+
+- **Real fixes among them:** the login redirect to our own login screen now uses `wp_safe_redirect()`; `$_SERVER` reads across OAuth, the WebP rewriter and the login guard are sanitized; `$slots` in the Themer canvas template is prefixed, because that file is included by the template loader in the **global** scope where a bare name really can collide (the other view partials are included from inside a method and are genuinely local); a redundant `syntax_check()` override on the block store that only called its parent is gone; and eleven `translators:` comments now tell whoever translates the strings what the placeholders are.
+
+### Fixed
+
+- `bin/check.ps1` crashed when PHPCS reported nothing — it called `.ToString()` on the null from a `Select-String` that matched no total line. The clean path had never run before, which is the point.
+
 ## [1.16.2]
 
 ### Changed

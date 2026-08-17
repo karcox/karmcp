@@ -200,10 +200,11 @@ class KarMCP_Themer_CPT {
 				. '<p style="margin:0 0 10px;color:#50575e;">%3$s</p>'
 				. '<div style="display:flex;flex-wrap:wrap;gap:6px;">%4$s</div>'
 			. '</div>',
-			$purple,
+			esc_attr( $purple ),
 			esc_html__( 'Themer template usage', 'karmcp' ),
 			esc_html__( 'This build allows 1 template per type, with site-wide, post-type and archive conditions.', 'karmcp' ),
-			$chips // Already escaped above.
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $chips is markup built above with every interpolated value escaped at the point it was inserted.
+			$chips
 		);
 	}
 

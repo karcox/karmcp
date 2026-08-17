@@ -8,6 +8,10 @@
  * @package KarMCP
  */
 
+// Included from inside a method (KarMCP_Admin::render_page), so everything here
+// is a local, not a global. The prefix sniff can't see the include site.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }

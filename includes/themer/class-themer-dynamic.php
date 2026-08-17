@@ -217,7 +217,9 @@ class KarMCP_Themer_Dynamic {
 					break;
 				case 'comments':
 					$count = (int) get_comments_number( $id );
-					$out[] = '<li class="karmcp-dyn-meta-comments"><a href="' . esc_url( (string) get_comments_link( $id ) ) . '">' . esc_html( sprintf( _n( '%s comment', '%s comments', $count, 'karmcp' ), number_format_i18n( $count ) ) ) . '</a></li>';
+					/* translators: %s: number of comments, already formatted for the locale. */
+					$label = sprintf( _n( '%s comment', '%s comments', $count, 'karmcp' ), number_format_i18n( $count ) );
+					$out[] = '<li class="karmcp-dyn-meta-comments"><a href="' . esc_url( (string) get_comments_link( $id ) ) . '">' . esc_html( $label ) . '</a></li>';
 					break;
 			}
 		}
@@ -339,6 +341,7 @@ class KarMCP_Themer_Dynamic {
 			return '';
 		}
 		$content = get_post_field( 'post_content', $id );
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core's the_content, see KarMCP_Themer_Content_Renderer.
 		$content = apply_filters( 'the_content', (string) $content );
 		$content = str_replace( ']]>', ']]&gt;', $content );
 		return '<div class="karmcp-dyn karmcp-dyn-post-content entry-content">' . $content . '</div>';

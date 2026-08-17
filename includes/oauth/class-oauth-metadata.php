@@ -142,7 +142,7 @@ class KarMCP_OAuth_Metadata {
 	 * @return string
 	 */
 	private static function request_path(): string {
-		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
 		if ( '/' !== $path ) {
 			$path = untrailingslashit( $path );

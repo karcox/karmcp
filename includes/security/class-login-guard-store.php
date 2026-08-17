@@ -181,9 +181,10 @@ class KarMCP_Login_Guard_Store {
 	 */
 	public static function failures_since( string $type, string $subject, int $since ): array {
 		global $wpdb;
-		$rows = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				'SELECT created_at FROM ' . self::table() . ' WHERE kind = %s AND subject_type = %s AND subject = %s AND created_at > %d',
+				'SELECT created_at FROM %i WHERE kind = %s AND subject_type = %s AND subject = %s AND created_at > %d',
+				self::table(),
 				'fail',
 				$type,
 				$subject,
@@ -205,9 +206,10 @@ class KarMCP_Login_Guard_Store {
 	 */
 	public static function prior_lockouts( string $type, string $subject, int $since ): int {
 		global $wpdb;
-		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				'SELECT COUNT(*) FROM ' . self::table() . ' WHERE kind = %s AND subject_type = %s AND subject = %s AND created_at > %d',
+				'SELECT COUNT(*) FROM %i WHERE kind = %s AND subject_type = %s AND subject = %s AND created_at > %d',
+				self::table(),
 				'lock',
 				$type,
 				$subject,
@@ -228,9 +230,10 @@ class KarMCP_Login_Guard_Store {
 	 */
 	public static function active_lock_until( string $type, string $subject, int $now ): int {
 		global $wpdb;
-		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				'SELECT MAX(expires_at) FROM ' . self::table() . ' WHERE kind = %s AND subject_type = %s AND subject = %s AND expires_at > %d',
+				'SELECT MAX(expires_at) FROM %i WHERE kind = %s AND subject_type = %s AND subject = %s AND expires_at > %d',
+				self::table(),
 				'lock',
 				$type,
 				$subject,
@@ -250,10 +253,11 @@ class KarMCP_Login_Guard_Store {
 	 */
 	public static function active_locks( int $now, int $limit = 100 ): array {
 		global $wpdb;
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				'SELECT subject_type, subject, username, created_at, expires_at FROM ' . self::table()
+				'SELECT subject_type, subject, username, created_at, expires_at FROM %i'
 				. ' WHERE kind = %s AND expires_at > %d ORDER BY expires_at DESC LIMIT %d',
+				self::table(),
 				'lock',
 				$now,
 				max( 1, min( 500, $limit ) )
@@ -320,9 +324,10 @@ class KarMCP_Login_Guard_Store {
 	 */
 	public static function gc(): void {
 		global $wpdb;
-		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				'DELETE FROM ' . self::table() . ' WHERE created_at < %d',
+				'DELETE FROM %i WHERE created_at < %d',
+				self::table(),
 				time() - self::RETENTION
 			)
 		);

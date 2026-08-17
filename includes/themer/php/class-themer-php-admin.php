@@ -98,6 +98,11 @@ class KarMCP_Themer_PHP_Admin {
 
 		$args = array(
 			// wp_unslash: the store re-slashes for storage; validation must see raw code.
+			// Deliberately not sanitized: this field IS PHP source. Any sanitizer
+			// would silently rewrite the template into something that no longer
+			// parses. KarMCP_Themer_PHP_Store::update() validates it instead, and
+			// can_edit() gated the request above.
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- see above; validated by the store, not sanitized.
 			'code'  => isset( $_POST['code'] ) ? (string) wp_unslash( $_POST['code'] ) : '',
 			'title' => isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '',
 		);

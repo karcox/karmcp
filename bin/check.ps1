@@ -8,11 +8,11 @@
     installed. If the toolchain is missing this bootstraps it rather than
     skipping the check quietly.
 
-    PHPCS is REPORTING, not blocking: the tree carries pre-existing findings in
-    a deliberately narrow ruleset (security, prepared SQL, i18n, prefixes, PHP
-    version compatibility). The count is printed so a rise is visible. PHPStan
-    IS blocking — its pre-existing findings are frozen in phpstan-baseline.neon,
-    so anything it reports is new.
+    All three block. PHPCS's ruleset is deliberately narrow (security, prepared
+    SQL, i18n, prefixes, PHP version compatibility) and the tree is clean
+    against it as of 1.16.3, so any finding is one this change introduced.
+    PHPStan's pre-existing findings are frozen in phpstan-baseline.neon, so
+    anything it reports is new too.
 
 .PARAMETER Quick
     Skip PHPCS, which is the slow one (~45s).
@@ -69,17 +69,19 @@ try {
     php tools\vendor\bin\phpstan analyse --no-progress --memory-limit=2G
     if ($LASTEXITCODE -ne 0) { $failed += 'PHPStan' }
 
-    # --- PHPCS (reporting) ------------------------------------------------
+    # --- PHPCS (blocking since 1.16.3) ------------------------------------
     if (-not $Quick) {
-        Section 'PHPCS (reporting only)'
-        $out = php tools\vendor\bin\phpcs --no-colors --report=summary 2>&1
-        $total = ($out | Select-String 'A TOTAL OF').ToString()
+        Section 'PHPCS'
+        $out   = php tools\vendor\bin\phpcs --no-colors --report=summary 2>&1
+        $code  = $LASTEXITCODE
+        $total = $out | Select-String 'A TOTAL OF' | Select-Object -First 1
         if ($total) {
-            Write-Host $total.Trim() -ForegroundColor Yellow
-            Write-Host 'Pre-existing. Full report: php tools\vendor\bin\phpcs' -ForegroundColor DarkGray
+            Write-Host $total.ToString().Trim() -ForegroundColor Yellow
+            Write-Host 'Full report: php tools\vendor\bin\phpcs' -ForegroundColor DarkGray
         } else {
             Write-Host 'clean' -ForegroundColor Green
         }
+        if ($code -ne 0) { $failed += 'PHPCS' }
     }
 
     # --- verdict ----------------------------------------------------------

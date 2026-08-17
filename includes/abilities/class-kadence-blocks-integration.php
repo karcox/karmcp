@@ -139,6 +139,7 @@ class KarMCP_Kadence_Blocks_Integration extends KarMCP_Theme_Integration {
 			return new WP_Error( 'not_found', __( 'Post not found.', 'karmcp' ), array( 'status' => 404 ) );
 		}
 		if ( ! KarMCP_Kadence_Blocks_Catalog::is_known( $name ) ) {
+			/* translators: %s: the block name the caller asked for. */
 			return new WP_Error( 'unknown_block', sprintf( __( 'Unknown Kadence block: %s', 'karmcp' ), $name ), array( 'status' => 404 ) );
 		}
 		$attrs    = ( isset( $input['attributes'] ) && is_array( $input['attributes'] ) ) ? $input['attributes'] : array();

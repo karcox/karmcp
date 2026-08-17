@@ -175,6 +175,7 @@ class KarMCP_Kadence_Pattern_Library {
 	public static function get_markup( string $id, bool $localize_images = false ) {
 		$entry = self::entry( $id );
 		if ( null === $entry ) {
+			/* translators: %s: the pattern id the caller asked for. */
 			return new WP_Error( 'unknown_pattern', sprintf( __( 'Unknown pattern: %s', 'karmcp' ), $id ), array( 'status' => 404 ) );
 		}
 		$content = self::fetch_content( $entry );
@@ -252,7 +253,10 @@ class KarMCP_Kadence_Pattern_Library {
 				return $data;
 			}
 		} catch ( \Throwable $e ) {
-			// fall through to original content.
+			// Deliberately empty: this is a best-effort call into Kadence's own
+			// controller, and the fallback for anything it throws is the same as
+			// the fallback for a failed result — return the content unchanged.
+			unset( $e );
 		}
 		return $content;
 	}

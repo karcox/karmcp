@@ -39,7 +39,7 @@ pwsh bin/check.ps1
 
 PHPUnit + PHPStan (bloqueante) + PHPCS (informativo). Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
 
-Estado de referencia: **969 tests, 2.470 aserciones**; PHPStan **sin errores**; PHPCS **87 errores y 17 avisos preexistentes** (2026-08-17).
+Estado de referencia (2026-08-17): **969 tests, 2.470 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
 
 ### El entorno, montado en la 1.16.2
 
@@ -59,7 +59,11 @@ Los 95 hallazgos que quedaban están congelados en `phpstan-baseline.neon` — c
 php tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon
 ```
 
-**PHPCS no tiene baseline y sus 87 errores son deuda real**, no ruido: el ruleset es deliberadamente estrecho (inyección, salida sin escapar, nonces, SQL preparado, i18n, prefijos globales, compatibilidad con PHP 8.1). Están concentrados en OAuth, el store del login guard y las vistas de admin. Es el siguiente trinquete, y hasta que se limpie el script no bloquea por ellos.
+**PHPCS no tiene baseline a propósito, y desde la 1.16.3 no lo necesita: está a cero y bloquea.** El ruleset es estrecho (inyección, salida sin escapar, nonces, SQL preparado, i18n, prefijos globales, compatibilidad con PHP 8.1). El siguiente bloque del trinquete es Docs.
+
+> **Los nombres de tabla van con `%i`, no concatenados.** `$wpdb->prepare( 'SELECT … FROM %i …', self::table(), … )`. Es el placeholder de identificadores de WordPress 6.2+, y aquí el mínimo es 6.9. Concatenar el nombre funciona pero no se puede verificar, y en los dos sitios donde la tabla **viene del llamante** (`describe-table` y el before-image del guard de base de datos) el escapado lo hacía un `str_replace` casero. No vuelvas a concatenar.
+
+> **Cuando el arreglo obvio es el equivocado, el motivo va en el código.** Un `redirect_uri` de OAuth tiene que salir del sitio —`wp_safe_redirect()` rompería el login entero—, la cabecera `Authorization` no se sanea porque `parse_bearer()` ya la restringe al alfabeto base64url, el código de una plantilla PHP no se puede sanear sin destruirlo, y los hooks de terceros (WPML, el adapter, el `the_content` de core) no se pueden prefijar sin dejar de ser esos hooks. Todos llevan su `phpcs:ignore` **con la razón escrita al lado**. Si te encuentras uno, léelo antes de "arreglarlo".
 
 ### La suite
 

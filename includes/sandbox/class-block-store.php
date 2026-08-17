@@ -333,19 +333,9 @@ class KarMCP_Block_Store extends KarMCP_Sandbox_Store {
 		return true;
 	}
 
-	/**
-	 * Parses generated PHP without running it, so a compiler bug becomes an
-	 * error message here instead of a fatal on someone's page.
-	 *
-	 * @since 1.12.0
-	 *
-	 * @param string $php Generated source.
-	 * @return true|WP_Error
-	 */
-	public static function syntax_check( string $php ) {
-		// Lives on the sandbox base now, shared with the extension store.
-		return parent::syntax_check( $php );
-	}
+	// syntax_check() is inherited from KarMCP_Sandbox_Store, shared with the
+	// extension store. The override that used to sit here only called the
+	// parent.
 
 	/**
 	 * Activates or deactivates a block.

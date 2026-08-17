@@ -229,9 +229,8 @@ class KarMCP_Vuln_Store {
 			return new \WP_Error( 'unreadable', __( 'Could not read the downloaded feed.', 'karmcp' ) );
 		}
 
-		$table = self::table();
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared -- plugin-owned table; a full rebuild is the operation.
-		$wpdb->query( "TRUNCATE TABLE {$table}" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- plugin-owned table; a full rebuild is the operation.
+		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', self::table() ) );
 
 		$buffer  = '';
 		$started = false;
@@ -315,9 +314,10 @@ class KarMCP_Vuln_Store {
 	 */
 	public static function for_software( string $type, string $slug ): array {
 		global $wpdb;
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				'SELECT * FROM ' . self::table() . ' WHERE software_type = %s AND slug = %s',
+				'SELECT * FROM %i WHERE software_type = %s AND slug = %s',
+				self::table(),
 				$type,
 				$slug
 			),

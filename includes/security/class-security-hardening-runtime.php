@@ -39,6 +39,7 @@ class KarMCP_Security_Hardening_Runtime {
 			// editor screens load, both of which happen after plugins — so
 			// defining it here is as effective as the wp-config line, and unlike
 			// that line it can be undone from a checkbox.
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- WordPress core's own constant; prefixing it would define something core never reads.
 			define( 'DISALLOW_FILE_EDIT', true );
 		}
 

@@ -2336,8 +2336,8 @@ class KarMCP_Admin {
 		// programmatic update_option() calls (e.g. the default-disabled seeder)
 		// from being inverted at all.
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- options.php verifies the settings nonce before sanitization runs.
-		$is_settings_form = isset( $_POST['option_page'] )
-			&& self::SETTINGS_GROUP === sanitize_text_field( wp_unslash( $_POST['option_page'] ) );
+		$option_page      = isset( $_POST['option_page'] ) ? sanitize_text_field( wp_unslash( $_POST['option_page'] ) ) : '';
+		$is_settings_form = self::SETTINGS_GROUP === $option_page;
 
 		if ( $is_settings_form ) {
 			$enabled = array();
@@ -2447,7 +2447,8 @@ class KarMCP_Admin {
 				// Connection auth self-test (#41).
 				'authTesting' => __( 'Testing…', 'karmcp' ),
 				'authOk'      => __( '✓ Authentication works, your AI client should connect successfully.', 'karmcp' ),
-				'authFail'    => __( '✗ Authentication failed (HTTP %d). If the credentials are correct, your server is stripping the Authorization header, see the fix below.', 'karmcp' ),
+				/* translators: %d: HTTP status code returned by the failed request. */
+			'authFail'    => __( '✗ Authentication failed (HTTP %d). If the credentials are correct, your server is stripping the Authorization header, see the fix below.', 'karmcp' ),
 				'authError'   => __( 'Could not reach the REST API to test. Check the site URL and that the REST API is enabled.', 'karmcp' ),
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'createPwNonce' => wp_create_nonce( 'karmcp_create_app_password' ),
@@ -2669,8 +2670,7 @@ class KarMCP_Admin {
 			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
 		}
 
-		$ids = isset( $_POST['ids'] ) ? (array) wp_unslash( $_POST['ids'] ) : array();
-		$ids = array_map( 'sanitize_text_field', $ids );
+		$ids = isset( $_POST['ids'] ) ? array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['ids'] ) ) : array();
 
 		$user_id = get_current_user_id();
 		KarMCP_Notifications::mark_read( $user_id, $ids );

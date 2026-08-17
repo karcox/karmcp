@@ -704,6 +704,7 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 						id="karmcp-wpcli-command"
 						name="karmcp_wpcli_command"
 						value="<?php echo esc_attr( $karmcp_wpcli_const ? '' : (string) get_option( 'karmcp_wpcli_command', '' ) ); ?>"
+						<?php /* translators: %s: the PHP constant name, e.g. KARMCP_WPCLI_COMMAND. */ ?>
 						placeholder="<?php echo esc_attr( $karmcp_wpcli_const ? sprintf( __( 'Set via the %s constant', 'karmcp' ), 'KARMCP_WPCLI_COMMAND' ) : 'wp, or   php /path/to/wp-cli.phar' ); ?>"
 						autocomplete="off" spellcheck="false"
 						<?php disabled( $karmcp_wpcli_const ); ?>

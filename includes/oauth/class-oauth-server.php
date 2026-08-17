@@ -117,7 +117,7 @@ class KarMCP_OAuth_Server {
 		if ( 0 === strpos( (string) home_url(), 'https://' ) ) {
 			return true;
 		}
-		$host = isset( $_SERVER['HTTP_HOST'] ) ? strtolower( (string) wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
+		$host = isset( $_SERVER['HTTP_HOST'] ) ? strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) ) : '';
 		return self::is_local_host( $host );
 	}
 

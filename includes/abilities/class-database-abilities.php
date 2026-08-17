@@ -87,7 +87,10 @@ class KarMCP_Database_Abilities {
 			return $table;
 		}
 		global $wpdb;
-		$cols = $wpdb->get_results( 'DESCRIBE `' . str_replace( '`', '', $table ) . '`', ARRAY_A );
+		// %i, not a hand-rolled backtick strip: the table name is already
+		// validated against the real table list, and this hands the escaping of
+		// the identifier to WordPress instead of to a str_replace here.
+		$cols = $wpdb->get_results( $wpdb->prepare( 'DESCRIBE %i', $table ), ARRAY_A );
 		return array( 'table' => $table, 'columns' => is_array( $cols ) ? $cols : array() );
 	}
 

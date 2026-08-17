@@ -147,7 +147,7 @@ class KarMCP_OAuth_Clients {
 	 * @return string
 	 */
 	private static function client_ip(): string {
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		return '' === $ip ? 'unknown' : $ip;
 	}
 

@@ -18,6 +18,11 @@
  * @since   1.1.0
  */
 
+// Every hook this file invokes is WPML's own — that is the whole point of the
+// file, as the docblock above says. The prefix sniff is asking us to rename
+// somebody else's API, which would just stop the integration working.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }

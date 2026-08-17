@@ -6,6 +6,9 @@
  * @package KarMCP
  */
 
+// Included from inside render_settings(), so $p is a local, not a global.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }

@@ -139,9 +139,11 @@ $karmcp_notices = array(
 				</thead>
 				<tbody>
 				<?php foreach ( $karmcp_rows as $karmcp_r ) :
-					$karmcp_tgt = ! empty( $karmcp_r['target_post_id'] )
-						? sprintf( __( 'post #%d', 'karmcp' ), (int) $karmcp_r['target_post_id'] )
-						: (string) $karmcp_r['target'];
+					$karmcp_tgt = (string) $karmcp_r['target'];
+					if ( ! empty( $karmcp_r['target_post_id'] ) ) {
+						/* translators: %d: the target post ID. */
+						$karmcp_tgt = sprintf( __( 'post #%d', 'karmcp' ), (int) $karmcp_r['target_post_id'] );
+					}
 					?>
 					<tr class="<?php echo empty( $karmcp_r['enabled'] ) ? 'karmcp-rd-off' : ''; ?>">
 						<td><code><?php echo esc_html( $karmcp_r['source_path'] ); ?></code></td>

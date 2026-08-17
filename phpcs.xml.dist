@@ -13,8 +13,13 @@
 		el siguiente bloque (Docs, luego NamingConventions, luego el formato) y
 		se vuelve a limpiar. No al revés.
 
+		ESTADO: limpio desde la 1.16.3 — 0 errores, 0 avisos — y bloqueante en
+		bin/check.ps1. El primer trinquete está cerrado; cualquier hallazgo que
+		aparezca ahora lo ha introducido el cambio que se esté haciendo. El
+		siguiente bloque a añadir es Docs.
+
 		Uso:
-			composer --working-dir=tools update
+			php ../composer.phar --working-dir=tools update
 			tools/vendor/bin/phpcs
 			tools/vendor/bin/phpcbf   (arregla lo autoarreglable)
 	</description>

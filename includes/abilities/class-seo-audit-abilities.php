@@ -53,7 +53,8 @@ class KarMCP_Seo_Audit_Abilities {
 		}
 
 		if ( defined( 'ICL_SITEPRESS_VERSION' ) ) {
-			$details = apply_filters( 'wpml_post_language_details', null, $post_id );
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML's own filter; renaming it would just stop asking WPML.
+		$details = apply_filters( 'wpml_post_language_details', null, $post_id );
 			if ( is_array( $details ) && ! empty( $details['locale'] ) ) {
 				return (string) $details['locale'];
 			}

@@ -219,7 +219,7 @@ JS;
 			echo '<p style="margin-top:0;"><label for="karmcp-themer-php"><strong>' . esc_html__( 'Render with PHP template', 'karmcp' ) . '</strong></label><br>';
 			printf(
 				'<select id="karmcp-themer-php" name="karmcp_themer_php_template" data-attached="%d" style="width:100%%;max-width:340px;%s">',
-				$attached,
+				esc_attr( $attached ),
 				$has_type ? '' : 'display:none;'
 			);
 			printf( '<option value="0">%s</option>', esc_html__( ', None (use builder content) , ', 'karmcp' ) );

@@ -80,6 +80,7 @@ class KarMCP_Themer_Content_Renderer {
 
 		// Gutenberg + classic both run through the the_content filter (do_blocks is
 		// attached there), which resolves blocks and shortcodes.
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core's the_content; running it is exactly what "render like the front end" means.
 		return apply_filters( 'the_content', $post->post_content );
 	}
 }

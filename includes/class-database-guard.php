@@ -316,14 +316,20 @@ class KarMCP_Database_Guard {
 		if ( empty( $where ) ) {
 			return array();
 		}
+		// Both the table and the column names are identifiers, and %i is what
+		// escapes an identifier — WordPress does it, rather than the backtick
+		// strip this used to do by hand. Args interleave to match the clause
+		// order: table, then (column, value) per condition.
 		$cond = array();
-		$vals = array();
+		$args = array( $table );
 		foreach ( $where as $col => $val ) {
-			$cond[] = '`' . str_replace( '`', '', (string) $col ) . '` = %s';
-			$vals[] = $val;
+			$cond[] = '%i = %s';
+			$args[] = (string) $col;
+			$args[] = $val;
 		}
-		$sql  = "SELECT * FROM `" . str_replace( '`', '', $table ) . "` WHERE " . implode( ' AND ', $cond ) . ' LIMIT ' . (int) self::BEFORE_IMAGE_CAP;
-		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $vals ), ARRAY_A );
+		$sql = 'SELECT * FROM %i WHERE ' . implode( ' AND ', $cond ) . ' LIMIT ' . (int) self::BEFORE_IMAGE_CAP;
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql is built from %i/%s placeholders and an int cap; every value goes through prepare().
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, ...$args ), ARRAY_A );
 		return is_array( $rows ) ? $rows : array();
 	}
 

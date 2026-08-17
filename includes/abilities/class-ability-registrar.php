@@ -236,6 +236,15 @@ class KarMCP_Ability_Registrar {
 			KarMCP_Seo_Audit_Abilities::register_snapshot_section();
 		}
 
+		// audit-page-a11y — the other half of the same seam.
+		if ( class_exists( 'KarMCP_A11y_Audit_Abilities' ) ) {
+			$a11y_audit = new KarMCP_A11y_Audit_Abilities();
+			$a11y_audit->register();
+			$this->ability_names = array_merge( $this->ability_names, $a11y_audit->get_ability_names() );
+
+			KarMCP_A11y_Audit_Abilities::register_snapshot_section();
+		}
+
 		// AI-safe transactions — change ledger + rollback (always-on, write foundation).
 		$transactions = new KarMCP_Transaction_Abilities();
 		$transactions->register();

@@ -735,10 +735,37 @@ class KarMCP_Seo_Audit {
 				$result['formula'],
 				$result['words_per_sentence']
 			),
-			$hard
-				? __( 'Shorter sentences move this more than shorter words do. Legitimate for a legal or technical page — judge it against who has to read it.', 'karmcp' )
-				: ''
+			$hard ? self::readability_advice( $result ) : ''
 		);
+	}
+
+	/**
+	 * Which lever actually moves this text.
+	 *
+	 * Both factors feed the same formula, and blaming the wrong one sends the
+	 * reader to rewrite something that is already fine. Found on a real page:
+	 * sentences averaging 11 words — short — graded "algo difícil" purely on
+	 * vocabulary, while the advice said to shorten the sentences.
+	 *
+	 * @param array $result Readability result.
+	 * @return string
+	 */
+	private static function readability_advice( array $result ): string {
+		$per_sentence = (float) ( $result['words_per_sentence'] ?? 0 );
+		$per_word     = $result['words'] > 0 ? $result['syllables'] / $result['words'] : 0;
+
+		$long_sentences = $per_sentence > 20;
+		$long_words     = $per_word > 2.2;
+
+		if ( $long_sentences && ! $long_words ) {
+			return __( 'The sentences are what weigh here, not the vocabulary: split the longest ones. Legitimate for a legal or technical page — judge it against who has to read it.', 'karmcp' );
+		}
+
+		if ( $long_words && ! $long_sentences ) {
+			return __( 'The sentences are already short; it is the vocabulary that weighs. Long abstract nouns are the usual cause. Legitimate for a technical page — judge it against who has to read it.', 'karmcp' );
+		}
+
+		return __( 'Both long sentences and long words weigh here. Splitting sentences is the easier of the two. Legitimate for a legal or technical page — judge it against who has to read it.', 'karmcp' );
 	}
 
 	/**

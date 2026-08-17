@@ -236,8 +236,11 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/class-seo-meta.php';
 		require_once KARMCP_DIR . 'includes/audits/class-audit-score.php';
 		require_once KARMCP_DIR . 'includes/audits/class-readability.php';
+		require_once KARMCP_DIR . 'includes/audits/class-color-contrast.php';
 		require_once KARMCP_DIR . 'includes/audits/class-seo-audit.php';
+		require_once KARMCP_DIR . 'includes/audits/class-a11y-audit.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-seo-audit-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-a11y-audit-abilities.php';
 		// Filesystem tools (read/scan + write/edit/delete; writes off by default).
 		require_once KARMCP_DIR . 'includes/class-filesystem-guard.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-filesystem-abilities.php';

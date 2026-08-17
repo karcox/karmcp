@@ -580,6 +580,51 @@ final class SeoAuditTest extends TestCase {
 		$this->assertNoFinding( $report, 'og-image-missing' );
 	}
 
+	// --------------------------------------------------------- legibilidad
+
+	/**
+	 * Both factors feed the same formula, so blaming the wrong one sends the
+	 * reader to rewrite something already fine. A real page had 11-word
+	 * sentences graded hard purely on vocabulary, while the advice said to
+	 * shorten the sentences.
+	 */
+	public function test_readability_advice_names_the_factor_that_actually_weighs(): void {
+		// Short sentences, long abstract nouns.
+		$vocabulary = KarMCP_Seo_Audit::run(
+			$this->digest(
+				array(
+					'text' => array(
+						'prose' => str_repeat( "La implementación resultó extraordinariamente insatisfactoria.\n", 40 ),
+					),
+				)
+			),
+			$this->ctx( array(), array( 'locale' => 'es_ES' ) )
+		);
+
+		$finding = $this->finding( $vocabulary, 'readability-hard' );
+
+		$this->assertNotNull( $finding );
+		$this->assertStringContainsString( 'sentences are already short', $finding['recommendation'] );
+	}
+
+	public function test_readability_is_measured_on_prose_not_on_the_whole_page(): void {
+		// The excerpt is full of menu chrome; only the prose should be scored.
+		$report = KarMCP_Seo_Audit::run(
+			$this->digest(
+				array(
+					'text' => array(
+						'excerpt' => str_repeat( 'Servicios Portafolio Blog Contacto ', 60 ),
+						'prose'   => '',
+					),
+				)
+			),
+			$this->ctx( array(), array( 'locale' => 'es_ES' ) )
+		);
+
+		$this->assertNoFinding( $report, 'readability-hard' );
+		$this->assertNoFinding( $report, 'readability-ok' );
+	}
+
 	// --------------------------------------------------------------- shape
 
 	public function test_every_non_pass_finding_carries_a_recommendation(): void {

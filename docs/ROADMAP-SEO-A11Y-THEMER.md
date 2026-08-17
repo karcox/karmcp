@@ -43,7 +43,7 @@ para que un plugin SEO que no guarda en postmeta (All in One SEO usa tabla propi
 > **Actualizado 2026-08-15: la dependencia cara ya no lo es.** Este apartado listaba tres clases; `KarMCP_Content_Extractor` se escribió para `render-page` (1.1.0) y vive en `includes/class-content-extractor.php`. Era la pieza central y el motivo por el que este trabajo se aplazaba una y otra vez. **Ya no bloquea nada.**
 
 - ~~`KarMCP_Seo_Meta`~~ — **hecho**, `includes/class-seo-meta.php`. Una sola línea de campos sobre Yoast, Rank Math y Slim SEO. AIOSEO y SEOPress se detectan pero **no se leen**, a propósito: guardan en tablas propias y adivinar un esquema ajeno produce un lector que devuelve cadenas vacías para siempre. El seam para ellos es el filtro `karmcp_seo_meta`.
-- `KarMCP_Color_Contrast` — matemática WCAG de ratio de contraste. Función pura, especificación cerrada, se testea sin WordPress. **Pendiente.**
+- ~~`KarMCP_Color_Contrast`~~ — **hecho**, `includes/audits/class-color-contrast.php`. La matemática es exacta; lo que no lo es sigue siendo saber **qué dos colores comparar**, y ahí manda la regla de abajo. Añadido sobre el plan original: cuando no se conoce el tamaño de letra —lo normal, porque vive en la hoja de estilos— dos tercios del rango siguen teniendo respuesta rigurosa, y solo la banda entre 3:1 y 4.5:1 depende de él.
 
 Y una que no estaba en la lista original porque no se había pensado el diseño:
 
@@ -98,13 +98,14 @@ Instancia el grupo en `KarMCP_Ability_Registrar` (el patrón está en la línea 
 
 ~~**Legibilidad**~~ — **hecha** en 1.15.0. `includes/audits/class-readability.php`, dentro del informe de SEO como se planteó. Szigriszt-Pazos + INFLESZ para español, Flesch para inglés, idioma resuelto por post vía Polylang/WPML. 46 tests, con 28 palabras fijadas una a una.
 
-Lo que queda, renumerado:
+~~**`KarMCP_Color_Contrast` + `audit-page-a11y`**~~ — **hechos** en 1.16.0. `includes/audits/class-color-contrast.php` y `class-a11y-audit.php`, 47 tests entre los dos. Rellenan también la sección `a11y` de `get-page-snapshot`, con lo que **las dos mitades del seam quedan contestadas**.
 
-1. **`KarMCP_Color_Contrast` + `audit-page-a11y`.**
-2. **Persistencia de escaneos** — listar, abrir uno viejo, comparar. Ver abajo; a esta altura ya sirve para las dos auditorías a la vez.
-3. **`add-alt-text-from-context` y `fix-color-contrast`** — los dos que escriben.
-4. **AEO** — opcional. Ya no hay que montar nada para ello: las reglas se añaden al mismo sitio que las de SEO. Ver abajo.
-5. **Core Web Vitals** — fuera de este plan. Ver abajo.
+Lo que queda:
+
+1. **Persistencia de escaneos** — listar, abrir uno viejo, comparar. Ver abajo; ahora ya sirve para las dos auditorías a la vez, que era la razón de ponerla después.
+2. **`add-alt-text-from-context` y `fix-color-contrast`** — los dos que escriben.
+3. **AEO** — opcional. Ya no hay que montar nada para ello: las reglas se añaden al mismo sitio que las de SEO. Ver abajo.
+4. **Core Web Vitals** — fuera de este plan. Ver abajo.
 
 ### Cuánto es esto, honestamente
 
@@ -115,17 +116,17 @@ Estimación en sesiones de trabajo enfocado, no en días de calendario:
 | ~~`KarMCP_Seo_Meta`~~ | ~~1~~ | **Hecho** |
 | ~~Motor de reglas + `audit-page-seo`~~ | ~~2–3~~ | **Hecho** |
 | ~~Legibilidad~~ | ~~½~~ | **Hecha** |
-| `KarMCP_Color_Contrast` | ½ | Bajo — fórmula WCAG cerrada |
-| Reglas a11y + `audit-page-a11y` | 2–3 | Medio — muchas reglas pequeñas; el coste es la cantidad |
+| ~~`KarMCP_Color_Contrast`~~ | ~~½~~ | **Hecho** |
+| ~~Reglas a11y + `audit-page-a11y`~~ | ~~2–3~~ | **Hechas** |
 | Persistencia + pestaña | 1–2 | Bajo — se copia el patrón de Security |
 | Las dos que escriben | 2 | **Medio-alto** — tocan render real, los stubs no lo cubren |
-| **Total pendiente** | **5–8** | |
+| **Total pendiente** | **3–4** | |
 
 Lo importante no es el total sino que **es incremental de verdad**, y el primer paso ya lo demostró: `audit-page-seo` sola es una herramienta completa y útil, y nada de lo que queda es requisito suyo. No hay un punto en el que haya que tenerlo todo para que algo funcione. Se puede parar después de cualquier paso.
 
 Lo que no está en la tabla porque no se ha diseñado: la pestaña de administración si se quiere que esto se vea sin un agente delante. Súmale 1–2 sesiones si se decide hacerla.
 
-> **La incertidumbre real está en el paso 3**, y conviene decirla antes de empezar: todo lo demás es lógica pura que la suite cubre. Las dos herramientas que escriben tocan el render del front-end, donde `tests/` no llega, y necesitan verificación manual en un WordPress local.
+> **La incertidumbre real está en el paso 2**, y conviene decirla antes de empezar: todo lo demás es lógica pura que la suite cubre. Las dos herramientas que escriben tocan el render del front-end, donde `tests/` no llega, y necesitan verificación manual en un WordPress local.
 
 ### Regla no negociable para las dos que escriben
 

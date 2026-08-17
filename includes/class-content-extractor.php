@@ -55,6 +55,14 @@ class KarMCP_Content_Extractor {
 	const WARNING_SAMPLE_CAP = 10;
 
 	/**
+	 * How many inline-coloured text elements to sample for the contrast check.
+	 *
+	 * A builder page can carry hundreds; the audit needs enough to be useful,
+	 * not all of them, and the digest travels over MCP.
+	 */
+	const COLOR_SAMPLE_CAP = 60;
+
+	/**
 	 * Elements treated as containers when hunting for empty ones.
 	 */
 	const CONTAINER_TAGS = array( 'div', 'section', 'article', 'aside', 'header', 'footer', 'main', 'nav', 'li' );
@@ -141,6 +149,7 @@ class KarMCP_Content_Extractor {
 		$digest['text']['excerpt'] = $excerpt_chars > 0 ? self::truncate( $text, $excerpt_chars ) : '';
 
 		self::collect_prose( $xpath, $digest, $excerpt_chars );
+		self::collect_inline_colors( $xpath, $digest );
 
 		$digest['counts']['iframes'] = $xpath->query( '//iframe' )->length;
 		$digest['counts']['scripts'] = $xpath->query( '//script' )->length;
@@ -823,6 +832,7 @@ class KarMCP_Content_Extractor {
 			'forms'            => array(),
 			'landmarks'        => array(),
 			'empty_containers' => array(),
+			'inline_colors'    => array(),
 			'text'             => array(
 				'words'       => 0,
 				'excerpt'     => '',
@@ -880,6 +890,163 @@ class KarMCP_Content_Extractor {
 		$words                          = preg_split( '/\s+/u', $prose, -1, PREG_SPLIT_NO_EMPTY );
 		$digest['text']['prose_words']  = is_array( $words ) ? count( $words ) : 0;
 		$digest['text']['prose']        = $excerpt_chars > 0 ? self::truncate( $prose, $excerpt_chars ) : '';
+	}
+
+	/**
+	 * Text elements that declare a colour in their own `style` attribute.
+	 *
+	 * This is the honest ceiling of what a contrast check can see from markup
+	 * alone. Most colour on a real page comes from a stylesheet, and resolving
+	 * that needs a CSS engine and a layout — neither of which exists here. What
+	 * is left is inline style, which page builders emit a lot of.
+	 *
+	 * The background is looked for on the element itself and then up its
+	 * ancestors, since text almost never carries its own. When none is found
+	 * the sample still ships with a null background: the audit reports that as
+	 * inconclusive, which is the true answer, rather than assuming white.
+	 *
+	 * @param DOMXPath $xpath  Query engine.
+	 * @param array    $digest Digest, by reference.
+	 */
+	private static function collect_inline_colors( DOMXPath $xpath, array &$digest ): void {
+		$samples = array();
+
+		$nodes = $xpath->query( '//*[contains(@style,"color")][not(self::script or self::style)]' );
+
+		foreach ( $nodes as $node ) {
+			if ( count( $samples ) >= self::COLOR_SAMPLE_CAP ) {
+				break;
+			}
+
+			if ( ! $node instanceof DOMElement ) {
+				continue;
+			}
+
+			$style = self::parse_style( $node->getAttribute( 'style' ) );
+			if ( ! isset( $style['color'] ) ) {
+				continue;
+			}
+
+			$text = self::normalize_space( self::node_text( $node ) );
+			if ( '' === $text ) {
+				continue;
+			}
+
+			$samples[] = array(
+				'tag'        => strtolower( $node->nodeName ),
+				'text'       => self::truncate( $text, 120 ),
+				'color'      => $style['color'],
+				'background' => self::inherited_background( $node ),
+				'font_size'  => isset( $style['font-size'] ) ? self::to_px( $style['font-size'] ) : null,
+				'bold'       => isset( $style['font-weight'] ) && self::is_bold( $style['font-weight'] ),
+			);
+		}
+
+		$digest['inline_colors'] = $samples;
+	}
+
+	/**
+	 * Walks up for the nearest declared background colour.
+	 *
+	 * @param DOMElement $node Starting element.
+	 * @return string|null
+	 */
+	private static function inherited_background( DOMElement $node ): ?string {
+		$current = $node;
+		$depth   = 0;
+
+		while ( $current instanceof DOMElement && $depth < 12 ) {
+			$style = self::parse_style( $current->getAttribute( 'style' ) );
+
+			foreach ( array( 'background-color', 'background' ) as $property ) {
+				if ( ! isset( $style[ $property ] ) ) {
+					continue;
+				}
+				// `background` is shorthand and can carry an image or a
+				// gradient. Only a plain colour is usable; anything else means
+				// we do not know what is behind the text.
+				$value = $style[ $property ];
+				if ( false !== strpos( $value, 'url(' ) || false !== strpos( $value, 'gradient' ) ) {
+					return null;
+				}
+				if ( 'transparent' !== $value ) {
+					return $value;
+				}
+			}
+
+			$current = $current->parentNode instanceof DOMElement ? $current->parentNode : null;
+			++$depth;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Splits a `style` attribute into declarations.
+	 *
+	 * @param string $style Attribute value.
+	 * @return array<string,string>
+	 */
+	private static function parse_style( string $style ): array {
+		$declarations = array();
+
+		foreach ( explode( ';', $style ) as $declaration ) {
+			$parts = explode( ':', $declaration, 2 );
+			if ( count( $parts ) !== 2 ) {
+				continue;
+			}
+			$property = strtolower( trim( $parts[0] ) );
+			$value    = strtolower( trim( $parts[1] ) );
+			if ( '' !== $property && '' !== $value ) {
+				$declarations[ $property ] = $value;
+			}
+		}
+
+		return $declarations;
+	}
+
+	/**
+	 * Converts a CSS length to pixels, for the units that convert without a
+	 * layout. `em` and `%` depend on an inherited size, so they return null and
+	 * the audit treats the size as unknown.
+	 *
+	 * @param string $value CSS length.
+	 * @return float|null
+	 */
+	private static function to_px( string $value ): ?float {
+		if ( ! preg_match( '/^(-?[0-9.]+)(px|pt|rem)?$/', trim( $value ), $matches ) ) {
+			return null;
+		}
+
+		$number = (float) $matches[1];
+		$unit   = $matches[2] ?? 'px';
+
+		switch ( $unit ) {
+			case 'pt':
+				return $number * ( 96 / 72 );
+			case 'rem':
+				// Against the 16px default root size. A theme can change it, so
+				// this is the one assumption here worth knowing about.
+				return $number * 16;
+			default:
+				return $number;
+		}
+	}
+
+	/**
+	 * Whether a font-weight counts as bold for the large-text threshold.
+	 *
+	 * @param string $weight CSS font-weight.
+	 * @return bool
+	 */
+	private static function is_bold( string $weight ): bool {
+		$weight = trim( $weight );
+
+		if ( is_numeric( $weight ) ) {
+			return (float) $weight >= 700;
+		}
+
+		return in_array( $weight, array( 'bold', 'bolder' ), true );
 	}
 
 	/**

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.15.1
+Stable tag: 1.16.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,16 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.16.0 =
+
+* New **`audit-page-a11y`**: image alt text, link and form-field accessible names, heading outline, declared language, page title, landmarks, duplicate ids and text contrast — each finding carrying its WCAG success criterion and a recommendation, scored 0-100 on the same curve as the SEO audit.
+* It states its own limits in its output. An automated check catches a minority of WCAG failures: it sees a missing alt attribute, not whether the alt text describes the image; a skipped heading level, not whether the headings mean anything. Reading order, focus order and keyboard traps need a browser and a person. A clean report is a floor, not a certificate.
+* New `KarMCP_Color_Contrast`: the WCAG maths, exact where the spec is exact and silent where it is not. A colour from a stylesheet, a variable, a gradient, a background image or a translucent overlay comes back `inconclusive` with its reason — never a pass, because a false pass closes the question.
+* When the font size is unknown — the normal case, since sizes live in stylesheets — two thirds of the range still have a rigorous answer: below 3:1 the text fails at any size, at or above 4.5:1 it passes at any size, and only the band between them depends on the size.
+* `render-page` collects the text elements that declare a colour inline, walking up for the nearest declared background and refusing gradients and images rather than guessing.
+* `get-page-snapshot` now fills its `a11y` section as well as `seo`.
+* Fixed: the readability recommendation always blamed sentence length. It now names whichever factor actually weighs — a page with 11-word sentences graded hard on vocabulary was being told to shorten its sentences.
 
 = 1.15.1 =
 

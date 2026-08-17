@@ -4218,7 +4218,12 @@ class KarMCP_Admin {
 					),
 					'karmcp/audit-page-seo' => array(
 						'label'       => __( 'Audit Page SEO', 'karmcp' ),
-						'description' => __( 'Grades one page for SEO and returns findings with a recommendation on each: title and description presence and length, H1 and heading outline, content depth, image alt text, placeholder links, indexability, canonical and focus keyword. Reads the stored metadata from Yoast, Rank Math or Slim SEO when present. Read-only.', 'karmcp' ),
+						'description' => __( 'Grades one page for SEO and returns findings with a recommendation on each: title and description presence and length, H1 and heading outline, content depth, readability in the language\'s own formula, image alt text, placeholder links, indexability, canonical and focus keyword. Reads the stored metadata from Yoast, Rank Math or Slim SEO when present. Read-only.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/audit-page-a11y' => array(
+						'label'       => __( 'Audit Page Accessibility', 'karmcp' ),
+						'description' => __( 'Grades one page against WCAG: image alt text, link and form-field names, heading outline, declared language, page title, landmarks, duplicate ids, and text contrast for anything that declares its colour inline. Says what it could not determine instead of passing it. Read-only.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
 					),
 				),

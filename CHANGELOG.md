@@ -2,6 +2,28 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.16.0]
+
+### Added
+
+- **`audit-page-a11y`: the accessibility half of the loop.** Image alt text, link and form-field accessible names, heading outline, declared language, page title, landmarks, duplicate ids and text contrast — each finding carrying a WCAG success criterion and a recommendation, scored 0-100 with a letter grade on the same curve as the SEO audit.
+
+  **What it says about itself matters as much as what it finds.** An automated check catches a minority of WCAG failures, and a tool that hides that is selling a certificate it cannot issue. This one states the limit in its own output: it sees a missing alt attribute, not whether the alt text describes the image; a skipped heading level, not whether the headings mean anything. Reading order, focus order and keyboard traps need a browser and a person.
+
+- **`KarMCP_Color_Contrast`** — the WCAG contrast maths, exact where the specification is exact and silent where it is not.
+
+  Contrast is the one check where a false pass does real damage, because it closes the question. So the rule set before a line was written was: what cannot be resolved is reported as unresolved, never as a pass. A colour from a stylesheet, a CSS variable, a gradient, a background image, a translucent overlay — each of those comes back `inconclusive` with the reason attached.
+
+  One case is better than that. When the font size is unknown, which is the normal case since sizes live in stylesheets, two thirds of the range still have a rigorous answer: below 3:1 the text fails at any size, at or above 4.5:1 it passes at any size, and only the band between them genuinely turns on the size.
+
+- `KarMCP_Content_Extractor` collects the text elements that declare a colour in their own `style` attribute, walking up for the nearest declared background and refusing gradients and images rather than guessing what is behind the text. This is the honest ceiling of a contrast check that has markup but no browser — and page builders emit a lot of inline style, so it is not nothing.
+
+- `get-page-snapshot` now fills its `a11y` section too. Both halves of the seam it reserved from the beginning are finally answered.
+
+### Fixed
+
+- The readability recommendation always blamed sentence length. Both factors feed the same formula, and a real page had 11-word sentences — short — graded hard purely on vocabulary, while the advice told the owner to shorten the sentences. It now names whichever factor actually weighs.
+
 ## [1.15.1]
 
 ### Fixed

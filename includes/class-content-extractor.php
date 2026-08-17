@@ -350,6 +350,13 @@ class KarMCP_Content_Extractor {
 		if ( $lang instanceof DOMNode ) {
 			$digest['document']['lang'] = trim( $lang->nodeValue );
 		}
+
+		// Open Graph is declared with `property`, but enough plugins emit it as
+		// `name` that querying only one of them misses real tags.
+		$og_image = $xpath->query( '//meta[@property="og:image" or @name="og:image"]/@content' )->item( 0 );
+		if ( $og_image instanceof DOMNode ) {
+			$digest['document']['og_image'] = trim( $og_image->nodeValue );
+		}
 	}
 
 	/**

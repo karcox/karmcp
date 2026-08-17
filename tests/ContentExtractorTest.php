@@ -326,6 +326,33 @@ class ContentExtractorTest extends TestCase {
 	}
 
 	/**
+	 * Open Graph is declared with `property`, but enough plugins emit it as
+	 * `name` that reading only one of them misses real tags.
+	 */
+	public function test_og_image_is_read_from_either_attribute(): void {
+		$property = KarMCP_Content_Extractor::analyze(
+			'<html><head><meta property="og:image" content="https://ejemplo.test/a.jpg"></head><body><p>x</p></body></html>',
+			array( 'scope' => 'full' )
+		);
+		$this->assertSame( 'https://ejemplo.test/a.jpg', $property['document']['og_image'] );
+
+		$name = KarMCP_Content_Extractor::analyze(
+			'<html><head><meta name="og:image" content="https://ejemplo.test/b.jpg"></head><body><p>x</p></body></html>',
+			array( 'scope' => 'full' )
+		);
+		$this->assertSame( 'https://ejemplo.test/b.jpg', $name['document']['og_image'] );
+	}
+
+	public function test_og_image_is_absent_when_the_page_declares_none(): void {
+		$digest = KarMCP_Content_Extractor::analyze(
+			'<html><head><title>x</title></head><body><p>x</p></body></html>',
+			array( 'scope' => 'full' )
+		);
+
+		$this->assertArrayNotHasKey( 'og_image', $digest['document'] );
+	}
+
+	/**
 	 * A fragment is loaded without a declared charset, and libxml then assumes
 	 * ISO-8859-1. On a Spanish-language site that mangles roughly every other
 	 * heading, and it does it silently.

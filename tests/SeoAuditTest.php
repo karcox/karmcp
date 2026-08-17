@@ -535,6 +535,51 @@ final class SeoAuditTest extends TestCase {
 		$this->assertNoFinding( $report, 'seo-plugin-missing' );
 	}
 
+	/**
+	 * Found on a real site: no recognised SEO plugin, and a perfectly good
+	 * 160-character meta description served anyway, because the theme or
+	 * another plugin was emitting it. The report claimed the field "cannot be
+	 * set at all" two lines above measuring the one that existed.
+	 */
+	public function test_report_does_not_contradict_itself_when_tags_come_from_elsewhere(): void {
+		$report = KarMCP_Seo_Audit::run(
+			$this->digest( array( 'document' => array( 'meta_description' => str_repeat( 'a', 120 ) ) ) ),
+			$this->ctxWithoutPlugin()
+		);
+
+		$this->assertFinding( $report, 'description-ok', 'pass' );
+		$this->assertFinding( $report, 'seo-plugin-missing', 'info' );
+
+		$cause = $this->finding( $report, 'seo-plugin-missing' );
+		$this->assertStringNotContainsStringIgnoringCase(
+			'cannot be set',
+			$cause['message'],
+			'the report says the description cannot exist while measuring the one it just found'
+		);
+		$this->assertSame( array( 'meta_description' ), $cause['examples'] );
+	}
+
+	public function test_the_blunt_message_survives_when_nothing_is_emitted(): void {
+		$report = KarMCP_Seo_Audit::run( $this->digest(), $this->ctxWithoutPlugin() );
+
+		$this->assertStringContainsStringIgnoringCase(
+			'cannot be set',
+			$this->finding( $report, 'seo-plugin-missing' )['message']
+		);
+	}
+
+	/**
+	 * Same mistake, other half: nothing stored is not nothing served.
+	 */
+	public function test_social_image_served_by_the_theme_is_not_reported_missing(): void {
+		$report = KarMCP_Seo_Audit::run(
+			$this->digest( array( 'document' => array( 'og_image' => 'https://example.com/og.jpg' ) ) ),
+			$this->ctx()
+		);
+
+		$this->assertNoFinding( $report, 'og-image-missing' );
+	}
+
 	// --------------------------------------------------------------- shape
 
 	public function test_every_non_pass_finding_carries_a_recommendation(): void {

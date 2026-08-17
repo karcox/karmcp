@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.14.2]
+
+### Fixed
+
+- **The SEO report contradicted itself on a site whose tags come from somewhere else.** Running 1.14.1 against a real site found it: no SEO plugin the audit recognises, and a perfectly good 160-character meta description served anyway — a theme, or Jetpack, or anything else can emit those tags. The report said the field *"cannot be set on this page at all"* two lines above measuring the one that plainly existed.
+
+  `seo-plugin-missing` now checks what the page actually emits. When something is producing the tags it says so — they can be read here but not changed here — and points out that a second source emitting the same tags is its own problem. The blunt message survives only when nothing is being emitted, which is when it is true.
+
+- **The same mistake in the other half:** `og-image-missing` looked only at what the SEO plugin had stored, so a social image emitted by the theme was reported missing while the page plainly carried one. It now checks the served page too.
+
+- `KarMCP_Content_Extractor` reads `og:image` from the document head, querying both `property` and `name` — Open Graph is specified with `property`, but enough plugins emit it as `name` that reading one of them misses real tags.
+
 ## [1.14.1]
 
 ### Fixed

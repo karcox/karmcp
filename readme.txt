@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.14.1
+Stable tag: 1.14.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,13 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.14.2 =
+
+* Fixed: the SEO report contradicted itself on a site whose meta tags come from somewhere other than an SEO plugin. It said the meta description "cannot be set on this page at all" two lines above measuring the 160-character one the page was serving — a theme or another plugin was emitting it.
+* `seo-plugin-missing` now checks what the page actually emits: when something else is producing the tags it says so, and warns that a second source emitting the same tags is its own problem. The blunt message survives only when nothing is emitted, which is when it is true.
+* Fixed: `og-image-missing` looked only at what the SEO plugin had stored, so a social image emitted by the theme was reported missing while the page carried one. It now checks the served page too.
+* `render-page` and the audits now read `og:image` from the document head, querying both `property` and `name` — Open Graph is specified with `property`, but enough plugins emit it as `name` that reading one of them misses real tags.
 
 = 1.14.1 =
 

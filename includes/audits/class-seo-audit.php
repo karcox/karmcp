@@ -77,7 +77,7 @@ class KarMCP_Seo_Audit {
 
 		self::check_render( $digest, $findings );
 		self::check_plugin_conflict( $ctx, $findings );
-		self::check_plugin_present( $ctx, $findings );
+		self::check_plugin_present( $digest, $ctx, $findings );
 		self::check_title( $title, $findings );
 		self::check_description( $description, $findings, self::has_seo_plugin( $ctx ) );
 		self::check_headings( $digest, $scope, $findings );
@@ -86,7 +86,7 @@ class KarMCP_Seo_Audit {
 		self::check_links( $digest, $findings );
 		self::check_indexability( $digest, $ctx, $scope, $findings );
 		self::check_language( $digest, $scope, $findings );
-		self::check_social( $ctx, $findings );
+		self::check_social( $digest, $ctx, $findings );
 		self::check_focus_keyword( $digest, $ctx, $title, $findings );
 
 		$summary = KarMCP_Audit_Score::summarize( $findings );
@@ -285,11 +285,35 @@ class KarMCP_Seo_Audit {
 	 * costs points through `description-missing`, and charging for the cause as
 	 * well would penalize the same fact twice.
 	 *
+	 * Two different situations hide behind "no SEO plugin", and saying the
+	 * wrong one makes the report contradict itself. Found on a real site: it
+	 * had no recognised SEO plugin, and served a perfectly good 160-character
+	 * meta description anyway — a theme or another plugin was emitting it. A
+	 * flat "these cannot be set at all" sat two lines above the audit measuring
+	 * the one that existed.
+	 *
+	 * @param array $digest   Page digest.
 	 * @param array $ctx      Audit context.
 	 * @param array $findings Findings, by reference.
 	 */
-	private static function check_plugin_present( array $ctx, array &$findings ): void {
+	private static function check_plugin_present( array $digest, array $ctx, array &$findings ): void {
 		if ( self::has_seo_plugin( $ctx ) ) {
+			return;
+		}
+
+		$emitted = self::emitted_metadata( $digest );
+
+		if ( ! empty( $emitted ) ) {
+			$findings[] = self::finding(
+				'seo-plugin-missing',
+				'config',
+				__( 'SEO metadata storage', 'karmcp' ),
+				'info',
+				$emitted,
+				__( 'No SEO plugin this audit recognises is active, yet the page does emit SEO metadata — the theme or another plugin is producing it. That tagging can be read here but not changed here.', 'karmcp' ),
+				__( 'Fine as it is. Worth knowing where it comes from before installing an SEO plugin, since two sources emitting the same tags is its own problem.', 'karmcp' ),
+				$emitted
+			);
 			return;
 		}
 
@@ -299,9 +323,32 @@ class KarMCP_Seo_Audit {
 			__( 'SEO metadata storage', 'karmcp' ),
 			'info',
 			'none',
-			__( 'No SEO plugin is active. WordPress on its own has no field for a meta description, a social image or a per-page robots setting, so those cannot be set on this page at all.', 'karmcp' ),
+			__( 'No SEO plugin is active and the page emits no SEO metadata of its own. WordPress alone has no field for a meta description, a social image or a per-page robots setting, so those cannot be set on this page at all.', 'karmcp' ),
 			__( 'Install one — Yoast, Rank Math and Slim SEO are all read by this audit — or accept that the pages will be described by whatever text a search engine picks out first.', 'karmcp' )
 		);
+	}
+
+	/**
+	 * Which SEO tags the served page is emitting, whoever put them there.
+	 *
+	 * Only meaningful in `full` scope: a content-only render has no document
+	 * head to read, so an empty result there means "not looked at", not
+	 * "absent". That is why the caller only uses it to soften a message and
+	 * never to raise a finding.
+	 *
+	 * @param array $digest Page digest.
+	 * @return string[] Names of the tags present.
+	 */
+	private static function emitted_metadata( array $digest ): array {
+		$emitted = array();
+
+		foreach ( array( 'meta_description', 'og_image' ) as $key ) {
+			if ( '' !== trim( (string) ( $digest['document'][ $key ] ?? '' ) ) ) {
+				$emitted[] = $key;
+			}
+		}
+
+		return $emitted;
 	}
 
 	/**
@@ -791,7 +838,7 @@ class KarMCP_Seo_Audit {
 	 * @param array $ctx      Audit context.
 	 * @param array $findings Findings, by reference.
 	 */
-	private static function check_social( array $ctx, array &$findings ): void {
+	private static function check_social( array $digest, array $ctx, array &$findings ): void {
 		// With no SEO plugin there is no per-page social image to be missing:
 		// the cause is already reported once by `seo-plugin-missing`, and
 		// repeating it here would be the same fact charged twice.
@@ -801,6 +848,15 @@ class KarMCP_Seo_Audit {
 
 		$image = isset( $ctx['seo']['fields']['og_image'] ) ? trim( (string) $ctx['seo']['fields']['og_image'] ) : '';
 		if ( '' !== $image ) {
+			return;
+		}
+
+		// Nothing stored is not the same as nothing served: a theme or another
+		// plugin can emit og:image on its own, and reporting it missing while
+		// the page plainly carries one is the same mistake as claiming a site
+		// cannot have a meta description while it serves one.
+		$rendered = trim( (string) ( $digest['document']['og_image'] ?? '' ) );
+		if ( '' !== $rendered ) {
 			return;
 		}
 

@@ -205,26 +205,42 @@ class KarMCP_Readability {
 	}
 
 	/**
-	 * Counts sentences.
+	 * Counts sentences, one block of prose at a time.
 	 *
-	 * A run of terminators counts once — "¿de verdad?!" is one sentence, and an
-	 * ellipsis is not three.
+	 * Blocks are separated by newlines, which is how the extractor hands over
+	 * paragraphs. Counting per block matters more than it looks: a paragraph
+	 * that ends without a full stop is still one sentence, and a single blob of
+	 * text has no way to know where one ended and the next began. Run together,
+	 * a page of short paragraphs reads as one enormous sentence and the score
+	 * collapses.
 	 *
-	 * @param string $text Text.
+	 * Within a block, a run of terminators counts once — "¿de verdad?!" is one
+	 * sentence, and an ellipsis is not three.
+	 *
+	 * @param string $text Text, blocks separated by newlines.
 	 * @return int
 	 */
 	public static function count_sentences( string $text ): int {
-		$text = trim( $text );
-		if ( '' === $text ) {
+		if ( '' === trim( $text ) ) {
 			return 0;
 		}
 
-		$count = preg_match_all( '/[.!?…]+(?:\s|$)/u', $text );
-		$count = is_int( $count ) ? $count : 0;
+		$total = 0;
 
-		// Text that never terminates is still one sentence — a heading-only
-		// page, or a final line with no full stop.
-		return max( 1, $count );
+		foreach ( preg_split( '/\R+/u', $text ) as $block ) {
+			$block = trim( $block );
+			if ( '' === $block ) {
+				continue;
+			}
+
+			$count = preg_match_all( '/[.!?…]+(?:\s|$)/u', $block );
+			$count = is_int( $count ) ? $count : 0;
+
+			// A block that never terminates is still one sentence.
+			$total += max( 1, $count );
+		}
+
+		return max( 1, $total );
 	}
 
 	/**

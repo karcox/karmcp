@@ -140,6 +140,8 @@ class KarMCP_Content_Extractor {
 		$digest['text']['words']   = is_array( $words ) ? count( $words ) : 0;
 		$digest['text']['excerpt'] = $excerpt_chars > 0 ? self::truncate( $text, $excerpt_chars ) : '';
 
+		self::collect_prose( $xpath, $digest, $excerpt_chars );
+
 		$digest['counts']['iframes'] = $xpath->query( '//iframe' )->length;
 		$digest['counts']['scripts'] = $xpath->query( '//script' )->length;
 
@@ -822,8 +824,10 @@ class KarMCP_Content_Extractor {
 			'landmarks'        => array(),
 			'empty_containers' => array(),
 			'text'             => array(
-				'words'   => 0,
-				'excerpt' => '',
+				'words'       => 0,
+				'excerpt'     => '',
+				'prose_words' => 0,
+				'prose'       => '',
 			),
 			'counts'           => array(
 				'headings' => 0,
@@ -836,6 +840,46 @@ class KarMCP_Content_Extractor {
 			'warnings'         => array(),
 			'truncated'        => false,
 		);
+	}
+
+	/**
+	 * The page's running prose, paragraph by paragraph.
+	 *
+	 * Separate from `text.excerpt` on purpose. That one is everything a visitor
+	 * can read, which is the right answer for "what does this page say" and the
+	 * wrong one for anything that assumes sentences: a page's visible text is
+	 * mostly menus, button labels and headings, none of which end in a full
+	 * stop. Measured as prose, a normal marketing page comes out unreadable —
+	 * not because the copy is dense but because a navigation menu is not a
+	 * sentence.
+	 *
+	 * Paragraphs are joined with a newline so the reader can count sentences per
+	 * block. A paragraph with no full stop is still one sentence; a blob has no
+	 * way to know that.
+	 *
+	 * @param DOMXPath $xpath         Query engine.
+	 * @param array    $digest        Digest, by reference.
+	 * @param int      $excerpt_chars Character cap, 0 for none.
+	 */
+	private static function collect_prose( DOMXPath $xpath, array &$digest, int $excerpt_chars ): void {
+		$blocks = array();
+
+		$paragraphs = $xpath->query(
+			'//p[not(ancestor::nav) and not(ancestor::header) and not(ancestor::footer) and not(ancestor::aside) and not(ancestor::form)]'
+		);
+
+		foreach ( $paragraphs as $node ) {
+			$block = self::normalize_space( self::visible_text( $node ) );
+			if ( '' !== $block ) {
+				$blocks[] = $block;
+			}
+		}
+
+		$prose = implode( "\n", $blocks );
+
+		$words                          = preg_split( '/\s+/u', $prose, -1, PREG_SPLIT_NO_EMPTY );
+		$digest['text']['prose_words']  = is_array( $words ) ? count( $words ) : 0;
+		$digest['text']['prose']        = $excerpt_chars > 0 ? self::truncate( $prose, $excerpt_chars ) : '';
 	}
 
 	/**

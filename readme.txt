@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.15.0
+Stable tag: 1.15.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,13 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.15.1 =
+
+* Fixed: readability was measuring the page furniture instead of the copy. 1.15.0 scored the whole visible text, which on a normal page is mostly navigation, button labels and headings — none of which end in a full stop. A real homepage came back at 8/100, "muy difícil", averaging 45 words per sentence, off copy that is plain Spanish; the recommendation told the owner to shorten sentences that were already short.
+* Readability now measures prose only: `<p>` elements outside nav, header, footer, aside and form. Without enough prose it reports `insufficient` rather than falling back to the full text, because that fallback was the bug.
+* Sentences are counted per paragraph with a minimum of one. A paragraph with no full stop is still a sentence; run together, a page of short paragraphs reads as one enormous sentence.
+* `render-page` now returns `text.prose` and `text.prose_words` alongside `text.excerpt` and `text.words`: everything a visitor can read, and the running prose, as two separate views. Additive.
 
 = 1.15.0 =
 

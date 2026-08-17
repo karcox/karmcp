@@ -683,7 +683,13 @@ class KarMCP_Seo_Audit {
 	 * @param array $findings Findings, by reference.
 	 */
 	private static function check_readability( array $digest, array $ctx, array &$findings ): void {
-		$text = isset( $digest['text']['excerpt'] ) ? (string) $digest['text']['excerpt'] : '';
+		// Prose only, never the full visible text. A page's visible text is
+		// mostly menus, button labels and headings, and a reading-ease formula
+		// applied to those measures the furniture: sitionet's homepage scored 8
+		// out of 100 off its own navigation, while the copy itself is plain
+		// Spanish. Falling back to `excerpt` when there is no prose would be
+		// reintroducing exactly that bug.
+		$text = isset( $digest['text']['prose'] ) ? (string) $digest['text']['prose'] : '';
 		if ( '' === trim( $text ) ) {
 			return;
 		}

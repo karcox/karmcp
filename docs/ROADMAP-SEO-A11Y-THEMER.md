@@ -150,6 +150,14 @@ El reparto correcto, que además es el que ya usa el resto del plugin:
 
 Es el mismo reparto que en el sandbox: el agente declara, el plugin compila. Aquí el agente redacta y el plugin persiste.
 
+### Deuda conocida del extractor: HTML minificado
+
+`visible_text()` extrae con `textContent`, que **concatena sin separador**. En HTML normal hay saltos de línea e indentación entre etiquetas y las palabras quedan sueltas, pero un plugin de caché que minifique la salida los elimina — y entonces la última palabra de un bloque y la primera del siguiente se funden en una.
+
+Efecto real: `text.words` **subcuenta** en un sitio con HTML minificado, y de ese contador cuelgan los umbrales de contenido escaso (100 y 300 palabras). No afecta a `text.prose`, porque los párrafos se recogen uno a uno y se unen explícitamente.
+
+Salió al escribir los tests de la prosa. No se arregló en 1.15.1 por no tocar la salida de `render-page` en la misma release que arreglaba otra cosa; el arreglo es insertar un espacio al extraer texto de elementos de bloque.
+
 ### Legibilidad: decide la fórmula antes de escribir la función
 
 El **Flesch Reading Ease está calibrado para el inglés**. Aplicado a un texto en español devuelve un número que parece válido y no lo es: el español tiene más sílabas por palabra de media, así que todo sale artificialmente "difícil".

@@ -2,6 +2,20 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.15.1]
+
+### Fixed
+
+- **Readability was measuring the furniture, not the copy.** 1.15.0 scored the page's whole visible text, and a page's visible text is mostly navigation, button labels and headings — none of which end in a full stop. A real homepage came back at **8 out of 100, "muy difícil", averaging 45 words per sentence**, off copy that reads like *"Te creamos una web que vende o agenda citas por ti"*. Plain Spanish, graded unreadable, with a recommendation telling the owner to shorten sentences that were already short.
+
+  What the formula was actually being fed: the skip link, then the navigation menu twice — desktop and mobile — then headings, then feature lists. Roughly 22 terminators across 988 words.
+
+  Readability now measures **prose only**: the text of `<p>` elements outside `nav`, `header`, `footer`, `aside` and `form`. When there is not enough prose it reports `insufficient` rather than falling back to the full text, because that fallback is the bug.
+
+- **Sentences are counted per paragraph, with a minimum of one.** A paragraph that ends without a full stop is still a sentence; run together in one blob, a page of short paragraphs reads as a single enormous sentence and the score collapses. The extractor hands over paragraphs separated by newlines so the counter can tell them apart.
+
+- `KarMCP_Content_Extractor` exposes `text.prose` and `text.prose_words` alongside the existing `text.excerpt` and `text.words`, so `render-page` returns both views: everything a visitor can read, and the running prose. Additive — nothing that read the old keys changes.
+
 ## [1.15.0]
 
 ### Added

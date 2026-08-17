@@ -343,6 +343,53 @@ class ContentExtractorTest extends TestCase {
 		$this->assertSame( 'https://ejemplo.test/b.jpg', $name['document']['og_image'] );
 	}
 
+	/**
+	 * Prose is the paragraphs, not everything a visitor can read. A real
+	 * homepage scored 8/100 for readability off its own navigation menu, so
+	 * this separation is the whole point.
+	 */
+	public function test_prose_excludes_navigation_headers_and_footers(): void {
+		// A full document has to declare its own charset: libxml assumes
+		// ISO-8859-1 otherwise and every accent comes back mangled. Only a
+		// fragment gets one supplied by the extractor.
+		$html = '<html><head><meta charset="utf-8"></head><body>'
+			. '<header><p>Cabecera</p></header>'
+			. '<nav><p>Servicios Portafolio Blog</p></nav>'
+			. '<main><p>Este es el texto de verdad.</p><p>Y un segundo párrafo.</p></main>'
+			. '<aside><p>Barra lateral</p></aside>'
+			. '<footer><p>Pie de página</p></footer>'
+			. '</body></html>';
+
+		$digest = KarMCP_Content_Extractor::analyze( $html, array( 'scope' => 'full', 'excerpt_chars' => 2000 ) );
+
+		$this->assertSame( "Este es el texto de verdad.\nY un segundo párrafo.", $digest['text']['prose'] );
+		$this->assertStringNotContainsString( 'Cabecera', $digest['text']['prose'] );
+		$this->assertStringNotContainsString( 'Pie de página', $digest['text']['prose'] );
+	}
+
+	public function test_prose_counts_its_own_words_separately_from_visible_text(): void {
+		// The whitespace between the blocks is deliberate: `textContent`
+		// concatenates without a separator, so on minified markup the last word
+		// of one block and the first of the next glue into one. Real pages are
+		// indented; see the note on minified HTML in the roadmap.
+		$html = '<html><body><nav><p>uno dos tres cuatro</p></nav> <main><p>cinco seis</p></main></body></html>';
+
+		$digest = KarMCP_Content_Extractor::analyze( $html, array( 'scope' => 'full', 'excerpt_chars' => 2000 ) );
+
+		$this->assertSame( 6, $digest['text']['words'] );
+		$this->assertSame( 2, $digest['text']['prose_words'] );
+	}
+
+	public function test_a_page_with_no_paragraphs_has_no_prose(): void {
+		$digest = KarMCP_Content_Extractor::analyze(
+			'<html><body><h2>Solo titulares</h2><div>y cajas</div></body></html>',
+			array( 'scope' => 'full', 'excerpt_chars' => 2000 )
+		);
+
+		$this->assertSame( '', $digest['text']['prose'] );
+		$this->assertSame( 0, $digest['text']['prose_words'] );
+	}
+
 	public function test_og_image_is_absent_when_the_page_declares_none(): void {
 		$digest = KarMCP_Content_Extractor::analyze(
 			'<html><head><title>x</title></head><body><p>x</p></body></html>',

@@ -128,6 +128,40 @@ final class ReadabilityTest extends TestCase {
 		$this->assertSame( 1, KarMCP_Readability::count_sentences( 'Un titular sin punto' ) );
 	}
 
+	/**
+	 * The bug that a real site exposed: a page of short paragraphs with no full
+	 * stops read as one enormous sentence, and the score collapsed. Each block
+	 * is at least one sentence.
+	 */
+	public function test_each_block_counts_as_at_least_one_sentence(): void {
+		$this->assertSame( 3, KarMCP_Readability::count_sentences( "Tiendas online\nSistemas de reservas\nMarketing y SEO" ) );
+	}
+
+	public function test_blocks_and_terminators_add_up(): void {
+		$this->assertSame( 4, KarMCP_Readability::count_sentences( "Uno. Dos. Tres.\nUn bloque sin punto" ) );
+	}
+
+	public function test_blank_blocks_are_not_counted(): void {
+		$this->assertSame( 2, KarMCP_Readability::count_sentences( "Uno\n\n\nDos" ) );
+	}
+
+	/**
+	 * The same prose scored as one blob versus as paragraphs: run together it
+	 * looks like one 30-word sentence and grades far harsher than it is.
+	 */
+	public function test_paragraph_awareness_changes_the_verdict(): void {
+		$blocks = array_fill( 0, 40, 'Diseño de páginas web para tu negocio' );
+
+		$as_paragraphs = KarMCP_Readability::analyze( implode( "\n", $blocks ), 'es_ES' );
+		$as_one_blob   = KarMCP_Readability::analyze( implode( ' ', $blocks ), 'es_ES' );
+
+		$this->assertGreaterThan(
+			$as_one_blob['score'],
+			$as_paragraphs['score'],
+			'headings run together must not be graded as one giant sentence'
+		);
+	}
+
 	public function test_empty_text_has_no_sentences(): void {
 		$this->assertSame( 0, KarMCP_Readability::count_sentences( '   ' ) );
 	}

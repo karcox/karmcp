@@ -182,7 +182,7 @@ class KarMCP_Content_Extractor {
 		$scope = ( isset( $args['scope'] ) && 'full' === $args['scope'] ) ? 'full' : 'content';
 
 		$rendered = ( 'full' === $scope )
-			? self::render_full( $post_id )
+			? self::render_full( $post_id, (array) ( $args['query_args'] ?? array() ) )
 			: self::render_content( $post_id );
 
 		if ( is_wp_error( $rendered ) ) {
@@ -215,6 +215,10 @@ class KarMCP_Content_Extractor {
 		);
 		if ( isset( $rendered['status_code'] ) ) {
 			$digest['render']['status_code'] = $rendered['status_code'];
+		}
+
+		if ( 'full' === $scope ) {
+			self::flag_wrong_page( $digest, $post_id );
 		}
 
 		if ( ! empty( $args['include_html'] ) ) {
@@ -291,7 +295,7 @@ class KarMCP_Content_Extractor {
 	 * @param int $post_id Post id.
 	 * @return array|WP_Error { html, source, status_code }
 	 */
-	private static function render_full( int $post_id ) {
+	private static function render_full( int $post_id, array $query_args = array() ) {
 		if ( ! class_exists( 'KarMCP_Performance_Page_Audit' ) ) {
 			return new WP_Error( 'fetcher_unavailable', __( 'The loopback fetcher is not available on this install.', 'karmcp' ) );
 		}
@@ -307,6 +311,27 @@ class KarMCP_Content_Extractor {
 		$url = get_permalink( $post_id );
 		if ( ! $url ) {
 			return new WP_Error( 'no_permalink', __( 'This post has no public URL.', 'karmcp' ) );
+		}
+
+		/*
+		 * The loopback carries no session, so a site behind an access wall
+		 * answers it with the login page — at 200 OK. Sites that gate this way
+		 * generally accept a preview key in the query string; this is how the
+		 * caller passes it.
+		 *
+		 * Values only, no keys from us: the arg names belong to whatever plugin
+		 * is doing the gating.
+		 */
+		if ( $query_args ) {
+			$clean = array();
+			foreach ( $query_args as $key => $value ) {
+				if ( is_scalar( $value ) ) {
+					$clean[ sanitize_key( (string) $key ) ] = sanitize_text_field( (string) $value );
+				}
+			}
+			if ( $clean ) {
+				$url = add_query_arg( $clean, $url );
+			}
 		}
 
 		$audit = new KarMCP_Performance_Page_Audit();
@@ -1058,6 +1083,84 @@ class KarMCP_Content_Extractor {
 	 * @param array  $examples Sample offenders.
 	 * @return array
 	 */
+	/**
+	 * Flags a `full` render that fetched something other than the post asked for.
+	 *
+	 * The loopback request carries no session. On a site behind an access wall
+	 * it is answered with the login page, at 200 OK, and every collector then
+	 * dutifully analyses *that*: the digest came back titled "Login", with a
+	 * canonical pointing at /login/, and warnings — `no_h1`, `empty_container` —
+	 * that describe the login screen while reading as defects of the course
+	 * someone had just built. Reporting real-looking faults about the wrong page
+	 * is worse than failing.
+	 *
+	 * The canonical is the test that works. Titles carry theme suffixes and
+	 * separators that differ per site, but a canonical that resolves to another
+	 * path is unambiguous: this is a different document.
+	 *
+	 * The content warnings are dropped rather than kept alongside the new one,
+	 * because every one of them is a statement about a page nobody asked about.
+	 *
+	 * @since 1.20.0
+	 *
+	 * @param array $digest  The digest, by reference.
+	 * @param int   $post_id The post that was requested.
+	 * @return void
+	 */
+	private static function flag_wrong_page( array &$digest, int $post_id ): void {
+		$canonical = (string) ( $digest['document']['canonical'] ?? '' );
+		$permalink = (string) get_permalink( $post_id );
+
+		if ( '' === $canonical || '' === $permalink ) {
+			return;
+		}
+
+		/*
+		 * Host + path + query, not path alone: with plain permalinks a post's
+		 * URL is `/?p=11103`, so every page on the site shares the empty path
+		 * and a path-only comparison would never fire — the check would look
+		 * present and detect nothing. The query is what identifies the post
+		 * there, and the host guards against a canonical pointing off-site.
+		 */
+		$normalise = static function ( string $url ): string {
+			$parts = (array) wp_parse_url( $url );
+			$host  = strtolower( (string) ( $parts['host'] ?? '' ) );
+			$path  = untrailingslashit( strtolower( (string) ( $parts['path'] ?? '' ) ) );
+			$query = (string) ( $parts['query'] ?? '' );
+
+			if ( '' !== $query ) {
+				parse_str( $query, $args );
+				ksort( $args );
+				$query = http_build_query( $args );
+			}
+
+			return $host . $path . ( '' === $query ? '' : '?' . $query );
+		};
+
+		if ( $normalise( $canonical ) === $normalise( $permalink ) ) {
+			return;
+		}
+
+		$digest['render']['matches_post'] = false;
+		$digest['render']['served']       = $canonical;
+
+		// Everything already collected describes the served page, not the
+		// requested one. Keeping it would be handing over findings about the
+		// wrong document.
+		$digest['warnings'] = array(
+			self::warning(
+				'render_mismatch',
+				'error',
+				sprintf(
+					/* translators: 1: canonical URL of what was served, 2: requested permalink. */
+					__( 'The loopback request was answered with a different page (%1$s) than the one requested (%2$s), so nothing here describes the post you asked about. This is usually an access wall: the request carries no session. Pass query_args with whatever preview key the site accepts, or use scope "content", which renders the post directly and needs no session.', 'karmcp' ),
+					$canonical,
+					$permalink
+				)
+			),
+		);
+	}
+
 	private static function warning( string $code, string $severity, string $message, array $examples = array() ): array {
 		$warning = array(
 			'code'     => $code,

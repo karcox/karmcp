@@ -31,16 +31,75 @@ class KarMCP_Layout_Abilities {
 	private $factory;
 
 	/**
+	 * Optional: absent when Elementor can't be introspected, in which case the
+	 * writes simply report no unknown keys.
+	 *
+	 * @var KarMCP_Settings_Validator|null
+	 */
+	private $validator;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
+	 * @since 1.20.0 Takes the settings validator, to report unknown keys.
 	 *
-	 * @param KarMCP_Data            $data    The data access layer.
-	 * @param KarMCP_Element_Factory $factory The element factory.
+	 * @param KarMCP_Data                    $data      The data access layer.
+	 * @param KarMCP_Element_Factory         $factory   The element factory.
+	 * @param KarMCP_Settings_Validator|null $validator The settings validator.
 	 */
-	public function __construct( KarMCP_Data $data, KarMCP_Element_Factory $factory ) {
-		$this->data    = $data;
-		$this->factory = $factory;
+	public function __construct( KarMCP_Data $data, KarMCP_Element_Factory $factory, ?KarMCP_Settings_Validator $validator = null ) {
+		$this->data      = $data;
+		$this->factory   = $factory;
+		$this->validator = $validator;
+	}
+
+	/**
+	 * Reports settings keys that match no control the element is known to have.
+	 *
+	 * Writes accept any key: it lands in `_elementor_data`, the response says
+	 * success, and reading the element back shows it there — so a wrong name
+	 * looks applied everywhere except on the page. Two of them in one session
+	 * (`button_background_color` for `background_color`, and `button_padding`,
+	 * which is the kit's control, for the widget's `text_padding`) cost a full
+	 * debugging pass each.
+	 *
+	 * Advisory on purpose, never a rejection: dynamic tags, third-party addons
+	 * and Elementor's own incomplete headless control list all produce keys that
+	 * are unrecognised and perfectly valid.
+	 *
+	 * @since 1.20.0
+	 *
+	 * @param array $element  The element being written to.
+	 * @param array $settings The settings being written.
+	 * @return array<int,array<string,mixed>> One entry per unknown key, with suggestions.
+	 */
+	private function unknown_key_report( array $element, array $settings ): array {
+		if ( null === $this->validator ) {
+			return array();
+		}
+
+		// Only widgets carry a control schema we can check against; containers
+		// resolve to no schema and would flag every key they were given.
+		$widget_type = ( 'widget' === ( $element['elType'] ?? '' ) ) ? (string) ( $element['widgetType'] ?? '' ) : '';
+
+		if ( '' === $widget_type ) {
+			return array();
+		}
+
+		$report = array();
+		foreach ( $this->validator->unknown_keys( $widget_type, $settings ) as $key ) {
+			$entry = array( 'key' => $key );
+
+			$suggestions = $this->validator->suggest_controls( $widget_type, $key );
+			if ( $suggestions ) {
+				$entry['did_you_mean'] = $suggestions;
+			}
+
+			$report[] = $entry;
+		}
+
+		return $report;
 	}
 
 	/**
@@ -404,6 +463,20 @@ class KarMCP_Layout_Abilities {
 						'success'     => array( 'type' => 'boolean' ),
 						'element_id'  => array( 'type' => 'string' ),
 						'element_type' => array( 'type' => 'string' ),
+						'unknown_keys' => array(
+							'type'        => 'array',
+							'description' => __( 'Present only when some setting matched no known control. The write still happened: the keys are stored, they simply will not render. Advisory — dynamic tags and addons legitimately produce names we cannot see.', 'karmcp' ),
+							'items'       => array(
+								'type'       => 'object',
+								'properties' => array(
+									'key'          => array( 'type' => 'string' ),
+									'did_you_mean' => array(
+										'type'  => 'array',
+										'items' => array( 'type' => 'string' ),
+									),
+								),
+							),
+						),
 					),
 				),
 				'meta'                => array(
@@ -451,11 +524,18 @@ class KarMCP_Layout_Abilities {
 			return $result;
 		}
 
-		return array(
+		$out = array(
 			'success'      => true,
 			'element_id'   => $element_id,
 			'element_type' => $element['elType'] ?? 'unknown',
 		);
+
+		$unknown = $this->unknown_key_report( $element, $settings );
+		if ( $unknown ) {
+			$out['unknown_keys'] = $unknown;
+		}
+
+		return $out;
 	}
 
 	// -------------------------------------------------------------------------
@@ -499,6 +579,11 @@ class KarMCP_Layout_Abilities {
 						'success'  => array( 'type' => 'boolean' ),
 						'updated'  => array( 'type' => 'integer' ),
 						'failed'   => array( 'type' => 'array', 'items' => array( 'type' => 'object' ) ),
+						'unknown_keys' => array(
+							'type'        => 'array',
+							'description' => __( 'Per element, any setting that matched no known control. The writes still happened. Advisory only.', 'karmcp' ),
+							'items'       => array( 'type' => 'object' ),
+						),
 					),
 				),
 				'meta'                => array(
@@ -529,6 +614,7 @@ class KarMCP_Layout_Abilities {
 
 		$updated_count = 0;
 		$failed        = array();
+		$unknown       = array();
 
 		foreach ( $operations as $op ) {
 			$eid      = sanitize_text_field( $op['element_id'] ?? '' );
@@ -550,6 +636,17 @@ class KarMCP_Layout_Abilities {
 
 			if ( $ok ) {
 				$updated_count++;
+
+				// Reported per element: a batch is exactly where an unknown key
+				// disappears, since one summary count of successes says nothing
+				// about which of twenty elements got a name wrong.
+				$report = $this->unknown_key_report( $element, $settings );
+				if ( $report ) {
+					$unknown[] = array(
+						'element_id' => $eid,
+						'keys'       => $report,
+					);
+				}
 			} else {
 				$failed[] = array( 'element_id' => $eid, 'reason' => 'update failed' );
 			}
@@ -561,11 +658,17 @@ class KarMCP_Layout_Abilities {
 			return $result;
 		}
 
-		return array(
+		$out = array(
 			'success' => empty( $failed ),
 			'updated' => $updated_count,
 			'failed'  => $failed,
 		);
+
+		if ( $unknown ) {
+			$out['unknown_keys'] = $unknown;
+		}
+
+		return $out;
 	}
 
 	// -------------------------------------------------------------------------

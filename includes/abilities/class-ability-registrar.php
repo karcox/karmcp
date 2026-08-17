@@ -543,7 +543,7 @@ class KarMCP_Ability_Registrar {
 			$this->ability_names = array_merge( $this->ability_names, $pages->get_ability_names() );
 
 			// P1 layout/container.
-			$layout = new KarMCP_Layout_Abilities( $this->data, $this->factory );
+			$layout = new KarMCP_Layout_Abilities( $this->data, $this->factory, $this->validator );
 			$layout->register();
 			$this->ability_names = array_merge( $this->ability_names, $layout->get_ability_names() );
 

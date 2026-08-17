@@ -145,7 +145,11 @@ return array(
 			'typography_text_transform'         => array( 'type' => 'string', 'enum' => array( '', 'uppercase', 'lowercase', 'capitalize', 'none' ), 'description' => 'Text transform.' ),
 			'typography_letter_spacing'         => array( 'type' => 'object', 'description' => 'Letter spacing: {size, unit}.' ),
 			'text_shadow_text_shadow'           => array( 'type' => 'object', 'description' => 'Text shadow: {horizontal, vertical, blur, color}.' ),
-			'button_padding'                    => array( 'type' => 'object', 'description' => 'Button padding: {top, right, bottom, left, unit, isLinked}.' ),
+			// `text_padding`, not `button_padding`. Both exist, in different
+			// documents: this is the widget's own control (button-trait.php),
+			// while `button_padding` belongs to the kit's global button styles.
+			// Writing the kit's name onto a widget is accepted and does nothing.
+			'text_padding'                      => array( 'type' => 'object', 'description' => 'Button padding: {top, right, bottom, left, unit, isLinked}. Responsive: text_padding_tablet, text_padding_mobile.' ),
 		),
 		'required' => array( 'text' ),
 		'defaults' => array( 'text' => 'Click here', 'size' => 'sm' ),

@@ -506,11 +506,26 @@ class KarMCP_Data {
 		$deleting = array_keys( array_filter( $settings, 'is_null' ) );
 		$settings = self::strip_null_deletions( $existing, $settings );
 
-		$result = $document->save( array( 'settings' => $settings ) );
+		/*
+		 * Merge BEFORE the save, not only in the fallback below.
+		 *
+		 * Elementor's page settings manager ends at
+		 * `update_metadata( 'post', $id, '_elementor_page_settings', $settings )`
+		 * — whatever array it is handed becomes the whole meta. Handing it just
+		 * the incoming keys therefore dropped every key already stored: sending
+		 * two background keys to a post took its page settings from eight
+		 * entries to two, and `container_custom_height` — the full-screen height
+		 * of a popup — went with them.
+		 *
+		 * The fallback path merged already, so the same call silently either
+		 * merged or replaced depending on whether the native save succeeded.
+		 * Both paths now merge, which is what update-element has always done.
+		 */
+		$merged = array_merge( $existing, $settings );
+
+		$result = $document->save( array( 'settings' => $merged ) );
 
 		if ( ! $result ) {
-			// Fallback: merge settings into existing page settings meta.
-			$merged = array_merge( $existing, $settings );
 			update_post_meta( $post_id, '_elementor_page_settings', $merged );
 
 			// Invalidate CSS cache.

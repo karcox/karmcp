@@ -474,6 +474,18 @@ function admin_url( $path = '' ): string {
 	return 'http://example.test/wp-admin/' . $path;
 }
 
+if ( ! function_exists( 'untrailingslashit' ) ) {
+	function untrailingslashit( $value ) {
+		return rtrim( (string) $value, '/\\' );
+	}
+}
+
+if ( ! function_exists( 'trailingslashit' ) ) {
+	function trailingslashit( $value ) {
+		return untrailingslashit( $value ) . '/';
+	}
+}
+
 function home_url( $path = '' ): string {
 	return 'http://example.test' . ( '' === $path ? '' : '/' . ltrim( (string) $path, '/' ) );
 }

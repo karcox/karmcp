@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.19.1
+Stable tag: 1.20.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,13 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.20.0 =
+
+* Fixed: **update-page-settings wiped the page settings it was not given.** Sending two keys to a post replaced all of its stored page settings with those two — losing things like a popup's full-screen height. It now merges, like every other write. **If you have used this tool, upgrade.**
+* Fixed: the button widget's padding was published under the wrong name (`button_padding`, which belongs to the global kit styles, instead of the widget's `text_padding`), so setting it did nothing at all.
+* Fixed: on a site behind an access wall, rendering a page returned the login screen as if it were the page, complete with warnings describing the login screen. It now says so instead, and accepts a preview key so it can fetch the real page.
+* Added: writes now report setting names they do not recognise, with suggestions. Previously a misspelled control name was accepted, stored and reported as a success, so it looked applied everywhere except on the page.
 
 = 1.19.1 =
 

@@ -2,6 +2,38 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.20.0]
+
+Four fixes from a field report written while building three courses over MCP. Each was measured against real posts; each is pinned by a test that fails without its fix.
+
+### Fixed
+
+- **`update-page-settings` replaced the page's settings instead of merging them.** Elementor's page settings manager ends at `update_metadata( 'post', $id, '_elementor_page_settings', $settings )`, so whatever array it is handed becomes the entire meta — and it was handed only the incoming keys. Sending two background keys to a post took it from eight stored settings to two, and `container_custom_height`, a popup's full-screen height, went with them. It is also the only tool that writes that meta, so there was nothing to fall back to.
+
+  Worse than the loss: the fallback path already merged, so the same call silently either merged or replaced depending on whether the native save happened to succeed. Both paths merge now, matching what `update-element` has always done. `null` still deletes a key.
+
+- **The curated catalog published `button_padding` for the button widget, which is not one of its controls.** The widget's control is `text_padding` (`button-trait.php:496`); `button_padding` is the *kit's* global button style (`theme-style-buttons.php:241`) — a different document and a different scope. Writing it was accepted, changed nothing, and left four buttons on factory padding, discovered in a browser rather than in any error.
+
+  `WidgetCatalogControlNamesTest` now checks the button entry control by control against what the widget registers. The first version of that test banned the kit's names outright and had to be rewritten: `button_padding` is a perfectly real control on call-to-action, on WooCommerce add-to-cart and on a dozen Jet widgets. The name is not wrong — the pairing is.
+
+- **A `full` render answered with the login page reported it as the post.** The loopback request carries no session, so a site behind an access wall returns its login screen at 200 OK, and every collector then analysed that: a published course came back titled "Login", canonical `/login/`, with `no_h1` and `empty_container` warnings that read as defects of the course. Findings that look real about the wrong document are worse than a failure.
+
+  `render-page` now compares the rendered canonical against the post's permalink and, when they differ, reports `render_mismatch` (severity `error`) with `render.matches_post: false` — **dropping** the content warnings, since every one of them describes a page nobody asked about. Comparison is on host + path + query, not path alone: with plain permalinks every post shares the empty path and a path-only check would never fire.
+
+### Added
+
+- **Writes report the setting keys they did not recognise.** `update-element` and `batch-update` return `unknown_keys` when a setting matches no known control, each with `did_you_mean` suggestions. The write still happens — it has to stay advisory, since dynamic tags, third-party addons and Elementor's own incomplete headless control list all produce valid names we cannot see.
+
+  This is the general form of the bug above. Writes accept any key, store it in `_elementor_data` and answer `success`, so a wrong name reads as applied everywhere except on the page. Two in one session: `button_background_color` (the control is `background_color`) left white text on a white button and the module was written off as broken; `button_padding` cost the four buttons. Suggestions match on trailing segment rather than edit distance, because `button_padding` → `text_padding` is seven edits apart and no spelling metric would ever connect them.
+
+  The accounting already existed inside `KarMCP_Settings_Validator` and was only being written to the debug log; it is now returned. The validator was already wired into `add-free-widget` and simply absent from the update path.
+
+- **`render-page` accepts `query_args` for the `scope: "full"` loopback**, so a site that gates access behind a preview key can be rendered as a visitor sees it.
+
+### Note
+
+The same report described `render-page` and `audit-page-a11y` disagreeing about an identical `scope: "content"` render, and proposed that render-page adopt the audit's rendering path. There is only one path: both call `KarMCP_Content_Extractor::extract()` with the same arguments. Whatever caused that difference, it is not the routing, so nothing was changed on a guess.
+
 ## [1.19.1]
 
 ### Fixed

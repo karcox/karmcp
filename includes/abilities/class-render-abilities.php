@@ -85,6 +85,10 @@ class KarMCP_Render_Abilities {
 							'type'        => 'integer',
 							'description' => __( 'How many characters of visible page text to return. Default 600, 0 for none.', 'karmcp' ),
 						),
+						'query_args'    => array(
+							'type'        => 'object',
+							'description' => __( 'Extra query arguments for the scope "full" loopback request, e.g. {"preview_key":"abc"}. The loopback carries no session, so a site behind an access wall answers it with its login page; pass whatever key that site accepts to get the real page. Ignored for scope "content", which needs no request.', 'karmcp' ),
+						),
 					),
 					'required'   => array( 'post_id' ),
 				),
@@ -123,6 +127,7 @@ class KarMCP_Render_Abilities {
 				'scope'         => isset( $input['scope'] ) ? (string) $input['scope'] : 'content',
 				'include_html'  => ! empty( $input['include_html'] ),
 				'excerpt_chars' => isset( $input['excerpt_chars'] ) ? (int) $input['excerpt_chars'] : 600,
+				'query_args'    => isset( $input['query_args'] ) ? (array) $input['query_args'] : array(),
 			)
 		);
 	}

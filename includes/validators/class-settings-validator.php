@@ -149,12 +149,50 @@ class KarMCP_Settings_Validator {
 	 * @return true Always true; the method is advisory only.
 	 */
 	public function validate( string $widget_type, array $settings ) {
+		$unknown = $this->unknown_keys( $widget_type, $settings );
+
+		// Unknown keys are very often real controls the headless schema can't see
+		// (typography, colours). Pass them through; log for diagnostics only.
+		if ( ! empty( $unknown ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log(
+				sprintf(
+					'[KarMCP] Passing through %1$d unrecognised setting(s) for widget "%2$s" (absent from the headless control schema): %3$s',
+					count( $unknown ),
+					$widget_type,
+					implode( ', ', $unknown )
+				)
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * The settings keys that match no control this widget is known to have.
+	 *
+	 * Same accounting `validate()` has always done, returned instead of only
+	 * logged. A caller can then say so in its response, which is the difference
+	 * between a typo costing a moment and costing a debugging session: writes
+	 * accept any key, store it in `_elementor_data`, and answer `success`, so a
+	 * misspelled control reads as applied everywhere except on the page.
+	 *
+	 * Advisory, and it has to stay advisory. The headless control list is
+	 * incomplete (see validate()), dynamic tags and third-party addons add keys
+	 * at runtime, so a name absent from it is suspicious, not wrong.
+	 *
+	 * @since 1.20.0
+	 *
+	 * @param string $widget_type The widget type name.
+	 * @param array  $settings    The settings being written.
+	 * @return string[] Unaccounted-for keys, in the order given.
+	 */
+	public function unknown_keys( string $widget_type, array $settings ): array {
 		$schema = $this->schema_generator->generate( $widget_type );
 
 		// Can't introspect controls (unknown widget, Elementor unavailable, etc.):
-		// don't block — Elementor is the authority at save/render time.
+		// claim nothing rather than flag everything.
 		if ( is_wp_error( $schema ) ) {
-			return true;
+			return array();
 		}
 
 		$valid_keys = array_keys( $schema['properties'] ?? array() );
@@ -171,20 +209,65 @@ class KarMCP_Settings_Validator {
 			$unknown[] = $key;
 		}
 
-		// Unknown keys are very often real controls the headless schema can't see
-		// (typography, colours). Pass them through; log for diagnostics only.
-		if ( ! empty( $unknown ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log(
-				sprintf(
-					'[KarMCP] Passing through %1$d unrecognised setting(s) for widget "%2$s" (absent from the headless control schema): %3$s',
-					count( $unknown ),
-					$widget_type,
-					implode( ', ', $unknown )
-				)
-			);
+		return $unknown;
+	}
+
+	/**
+	 * Controls whose name is close to one that wasn't recognised.
+	 *
+	 * Both real cases this exists for were near-misses of a real control:
+	 * `button_background_color` for `background_color`, and `button_padding` —
+	 * the kit's name — for the widget's `text_padding`. Neither is a typo in
+	 * the edit-distance sense, so matching is done on the trailing segments:
+	 * `*_padding` finds `text_padding`, which spelling distance never would.
+	 *
+	 * @since 1.20.0
+	 *
+	 * @param string $widget_type The widget type name.
+	 * @param string $key         The unrecognised key.
+	 * @param int    $limit       Maximum suggestions.
+	 * @return string[] Candidate control names, closest first.
+	 */
+	public function suggest_controls( string $widget_type, string $key, int $limit = 3 ): array {
+		$schema = $this->schema_generator->generate( $widget_type );
+
+		if ( is_wp_error( $schema ) ) {
+			return array();
 		}
 
-		return true;
+		$candidates = array_keys( $schema['properties'] ?? array() );
+		$scored     = array();
+
+		foreach ( $candidates as $candidate ) {
+			$score = 0;
+
+			// Shared trailing segment: the signal that actually fires here.
+			$key_tail       = strrchr( $key, '_' );
+			$candidate_tail = strrchr( $candidate, '_' );
+			if ( false !== $key_tail && $key_tail === $candidate_tail ) {
+				$score += 100;
+			}
+
+			// One name containing the other: button_background_color →
+			// background_color.
+			if ( str_contains( $key, $candidate ) || str_contains( $candidate, $key ) ) {
+				$score += 60;
+			}
+
+			// Spelling distance, for ordinary typos. Only close ones count.
+			$distance = levenshtein( $key, $candidate );
+			if ( $distance <= 3 ) {
+				$score += ( 40 - ( $distance * 10 ) );
+			}
+
+			if ( $score > 0 ) {
+				$scored[ $candidate ] = $score;
+			}
+		}
+
+		arsort( $scored );
+
+		return array_slice( array_keys( $scored ), 0, $limit );
 	}
 
 	/**

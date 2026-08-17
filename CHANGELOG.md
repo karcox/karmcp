@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.19.0]
+
+### Changed
+
+- **The sections moved out of a horizontal strip and into a collapsible rail beside the content.** Twelve sections in a row could only ever scroll or drop their labels; a column shows all of them at once, and collapses to a 46px icon strip when the screen is worth more than the labels. The collapse state is per-user, like WordPress's own folded menu — two admins on one site want different things from the same screen.
+
+  **The state is resolved in PHP, from user meta, not read from `localStorage` on load.** Deciding it client-side paints the rail expanded on every page and snaps it shut a frame later; this is the same reason core renders its folded-menu class server-side.
+
+- **The app bar keeps only the brand and the actions**, so it stays a fixed strip no matter how many sections the plugin grows. The three log/history links carry their label in a span that the CSS drops below 1400px, keeping them identifiable through their `title`.
+
+- **The sidebar no longer repeats the section list.** Every section was listed twice — once in WordPress's menu, once in the panel — in two different orders. The WordPress menu now shows just the `KarMCP` entry.
+
+  The rows are **hidden, not unregistered**: `remove_submenu_page()` drops the page from `$submenu`, which breaks `user_can_access_admin_page()` and the render hook, so every section would 'Cannot load'. Two rows are deliberately kept — `.wp-submenu-head`, which is the label the collapsed sidebar shows on hover, and `.wp-first-item`, core's own link back to the parent page.
+
+### Removed
+
+- The horizontal nav's overflow arrows and drag-to-scroll, in CSS and JS. A column that fits does not need either.
+
 ## [1.18.1]
 
 ### Fixed

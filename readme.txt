@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.18.1
+Stable tag: 1.19.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.19.0 =
+
+* Changed: the sections now live in a collapsible rail down the left of the panel instead of a row of tabs across the top. All twelve are visible at once, and the rail collapses to icons when you want the width back. The choice is remembered per user.
+* Changed: the WordPress sidebar no longer repeats the section list — it keeps just the KarMCP entry. Every section is still reachable by its own URL, exactly as before.
+* Changed: the top bar now carries only the brand and the log, history, changelog, help, notification and cloud controls.
 
 = 1.18.1 =
 

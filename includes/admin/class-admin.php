@@ -239,6 +239,7 @@ class KarMCP_Admin {
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'handle_security_actions' ) );
+		add_action( 'wp_ajax_karmcp_nav_state', array( $this, 'ajax_nav_state' ) );
 		add_action( 'wp_ajax_karmcp_scan_start', array( $this, 'ajax_scan_start' ) );
 		add_action( 'wp_ajax_karmcp_scan_step', array( $this, 'ajax_scan_step' ) );
 		add_action( 'wp_ajax_karmcp_vuln_update', array( $this, 'ajax_vuln_update' ) );
@@ -1749,6 +1750,52 @@ class KarMCP_Admin {
 	}
 
 	/**
+	 * User meta key holding the section rail's collapsed state.
+	 *
+	 * Per-user, like WordPress's own folded-menu preference: two people
+	 * administering the same site want different things from the same screen.
+	 *
+	 * @since 1.19.0
+	 * @var string
+	 */
+	const NAV_STATE_META = '_karmcp_nav_collapsed';
+
+	/**
+	 * Whether the section rail is collapsed for the current user.
+	 *
+	 * @since 1.19.0
+	 * @return bool
+	 */
+	public static function nav_collapsed(): bool {
+		return '1' === (string) get_user_meta( get_current_user_id(), self::NAV_STATE_META, true );
+	}
+
+	/**
+	 * Persists the rail's collapsed state.
+	 *
+	 * A preference, not a setting: it stores one bit against the current user
+	 * and touches nothing else, so `manage_options` (the capability every
+	 * KarMCP screen already requires) is the right bar rather than a narrower
+	 * one invented for it.
+	 *
+	 * @since 1.19.0
+	 * @return void
+	 */
+	public function ajax_nav_state(): void {
+		check_ajax_referer( 'karmcp_nav_state' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
+		}
+		$collapsed = isset( $_POST['collapsed'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['collapsed'] ) );
+		if ( $collapsed ) {
+			update_user_meta( get_current_user_id(), self::NAV_STATE_META, '1' );
+		} else {
+			delete_user_meta( get_current_user_id(), self::NAV_STATE_META );
+		}
+		wp_send_json_success( array( 'collapsed' => $collapsed ) );
+	}
+
+	/**
 	 * Add the settings page under the Settings menu.
 	 *
 	 * @since 1.0.0
@@ -1808,15 +1855,22 @@ class KarMCP_Admin {
 			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . '.wp-has-current-submenu .wp-menu-image img{'
 			. 'opacity:1;'
 			. '}'
-			// Changelog lives in the header app-bar, not the sidebar. It stays a
-			// real submenu (so it renders + is URL-accessible); we only hide its
-			// sidebar row. :has() hides the whole <li>; the anchor rule is a
-			// fallback for browsers without :has() (collapses the row to 0).
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-submenu li:has(> a[href$="page=' . esc_attr( self::PAGE_SLUG ) . '-changelog"]),'
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-submenu a[href$="page=' . esc_attr( self::PAGE_SLUG ) . '-changelog"],'
-			// History also lives in the app-bar (next to Changelog), not the sidebar.
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-submenu li:has(> a[href$="page=' . esc_attr( self::PAGE_SLUG ) . '-history"]),'
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-submenu a[href$="page=' . esc_attr( self::PAGE_SLUG ) . '-history"]{'
+			// Every section now lives in the app bar's own nav, so the sidebar
+			// keeps only the top-level "KarMCP" entry — the sections were listed
+			// twice, in two different orders.
+			//
+			// Hidden, NOT unregistered: remove_submenu_page() drops the page from
+			// $submenu, which breaks user_can_access_admin_page() (the parent no
+			// longer resolves) and the render hook (admin.php recomputes the page
+			// hook to a name with no attached callback → "Cannot load"). Hiding
+			// the rows leaves every section a normal, fully-renderable submenu,
+			// still reachable by URL and still highlighting its parent.
+			//
+			// Two rows are deliberately kept: .wp-submenu-head is the label the
+			// collapsed sidebar shows on hover — hide it and the flyout is blank —
+			// and .wp-first-item is WordPress's auto-generated link back to the
+			// parent page, which is the one entry we still want.
+			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-submenu li:not(.wp-submenu-head):not(.wp-first-item){'
 			. 'display:none !important;'
 			. '}'
 			. '</style>';
@@ -3229,18 +3283,26 @@ class KarMCP_Admin {
 					<span class="karmcp-appbar-title karmcp-appbar-title--short"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
 					<span class="karmcp-appbar-version">v<?php echo esc_html( KARMCP_VERSION ); ?></span>
 				</div>
+				<?php
+				/*
+				 * The three log/history links carry their label in a span so the CSS
+				 * can drop it on narrow screens: with the sections now sharing the
+				 * row, three text buttons are what runs out of space first. The
+				 * title attribute keeps them identifiable once the text is gone.
+				 */
+				?>
 				<div class="karmcp-appbar-actions">
-					<a class="karmcp-appbar-changelog<?php echo 'mcp-log' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-mcp-log' ) ); ?>">
+					<a class="karmcp-appbar-changelog<?php echo 'mcp-log' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-mcp-log' ) ); ?>" title="<?php esc_attr_e( 'MCP Log', 'karmcp' ); ?>">
 						<span class="dashicons dashicons-list-view" aria-hidden="true"></span>
-						<?php esc_html_e( 'MCP Log', 'karmcp' ); ?>
+						<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'MCP Log', 'karmcp' ); ?></span>
 					</a>
-					<a class="karmcp-appbar-changelog<?php echo 'history' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-history' ) ); ?>">
+					<a class="karmcp-appbar-changelog<?php echo 'history' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-history' ) ); ?>" title="<?php esc_attr_e( 'History', 'karmcp' ); ?>">
 						<span class="dashicons dashicons-clock" aria-hidden="true"></span>
-						<?php esc_html_e( 'History', 'karmcp' ); ?>
+						<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'History', 'karmcp' ); ?></span>
 					</a>
-					<a class="karmcp-appbar-changelog<?php echo 'changelog' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-changelog' ) ); ?>">
+					<a class="karmcp-appbar-changelog<?php echo 'changelog' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-changelog' ) ); ?>" title="<?php esc_attr_e( 'Changelog', 'karmcp' ); ?>">
 						<span class="dashicons dashicons-backup" aria-hidden="true"></span>
-						<?php esc_html_e( 'Changelog', 'karmcp' ); ?>
+						<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'Changelog', 'karmcp' ); ?></span>
 					</a>
 					<div class="karmcp-help-menu">
 						<button type="button" class="karmcp-help-toggle" aria-haspopup="true">
@@ -3310,29 +3372,49 @@ class KarMCP_Admin {
 				</div>
 			</div>
 
-			<!-- Tab nav -->
-						<div class="karmcp-appnav-wrap">
-				<button type="button" class="karmcp-appnav-arrow karmcp-appnav-arrow--prev" aria-label="<?php esc_attr_e( 'Scroll tabs left', 'karmcp' ); ?>" hidden><span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span></button>
-<nav class="karmcp-appnav" aria-label="<?php esc_attr_e( 'KarMCP sections', 'karmcp' ); ?>">
-				<?php
-				foreach ( $this->get_submenus() as $karmcp_slug => $karmcp_label ) :
-					$karmcp_tab_id = ( self::PAGE_SLUG === $karmcp_slug ) ? 'dashboard' : substr( $karmcp_slug, strlen( self::PAGE_SLUG . '-' ) );
-					// Changelog + History + MCP Log live in the app-bar top-right, not the tab nav.
-					if ( 'changelog' === $karmcp_tab_id || 'history' === $karmcp_tab_id || 'mcp-log' === $karmcp_tab_id ) {
-						continue;
-					}
-					$karmcp_is_on = ( $karmcp_tab_id === $active_tab );
-					?>
-					<a class="karmcp-appnav-item<?php echo $karmcp_is_on ? ' is-active' : ''; ?>"
-						href="<?php echo esc_url( admin_url( 'admin.php?page=' . $karmcp_slug ) ); ?>"
-						<?php echo $karmcp_is_on ? 'aria-current="page"' : ''; ?>>
-						<span class="dashicons <?php echo esc_attr( self::tab_icon( $karmcp_tab_id ) ); ?>" aria-hidden="true"></span>
-						<span class="karmcp-appnav-label"><?php echo esc_html( $karmcp_label ); ?></span>
-					</a>
-				<?php endforeach; ?>
-			</nav>
-				<button type="button" class="karmcp-appnav-arrow karmcp-appnav-arrow--next" aria-label="<?php esc_attr_e( 'Scroll tabs right', 'karmcp' ); ?>" hidden><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></button>
-			</div>
+			<?php
+			/*
+			 * Sections live in a collapsible rail beside the content, not in a row
+			 * above it: at twelve entries a horizontal strip either scrolls or
+			 * drops its labels, and both cost more than the column does.
+			 *
+			 * The collapsed state is resolved HERE, in PHP, from user meta — not
+			 * read from localStorage on load. Deciding it client-side would paint
+			 * the rail expanded on every page and snap it shut a frame later,
+			 * which is exactly the flicker WordPress's own folded menu avoids the
+			 * same way.
+			 */
+			$karmcp_nav_collapsed = self::nav_collapsed();
+			?>
+			<div class="karmcp-shell<?php echo $karmcp_nav_collapsed ? ' is-collapsed' : ''; ?>">
+				<div class="karmcp-appnav-wrap">
+					<nav class="karmcp-appnav" aria-label="<?php esc_attr_e( 'KarMCP sections', 'karmcp' ); ?>">
+						<?php
+						foreach ( $this->get_submenus() as $karmcp_slug => $karmcp_label ) :
+							$karmcp_tab_id = ( self::PAGE_SLUG === $karmcp_slug ) ? 'dashboard' : substr( $karmcp_slug, strlen( self::PAGE_SLUG . '-' ) );
+							// Changelog + History + MCP Log live in the app-bar actions, not the section rail.
+							if ( 'changelog' === $karmcp_tab_id || 'history' === $karmcp_tab_id || 'mcp-log' === $karmcp_tab_id ) {
+								continue;
+							}
+							$karmcp_is_on = ( $karmcp_tab_id === $active_tab );
+							?>
+							<a class="karmcp-appnav-item<?php echo $karmcp_is_on ? ' is-active' : ''; ?>"
+								href="<?php echo esc_url( admin_url( 'admin.php?page=' . $karmcp_slug ) ); ?>"
+								title="<?php echo esc_attr( $karmcp_label ); ?>"
+								<?php echo $karmcp_is_on ? 'aria-current="page"' : ''; ?>>
+								<span class="dashicons <?php echo esc_attr( self::tab_icon( $karmcp_tab_id ) ); ?>" aria-hidden="true"></span>
+								<span class="karmcp-appnav-label"><?php echo esc_html( $karmcp_label ); ?></span>
+							</a>
+						<?php endforeach; ?>
+					</nav>
+					<button type="button"
+						class="karmcp-appnav-toggle"
+						aria-expanded="<?php echo $karmcp_nav_collapsed ? 'false' : 'true'; ?>"
+						data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_nav_state' ) ); ?>">
+						<span class="dashicons dashicons-arrow-left-alt2 karmcp-appnav-toggle-icon" aria-hidden="true"></span>
+						<span class="karmcp-appnav-label"><?php esc_html_e( 'Collapse', 'karmcp' ); ?></span>
+					</button>
+				</div>
 
 			<!-- Content -->
 			<div class="tab-content<?php echo 'dashboard' === $active_tab ? ' tab-content--flush' : ''; ?>">
@@ -3369,6 +3451,7 @@ class KarMCP_Admin {
 					include KARMCP_DIR . 'includes/admin/views/page-tools.php';
 				}
 				?>
+			</div>
 			</div>
 		</div>
 		<?php

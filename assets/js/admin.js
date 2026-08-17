@@ -1677,41 +1677,37 @@
 
 	// Initialize on DOM ready.
 	/**
-	 * Header tab nav overflow controls: show prev/next arrows when the tabs
-	 * exceed the viewport (small desktops), scrolling the nav on click. Touch
-	 * devices still swipe natively. Arrows auto-hide at each end and when the
-	 * nav fits. The active tab is scrolled into view on load.
+	 * Collapse control for the section rail.
+	 *
+	 * The class is toggled first and the state saved after, deliberately: the
+	 * rail must answer the click immediately, and a preference that fails to
+	 * persist is worth far less than a rail that stutters on every use. A failed
+	 * save just means the next page load starts from the stored state.
+	 *
+	 * PHP renders the initial state onto .karmcp-shell, so nothing here runs on
+	 * load and there is no expanded-then-collapsed flash.
 	 */
-	function initNavArrows() {
-		var wrap = document.querySelector( '.karmcp-appnav-wrap' );
-		if ( ! wrap ) { return; }
-		var nav  = wrap.querySelector( '.karmcp-appnav' );
-		var prev = wrap.querySelector( '.karmcp-appnav-arrow--prev' );
-		var next = wrap.querySelector( '.karmcp-appnav-arrow--next' );
-		if ( ! nav || ! prev || ! next ) { return; }
+	function initNavCollapse() {
+		var shell = document.querySelector( '.karmcp-shell' );
+		if ( ! shell ) { return; }
+		var toggle = shell.querySelector( '.karmcp-appnav-toggle' );
+		if ( ! toggle ) { return; }
 
-		function update() {
-			var max = nav.scrollWidth - nav.clientWidth;
-			var overflowing = max > 2;
-			prev.hidden = ! overflowing || nav.scrollLeft <= 1;
-			next.hidden = ! overflowing || nav.scrollLeft >= max - 1;
-			wrap.classList.toggle( 'is-overflowing', overflowing );
-		}
-		function step( dir ) {
-			nav.scrollBy( { left: dir * Math.max( 160, Math.round( nav.clientWidth * 0.7 ) ), behavior: 'smooth' } );
-		}
+		toggle.addEventListener( 'click', function () {
+			var collapsed = shell.classList.toggle( 'is-collapsed' );
+			toggle.setAttribute( 'aria-expanded', collapsed ? 'false' : 'true' );
 
-		prev.addEventListener( 'click', function () { step( -1 ); } );
-		next.addEventListener( 'click', function () { step( 1 ); } );
-		nav.addEventListener( 'scroll', update, { passive: true } );
-		window.addEventListener( 'resize', update );
-
-		// Bring the active tab into view (in case it's off-screen on a narrow window).
-		var active = nav.querySelector( '.karmcp-appnav-item.is-active' );
-		if ( active && active.scrollIntoView ) {
-			active.scrollIntoView( { inline: 'center', block: 'nearest' } );
-		}
-		update();
+			if ( ! window.ajaxurl ) { return; }
+			var body = new URLSearchParams();
+			body.append( 'action', 'karmcp_nav_state' );
+			body.append( '_ajax_nonce', toggle.getAttribute( 'data-nonce' ) || '' );
+			body.append( 'collapsed', collapsed ? '1' : '0' );
+			window.fetch( window.ajaxurl, {
+				method: 'POST',
+				credentials: 'same-origin',
+				body: body
+			} ).catch( function () { /* preference only — the rail already moved */ } );
+		} );
 	}
 
 	function initAll() {
@@ -1725,7 +1721,7 @@
 		initCodeOverlay();
 		initClickToCopy();
 		initContextPage();
-		initNavArrows();
+		initNavCollapse();
 		initNotifications();
 	}
 

@@ -242,12 +242,37 @@ final class A11yAuditTest extends TestCase {
 		$this->assertSame( 1, $report['contrast']['inconclusive'] );
 	}
 
-	public function test_no_colour_samples_means_no_contrast_findings(): void {
+	/**
+	 * Found on a real Elementor page: zero samples, and the report said nothing
+	 * at all about contrast. A reader cannot tell "fine" from "never looked
+	 * at", and the ambiguity flatters the tool.
+	 */
+	public function test_no_colour_samples_says_so_instead_of_going_quiet(): void {
 		$report = KarMCP_A11y_Audit::run( $this->digest() );
 
+		$this->assertFinding( $report, 'contrast-not-checked', 'info' );
 		$this->assertNoFinding( $report, 'contrast-checked-ok' );
 		$this->assertNoFinding( $report, 'contrast-inconclusive' );
 		$this->assertSame( 0, $report['contrast']['samples'] );
+
+		$this->assertStringContainsString(
+			'not a pass',
+			$this->finding( $report, 'contrast-not-checked' )['message']
+		);
+	}
+
+	public function test_having_samples_replaces_the_not_checked_notice(): void {
+		$report = KarMCP_A11y_Audit::run(
+			$this->digest(
+				array(
+					'inline_colors' => array(
+						array( 'tag' => 'p', 'text' => 'Negro', 'color' => '#000000', 'background' => '#ffffff', 'font_size' => 16.0, 'bold' => false ),
+					),
+				)
+			)
+		);
+
+		$this->assertNoFinding( $report, 'contrast-not-checked' );
 	}
 
 	// --------------------------------------------------------------- shape

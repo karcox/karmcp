@@ -381,6 +381,21 @@ class KarMCP_A11y_Audit {
 		);
 
 		if ( empty( $samples ) ) {
+			// Silence here is ambiguous, and the ambiguity favours the tool: a
+			// reader cannot tell "contrast is fine" from "contrast was never
+			// looked at". On an Elementor page this is the normal outcome —
+			// the builder writes its colour into a generated stylesheet, so
+			// there is nothing inline to read.
+			$findings[] = self::finding(
+				'contrast-not-checked',
+				'wcag-1.4.3',
+				__( 'Text contrast not checked', 'karmcp' ),
+				'info',
+				0,
+				__( 'No text on this page declares its colour in the markup, so contrast was not evaluated at all here — this is not a pass. Page builders and themes normally put colour in a stylesheet, which needs a browser to resolve.', 'karmcp' ),
+				__( 'Check contrast with a browser tool, or against the palette in the builder. This audit only sees colour written inline.', 'karmcp' )
+			);
+
 			return $summary;
 		}
 

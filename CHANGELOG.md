@@ -2,6 +2,16 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.16.1]
+
+### Fixed
+
+- **The contrast check went silent when it had nothing to look at.** Run against a real Elementor page the day 1.16.0 shipped, it found zero text declaring a colour inline — Elementor writes its colour into a generated stylesheet — and the report simply said nothing about contrast at all.
+
+  Silence is ambiguous, and the ambiguity flatters the tool: a reader cannot tell "contrast is fine" from "contrast was never looked at". It now reports `contrast-not-checked` and says outright that this **is not a pass**, along with the reason.
+
+  The underlying limitation stands and is the next piece of work: on a builder page the colour lives in the builder's data, not in the markup. That is where it will have to be read from.
+
 ## [1.16.0]
 
 ### Added

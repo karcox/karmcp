@@ -151,6 +151,38 @@ El reparto correcto, que además es el que ya usa el resto del plugin:
 
 Es el mismo reparto que en el sandbox: el agente declara, el plugin compila. Aquí el agente redacta y el plugin persiste.
 
+### Contraste en Elementor: leer el color del constructor, no del marcado
+
+**El problema, verificado el 2026-08-17 contra sitionet.** La 1.16.0 recoge el color del atributo `style` del marcado. En una página de Elementor eso devuelve **cero muestras**: Elementor no escribe color en línea, lo compila a una hoja de estilos por página (`post-<id>.css`). O sea que el chequeo de contraste no cubre nada justo en el constructor en el que este plugin se especializa.
+
+La 1.16.1 al menos lo dice en voz alta (`contrast-not-checked`), pero el hueco sigue.
+
+**La posición que tenemos y un escáner externo no.** axe o Lighthouse tienen que resolver el CSS computado con un navegador. Nosotros podemos preguntarle al constructor. Verificado leyendo datos reales:
+
+El kit global (`get-global-settings`) trae la paleta y los valores ya resueltos:
+
+```
+system_colors:  primary #0B0090 · secondary #FF8754 · text #000F5C · accent #FFFFFF
+h1_color … h6_color: "#000F5C"          body_color: "#000000"
+button_text_color: "#FFFFFF"            button_background_color: "#FF8754"
+__globals__: { "h1_color": "globals/colors?id=text", … }
+```
+
+Y los ajustes de cada elemento traen las excepciones, en concreto (`find-element` con `setting_key: title_color` devolvió `title_color: "#000F5C"` en un icon-box).
+
+**El diseño que sale de ahí:**
+
+1. Recorrer el árbol de elementos, arrastrando el **fondo del contenedor ancestro más cercano** (`background_color` del container). Ese recorrido es la parte que hoy no existe y es la que da el fondo, que es la mitad que siempre falta.
+2. Para cada widget con texto, resolver el color: ajuste del elemento → referencia en `__globals__` → default del kit por etiqueta (`h2_color`) → `body_color`.
+3. Tamaño desde la tipografía del elemento o del kit por nivel de encabezado; el kit ya los trae en px.
+4. Evaluar con `KarMCP_Color_Contrast`, que ya está y no hay que tocar.
+
+**Lo que seguirá siendo `inconclusive`, y está bien que lo sea:** degradados; colores translúcidos —la paleta de sitionet tiene un `#FFFFFF4D` literal—; widgets de terceros (Premium Addons, JetEngine) cuyos nombres de ajuste no conocemos, y ahí **no se adivina**; e imágenes de fondo.
+
+**Dos decisiones pendientes** cuando se aborde: qué hacer con los tamaños responsive, porque el kit define `h1_typography_font_size_mobile` y un texto puede ser "grande" en escritorio y no en móvil —lo honesto es evaluar escritorio y decirlo—; y si los estados `:hover` entran, que yo dejaría fuera.
+
+**Coste:** 2–3 sesiones. Es un proyecto propio, no un retoque.
+
 ### Deuda conocida del extractor: HTML minificado
 
 `visible_text()` extrae con `textContent`, que **concatena sin separador**. En HTML normal hay saltos de línea e indentación entre etiquetas y las palabras quedan sueltas, pero un plugin de caché que minifique la salida los elimina — y entonces la última palabra de un bloque y la primera del siguiente se funden en una.

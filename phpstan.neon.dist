@@ -18,6 +18,12 @@
 
 includes:
     - tools/vendor/szepeviktor/phpstan-wordpress/extension.neon
+    # The 95 findings that predate the toolchain actually running here, frozen
+    # so the report is empty and anything NEW fails loudly. They are almost all
+    # calls into software that may not be installed (ACF, WooCommerce, CF7,
+    # Polylang, the Elementor widget base). Regenerate after clearing a batch:
+    #   tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon
+    - phpstan-baseline.neon
 
 parameters:
     level: 1
@@ -30,6 +36,12 @@ parameters:
         analyse:
             - vendor
             - tools
+
+    # The MCP Adapter ships inside vendor/, which is excluded from analysis —
+    # but its classes are real and the plugin names them. Scanned, not analysed:
+    # PHPStan learns the symbols without reporting on third-party code.
+    scanDirectories:
+        - vendor/wordpress/mcp-adapter/includes
 
     # El plugin se integra con software que puede no estar instalado, y por eso
     # todos estos usos van tras un class_exists(). PHPStan no puede saberlo, así

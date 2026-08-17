@@ -1,0 +1,247 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Function acf_get_acf_post_types not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_get_acf_taxonomies not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_get_field_group not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_get_field_groups not found\.$#'
+			identifier: function.notFound
+			count: 3
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_get_fields not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_get_internal_post_type not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_import_post_type not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_import_taxonomy not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_update_field_group not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function acf_update_internal_post_type not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Function update_field not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/class-acf-abilities.php
+
+		-
+			message: '#^Variable \$equal_width might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/abilities/class-composite-abilities.php
+
+		-
+			message: '#^Constant DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/abilities/class-database-abilities.php
+
+		-
+			message: '#^Call to static method find\(\) on an unknown class WPCF7_ContactForm\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/abilities/forms/class-cf7-integration.php
+
+		-
+			message: '#^Call to static method get_instance\(\) on an unknown class WPCF7_ContactForm\.$#'
+			identifier: class.notFound
+			count: 6
+			path: includes/abilities/forms/class-cf7-integration.php
+
+		-
+			message: '#^Call to static method get_template\(\) on an unknown class WPCF7_ContactForm\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/abilities/forms/class-cf7-integration.php
+
+		-
+			message: '#^Function pll_get_post_language not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/i18n/class-polylang-integration.php
+
+		-
+			message: '#^Function pll_get_post_translations not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/i18n/class-polylang-integration.php
+
+		-
+			message: '#^Function pll_languages_list not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: includes/abilities/i18n/class-polylang-integration.php
+
+		-
+			message: '#^Function pll_save_post_translations not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/i18n/class-polylang-integration.php
+
+		-
+			message: '#^Function pll_set_post_language not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/i18n/class-polylang-integration.php
+
+		-
+			message: '#^Function wc_get_page_id not found\.$#'
+			identifier: function.notFound
+			count: 5
+			path: includes/abilities/woo/class-woo-integration.php
+
+		-
+			message: '#^Function wc_get_product not found\.$#'
+			identifier: function.notFound
+			count: 3
+			path: includes/abilities/woo/class-woo-integration.php
+
+		-
+			message: '#^Function wc_get_products not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/abilities/woo/class-woo-integration.php
+
+		-
+			message: '#^Call to private method module_tab_visible\(\) of class KarMCP_Admin\.$#'
+			identifier: method.private
+			count: 3
+			path: includes/admin/views/page-dashboard.php
+
+		-
+			message: '#^Variable \$karmcp_videos in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: includes/admin/views/page-dashboard.php
+
+		-
+			message: '#^Variable \$write in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: includes/class-system-kit-writer.php
+
+		-
+			message: '#^Variable \$policy might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: includes/modules/guardrails/settings-fields.php
+
+		-
+			message: '#^Variable \$settings might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/modules/image-optimization/settings-fields.php
+
+		-
+			message: '#^Instantiated class enshrined\\svgSanitize\\Sanitizer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/modules/svg-support/class-svg-sanitizer.php
+
+		-
+			message: '#^Action callback returns WP_Error\|true but should not return anything\.$#'
+			identifier: return.void
+			count: 1
+			path: includes/modules/vulnerabilities/class-vuln-store.php
+
+		-
+			message: '#^Constant DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/performance/class-db-cleaner.php
+
+		-
+			message: '#^Constant DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/performance/class-performance-server-audit.php
+
+		-
+			message: '#^Constant AUTH_SALT not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/security/class-security-hardening-runtime.php
+
+		-
+			message: '#^Action callback returns array but should not return anything\.$#'
+			identifier: return.void
+			count: 1
+			path: includes/themer/class-themer-index.php
+
+		-
+			message: '#^Call to an undefined method KarMCP_Themer_Widget_Base\:\:add_control\(\)\.$#'
+			identifier: method.notFound
+			count: 9
+			path: includes/themer/widgets/class-themer-widget-classes.php
+
+		-
+			message: '#^Call to an undefined method KarMCP_Themer_Widget_Base\:\:add_group_control\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/themer/widgets/class-themer-widget-classes.php
+
+		-
+			message: '#^Call to an undefined method KarMCP_Themer_Widget_Base\:\:add_responsive_control\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: includes/themer/widgets/class-themer-widget-classes.php
+
+		-
+			message: '#^Call to an undefined method KarMCP_Themer_Widget_Base\:\:end_controls_section\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/themer/widgets/class-themer-widget-classes.php
+
+		-
+			message: '#^Call to an undefined method KarMCP_Themer_Widget_Base\:\:get_settings_for_display\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/themer/widgets/class-themer-widget-classes.php
+
+		-
+			message: '#^Call to an undefined method KarMCP_Themer_Widget_Base\:\:start_controls_section\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/themer/widgets/class-themer-widget-classes.php

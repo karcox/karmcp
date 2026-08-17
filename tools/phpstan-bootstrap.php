@@ -14,6 +14,11 @@
 // Las cuatro que define karmcp.php (líneas 89-92). Si se añade una allí, se
 // añade aquí.
 define( 'KARMCP_VERSION', '0.0.0' );
-define( 'KARMCP_DIR', __DIR__ . '/' );
+// dirname( __DIR__ ), not __DIR__: this file lives in tools/, the plugin root
+// is one level up. Pointing it at tools/ made PHPStan resolve every
+// `require_once KARMCP_DIR . 'includes/…'` to a path that doesn't exist, and
+// report each one — 241 fabricated errors from class-bootstrap.php alone,
+// enough noise to bury anything real.
+define( 'KARMCP_DIR', dirname( __DIR__ ) . '/' );
 define( 'KARMCP_URL', 'https://example.test/wp-content/plugins/karmcp/' );
 define( 'KARMCP_BASENAME', 'karmcp/karmcp.php' );

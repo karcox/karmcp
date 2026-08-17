@@ -29,22 +29,41 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 
 Estándares de WordPress, estrictos: `snake_case` en funciones y variables, `Upper_Snake_Case` en clases, sanitizar entrada, escapar salida, `$wpdb->prepare()`, nonces y capacidades siempre. Código y comentarios **en inglés**; la documentación de proyecto (este archivo, el roadmap) en español.
 
-## Tests
+## Tests y análisis estático
 
-La suite corre sobre stubs, sin instalar WordPress. Desde la raíz:
+**Un solo comando corre las tres cosas:**
 
-```bash
-composer install && vendor/bin/phpunit
+```powershell
+pwsh bin/check.ps1
 ```
 
-**En la máquina de desarrollo actual (Windows) no hay Composer en el PATH** y el PHP de winget trae las extensiones desactivadas. Para correr la suite sin Composer: descarga `phpunit-10.phar` de phar.phpunit.de y arráncalo activando `mbstring` por línea de comandos.
+PHPUnit + PHPStan (bloqueante) + PHPCS (informativo). Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
+
+Estado de referencia: **969 tests, 2.470 aserciones**; PHPStan **sin errores**; PHPCS **87 errores y 17 avisos preexistentes** (2026-08-17).
+
+### El entorno, montado en la 1.16.2
+
+En esta máquina (Windows, PHP 8.5.5 de winget) faltaba todo esto y **el resultado fue que durante meses solo corría la suite**: `phpcs.xml.dist` y `phpstan.neon.dist` llevaban tiempo escritos y no se habían ejecutado nunca. Ya está resuelto y no hay que repetirlo:
+
+- `mbstring` y `fileinfo` **activadas en el `php.ini`** de winget (había copia de seguridad `.bak-20260817`). Ya no hacen falta los `-d extension=…` que documentaba este archivo.
+- `composer.phar` en `C:\Desarrollos\MCPKar\` (hash verificado contra el `.sha256sum` oficial), junto a `phpunit-10.phar`. No hay Composer en el PATH y no hace falta: `php C:\Desarrollos\MCPKar\composer.phar --working-dir=tools update`.
+- La cadena vive en `tools/` con su propio `composer.json`, y ni `tools/vendor/` ni el lock se comitean.
+
+> **PHPStan tuvo que subir a 2.x.** La 1.12 es de julio de 2025 y **no parsea PHP 8.5**: revienta en los stubs internos al llegar a la nueva función `clone()`, con un "Internal error" que no parece un problema de versión. Si vuelve a aparecer, es eso.
+
+> **`tools/phpstan-bootstrap.php` definía `KARMCP_DIR` como `__DIR__`**, que es `tools/`, no la raíz. Cada `require_once KARMCP_DIR . 'includes/…'` se resolvía a una ruta inexistente: **241 errores inventados solo en `class-bootstrap.php`**, suficiente ruido para enterrar cualquier cosa real. Corregido a `dirname( __DIR__ )`.
+
+Los 95 hallazgos que quedaban están congelados en `phpstan-baseline.neon` — casi todos son llamadas a software que puede no estar instalado (ACF, WooCommerce, CF7, Polylang, la clase base de widgets de Elementor). **Lo que PHPStan reporte a partir de ahora es nuevo.** Al limpiar un grupo, se regenera:
 
 ```bash
-PHPDIR=$(dirname "$(which php)")
-php -d extension_dir="$PHPDIR/ext" -d extension=mbstring /ruta/a/phpunit.phar
+php tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon
 ```
 
-Estado de referencia: **969 tests, 2.470 aserciones, todo en verde** (2026-08-17). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+**PHPCS no tiene baseline y sus 87 errores son deuda real**, no ruido: el ruleset es deliberadamente estrecho (inyección, salida sin escapar, nonces, SQL preparado, i18n, prefijos globales, compatibilidad con PHP 8.1). Están concentrados en OAuth, el store del login guard y las vistas de admin. Es el siguiente trinquete, y hasta que se limpie el script no bloquea por ellos.
+
+### La suite
+
+Corre sobre stubs, sin instalar WordPress. Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local. Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
 
 El harness comparte stubs en `tests/bootstrap.php`, y ahí está la trampa: **un stub del harness gana al que declare un fichero de test**, porque el bootstrap carga primero. Si añades ahí una función que un test ya simulaba por su cuenta, ese test empieza a leer una fixture distinta y falla lejos del cambio. Pasó con `wp_get_object_terms()` y los menús.
 

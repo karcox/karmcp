@@ -50,6 +50,14 @@ class KarMCP_Seo_Audit {
 	const VERY_THIN_WORDS = 100;
 
 	/**
+	 * Reading-ease score below which the text is flagged as hard going.
+	 *
+	 * 55 is the INFLESZ boundary between "normal" and "algo difícil", and lands
+	 * close enough to the equivalent Flesch band to serve both.
+	 */
+	const READABILITY_FLOOR = 55;
+
+	/**
 	 * How many offending examples to echo back per finding.
 	 */
 	const SAMPLE_CAP = 5;
@@ -82,6 +90,7 @@ class KarMCP_Seo_Audit {
 		self::check_description( $description, $findings, self::has_seo_plugin( $ctx ) );
 		self::check_headings( $digest, $scope, $findings );
 		self::check_content( $digest, $findings );
+		self::check_readability( $digest, $ctx, $findings );
 		self::check_images( $digest, $findings );
 		self::check_links( $digest, $findings );
 		self::check_indexability( $digest, $ctx, $scope, $findings );
@@ -659,6 +668,70 @@ class KarMCP_Seo_Audit {
 				__( 'The page has %d words of visible text.', 'karmcp' ),
 				$words
 			)
+		);
+	}
+
+	/**
+	 * Reading ease, in the formula that matches the page's language.
+	 *
+	 * Reported and never scored. A hard text is a legitimate choice — a legal
+	 * page or a technical spec is supposed to read like one — so this states
+	 * the number and leaves the judgement to whoever knows the audience.
+	 *
+	 * @param array $digest   Page digest.
+	 * @param array $ctx      Audit context.
+	 * @param array $findings Findings, by reference.
+	 */
+	private static function check_readability( array $digest, array $ctx, array &$findings ): void {
+		$text = isset( $digest['text']['excerpt'] ) ? (string) $digest['text']['excerpt'] : '';
+		if ( '' === trim( $text ) ) {
+			return;
+		}
+
+		$locale = isset( $ctx['locale'] ) ? (string) $ctx['locale'] : 'en_US';
+		$result = KarMCP_Readability::analyze( $text, $locale );
+
+		if ( 'unsupported' === $result['status'] ) {
+			$findings[] = self::finding(
+				'readability-unsupported',
+				'content',
+				__( 'Readability', 'karmcp' ),
+				'info',
+				$result['language'],
+				sprintf(
+					/* translators: %s: language subtag, e.g. "de". */
+					__( 'No reading-ease formula is calibrated for "%s" here, so no score is given. A number from the wrong formula would be worse than none.', 'karmcp' ),
+					$result['language']
+				)
+			);
+			return;
+		}
+
+		if ( 'insufficient' === $result['status'] ) {
+			// Thin content is already a finding of its own; saying it twice in
+			// different words adds nothing.
+			return;
+		}
+
+		$hard = $result['score'] < self::READABILITY_FLOOR;
+
+		$findings[] = self::finding(
+			$hard ? 'readability-hard' : 'readability-ok',
+			'content',
+			__( 'Readability', 'karmcp' ),
+			$hard ? 'warning' : 'pass',
+			$result['score'],
+			sprintf(
+				/* translators: 1: score, 2: human band, 3: formula name, 4: average words per sentence. */
+				__( 'Reading ease %1$d (%2$s) on the %3$s scale, averaging %4$s words per sentence.', 'karmcp' ),
+				$result['score'],
+				$result['level'],
+				$result['formula'],
+				$result['words_per_sentence']
+			),
+			$hard
+				? __( 'Shorter sentences move this more than shorter words do. Legitimate for a legal or technical page — judge it against who has to read it.', 'karmcp' )
+				: ''
 		);
 	}
 

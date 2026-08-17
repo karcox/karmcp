@@ -96,14 +96,15 @@ Instancia el grupo en `KarMCP_Ability_Registrar` (el patrón está en la línea 
 
 ~~1. **`KarMCP_Seo_Meta` + `audit-page-seo`**~~ — **hecho.** `includes/audits/class-seo-audit.php` y `includes/abilities/class-seo-audit-abilities.php`, cubiertos por `tests/SeoAuditTest.php` y `tests/SeoMetaTest.php` (56 tests). Rellena además la sección `seo` de `get-page-snapshot`, que llevaba desde el principio reservando el seam y devolviendo un stub vacío.
 
+~~**Legibilidad**~~ — **hecha** en 1.15.0. `includes/audits/class-readability.php`, dentro del informe de SEO como se planteó. Szigriszt-Pazos + INFLESZ para español, Flesch para inglés, idioma resuelto por post vía Polylang/WPML. 46 tests, con 28 palabras fijadas una a una.
+
 Lo que queda, renumerado:
 
-1. **Legibilidad**, dentro del informe de SEO. No como herramienta suelta: es una métrica del mismo análisis. Ver la decisión de idioma más abajo.
-2. **`KarMCP_Color_Contrast` + `audit-page-a11y`.**
-3. **Persistencia de escaneos** — listar, abrir uno viejo, comparar. Ver abajo; a esta altura ya sirve para las dos auditorías a la vez.
-4. **`add-alt-text-from-context` y `fix-color-contrast`** — los dos que escriben.
-5. **AEO** — opcional. Ya no hay que montar nada para ello: las reglas se añaden al mismo sitio que las de SEO. Ver abajo.
-6. **Core Web Vitals** — fuera de este plan. Ver abajo.
+1. **`KarMCP_Color_Contrast` + `audit-page-a11y`.**
+2. **Persistencia de escaneos** — listar, abrir uno viejo, comparar. Ver abajo; a esta altura ya sirve para las dos auditorías a la vez.
+3. **`add-alt-text-from-context` y `fix-color-contrast`** — los dos que escriben.
+4. **AEO** — opcional. Ya no hay que montar nada para ello: las reglas se añaden al mismo sitio que las de SEO. Ver abajo.
+5. **Core Web Vitals** — fuera de este plan. Ver abajo.
 
 ### Cuánto es esto, honestamente
 
@@ -113,18 +114,18 @@ Estimación en sesiones de trabajo enfocado, no en días de calendario:
 |---|---|---|
 | ~~`KarMCP_Seo_Meta`~~ | ~~1~~ | **Hecho** |
 | ~~Motor de reglas + `audit-page-seo`~~ | ~~2–3~~ | **Hecho** |
-| Legibilidad | ½ | Bajo — función pura |
+| ~~Legibilidad~~ | ~~½~~ | **Hecha** |
 | `KarMCP_Color_Contrast` | ½ | Bajo — fórmula WCAG cerrada |
 | Reglas a11y + `audit-page-a11y` | 2–3 | Medio — muchas reglas pequeñas; el coste es la cantidad |
 | Persistencia + pestaña | 1–2 | Bajo — se copia el patrón de Security |
 | Las dos que escriben | 2 | **Medio-alto** — tocan render real, los stubs no lo cubren |
-| **Total pendiente** | **6–9** | |
+| **Total pendiente** | **5–8** | |
 
 Lo importante no es el total sino que **es incremental de verdad**, y el primer paso ya lo demostró: `audit-page-seo` sola es una herramienta completa y útil, y nada de lo que queda es requisito suyo. No hay un punto en el que haya que tenerlo todo para que algo funcione. Se puede parar después de cualquier paso.
 
 Lo que no está en la tabla porque no se ha diseñado: la pestaña de administración si se quiere que esto se vea sin un agente delante. Súmale 1–2 sesiones si se decide hacerla.
 
-> **La incertidumbre real está en el paso 4**, y conviene decirla antes de empezar: todo lo demás es lógica pura que la suite cubre. Las dos herramientas que escriben tocan el render del front-end, donde `tests/` no llega, y necesitan verificación manual en un WordPress local.
+> **La incertidumbre real está en el paso 3**, y conviene decirla antes de empezar: todo lo demás es lógica pura que la suite cubre. Las dos herramientas que escriben tocan el render del front-end, donde `tests/` no llega, y necesitan verificación manual en un WordPress local.
 
 ### Regla no negociable para las dos que escriben
 

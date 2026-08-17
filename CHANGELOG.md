@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.15.0]
+
+### Added
+
+- **Readability, in the formula that matches the page's language.** `audit-page-seo` now reports reading ease alongside everything else — score, band and average sentence length.
+
+  The reason this is worth more than a line item: **Flesch Reading Ease is calibrated on English.** Run Spanish prose through it and you get a number that looks perfectly valid and is not, because Spanish averages more syllables per word, so every page comes back "difficult". That is the worst kind of wrong: nothing errors, and somebody rewrites good copy to chase a score that was never measuring their language.
+
+  Spanish is scored with **Szigriszt-Pazos** and read on the **INFLESZ** scale; English keeps Flesch. A language with no calibrated formula gets no score and says so, rather than borrowing one.
+
+  The language is resolved **per post, not per site** — Polylang and WPML are asked first, since a multilingual site has a locale per page and that is exactly where the wrong-formula mistake would land.
+
+  The Spanish syllable counter is exact rather than heuristic. Vowel groups, diphthongs, hiatus, the accent that breaks a diphthong (`día`, `país`), the silent `h` that does not (`ahijado`), `ü`, and `y` behaving as a vowel after one (`rey`, `muy`) are all implemented from the rules — Spanish is regular enough to allow it, where English needs a dictionary and every implementation settles for a heuristic. 28 words are pinned in the suite one by one, because a silent drift of one syllable per word moves the score by tens of points and nothing else would catch it.
+
+  Reported, never scored: a dense text is a legitimate choice for a legal or technical page, so the finding states the number and leaves the judgement to whoever knows the audience. Pages under 100 words get no score at all — thin content is already its own finding, and a reading score off forty words is noise.
+
 ## [1.14.2]
 
 ### Fixed

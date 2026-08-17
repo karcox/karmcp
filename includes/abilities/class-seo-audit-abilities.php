@@ -26,6 +26,43 @@ if ( ! defined( 'ABSPATH' ) ) {
 class KarMCP_Seo_Audit_Abilities {
 
 	/**
+	 * How much visible text to pull back for the readability rule.
+	 *
+	 * Enough to cover a long page whole; the extractor caps the HTML it parses
+	 * well before this matters.
+	 */
+	const READABILITY_CHARS = 40000;
+
+	/**
+	 * The locale a given post is written in.
+	 *
+	 * A multilingual site has one locale per post, not per site, and scoring a
+	 * Spanish page with the English formula is exactly the mistake this whole
+	 * rule exists to avoid. Polylang and WPML both already ship integrations
+	 * here, so ask them first and fall back to the site locale.
+	 *
+	 * @param int $post_id Post id.
+	 * @return string
+	 */
+	public static function locale_for( int $post_id ): string {
+		if ( function_exists( 'pll_get_post_language' ) ) {
+			$locale = pll_get_post_language( $post_id, 'locale' );
+			if ( is_string( $locale ) && '' !== $locale ) {
+				return $locale;
+			}
+		}
+
+		if ( defined( 'ICL_SITEPRESS_VERSION' ) ) {
+			$details = apply_filters( 'wpml_post_language_details', null, $post_id );
+			if ( is_array( $details ) && ! empty( $details['locale'] ) ) {
+				return (string) $details['locale'];
+			}
+		}
+
+		return function_exists( 'get_locale' ) ? get_locale() : 'en_US';
+	}
+
+	/**
 	 * Returns the ability names registered by this class.
 	 *
 	 * @return string[]
@@ -126,7 +163,7 @@ class KarMCP_Seo_Audit_Abilities {
 					(int) $post_id,
 					array(
 						'scope'         => 'content',
-						'excerpt_chars' => 0,
+						'excerpt_chars' => self::READABILITY_CHARS,
 					)
 				);
 
@@ -144,9 +181,10 @@ class KarMCP_Seo_Audit_Abilities {
 				$report = KarMCP_Seo_Audit::run(
 					$digest,
 					array(
-						'scope' => 'content',
-						'seo'   => $seo,
-						'post'  => array(
+						'scope'  => 'content',
+						'seo'    => $seo,
+						'locale' => self::locale_for( (int) $post_id ),
+						'post'   => array(
 							'title'  => get_the_title( (int) $post_id ),
 							'status' => $post ? $post->post_status : '',
 						),
@@ -206,8 +244,10 @@ class KarMCP_Seo_Audit_Abilities {
 		$digest = KarMCP_Content_Extractor::extract(
 			$post_id,
 			array(
-				'scope'         => $scope,
-				'excerpt_chars' => 0,
+				'scope' => $scope,
+				// The readability rule needs the prose, not a sample: a score
+				// off 600 characters swings wildly with one long sentence.
+				'excerpt_chars' => self::READABILITY_CHARS,
 			)
 		);
 
@@ -220,9 +260,10 @@ class KarMCP_Seo_Audit_Abilities {
 		$report = KarMCP_Seo_Audit::run(
 			$digest,
 			array(
-				'scope' => $scope,
-				'seo'   => $seo,
-				'post'  => array(
+				'scope'  => $scope,
+				'seo'    => $seo,
+				'locale' => self::locale_for( $post_id ),
+				'post'   => array(
 					'title'  => get_the_title( $post_id ),
 					'url'    => get_permalink( $post_id ),
 					'type'   => $post->post_type,

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.14.2
+Stable tag: 1.15.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,14 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.15.0 =
+
+* New: **readability in the right formula for the language**, reported inside `audit-page-seo` — score, band and average sentence length. Flesch Reading Ease is calibrated on English; run Spanish through it and you get a number that looks valid and is not, because Spanish carries more syllables per word, so every page comes back "difficult".
+* Spanish is scored with **Szigriszt-Pazos** on the **INFLESZ** scale; English keeps Flesch. A language with no calibrated formula gets no score and says so instead of borrowing one.
+* The language is resolved per post, not per site — Polylang and WPML are asked first, because a multilingual site has a locale per page and that is exactly where the wrong-formula mistake lands.
+* The Spanish syllable counter is exact, not heuristic: vowel groups, diphthongs, hiatus, the accent that breaks a diphthong (día, país), the silent h that does not (ahijado), ü, and y as a vowel after one (rey, muy).
+* Reported, never scored. A dense text is a legitimate choice for a legal or technical page, so the finding gives the number and leaves the judgement to whoever knows the audience. Pages under 100 words get no score: thin content is already its own finding.
 
 = 1.14.2 =
 

@@ -93,7 +93,14 @@ class KarMCP_Composite_Abilities {
 	 *
 	 * @return bool
 	 */
-	public function check_create_permission(): bool {
+	public function check_create_permission( $input = null ): bool {
+		// Writing into an existing post is a different privilege from creating a
+		// new one: the caller must be able to edit THAT post, whatever its type.
+		$target_id = absint( $input['post_id'] ?? 0 );
+		if ( $target_id ) {
+			return current_user_can( 'edit_post', $target_id );
+		}
+
 		return current_user_can( 'publish_pages' ) || current_user_can( 'edit_pages' );
 	}
 
@@ -115,7 +122,20 @@ class KarMCP_Composite_Abilities {
 					'properties' => array(
 						'title'         => array(
 							'type'        => 'string',
-							'description' => __( 'Page title.', 'karmcp' ),
+							'description' => __( 'Page title. Required when creating a post; ignored when post_id is given, since the target already has one.', 'karmcp' ),
+						),
+						'post_id'       => array(
+							'type'        => 'integer',
+							'description' => __( 'Write the structure into an existing post instead of creating one, and require `mode`. The post type comes from the target, so this is how to build into a CPT that create-page cannot make (a jet-popup used as a course item, for instance) without the create-page + save-as-template + apply-template detour and its leftover scratch post.', 'karmcp' ),
+						),
+						'mode'          => array(
+							'type'        => 'string',
+							'enum'        => array( 'append', 'replace' ),
+							'description' => __( 'Required with post_id, ignored without it. "append" adds the structure after whatever the post already holds. "replace" discards the post\'s existing Elementor data first, which is destructive and therefore also needs confirm:true.', 'karmcp' ),
+						),
+						'confirm'       => array(
+							'type'        => 'boolean',
+							'description' => __( 'Required for mode:replace, which throws away the target post\'s current content.', 'karmcp' ),
 						),
 						'status'        => array(
 							'type'        => 'string',
@@ -153,7 +173,11 @@ class KarMCP_Composite_Abilities {
 							),
 						),
 					),
-					'required'   => array( 'title', 'structure' ),
+					// `title` is not listed: it is required to CREATE a post but
+					// meaningless when writing into one that exists, and JSON Schema
+					// cannot say "required unless post_id". execute_build_page()
+					// enforces it for the creation path.
+					'required'   => array( 'structure' ),
 				),
 				'output_schema'       => array(
 					'type'       => 'object',
@@ -163,6 +187,10 @@ class KarMCP_Composite_Abilities {
 						'edit_url'         => array( 'type' => 'string' ),
 						'preview_url'      => array( 'type' => 'string' ),
 						'elements_created' => array( 'type' => 'integer' ),
+						'mode'             => array(
+							'type'        => 'string',
+							'description' => __( 'Present only when writing into an existing post: which mode ran.', 'karmcp' ),
+						),
 						'warnings'         => array(
 							'type'        => 'array',
 							'description' => __( 'Non-fatal notes: nodes that were coerced from shorthand or skipped. If present, some elements did not land exactly as written, fix and rebuild or patch with the layout/widget tools.', 'karmcp' ),
@@ -196,13 +224,25 @@ class KarMCP_Composite_Abilities {
 		$post_type     = sanitize_key( $input['post_type'] ?? 'page' );
 		$page_settings = $input['page_settings'] ?? array();
 		$structure     = $input['structure'] ?? array();
+		$target_id     = absint( $input['post_id'] ?? 0 );
+		$mode          = sanitize_key( $input['mode'] ?? '' );
 
-		if ( empty( $title ) ) {
-			return new \WP_Error( 'missing_title', __( 'The title parameter is required.', 'karmcp' ) );
+		if ( ! $target_id && empty( $title ) ) {
+			return new \WP_Error( 'missing_title', __( 'The title parameter is required when creating a post. Pass post_id instead to write into one that already exists.', 'karmcp' ) );
 		}
 
 		if ( empty( $structure ) || ! is_array( $structure ) ) {
 			return new \WP_Error( 'missing_structure', __( 'The structure parameter is required and must be an array.', 'karmcp' ) );
+		}
+
+		// Validate the target before building anything, so a bad post id or a
+		// missing confirmation costs nothing.
+		if ( $target_id ) {
+			$target_guard = $this->check_build_target( $target_id, $mode, ! empty( $input['confirm'] ) );
+
+			if ( is_wp_error( $target_guard ) ) {
+				return $target_guard;
+			}
 		}
 
 		// build-page emits legacy `container` elements, which only render when
@@ -241,22 +281,40 @@ class KarMCP_Composite_Abilities {
 			);
 		}
 
-		// 2. Create the WordPress post.
-		$post_id = wp_insert_post(
-			array(
-				'post_title'  => $title,
-				'post_status' => $status,
-				'post_type'   => $post_type,
-				'meta_input'  => array(
-					'_elementor_edit_mode'     => 'builder',
-					'_elementor_template_type' => 'wp-' . $post_type,
-				),
-			),
-			true
-		);
+		// 2. Resolve the target post: an existing one, or a new one.
+		if ( $target_id ) {
+			$post_id = $target_id;
+			$title   = (string) get_the_title( $post_id );
 
-		if ( is_wp_error( $post_id ) ) {
-			return $post_id;
+			if ( 'append' === $mode ) {
+				$existing = $this->data->get_page_data( $post_id );
+
+				if ( is_wp_error( $existing ) ) {
+					return $existing;
+				}
+
+				// Reassign the incoming ids: the structure was built fresh, but a
+				// collision with an id already on the page would make Elementor
+				// address two elements as one.
+				$elements = array_merge( $existing, $this->data->reassign_ids( $elements ) );
+			}
+		} else {
+			$post_id = wp_insert_post(
+				array(
+					'post_title'  => $title,
+					'post_status' => $status,
+					'post_type'   => $post_type,
+					'meta_input'  => array(
+						'_elementor_edit_mode'     => 'builder',
+						'_elementor_template_type' => 'wp-' . $post_type,
+					),
+				),
+				true
+			);
+
+			if ( is_wp_error( $post_id ) ) {
+				return $post_id;
+			}
 		}
 
 		// 3. Save the element data.
@@ -281,12 +339,70 @@ class KarMCP_Composite_Abilities {
 			'preview_url'      => $preview_url ? $preview_url : '',
 			'elements_created' => $this->elements_created,
 		);
+		if ( $target_id ) {
+			$out['mode'] = $mode;
+		}
 		// Surface coercions/skips so the caller learns a node didn't land as
 		// written, instead of a silent partial success (cf. the empty-column case).
 		if ( ! empty( $this->warnings ) ) {
 			$out['warnings'] = array_values( array_unique( $this->warnings ) );
 		}
 		return $out;
+	}
+
+	/**
+	 * Validates a build-page target post before anything is built or written.
+	 *
+	 * `mode` is required rather than defaulted because the two answers are not
+	 * variations of one another: guessing "append" would quietly duplicate a
+	 * layout, guessing "replace" would quietly destroy one. Making the caller
+	 * say which keeps that decision out of this function.
+	 *
+	 * @since 1.17.0
+	 *
+	 * @param int    $post_id   The target post ID.
+	 * @param string $mode      Either `append` or `replace`.
+	 * @param bool   $confirmed Whether the caller passed confirm:true.
+	 * @return true|\WP_Error
+	 */
+	private function check_build_target( int $post_id, string $mode, bool $confirmed ) {
+		if ( ! get_post( $post_id ) ) {
+			return new \WP_Error(
+				'post_not_found',
+				sprintf(
+					/* translators: %d: post ID */
+					__( 'Post %d does not exist.', 'karmcp' ),
+					$post_id
+				)
+			);
+		}
+
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return new \WP_Error(
+				'cannot_edit',
+				sprintf(
+					/* translators: %d: post ID */
+					__( 'You do not have permission to edit post %d.', 'karmcp' ),
+					$post_id
+				)
+			);
+		}
+
+		if ( ! in_array( $mode, array( 'append', 'replace' ), true ) ) {
+			return new \WP_Error(
+				'missing_mode',
+				__( 'With post_id, mode is required and must be "append" (add to what the post already has) or "replace" (discard it first).', 'karmcp' )
+			);
+		}
+
+		if ( 'replace' === $mode && ! $confirmed ) {
+			return new \WP_Error(
+				'confirm_required',
+				__( 'mode:replace discards the target post\'s existing Elementor content. Pass confirm:true to proceed, or use mode:append.', 'karmcp' )
+			);
+		}
+
+		return true;
 	}
 
 	// -------------------------------------------------------------------------

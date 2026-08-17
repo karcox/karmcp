@@ -2,6 +2,52 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.17.2]
+
+### Fixed
+
+- **The Login Guard module took the entire REST API down on any site where it was enabled.** Every `/wp-json/` request — core routes, the MCP server, anything — died with `Uncaught TypeError: Cannot access offset of type string on string`, while the front end and wp-admin kept working normally, because nothing on a page load runs the filter that broke.
+
+  `restrict_user_endpoints()` treats each entry of a route in the `rest_endpoints` filter as a handler. It isn't: `WP_REST_Server::register_route()` does `$route_args['namespace'] = $route_namespace` before storing the route, so every route carries a `namespace` **string** alongside its numeric handler entries. Writing a permission callback into that string is fatal. The read on the line before was not the problem — `??` uses isset semantics on an illegal string offset and quietly yields null — it was the write.
+
+  Present since 1.4.0 and **not tied to any version**: any site with the module on is affected, and reinstalling or downgrading the plugin does not clear it, because the module's state lives in the `karmcp_active_modules` option. That combination is what made it look like a deployment problem for a while — the same plugin files were healthy on two other sites that simply had the module off.
+
+  `LoginGuardRestEndpointsTest` reproduces core's real structure, `namespace` key included. Without the guard the test fatals rather than fails, which is deliberate: it reproduces the outage instead of describing it.
+
+## [1.17.1]
+
+### Changed
+
+- **`karmcp_content_allowed_protected_meta` now receives the post type and post id**, so a site can scope its answer instead of authorising a meta key everywhere.
+
+  The filter is the escape hatch for plugin CPTs that keep their entire configuration in protected meta — a JetPopup wrapper is `_settings`, `_styles`, `_content_type`, `_conditions` and `_relation_type`, and without them you get a `jet-popup` post that is not a popup. With no context, the only possible answer was global: allowing `_settings` for one CPT allowed it on every post type, and on reads as well as writes, because both call sites share the filter. `_settings` and `_styles` are unprefixed names that other plugins use too, so the blast radius was considerably wider than the key list suggested. A callback can now answer per post type; existing one-argument callbacks keep working unchanged.
+
+  Worth knowing before using it at all: **duplicate-post already solves this without opening anything.** It copies a working wrapper byte for byte, so the protected meta being written is state a human already approved rather than something an agent composed — which is the guarantee the guard exists to protect. Paired with 1.17.0's `post_id` on build-page, creating a course item is two calls with the guard fully closed: duplicate an existing item, then `build-page` into it with `mode: replace`.
+
+## [1.17.0]
+
+Six findings from building two full courses through MCP on a live site. The first three are the expensive kind: the write returns `success: true`, the data reads back correct, and the rendered page is wrong — so there is nothing to debug from, only a page that looks broken for no visible reason.
+
+### Fixed
+
+- **A post filled by MCP could end up never marked as built with Elementor**, and then Elementor does not enqueue its CSS: the page renders with no containers, no padding, everything stacked in one column and widget templates showing their raw placeholders. For a CPT whose own document class gates on the flag — a JetPopup used as a course module — it renders as an empty strip instead. Opening it in the editor once "fixed" it, which is what made it look like a data problem when the data was always fine.
+
+  `_elementor_edit_mode` **is** `Document::is_built_with_elementor()`, and `Document::save()` never writes it: Elementor only sets it when the editor is opened, when the editor itself saves, from the classic-editor metabox, or when it creates a document. None of that happens on an MCP write. The flag was written here, but from inside the branch that only runs when the native save fails — so the successful path, the normal one, wrote everything except the flag. It is now written on both paths, and because it runs on every Elementor write it also repairs posts an earlier version left unflagged.
+
+  Pages created with create-page, create-popup, create-theme-template and build-page were never affected: those tools seed the flag themselves. Anything reached another way — create-post, or a post that already existed — silently was.
+
+- **CSS classes on a container were stored where Elementor never reads them.** `_css_classes` is the widget spelling; containers, sections and columns read `css_classes`, with no underscore — the prefix is what `Widget_Common` adds when it injects the shared Advanced controls into widgets, not a general convention. Elementor stores whichever key it is handed, so the class read back correctly from `_elementor_data` and simply never reached the HTML, taking every stylesheet rule that hung off it. Either spelling is now accepted for either element type and rewritten to the right one. Atomic (v4) elements are left alone: their classes live in the typed `classes` prop.
+
+- **The background normalizer downgraded an existing gradient to a flat colour.** It injected the missing `classic` activator by looking only at the incoming payload, so an update sending just `background_color` at a container whose stored activator was `gradient` looked background-less, got `classic` written over it, and lost the gradient — an ajuste the caller never mentioned. The activator is now decided after the merge, on the element's real settings.
+
+### Added
+
+- **`null` in an update-element or page-settings payload now deletes the key** instead of storing a literal null. Settings were merged, so a setting could only be overwritten, never removed: undoing one meant guessing the value that neutralises that particular control — `{url:'',id:'',size:''}` for an image, `{size:0}` for an overlay's opacity, `''` for a filter — and guessing wrong left it in place without saying so. Deletions resolve after the key rewrites, so removing an aliased key (`justify_content`, `_css_classes`) removes the one actually stored.
+
+- **`strip_media` on apply-template**, which inserts a template block without the source's imagery: background images and their responsive overrides, background overlays, widget images, image filters, and any global bound to those keys. A stylesheet cannot undo them — an element's own `background-image` outranks any rule aimed at it — so re-skinning a copied block meant clearing it element by element. Off by default; the copy stays verbatim. Classic elements only.
+
+- **`post_id` on build-page**, with `mode: append | replace`, to write a structure into a post that already exists. Building a course item used to take build-page into a scratch page, save-as-template, apply-template, and a manual delete — leaving orphan pages behind whenever something failed halfway. The post type now comes from the target, so build-page reaches CPTs it cannot create. `mode` is required rather than defaulted, because guessing "append" duplicates a layout and guessing "replace" destroys one, and `replace` additionally requires `confirm: true`. Permission is checked against `edit_post` on the target, not the page-creation caps.
+
 ## [1.16.4]
 
 ### Fixed

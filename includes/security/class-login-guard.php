@@ -258,6 +258,24 @@ class KarMCP_Login_Guard {
 				continue;
 			}
 			foreach ( $endpoints[ $route ] as $i => $handler ) {
+				// A route's entry is NOT purely a list of handlers.
+				// `WP_REST_Server::register_route()` does
+				// `$route_args['namespace'] = $route_namespace` before storing it,
+				// so every route also carries a `namespace` string alongside its
+				// numeric handler entries. Treating that string as a handler and
+				// writing a permission callback into it is a fatal TypeError —
+				// "Cannot access offset of type string on string" — and it takes
+				// the whole REST API down with it, `/wp-json/` included, on every
+				// request, while the front end keeps rendering perfectly because
+				// nothing there runs this filter.
+				//
+				// The read on the next line would not have caught it either:
+				// `??` uses isset semantics on an illegal string offset and
+				// quietly yields null. It is the write that throws.
+				if ( ! is_array( $handler ) ) {
+					continue;
+				}
+
 				$existing = $handler['permission_callback'] ?? null;
 
 				$endpoints[ $route ][ $i ]['permission_callback'] = static function ( $request ) use ( $existing ) {

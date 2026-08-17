@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.16.4
+Stable tag: 1.17.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,23 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.17.2 =
+
+* Fixed: with the Login Guard module enabled, every REST API request failed with a fatal error — core routes and the MCP server alike — while the front end and the admin kept working, which made it very hard to place. The module's user-enumeration hardening treated the route namespace that WordPress stores alongside each route's handlers as if it were a handler. Present since 1.4.0 and unrelated to the plugin version: downgrading did not clear it, because the module's state lives in an option. **If you use Login Guard, upgrade to this version.**
+
+= 1.17.1 =
+
+* Changed: the filter that lets a site authorise MCP to touch protected meta now receives the post type and post id, so the authorisation can be narrowed to the one custom post type that needs it instead of applying everywhere. Existing filter callbacks keep working. Note that duplicate-post already covers the common case — copying a working plugin CPT wrapper — without opening the guard at all.
+
+= 1.17.0 =
+
+* Fixed: a post filled through MCP could end up never marked as built with Elementor, and then Elementor does not enqueue its CSS — the page renders with no containers, no padding and widget placeholders showing, or as an empty strip for a popup. Opening it in the editor once appeared to fix it. The flag is now written on every Elementor write, which also repairs posts left unflagged by an earlier version.
+* Fixed: CSS classes set on a container were stored under the widget spelling (`_css_classes`) and never reached the HTML, silently killing every stylesheet rule that depended on them. Either spelling is now accepted and rewritten to the one the element type actually reads.
+* Fixed: updating only the colours of a container that had a gradient background downgraded it to a flat colour, without being asked to. The background activator is now decided from the element's real settings instead of from the incoming payload.
+* Added: `null` in an update-element or page-settings payload deletes the key instead of storing a null, so a setting can finally be removed rather than neutralised by guesswork.
+* Added: `strip_media` on apply-template inserts a template block without the source's background images, overlays, widget images and image filters — the parts CSS cannot override.
+* Added: `post_id` with `mode: append | replace` on build-page writes a structure into an existing post of any type, replacing the three-call detour that left orphan scratch pages behind. `replace` requires `confirm: true`.
 
 = 1.16.4 =
 

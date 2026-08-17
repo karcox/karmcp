@@ -368,6 +368,53 @@ class KarMCP_Content_Abilities {
 		return array( 'karmcp_skill', 'karmcp_php_snippet', 'karmcp_widget', 'karmcp_theme_tpl', 'karmcp_theme_php', 'karmcp_kit_backup' );
 	}
 
+	/**
+	 * The protected meta keys a site has authorised MCP to touch, for this post.
+	 *
+	 * Plugin CPTs keep their whole configuration in protected meta — a JetPopup
+	 * wrapper is `_settings`, `_styles`, `_content_type`, `_conditions` and
+	 * `_relation_type`, and without them you get a `jet-popup` post that is not a
+	 * popup. The guard is right to refuse agent-authored writes there, so the
+	 * escape hatch is a site-owner decision, taken in PHP.
+	 *
+	 * The post type and id are passed so that decision can be narrow. Without
+	 * them the only possible answer was global: allowing `_settings` for one CPT
+	 * allowed it everywhere, on every post type, for reads as well as writes —
+	 * and `_settings` and `_styles` are unprefixed names that several plugins
+	 * use, so the blast radius was much wider than the key list suggests. A
+	 * callback can now say "these five keys, on jet-popup only":
+	 *
+	 *     add_filter( 'karmcp_content_allowed_protected_meta', function ( $keys, $post_type ) {
+	 *         return 'jet-popup' === $post_type
+	 *             ? array( '_settings', '_styles', '_content_type', '_conditions', '_relation_type' )
+	 *             : $keys;
+	 *     }, 10, 2 );
+	 *
+	 * Before reaching for it: duplicate-post copies a working wrapper without
+	 * opening anything, because the meta it writes is a byte-for-byte copy of
+	 * state a human already approved rather than something an agent composed.
+	 * With build-page's `post_id`, that is the whole job in two calls.
+	 *
+	 * @since 1.17.1
+	 *
+	 * @param string $post_type The post type in play. Empty when unknown.
+	 * @param int    $post_id   The post in play, 0 when creating.
+	 * @return string[] Meta keys exempt from the guard.
+	 */
+	private function allowed_protected_meta( string $post_type = '', int $post_id = 0 ): array {
+		/**
+		 * Filters the protected meta keys MCP tools may read and write.
+		 *
+		 * @since 1.1.0
+		 * @since 1.17.1 Added the `$post_type` and `$post_id` context arguments.
+		 *
+		 * @param string[] $keys      Allowed protected meta keys. Empty by default.
+		 * @param string   $post_type The post type in play. Empty when unknown.
+		 * @param int      $post_id   The post in play, 0 when creating.
+		 */
+		return (array) apply_filters( 'karmcp_content_allowed_protected_meta', array(), $post_type, $post_id );
+	}
+
 	/** Whether a post type may be written to. */
 	private function is_writable_post_type( string $post_type ): bool {
 		if ( '' === $post_type || ! post_type_exists( $post_type ) ) {
@@ -379,11 +426,13 @@ class KarMCP_Content_Abilities {
 	/**
 	 * Validate a meta map against the protected-meta guard.
 	 *
-	 * @param array $meta
+	 * @param array  $meta      The meta map the caller wants written.
+	 * @param string $post_type The post type being written.
+	 * @param int    $post_id   The post being written, 0 when creating.
 	 * @return true|\WP_Error
 	 */
-	private function reject_protected_meta( array $meta ) {
-		$allowed = (array) apply_filters( 'karmcp_content_allowed_protected_meta', array() );
+	private function reject_protected_meta( array $meta, string $post_type = '', int $post_id = 0 ) {
+		$allowed = (array) $this->allowed_protected_meta( $post_type, $post_id );
 		foreach ( array_keys( $meta ) as $key ) {
 			$key = (string) $key;
 			if ( in_array( $key, $allowed, true ) ) {
@@ -554,7 +603,7 @@ class KarMCP_Content_Abilities {
 		}
 
 		if ( isset( $input['meta'] ) && is_array( $input['meta'] ) ) {
-			$guard = $this->reject_protected_meta( $input['meta'] );
+			$guard = $this->reject_protected_meta( $input['meta'], $post_type );
 			if ( is_wp_error( $guard ) ) {
 				return $guard;
 			}
@@ -708,7 +757,7 @@ class KarMCP_Content_Abilities {
 		$meta_raw = get_post_meta( $post_id );
 		$meta     = array();
 		if ( is_array( $meta_raw ) ) {
-			$allowed = (array) apply_filters( 'karmcp_content_allowed_protected_meta', array() );
+			$allowed = $this->allowed_protected_meta( (string) $post->post_type, $post_id );
 			foreach ( $meta_raw as $key => $vals ) {
 				$key = (string) $key;
 				if ( ! in_array( $key, $allowed, true ) && ( '_' === substr( $key, 0, 1 ) || is_protected_meta( $key, 'post' ) ) ) {
@@ -817,7 +866,7 @@ class KarMCP_Content_Abilities {
 		}
 
 		if ( isset( $input['meta'] ) && is_array( $input['meta'] ) ) {
-			$guard = $this->reject_protected_meta( $input['meta'] );
+			$guard = $this->reject_protected_meta( $input['meta'], (string) get_post_type( $post_id ), $post_id );
 			if ( is_wp_error( $guard ) ) {
 				return $guard;
 			}

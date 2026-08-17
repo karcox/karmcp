@@ -385,13 +385,6 @@ class KarMCP_Data {
 
 			update_post_meta( $post_id, '_elementor_data', wp_slash( $json ) );
 
-			// Ensure Elementor meta flags are set.
-			update_post_meta( $post_id, '_elementor_edit_mode', 'builder' );
-
-			if ( defined( 'ELEMENTOR_VERSION' ) ) {
-				update_post_meta( $post_id, '_elementor_version', ELEMENTOR_VERSION );
-			}
-
 			// Invalidate Elementor CSS cache so it regenerates on next page view.
 			delete_post_meta( $post_id, '_elementor_css' );
 
@@ -407,6 +400,13 @@ class KarMCP_Data {
 				wp_delete_file( $css_path );
 			}
 		}
+
+		// Mark the post as built with Elementor on BOTH paths, not just the
+		// fallback. This block used to live inside the branch above, which read
+		// as safe — surely a successful native save sets its own flag — and is
+		// not: Document::save() never writes `_elementor_edit_mode`. See
+		// mark_built_with_elementor() for who does.
+		self::mark_built_with_elementor( $post_id );
 
 		// Record the edit to the unified change ledger (skipped during rollback).
 		if ( class_exists( 'KarMCP_Change_Log' ) && ! KarMCP_Change_Log::$suppress ) {
@@ -440,6 +440,41 @@ class KarMCP_Data {
 	}
 
 	/**
+	 * Flags a post as built with Elementor, so Elementor treats it as its own.
+	 *
+	 * `_elementor_edit_mode` IS `Document::is_built_with_elementor()`, and that
+	 * gates whether Elementor enqueues the post's generated CSS and whether a
+	 * document renders its builder content at all. Without it a post whose
+	 * `_elementor_data` is perfectly correct renders raw — no containers, no
+	 * padding, widget templates unresolved — or, for a CPT whose own document
+	 * class gates on the flag, renders nothing.
+	 *
+	 * KarMCP has to write it because Elementor does not: `Document::save()`
+	 * never touches this meta. `set_is_built_with_elementor()` is only reached
+	 * by opening the editor, the editor's own save, the classic-editor metabox
+	 * and document creation — none of which happen on an MCP write. Posts built
+	 * through create-page / create-popup / create-theme-template / build-page
+	 * looked fine only because those tools seed the flag themselves at creation;
+	 * anything reached another way (create-post, or a post that already existed)
+	 * silently did not.
+	 *
+	 * Idempotent, and called on every Elementor write, so it also repairs posts
+	 * an earlier version left unflagged.
+	 *
+	 * @since 1.17.0
+	 *
+	 * @param int $post_id The post ID being written.
+	 * @return void
+	 */
+	public static function mark_built_with_elementor( int $post_id ): void {
+		update_post_meta( $post_id, '_elementor_edit_mode', 'builder' );
+
+		if ( defined( 'ELEMENTOR_VERSION' ) ) {
+			update_post_meta( $post_id, '_elementor_version', ELEMENTOR_VERSION );
+		}
+	}
+
+	/**
 	 * Saves page-level settings.
 	 *
 	 * Tries native Elementor save first, falls back to direct meta for
@@ -458,20 +493,39 @@ class KarMCP_Data {
 			return $document;
 		}
 
+		$existing = get_post_meta( $post_id, '_elementor_page_settings', true );
+		if ( ! is_array( $existing ) ) {
+			$existing = array();
+		}
+
+		// Same `null`-deletes convention as update-element. The markers are
+		// resolved before the save so Elementor is never handed a literal null
+		// (which it stores as a set-but-empty control), and re-applied after it
+		// because the native save rebuilds page settings from its own model and
+		// would put a removed key straight back.
+		$deleting = array_keys( array_filter( $settings, 'is_null' ) );
+		$settings = self::strip_null_deletions( $existing, $settings );
+
 		$result = $document->save( array( 'settings' => $settings ) );
 
 		if ( ! $result ) {
 			// Fallback: merge settings into existing page settings meta.
-			$existing = get_post_meta( $post_id, '_elementor_page_settings', true );
-			if ( ! is_array( $existing ) ) {
-				$existing = array();
-			}
-
 			$merged = array_merge( $existing, $settings );
 			update_post_meta( $post_id, '_elementor_page_settings', $merged );
 
 			// Invalidate CSS cache.
 			delete_post_meta( $post_id, '_elementor_css' );
+		}
+
+		if ( $deleting ) {
+			$stored = get_post_meta( $post_id, '_elementor_page_settings', true );
+			if ( is_array( $stored ) ) {
+				foreach ( $deleting as $deleted_key ) {
+					unset( $stored[ $deleted_key ] );
+				}
+				update_post_meta( $post_id, '_elementor_page_settings', $stored );
+				delete_post_meta( $post_id, '_elementor_css' );
+			}
 		}
 
 		return true;
@@ -552,6 +606,94 @@ class KarMCP_Data {
 	}
 
 	/**
+	 * Settings that carry a template's own imagery, and therefore its identity.
+	 *
+	 * Copying a block from a house template drags these along: the photo behind
+	 * the hero, the dark overlay over it, the stock shots in the cards, the
+	 * filters on them. A stylesheet cannot undo it — an element's own
+	 * `background-image` beats any rule aimed at the same element — so a
+	 * white-label build ends up wearing the house's clothes unless the keys
+	 * themselves go.
+	 *
+	 * @since 1.17.0
+	 *
+	 * @var string[]
+	 */
+	private const MEDIA_SETTING_KEYS = array(
+		'background_image',
+		'background_overlay_background',
+		'background_overlay_image',
+		'background_overlay_color',
+		'background_overlay_opacity',
+		'image',
+		'image_css_filter_css_filter',
+	);
+
+	/**
+	 * Recursively removes the media settings above from an element tree.
+	 *
+	 * Removes rather than blanks: a blanked control is still a set control, and
+	 * `{url:'',id:''}` is exactly the guesswork this is meant to end. Also clears
+	 * each key's responsive overrides — a tablet-only background would otherwise
+	 * survive and reappear at one breakpoint — and any `__globals__` binding for
+	 * the same key, which would keep painting on its own.
+	 *
+	 * Classic elements only. Atomic (v4) elements keep their background in the
+	 * typed `styles` map, which this does not walk.
+	 *
+	 * @since 1.17.0
+	 *
+	 * @param array $elements The element tree.
+	 * @param int   $removed  Receives the number of settings actually removed.
+	 * @return array The tree with media settings stripped.
+	 */
+	public function strip_media( array $elements, int &$removed ): array {
+		foreach ( $elements as &$element ) {
+			if ( isset( $element['settings'] ) && is_array( $element['settings'] ) ) {
+				$element['settings'] = self::strip_media_settings( $element['settings'], $removed );
+			}
+
+			if ( ! empty( $element['elements'] ) && is_array( $element['elements'] ) ) {
+				$element['elements'] = $this->strip_media( $element['elements'], $removed );
+			}
+		}
+		unset( $element );
+
+		return $elements;
+	}
+
+	/**
+	 * Strips the media keys from one element's settings.
+	 *
+	 * @since 1.17.0
+	 *
+	 * @param array $settings The element settings.
+	 * @param int   $removed  Running count of removed settings.
+	 * @return array The settings without media keys.
+	 */
+	private static function strip_media_settings( array $settings, int &$removed ): array {
+		$suffixes = array( '', '_widescreen', '_laptop', '_tablet_extra', '_tablet', '_mobile_extra', '_mobile' );
+
+		foreach ( self::MEDIA_SETTING_KEYS as $base ) {
+			foreach ( $suffixes as $suffix ) {
+				$key = $base . $suffix;
+
+				if ( array_key_exists( $key, $settings ) ) {
+					unset( $settings[ $key ] );
+					++$removed;
+				}
+
+				if ( isset( $settings['__globals__'][ $key ] ) ) {
+					unset( $settings['__globals__'][ $key ] );
+					++$removed;
+				}
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
 	 * Recursively reassigns fresh IDs to all elements in a tree.
 	 *
 	 * @since 1.0.0
@@ -615,6 +757,30 @@ class KarMCP_Data {
 	}
 
 	/**
+	 * Resolves the `null`-means-delete convention against a settings array.
+	 *
+	 * Every key the caller sent as `null` is removed from the existing settings
+	 * and dropped from the incoming ones, so the subsequent merge neither
+	 * restores the old value nor writes a literal `null` (which Elementor stores
+	 * happily and then reads as a set-but-empty control).
+	 *
+	 * @since 1.17.0
+	 *
+	 * @param array $existing The element's current settings, modified in place.
+	 * @param array $incoming The settings the caller sent.
+	 * @return array The incoming settings with the deletion markers removed.
+	 */
+	private static function strip_null_deletions( array &$existing, array $incoming ): array {
+		foreach ( $incoming as $key => $value ) {
+			if ( null === $value ) {
+				unset( $existing[ $key ], $incoming[ $key ] );
+			}
+		}
+
+		return $incoming;
+	}
+
+	/**
 	 * Updates settings for a specific element in the tree.
 	 *
 	 * Modifies `$data` by reference. Returns true if element was found
@@ -661,20 +827,53 @@ class KarMCP_Data {
 					}
 				}
 
-				// Containers: rewrite MCP shorthand keys (`justify_content`,
-				// `align_items`, `align_content`) to Elementor's prefixed flex
-				// keys before merging. Without this, the values are saved
-				// but never read by Elementor's CSS generator (issue #32).
-				if ( 'container' === ( $item['elType'] ?? '' ) ) {
-					$settings = KarMCP_Element_Factory::normalize_container_settings( $settings );
-				} else {
-					// Widgets/other elTypes: flatten the same background shorthand
-					// so an update-time background applies (containers already
-					// covered by normalize_container_settings above).
-					$settings = KarMCP_Element_Factory::normalize_background_settings( $settings );
+				$el_type     = (string) ( $item['elType'] ?? '' );
+				$widget_type = (string) ( $item['widgetType'] ?? '' );
+
+				// v4 atomic elements keep their classes in the typed `classes`
+				// prop and their background in the `styles` map, so none of the
+				// classic key rewriting below describes them. Running it there
+				// would invent keys, not repair them.
+				$is_atomic = ( 0 === strpos( $el_type, 'e-' ) )
+					|| ( '' !== $widget_type
+						&& class_exists( 'KarMCP_Atomic_Widget_Map' )
+						&& KarMCP_Atomic_Widget_Map::is_atomic( $widget_type ) );
+
+				if ( ! $is_atomic ) {
+					// Containers: rewrite MCP shorthand keys (`justify_content`,
+					// `align_items`, `align_content`) to Elementor's prefixed flex
+					// keys before merging. Without this, the values are saved
+					// but never read by Elementor's CSS generator (issue #32).
+					if ( 'container' === $el_type ) {
+						$settings = KarMCP_Element_Factory::normalize_container_settings( $settings );
+					} else {
+						// Widgets/other elTypes: rewrite the CSS-class key for this
+						// element type and flatten the same background shorthand so
+						// an update-time background applies (containers already
+						// covered by normalize_container_settings above).
+						$settings = KarMCP_Element_Factory::normalize_css_classes_key( $el_type, $settings );
+						$settings = KarMCP_Element_Factory::normalize_background_settings( $settings );
+					}
 				}
 
+				// An incoming `null` means "remove this key", not "store a null".
+				// A merge can only add or overwrite, so without this there is no
+				// way to undo a setting: the caller has to guess the value that
+				// neutralises each control — `{url:'',id:'',size:''}` for an
+				// image, `{size:0}` for an overlay's opacity, `''` for a filter —
+				// and guessing wrong leaves the setting in place without saying so.
+				// Runs after the rewrites above so deleting an aliased key
+				// (`justify_content`, `_css_classes`) removes the key actually stored.
+				$settings = self::strip_null_deletions( $item['settings'], $settings );
+
 				$item['settings'] = array_merge( $item['settings'], $settings );
+
+				if ( ! $is_atomic ) {
+					// Only now are the element's true, complete settings known,
+					// which is the earliest point the background activator can be
+					// decided without destroying one that was already set.
+					$item['settings'] = KarMCP_Element_Factory::apply_background_activator( $item['settings'] );
+				}
 
 				// v4 atomic: props are typed, and a raw value like `'Hello'`
 				// instead of `{$$type:'html-v3',…}` is not merely ignored, it

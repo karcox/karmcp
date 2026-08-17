@@ -263,6 +263,10 @@ class KarMCP_Template_Abilities {
 							'type'        => 'integer',
 							'description' => __( 'Insert position. -1 = append.', 'karmcp' ),
 						),
+						'strip_media' => array(
+							'type'        => 'boolean',
+							'description' => __( 'Insert the block without the template\'s own imagery: background images and their responsive overrides, background overlays, widget images and image filters are dropped from every element copied. Use it when the block is a layout you want and the pictures are the previous brand\'s — CSS cannot override an element\'s own background-image, so otherwise they have to be cleared one element at a time. Off by default; the copy is verbatim as before. Classic elements only: atomic (v4) elements keep their background in the typed styles map, which this does not touch.', 'karmcp' ),
+						),
 					),
 					'required'   => array( 'post_id', 'template_id' ),
 				),
@@ -271,6 +275,10 @@ class KarMCP_Template_Abilities {
 					'properties' => array(
 						'success'        => array( 'type' => 'boolean' ),
 						'elements_added' => array( 'type' => 'integer' ),
+						'media_removed'  => array(
+							'type'        => 'integer',
+							'description' => __( 'With strip_media, how many media settings were actually removed. Zero means the template carried none.', 'karmcp' ),
+						),
 					),
 				),
 				'meta'                => array(
@@ -325,6 +333,12 @@ class KarMCP_Template_Abilities {
 		$template_data = $this->data->reassign_ids( $template_data );
 		$count         = $this->data->count_elements( $template_data );
 
+		// Optionally drop the source template's own imagery before inserting.
+		$media_removed = 0;
+		if ( ! empty( $input['strip_media'] ) ) {
+			$template_data = $this->data->strip_media( $template_data, $media_removed );
+		}
+
 		// Insert template elements.
 		if ( ! empty( $parent_id ) ) {
 			// Insert each template element into the parent.
@@ -358,10 +372,14 @@ class KarMCP_Template_Abilities {
 			return $result;
 		}
 
-		return array(
+		$out = array(
 			'success'        => true,
 			'elements_added' => $count,
 		);
+		if ( ! empty( $input['strip_media'] ) ) {
+			$out['media_removed'] = $media_removed;
+		}
+		return $out;
 	}
 
 	// ── Phase 6: Theme Builder Template Tools ─────────────────────────

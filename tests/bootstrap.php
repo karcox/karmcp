@@ -435,6 +435,21 @@ function get_post( $post_id ) {
 	return $GLOBALS['karmcp_test']['posts'][ (int) $post_id ] ?? null;
 }
 
+if ( ! function_exists( 'is_user_logged_in' ) ) {
+	// Defaults to false: the interesting paths are the ones an anonymous caller
+	// reaches. Set $GLOBALS['karmcp_test']['logged_in'] to flip it.
+	function is_user_logged_in(): bool {
+		return (bool) ( $GLOBALS['karmcp_test']['logged_in'] ?? false );
+	}
+}
+
+if ( ! function_exists( 'is_protected_meta' ) ) {
+	// Core's rule, minus the filter: a leading underscore means protected.
+	function is_protected_meta( $meta_key, $meta_type = '' ): bool {
+		return '_' === substr( (string) $meta_key, 0, 1 );
+	}
+}
+
 if ( ! function_exists( 'get_post_type' ) ) {
 	// Derived from the same ['posts'] fixture get_post() serves.
 	function get_post_type( $post = null ) {

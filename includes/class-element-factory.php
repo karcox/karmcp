@@ -27,7 +27,7 @@ class KarMCP_Element_Factory {
 	 * @return array The container element structure.
 	 */
 	public function create_container( array $settings = array(), array $children = array() ): array {
-		$settings = self::normalize_container_settings( $settings );
+		$settings = self::apply_background_activator( self::normalize_container_settings( $settings ) );
 
 		$defaults = array(
 			'container_type' => 'flex',
@@ -73,7 +73,7 @@ class KarMCP_Element_Factory {
 			'elType'     => 'widget',
 			'widgetType' => $widget_type,
 			'isInner'    => false,
-			'settings'   => self::normalize_background_settings( $settings ),
+			'settings'   => self::apply_background_activator( self::normalize_background_settings( $settings ) ),
 			'elements'   => array(),
 		);
 	}
@@ -166,7 +166,57 @@ class KarMCP_Element_Factory {
 			unset( $settings[ $shorthand ] );
 		}
 
+		$settings = self::normalize_css_classes_key( 'container', $settings );
+
 		return self::normalize_background_settings( $settings );
+	}
+
+	/**
+	 * Rewrites the CSS-class key to the one the target element type actually
+	 * reads, in whichever direction is needed.
+	 *
+	 * Widgets read `_css_classes`; every other classic element type — container,
+	 * section, column — reads `css_classes`, with no leading underscore. The
+	 * underscore is not a naming convention, it is the prefix `Widget_Common`
+	 * adds when it injects the shared Advanced controls into widgets; elements
+	 * declare their own, unprefixed. Verified against a live Elementor 4.2.2
+	 * container schema: it exposes `css_classes` and no `_css_classes` (while
+	 * still exposing `_element_id`, which is why guessing from a sibling key
+	 * gets it wrong).
+	 *
+	 * Sending the wrong one is silent: Elementor stores any key it is handed, so
+	 * the class reads back correctly from `_elementor_data` and simply never
+	 * reaches the HTML — and every stylesheet rule hanging off that class dies
+	 * with it. Same class of bug as the flex shorthand above (issue #32).
+	 *
+	 * Atomic (v4) elements are NOT covered here and must not be passed through
+	 * this: their classes live in the typed `classes` prop, and renaming
+	 * anything there would corrupt the element.
+	 *
+	 * @since 1.17.0
+	 *
+	 * @param string $el_type  The element's `elType` (`widget`, `container`, …).
+	 * @param array  $settings Raw element settings.
+	 * @return array Settings with the CSS-class key rewritten for this element type.
+	 */
+	public static function normalize_css_classes_key( string $el_type, array $settings ): array {
+		$is_widget = ( 'widget' === $el_type );
+		$target    = $is_widget ? '_css_classes' : 'css_classes';
+		$source    = $is_widget ? 'css_classes' : '_css_classes';
+
+		if ( ! array_key_exists( $source, $settings ) ) {
+			return $settings;
+		}
+
+		// A caller-supplied correct key wins; the wrong one is dropped either way
+		// so it cannot linger as a decoy in the saved data.
+		if ( ! array_key_exists( $target, $settings ) ) {
+			$settings[ $target ] = $settings[ $source ];
+		}
+
+		unset( $settings[ $source ] );
+
+		return $settings;
 	}
 
 	/**
@@ -180,9 +230,10 @@ class KarMCP_Element_Factory {
 	 *  2. `background_image` given as an array of `{ id, url }` objects (the
 	 *     model mirrors media-repeater shape) is unwrapped to the single
 	 *     `{ id, url }` object the control expects.
-	 *  3. When an image or colour is present but the `background_background`
-	 *     activator is missing, it is set to `classic` — without the activator
-	 *     Elementor never renders the background at all.
+	 *
+	 * This reshapes the payload only. Injecting the missing `background_background`
+	 * activator is a separate step — see apply_background_activator() — because it
+	 * is the one decision here that cannot be made from the payload alone.
 	 *
 	 * Idempotent and non-destructive: caller-supplied flat keys always win over
 	 * anything lifted out of the nested group, and settings with no background
@@ -223,8 +274,36 @@ class KarMCP_Element_Factory {
 			$settings['background_image'] = $settings['background_image'][0];
 		}
 
-		// 3. Inject the `classic` activator when a background exists without one.
+		return $settings;
+	}
+
+	/**
+	 * Injects the `classic` background activator when a background exists
+	 * without one — without an activator Elementor renders no background at all.
+	 *
+	 * Run this on the FINAL settings of an element, never on an incoming partial
+	 * payload. The activator says which *kind* of background is active, so
+	 * deciding it from the payload alone silently destroys a setting that was
+	 * already right: an update sending only `background_color` at a container
+	 * whose stored `background_background` is `gradient` looks background-less
+	 * to a payload-only check, gets `classic` injected, and the gradient
+	 * collapses to a flat colour — an ajuste the caller never mentioned.
+	 *
+	 * On a creation path "final" and "incoming" are the same thing, so calling
+	 * it there is the same as before; on an update it must run after the merge
+	 * with the element's existing settings.
+	 *
+	 * Idempotent: an activator that is already set is never overwritten, and
+	 * settings with no background pass through untouched.
+	 *
+	 * @since 1.17.0
+	 *
+	 * @param array $settings The element's complete settings.
+	 * @return array Settings with the activator injected when it was missing.
+	 */
+	public static function apply_background_activator( array $settings ): array {
 		$has_bg = ( ! empty( $settings['background_image'] ) || ! empty( $settings['background_color'] ) );
+
 		if ( $has_bg && empty( $settings['background_background'] ) ) {
 			$settings['background_background'] = 'classic';
 		}

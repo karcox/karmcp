@@ -79,6 +79,98 @@ class KarMCP_Block_Tree {
 	}
 
 	/**
+	 * Why a position cannot be used, or null when it can.
+	 *
+	 * The mutators below are TOTAL: handed a path that doesn't resolve they
+	 * return the tree untouched rather than erroring. That is the right shape
+	 * for a pure transform and the wrong thing to report to a caller — the save
+	 * still succeeds, so a tool that doesn't check first answers "added" for a
+	 * block it never inserted. Every caller runs this first, and the silence
+	 * becomes a message.
+	 *
+	 * @since 1.16.2
+	 *
+	 * @param array $blocks   Tree.
+	 * @param array $position { mode, path? }.
+	 * @return string|null Reason, or null when the position resolves.
+	 */
+	public static function position_error( array $blocks, array $position ): ?string {
+		$mode = isset( $position['mode'] ) ? (string) $position['mode'] : 'append';
+		$path = ( isset( $position['path'] ) && is_array( $position['path'] ) ) ? array_map( 'intval', $position['path'] ) : array();
+
+		if ( in_array( $mode, array( 'append', 'prepend' ), true ) ) {
+			return null;
+		}
+		if ( ! in_array( $mode, array( 'before', 'after', 'inside' ), true ) ) {
+			return sprintf(
+				/* translators: %s: the position.mode value the caller sent */
+				__( 'Unknown position.mode "%s". Use append, prepend, before, after or inside.', 'karmcp' ),
+				$mode
+			);
+		}
+		if ( ! $path ) {
+			return sprintf(
+				/* translators: %s: the position.mode value the caller sent */
+				__( 'position.mode "%s" needs position.path. Call get-post-blocks for the path.', 'karmcp' ),
+				$mode
+			);
+		}
+		if ( null === self::at( $blocks, $path ) ) {
+			return sprintf(
+				/* translators: %s: the index path, e.g. 2,1 */
+				__( 'position.path [%s] does not resolve to a block. Call get-post-blocks first.', 'karmcp' ),
+				implode( ',', $path )
+			);
+		}
+		return null;
+	}
+
+	/**
+	 * Why a move cannot be performed, or null when it can.
+	 *
+	 * Covers the two cases move() itself declines silently — a move onto the
+	 * node's own position, and a target inside the subtree being moved (which
+	 * would remove the node and then fail to re-insert it) — on top of the
+	 * position checks both paths need.
+	 *
+	 * @since 1.16.2
+	 *
+	 * @param array $blocks   Tree.
+	 * @param int[] $from     Source path.
+	 * @param array $position { mode, path? } target.
+	 * @return string|null Reason, or null when the move resolves.
+	 */
+	public static function move_error( array $blocks, array $from, array $position ): ?string {
+		$from = array_map( 'intval', $from );
+		if ( ! $from || null === self::at( $blocks, $from ) ) {
+			return sprintf(
+				/* translators: %s: the index path, e.g. 2,1 */
+				__( 'path [%s] does not resolve to a block. Call get-post-blocks first.', 'karmcp' ),
+				implode( ',', $from )
+			);
+		}
+
+		$err = self::position_error( $blocks, $position );
+		if ( null !== $err ) {
+			return $err;
+		}
+
+		$mode = isset( $position['mode'] ) ? (string) $position['mode'] : 'append';
+		$to   = ( isset( $position['path'] ) && is_array( $position['path'] ) ) ? array_map( 'intval', $position['path'] ) : array();
+
+		if ( in_array( $mode, array( 'before', 'after' ), true ) && $from === $to ) {
+			return __( 'The block is already at that position; the move would change nothing.', 'karmcp' );
+		}
+
+		$depth = count( $from );
+		if ( count( $to ) >= $depth && array_slice( $to, 0, $depth ) === $from ) {
+			return __( 'The target position is inside the block being moved. Pick a target outside its own subtree.', 'karmcp' );
+		}
+
+		return null;
+	}
+
+	/**
 	 * Insert one or more blocks at a position.
 	 *
 	 * @param array  $blocks    Tree.

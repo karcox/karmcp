@@ -51,9 +51,11 @@ class KarMCP_Plugin {
 	/**
 	 * The ability registrar.
 	 *
-	 * @var KarMCP_Ability_Registrar
+	 * Built lazily by registrar(); null until something first asks for a tool.
+	 *
+	 * @var KarMCP_Ability_Registrar|null
 	 */
-	private $registrar;
+	private $registrar = null;
 
 	/** @var float|null MCP request start time (for the request log). */
 	private $mcp_req_start = null;
@@ -111,8 +113,9 @@ class KarMCP_Plugin {
 		$this->data             = new KarMCP_Data();
 		$this->factory          = new KarMCP_Element_Factory();
 		$this->schema_generator = new KarMCP_Schema_Generator();
-		$validator              = new KarMCP_Settings_Validator( $this->schema_generator );
-		$this->registrar        = new KarMCP_Ability_Registrar( $this->data, $this->factory, $this->schema_generator, $validator );
+		// The registrar is built on first use, not here: it lives among the tool
+		// classes, which no longer load on a request that never asks for a tool.
+		// See KarMCP_Bootstrap::load_ability_classes().
 
 		// Admin settings page.
 		if ( is_admin() && class_exists( 'KarMCP_Admin' ) ) {
@@ -275,7 +278,28 @@ class KarMCP_Plugin {
 	 * @since 1.0.0
 	 */
 	public function register_abilities(): void {
-		$this->ability_names = $this->registrar->register_all( KarMCP_Bootstrap::elementor_active() );
+		$this->ability_names = $this->registrar()->register_all( KarMCP_Bootstrap::elementor_active() );
+	}
+
+	/**
+	 * The ability registrar, built on first use.
+	 *
+	 * This is the seam the deferred tool-class load hangs on: the registrar and
+	 * every class it registers are required here, at the moment something first
+	 * asks for a tool, instead of on every request. A front-end page view that
+	 * never reaches a tool never parses any of it.
+	 *
+	 * @since 1.16.2
+	 *
+	 * @return KarMCP_Ability_Registrar
+	 */
+	private function registrar(): KarMCP_Ability_Registrar {
+		if ( null === $this->registrar ) {
+			KarMCP_Bootstrap::load_ability_classes();
+			$validator       = new KarMCP_Settings_Validator( $this->schema_generator );
+			$this->registrar = new KarMCP_Ability_Registrar( $this->data, $this->factory, $this->schema_generator, $validator );
+		}
+		return $this->registrar;
 	}
 
 	/**

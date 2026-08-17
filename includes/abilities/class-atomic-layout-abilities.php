@@ -304,7 +304,12 @@ class KarMCP_Atomic_Layout_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => function () {
 					$core_version = defined( 'ELEMENTOR_VERSION' ) ? ELEMENTOR_VERSION : 'unknown';
-					$pro_version  = defined( 'ELEMENTOR_PRO_VERSION' ) ? ELEMENTOR_PRO_VERSION : null;
+					// Empty string, not null, when Pro is absent: the output schema
+					// below declares this a string, and a strict client validating
+					// against it rejects the whole response — so the one tool the
+					// docs tell an agent to call FIRST would fail on every
+					// free-Elementor site.
+					$pro_version  = defined( 'ELEMENTOR_PRO_VERSION' ) ? ELEMENTOR_PRO_VERSION : '';
 
 					$supports_atomic    = KarMCP_Atomic_Props::is_atomic_supported();
 					$supports_container = KarMCP_Atomic_Props::is_container_supported();

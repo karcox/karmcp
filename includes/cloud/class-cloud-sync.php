@@ -14,6 +14,11 @@ class KarMCP_Cloud_Sync {
 	 * @return KarMCP_Sandbox_Cloud_Abilities
 	 */
 	private static function abilities(): KarMCP_Sandbox_Cloud_Abilities {
+		// The tool classes load on demand; this signature is one of the few
+		// places outside includes/abilities/ that names one.
+		if ( ! class_exists( 'KarMCP_Sandbox_Cloud_Abilities' ) && class_exists( 'KarMCP_Bootstrap' ) ) {
+			KarMCP_Bootstrap::load_ability_classes();
+		}
 		return new KarMCP_Sandbox_Cloud_Abilities();
 	}
 

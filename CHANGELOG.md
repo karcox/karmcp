@@ -2,6 +2,30 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.16.2]
+
+### Changed
+
+- **The tool classes no longer load on requests that never ask for a tool.** All 76 files under `includes/abilities/` — 1.1 MB of source, several MB once PHP has it in memory — were required on `plugins_loaded`, on every request, front-end page views included. A visitor reading a blog post paid for the whole MCP surface.
+
+  They now load at the moment something first asks for a tool: `wp_abilities_api_init` (which is lazy — it fires on the first `wp_get_ability()` call, i.e. the MCP server registering its tools), wp-admin, and the two runtime callers that name a tool class in a signature. On a host with a 128 MB limit this is the difference between the site working and not.
+
+  The registrar is built on first use for the same reason; it lives among the classes being deferred.
+
+  **What makes this safe is checkable, so it is checked.** `DeferredAbilityLoadTest` pins that no runtime file depends on a class that may not be loaded yet — a list of six references, each with its reason written down — that every deferred path exists, that `load_classes()` keeps none of them, and that each abstract base still loads before its subclasses. All four fail silently in production and none of them would have failed in the suite.
+
+### Fixed
+
+- **Inserting a Kadence or Spectra block at a position that doesn't exist reported success.** `KarMCP_Block_Tree`'s mutators are total: handed a path that doesn't resolve they return the tree untouched. That is right for a pure transform, and it means the save that follows succeeds and the tool answers `added` for a block it never inserted. The Gutenberg tools checked the path first; `add-block` and `insert-pattern` on both integrations did not.
+
+  The check now lives in the primitive as `position_error()` and every caller runs it. It also covers what none of them checked: an unrecognised `position.mode`, which fell through to a splice with an empty path — so a typo in `inside` was a silent no-op too.
+
+- **`move-block` reported a move it had not performed.** Verifying that both paths resolve isn't enough: `move()` also declines a block moved onto its own position, and a target inside the subtree being moved (which would remove the node and then fail to re-insert it, losing it). Both resolve fine. `move_error()` names all four cases, and a test pins that every rejection is one `move()` genuinely won't perform — so the guard can't drift into refusing moves that work.
+
+- **`detect-elementor-version` failed validation on sites without Elementor Pro.** It returned `null` for `elementor_pro_version` against an output schema declaring a string, so a strict client rejected the response — from the one tool the documentation tells an agent to call first. It returns an empty string.
+
+- **OAuth sign-in never started on a WordPress installed in a subdirectory.** The authorize endpoint is advertised from the public base, which carries the subdirectory, so the request arrives as `/blog/karmcp-oauth/authorize` while the matcher compared it against the bare `/karmcp-oauth/authorize`. The endpoint we published was never served and sign-in dead-ended on the site's 404 page — with nothing anywhere reporting an error. The path is matched against the installation's own prefix, and the bare path still matches for a proxy that strips it. The metadata endpoint already did this correctly; only authorize didn't.
+
 ## [1.16.1]
 
 ### Fixed

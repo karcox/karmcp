@@ -65,10 +65,7 @@ class KarMCP_OAuth_Authorize {
 	public static function maybe_serve( $wp = null ): void {
 		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
 		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
-		if ( '/' !== $path ) {
-			$path = rtrim( $path, '/' );
-		}
-		if ( self::PATH !== $path ) {
+		if ( ! self::path_matches( $path, self::site_path_prefix() ) ) {
 			return;
 		}
 		if ( ! KarMCP_OAuth_Server::is_enabled() ) {
@@ -80,6 +77,52 @@ class KarMCP_OAuth_Authorize {
 		} else {
 			self::handle_get();
 		}
+	}
+
+	/**
+	 * Whether a request path is this endpoint.
+	 *
+	 * Pure, so the subdirectory case is testable without WordPress.
+	 *
+	 * The endpoint is advertised as `<base>/karmcp-oauth/authorize`, and on a
+	 * WordPress installed in a subdirectory that base carries the subdirectory —
+	 * so the request arrives as `/blog/karmcp-oauth/authorize` while the constant
+	 * is `/karmcp-oauth/authorize`. Comparing the two directly means the endpoint
+	 * we published is never served and sign-in dead-ends on the site's 404 page.
+	 * The bare path is still accepted, for a proxy that strips the prefix before
+	 * the request reaches WordPress.
+	 *
+	 * @since 1.16.2
+	 *
+	 * @param string $request_path Path of the incoming request (no query string).
+	 * @param string $site_prefix  The installation's path prefix ('' at the root).
+	 * @return bool
+	 */
+	public static function path_matches( string $request_path, string $site_prefix ): bool {
+		if ( '/' !== $request_path ) {
+			$request_path = rtrim( $request_path, '/' );
+		}
+		if ( self::PATH === $request_path ) {
+			return true;
+		}
+		$site_prefix = rtrim( $site_prefix, '/' );
+		return '' !== $site_prefix && ( $site_prefix . self::PATH ) === $request_path;
+	}
+
+	/**
+	 * The path WordPress is installed under, '' when it is at the domain root.
+	 *
+	 * Read from home_url() — the site as it is actually served here — not from
+	 * the Server URL override, which may point at a different host entirely.
+	 *
+	 * @since 1.16.2
+	 *
+	 * @return string
+	 */
+	private static function site_path_prefix(): string {
+		$path = (string) wp_parse_url( (string) home_url( '/' ), PHP_URL_PATH );
+		$path = rtrim( $path, '/' );
+		return '/' === $path ? '' : $path;
 	}
 
 	/**

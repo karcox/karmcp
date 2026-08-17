@@ -94,9 +94,10 @@ class KarMCP_Bootstrap {
 	}
 
 	/**
-	 * Loads all class files (core, data, abilities, features). Self-guarded
-	 * feature groups (Pro / atomic) are loaded unconditionally; they no-op on
-	 * registration when their gate isn't met.
+	 * Loads the runtime class files — everything the front end, the admin and
+	 * the hooks below need. The tool classes are NOT here: they load on demand,
+	 * see load_ability_classes(). Self-guarded feature groups (Pro / atomic) are
+	 * loaded unconditionally; they no-op on registration when their gate isn't met.
 	 *
 	 * @since 2.1.0
 	 */
@@ -104,9 +105,6 @@ class KarMCP_Bootstrap {
 		// Schema compatibility + the karmcp_register_ability() entry point
 		// must load before any ability group registers.
 		require_once KARMCP_DIR . 'includes/class-schema-compat.php';
-		// Shared dispatch for the two-tool plugin integrations. Loads before any
-		// of them, since a trait has to exist when the class that uses it does.
-		require_once KARMCP_DIR . 'includes/abilities/trait-operation-dispatcher.php';
 		require_once KARMCP_DIR . 'includes/class-id-generator.php';
 		require_once KARMCP_DIR . 'includes/class-url-guard.php';
 		require_once KARMCP_DIR . 'includes/class-site-context.php';
@@ -118,23 +116,12 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/validators/class-settings-validator.php';
 		// Widget catalog — source of truth for the 5 catalog-backed widget tools.
 		require_once KARMCP_DIR . 'includes/widgets/class-widget-catalog.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-query-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-page-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-layout-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-widget-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-template-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-global-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-composite-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-secret.php';
 		require_once KARMCP_DIR . 'includes/class-unsplash-client.php';
 		require_once KARMCP_DIR . 'includes/class-pexels-client.php';
 		require_once KARMCP_DIR . 'includes/class-pixabay-client.php';
 		require_once KARMCP_DIR . 'includes/class-stock-image-providers.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-stock-image-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-media-library-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-image-resize-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-block-tree.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-gutenberg-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-page-snapshot.php';
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-util.php';
 		require_once KARMCP_DIR . 'includes/cloud/class-cloud.php';
@@ -151,85 +138,35 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-token.php';
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-bearer.php';
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-server.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-snapshot-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-content-extractor.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-render-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-change-log.php';
 		require_once KARMCP_DIR . 'includes/class-change-blobs.php';
 		require_once KARMCP_DIR . 'includes/class-change-recorder.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-transaction-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-search-ranker.php';
 		require_once KARMCP_DIR . 'includes/class-search-index.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-search-abilities.php';
 		require_once KARMCP_DIR . 'includes/redirects/class-redirect-store.php';
 		require_once KARMCP_DIR . 'includes/redirects/class-redirect-handler.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-redirect-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-login-guard-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-security-fix-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-recovery-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-vulnerability-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-db-cleanup-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-skill-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-content-mirror.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-content-mirror-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-admin-bar.php';
 		require_once KARMCP_DIR . 'includes/class-notifications.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-content-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-dispatcher-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-settings-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-package-guard.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-plugin-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-theme-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-user-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-nav-menu-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-nav-menu-shortcode.php';
 		add_action( 'init', array( 'KarMCP_Nav_Menu_Shortcode', 'register' ) );
-		// ACF tools (field values + field group discovery/authoring; writes off by default).
-		require_once KARMCP_DIR . 'includes/abilities/class-acf-abilities.php';
-		// Meta Box tools (field values + field group discovery; writes off by default).
-		require_once KARMCP_DIR . 'includes/abilities/class-metabox-abilities.php';
 
-		// Themes domain: the child-theme builder + the dispatcher base (must load
-		// before its subclasses) + the integrations.
+		// Themes domain: the child-theme builder. The dispatcher base and the
+		// theme integrations built on it are tool classes (deferred).
 		require_once KARMCP_DIR . 'includes/class-child-theme-builder.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-theme-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-active-theme-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-astra-integration.php';
 		require_once KARMCP_DIR . 'includes/blocks-catalog/class-spectra-catalog.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-spectra-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-kadence-integration.php';
 		require_once KARMCP_DIR . 'includes/blocks-catalog/class-kadence-blocks-catalog.php';
 		require_once KARMCP_DIR . 'includes/blocks-catalog/class-kadence-pattern-library.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-kadence-blocks-integration.php';
-		// Forms-tab integrations — abstract base + Contact Form 7. The adapters for
-		// the entry-storing plugins were upstream Pro files and are not in this build.
-		require_once KARMCP_DIR . 'includes/abilities/forms/class-form-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-form-builder.php';
-		require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/forms/class-elementor-form-builder.php';
-		require_once KARMCP_DIR . 'includes/abilities/forms/class-form-widget-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/woo/class-woo-product-input.php';
-		require_once KARMCP_DIR . 'includes/abilities/woo/class-woo-integration.php';
 		require_once KARMCP_DIR . 'includes/class-post-duplicator.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-duplicate-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-structured-data.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-structured-data-abilities.php';
 		require_once KARMCP_DIR . 'includes/class-site-plan.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-site-builder-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/i18n/class-translation-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/i18n/class-polylang-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/i18n/class-wpml-integration.php';
-		// SEO plugin integrations — abstract base + Slim SEO. The Yoast, Rank Math,
-		// AIOSEO, SEOPress, SEO Framework and SureRank adapters were upstream Pro
-		// files and are not in this build.
-		require_once KARMCP_DIR . 'includes/abilities/seo/class-seo-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/seo/class-slimseo-integration.php';
 		// Performance Analyzer (v3.0.0) — read-only server/WP/page audit.
 		require_once KARMCP_DIR . 'includes/performance/class-performance-finding.php';
 		require_once KARMCP_DIR . 'includes/performance/class-performance-server-audit.php';
 		require_once KARMCP_DIR . 'includes/performance/class-performance-page-audit.php';
 		require_once KARMCP_DIR . 'includes/performance/class-performance-analyzer.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-performance-abilities.php';
 		// Page audits — normalized SEO metadata plus the rule set that grades a
 		// page against it. The rules are pure and consume the render digest that
 		// `KarMCP_Content_Extractor` already produces.
@@ -239,19 +176,14 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/audits/class-color-contrast.php';
 		require_once KARMCP_DIR . 'includes/audits/class-seo-audit.php';
 		require_once KARMCP_DIR . 'includes/audits/class-a11y-audit.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-seo-audit-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-a11y-audit-abilities.php';
 		// Filesystem tools (read/scan + write/edit/delete; writes off by default).
 		require_once KARMCP_DIR . 'includes/class-filesystem-guard.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-filesystem-abilities.php';
 		// Database tools (read-only query + structured writes; writes off by default).
 		require_once KARMCP_DIR . 'includes/class-database-guard.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-database-abilities.php';
 		// WP-CLI tools (run + background jobs; disabled-by-default, manage_options).
 		require_once KARMCP_DIR . 'includes/wpcli/class-wpcli-validator.php';
 		require_once KARMCP_DIR . 'includes/wpcli/class-wpcli-runner.php';
 		require_once KARMCP_DIR . 'includes/wpcli/class-wpcli-jobs.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-wpcli-abilities.php';
 		// Security & Malware Scanner (v3.0.0) — read-only multi-audit scan.
 		require_once KARMCP_DIR . 'includes/security/class-security-finding.php';
 		require_once KARMCP_DIR . 'includes/security/class-security-malware-audit.php';
@@ -268,9 +200,6 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/security/class-security-scan-run.php';
 		require_once KARMCP_DIR . 'includes/performance/class-db-cleaner.php';
 		require_once KARMCP_DIR . 'includes/security/class-fatal-handler-template.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-security-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-svg-icon-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-custom-code-abilities.php';
 		// Brand Kits. The writer + backup store + bundled-kit fetcher load
 		// unconditionally so the MCP REST/CLI/proxy surface can reach them. The
 		// extended brand-kit admin + system-kit abilities were upstream Pro files
@@ -288,7 +217,6 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/sandbox/class-widget-generator.php';
 		require_once KARMCP_DIR . 'includes/class-widget-store.php';
 		require_once KARMCP_DIR . 'includes/class-widget-loader.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-widget-builder-abilities.php';
 		// Sandbox Bundle — portable cloud-ready format for blocks/widgets/snippets.
 		require_once KARMCP_DIR . 'includes/sandbox/class-sandbox-bundle.php';
 		require_once KARMCP_DIR . 'includes/sandbox/interface-sandbox-artifact.php';
@@ -305,7 +233,6 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/sandbox/class-block-generator.php';
 		require_once KARMCP_DIR . 'includes/sandbox/class-block-store.php';
 		require_once KARMCP_DIR . 'includes/sandbox/class-block-loader.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-block-builder-abilities.php';
 		// Element extensions (Elementor 4.2+). Same pairing rule as the blocks:
 		// store and loader load together, because boot() instantiates the
 		// loader as soon as the store class exists.
@@ -313,29 +240,16 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/sandbox/class-extension-generator.php';
 		require_once KARMCP_DIR . 'includes/sandbox/class-extension-store.php';
 		require_once KARMCP_DIR . 'includes/sandbox/class-extension-loader.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-extension-builder-abilities.php';
-		// Sandbox Cloud abilities — export/import any sandbox artifact (block/
-		// widget/snippet) as a portable bundle over the cloud contract. Free tree;
-		// registration is wired by the ability registrar (a later task).
-		require_once KARMCP_DIR . 'includes/abilities/class-sandbox-cloud-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-cloud-abilities.php';
 		// PHP Code Snippets (Sandbox) — free, capability-gated. AI can author +
 		// validate drafts via MCP; only an admin can activate. The loader runs
 		// ACTIVE snippets (hash-verified, fatal-isolated).
 		require_once KARMCP_DIR . 'includes/class-php-snippet-validator.php';
 		require_once KARMCP_DIR . 'includes/class-php-snippet-store.php';
 		require_once KARMCP_DIR . 'includes/class-php-snippet-loader.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-php-snippet-abilities.php';
 		// Atomic elements support (Elementor 4.0+).
 		require_once KARMCP_DIR . 'includes/class-atomic-props.php';
 		require_once KARMCP_DIR . 'includes/class-atomic-styles.php';
 		require_once KARMCP_DIR . 'includes/class-atomic-widget-map.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-atomic-widget-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-atomic-layout-abilities.php';
-		// Global Classes (Class Manager) reader — self-gates on Elementor 4.0+.
-		require_once KARMCP_DIR . 'includes/abilities/class-global-classes-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-global-classes-write-abilities.php';
-		// Background library refresh.
 		// Modules framework (free) + built-in modules. The registry boots active
 		// modules on `init`; each module self-gates on its options + availability.
 		require_once KARMCP_DIR . 'includes/modules/class-module.php';
@@ -387,13 +301,137 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/themer/php/class-themer-php-store.php';
 		require_once KARMCP_DIR . 'includes/themer/php/class-themer-php.php';
 		require_once KARMCP_DIR . 'includes/themer/php/class-themer-php-renderer.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-themer-php-abilities.php';
 		require_once KARMCP_DIR . 'includes/themer/php/class-themer-php-admin.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-themer-abilities.php';
 		require_once KARMCP_DIR . 'includes/modules/class-themer-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-redirect-module.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-ability-registrar.php';
 		require_once KARMCP_DIR . 'includes/class-plugin.php';
+	}
+
+	/**
+	 * Loads the tool classes — the ~76 files under includes/abilities/ plus the
+	 * registrar that wires them.
+	 *
+	 * These used to load on every request, front-end page views included. That
+	 * is several MB of PHP parsed to define classes a visitor will never reach,
+	 * and on a 128MB host it is the difference between the site working and not.
+	 * Nothing outside includes/abilities/ depends on them at load time, so they
+	 * can wait for the moment a caller actually needs a tool:
+	 *
+	 * - `wp_abilities_api_init` — the Abilities API is lazy, the hook fires on
+	 *   the first wp_get_ability() call, which is the MCP server registering
+	 *   its tools. This is the hot path and the reason the split pays.
+	 * - `mcp_adapter_init` — the server build reads the dispatcher's names.
+	 * - wp-admin — the Tools tab lists every tool and seeds their defaults.
+	 * - KarMCP_Cloud_Sync — type-hints a tool class in a method signature.
+	 *
+	 * Idempotent: safe to call from all of them, and cheap after the first.
+	 * The order below is the original load order, which several groups depend
+	 * on — the dispatch trait before the integrations that use it, each
+	 * abstract base before its subclasses.
+	 *
+	 * @since 1.16.2
+	 */
+	public static function load_ability_classes(): void {
+		static $loaded = false;
+		if ( $loaded ) {
+			return;
+		}
+		$loaded = true;
+
+		// Shared dispatch for the two-tool plugin integrations. Loads before any
+		// of them, since a trait has to exist when the class that uses it does.
+		require_once KARMCP_DIR . 'includes/abilities/trait-operation-dispatcher.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-query-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-page-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-layout-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-widget-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-template-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-global-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-composite-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-stock-image-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-media-library-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-image-resize-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-gutenberg-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-snapshot-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-render-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-transaction-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-search-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-redirect-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-login-guard-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-security-fix-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-recovery-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-vulnerability-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-db-cleanup-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-skill-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-content-mirror-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-content-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-dispatcher-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-settings-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-plugin-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-theme-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-user-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-nav-menu-abilities.php';
+		// ACF tools (field values + field group discovery/authoring; writes off by default).
+		require_once KARMCP_DIR . 'includes/abilities/class-acf-abilities.php';
+		// Meta Box tools (field values + field group discovery; writes off by default).
+		require_once KARMCP_DIR . 'includes/abilities/class-metabox-abilities.php';
+		// Themes domain: the dispatcher base (must load before its subclasses)
+		// + the integrations.
+		require_once KARMCP_DIR . 'includes/abilities/class-theme-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-active-theme-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-astra-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-spectra-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-kadence-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-kadence-blocks-integration.php';
+		// Forms-tab integrations — abstract base + Contact Form 7. The adapters for
+		// the entry-storing plugins were upstream Pro files and are not in this build.
+		require_once KARMCP_DIR . 'includes/abilities/forms/class-form-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-form-builder.php';
+		require_once KARMCP_DIR . 'includes/abilities/forms/class-cf7-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/forms/class-elementor-form-builder.php';
+		require_once KARMCP_DIR . 'includes/abilities/forms/class-form-widget-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/woo/class-woo-product-input.php';
+		require_once KARMCP_DIR . 'includes/abilities/woo/class-woo-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-duplicate-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-structured-data-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-site-builder-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/i18n/class-translation-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/i18n/class-polylang-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/i18n/class-wpml-integration.php';
+		// SEO plugin integrations — abstract base + Slim SEO. The Yoast, Rank Math,
+		// AIOSEO, SEOPress, SEO Framework and SureRank adapters were upstream Pro
+		// files and are not in this build.
+		require_once KARMCP_DIR . 'includes/abilities/seo/class-seo-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/seo/class-slimseo-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-performance-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-seo-audit-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-a11y-audit-abilities.php';
+		// Filesystem tools (read/scan + write/edit/delete; writes off by default).
+		require_once KARMCP_DIR . 'includes/abilities/class-filesystem-abilities.php';
+		// Database tools (read-only query + structured writes; writes off by default).
+		require_once KARMCP_DIR . 'includes/abilities/class-database-abilities.php';
+		// WP-CLI tools (run + background jobs; disabled-by-default, manage_options).
+		require_once KARMCP_DIR . 'includes/abilities/class-wpcli-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-security-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-svg-icon-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-custom-code-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-widget-builder-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-block-builder-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-extension-builder-abilities.php';
+		// Sandbox Cloud abilities — export/import any sandbox artifact (block/
+		// widget/snippet) as a portable bundle over the cloud contract.
+		require_once KARMCP_DIR . 'includes/abilities/class-sandbox-cloud-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-cloud-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-php-snippet-abilities.php';
+		// Atomic elements support (Elementor 4.0+).
+		require_once KARMCP_DIR . 'includes/abilities/class-atomic-widget-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-atomic-layout-abilities.php';
+		// Global Classes (Class Manager) reader — self-gates on Elementor 4.0+.
+		require_once KARMCP_DIR . 'includes/abilities/class-global-classes-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-global-classes-write-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-themer-php-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-themer-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-ability-registrar.php';
 	}
 
 	/**
@@ -489,6 +527,11 @@ class KarMCP_Bootstrap {
 	 * @since 2.1.0
 	 */
 	private static function load_admin(): void {
+		// wp-admin is a tool consumer: the Tools tab lists every tool and seeds
+		// the disabled-by-default slugs, and the sandbox screens resolve artifacts
+		// through a tool class. No deferral here.
+		self::load_ability_classes();
+
 		require_once KARMCP_DIR . 'includes/admin/class-admin.php';
 		require_once KARMCP_DIR . 'includes/admin/class-mcpb-builder.php';
 

@@ -128,7 +128,13 @@ class KarMCP_Spectra_Integration extends KarMCP_Theme_Integration {
 
 		$block = $this->build_block( $name, $attrs );
 		$tree  = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
-		$tree  = KarMCP_Block_Tree::insert( $tree, array( $block ), $position );
+
+		$pos_err = KarMCP_Block_Tree::position_error( $tree, $position );
+		if ( null !== $pos_err ) {
+			return new WP_Error( 'invalid_position', $pos_err, array( 'status' => 400 ) );
+		}
+
+		$tree   = KarMCP_Block_Tree::insert( $tree, array( $block ), $position );
 		$markup = KarMCP_Block_Tree::to_markup( $tree );
 
 		$result = wp_update_post( array( 'ID' => $post_id, 'post_content' => wp_slash( $markup ) ), true );

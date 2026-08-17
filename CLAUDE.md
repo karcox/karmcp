@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.13.1` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.16.2` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -44,7 +44,7 @@ PHPDIR=$(dirname "$(which php)")
 php -d extension_dir="$PHPDIR/ext" -d extension=mbstring /ruta/a/phpunit.phar
 ```
 
-Estado de referencia: **838 tests, 2.095 aserciones, todo en verde** (2026-08-16). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+Estado de referencia: **969 tests, 2.470 aserciones, todo en verde** (2026-08-17). Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
 
 El harness comparte stubs en `tests/bootstrap.php`, y ahí está la trampa: **un stub del harness gana al que declare un fichero de test**, porque el bootstrap carga primero. Si añades ahí una función que un test ya simulaba por su cuenta, ese test empieza a leer una fixture distinta y falla lejos del cambio. Pasó con `wp_get_object_terms()` y los menús.
 
@@ -59,6 +59,14 @@ Tres hooks, en este orden:
 3. `mcp_adapter_init` → crea el servidor MCP con la lista de abilities
 
 > **Trampa cara:** si omites `'category' => 'karmcp'` al registrar, `wp_register_ability()` **descarta la ability en silencio**. Sin error, sin aviso: la herramienta simplemente no existe.
+
+### Las clases de herramientas se cargan bajo demanda (1.16.2)
+
+`load_classes()` carga el runtime. Los **76 archivos de `includes/abilities/`** los carga `KarMCP_Bootstrap::load_ability_classes()` — idempotente, pública— y solo cuando alguien pide una herramienta: `wp_abilities_api_init` (que es **perezoso**: dispara en la primera llamada a `wp_get_ability()`), `wp-admin`, y `KarMCP_Cloud_Sync`. Una visita al front que no toca ninguna herramienta no parsea 1,1 MB de PHP.
+
+**Si añades un archivo de abilities, va en `load_ability_classes()`, no en `load_classes()`.** Y el orden importa: el trait de dispatch antes de las integraciones, cada base abstracta antes de sus subclases.
+
+> **La regla que lo sostiene:** ningún archivo fuera de `includes/abilities/` puede depender de una clase de ahí en tiempo de carga. Hay seis referencias permitidas, cada una con su motivo, y `DeferredAbilityLoadTest` las fija. Si añades una séptima el test te dice qué hacer: quitarla, llamar a `load_ability_classes()` antes, o justificarla en `ALLOWED`. Sin ese test, romperlo es un fatal en producción que la suite no ve.
 
 ### Capas
 

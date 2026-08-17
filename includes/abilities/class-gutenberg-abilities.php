@@ -385,8 +385,9 @@ class KarMCP_Gutenberg_Abilities {
 		}
 		$position = $this->position_from_input( $input );
 		$tree     = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
-		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === KarMCP_Block_Tree::at( $tree, $position['path'] ) ) {
-			return array( 'error' => __( 'position.path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
+		$pos_err  = KarMCP_Block_Tree::position_error( $tree, $position );
+		if ( null !== $pos_err ) {
+			return array( 'error' => $pos_err );
 		}
 		$tree = KarMCP_Block_Tree::insert( $tree, $new, $position );
 		$this->save_tree( $post, $tree );
@@ -524,14 +525,15 @@ class KarMCP_Gutenberg_Abilities {
 		if ( $err ) {
 			return $err;
 		}
-		$from = isset( $input['path'] ) && is_array( $input['path'] ) ? array_map( 'intval', $input['path'] ) : array();
-		$tree = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
-		if ( ! $from || null === KarMCP_Block_Tree::at( $tree, $from ) ) {
-			return array( 'error' => __( 'path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
-		}
+		$from     = isset( $input['path'] ) && is_array( $input['path'] ) ? array_map( 'intval', $input['path'] ) : array();
+		$tree     = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
 		$position = $this->position_from_input( $input );
-		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === KarMCP_Block_Tree::at( $tree, $position['path'] ) ) {
-			return array( 'error' => __( 'target position.path does not resolve to a block.', 'karmcp' ) );
+		// move() declines a self-move and a target inside the moved subtree by
+		// returning the tree untouched — checking only that both paths resolve
+		// would answer "moved" for both. move_error() covers them.
+		$move_err = KarMCP_Block_Tree::move_error( $tree, $from, $position );
+		if ( null !== $move_err ) {
+			return array( 'error' => $move_err );
 		}
 		$tree = KarMCP_Block_Tree::move( $tree, $from, $position );
 		$this->save_tree( $post, $tree );
@@ -632,8 +634,9 @@ class KarMCP_Gutenberg_Abilities {
 		}
 		$position = $this->position_from_input( $input );
 		$tree     = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
-		if ( in_array( $position['mode'], array( 'before', 'after', 'inside' ), true ) && null === KarMCP_Block_Tree::at( $tree, $position['path'] ) ) {
-			return array( 'error' => __( 'position.path does not resolve to a block. Call get-post-blocks first.', 'karmcp' ) );
+		$pos_err  = KarMCP_Block_Tree::position_error( $tree, $position );
+		if ( null !== $pos_err ) {
+			return array( 'error' => $pos_err );
 		}
 		$tree = KarMCP_Block_Tree::insert( $tree, $new, $position );
 		$this->save_tree( $post, $tree );

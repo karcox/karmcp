@@ -144,8 +144,14 @@ class KarMCP_Kadence_Blocks_Integration extends KarMCP_Theme_Integration {
 		$attrs    = ( isset( $input['attributes'] ) && is_array( $input['attributes'] ) ) ? $input['attributes'] : array();
 		$position = ( isset( $input['position'] ) && is_array( $input['position'] ) ) ? $input['position'] : array( 'mode' => 'append' );
 
-		$block  = $this->build_block( $name, $attrs );
-		$tree   = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+		$block = $this->build_block( $name, $attrs );
+		$tree  = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
+
+		$pos_err = KarMCP_Block_Tree::position_error( $tree, $position );
+		if ( null !== $pos_err ) {
+			return new WP_Error( 'invalid_position', $pos_err, array( 'status' => 400 ) );
+		}
+
 		$tree   = KarMCP_Block_Tree::insert( $tree, array( $block ), $position );
 		$markup = KarMCP_Block_Tree::to_markup( $tree );
 
@@ -218,8 +224,14 @@ class KarMCP_Kadence_Blocks_Integration extends KarMCP_Theme_Integration {
 
 		$position = ( isset( $input['position'] ) && is_array( $input['position'] ) ) ? $input['position'] : array( 'mode' => 'append' );
 		$tree     = KarMCP_Block_Tree::from_markup( (string) $post->post_content );
-		$tree     = KarMCP_Block_Tree::insert( $tree, $new_blocks, $position );
-		$out      = KarMCP_Block_Tree::to_markup( $tree );
+
+		$pos_err = KarMCP_Block_Tree::position_error( $tree, $position );
+		if ( null !== $pos_err ) {
+			return new WP_Error( 'invalid_position', $pos_err, array( 'status' => 400 ) );
+		}
+
+		$tree = KarMCP_Block_Tree::insert( $tree, $new_blocks, $position );
+		$out  = KarMCP_Block_Tree::to_markup( $tree );
 
 		$result = wp_update_post( array( 'ID' => $post_id, 'post_content' => wp_slash( $out ) ), true );
 		if ( is_wp_error( $result ) ) {

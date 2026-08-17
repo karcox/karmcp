@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.16.1
+Stable tag: 1.16.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,14 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.16.2 =
+
+* Changed: the tool classes no longer load on requests that never ask for a tool. All 76 files under `includes/abilities/` — 1.1 MB of source, several MB in memory — were parsed on every request, front-end page views included. They now load the moment something first asks for a tool. On a host with a 128 MB limit this is the difference between the site working and not.
+* Fixed: inserting a Kadence or Spectra block at a position that does not exist reported success. The tree operations return the tree untouched for a path that does not resolve, so the save succeeded and the tool answered "added" for a block it never inserted. Every caller now validates the position first, including an unrecognised `position.mode` — a typo in `inside` was a silent no-op too.
+* Fixed: `move-block` reported a move it had not performed. Checking that both paths resolve is not enough: a block moved onto its own position, and a target inside the subtree being moved, both resolve and neither is a move.
+* Fixed: `detect-elementor-version` failed validation on sites without Elementor Pro — it returned null against a schema declaring a string, from the one tool an agent is told to call first.
+* Fixed: OAuth sign-in never started on a WordPress installed in a subdirectory. The endpoint was advertised with the subdirectory and matched without it, so the URL we published was never served and sign-in dead-ended on the site's 404 page.
 
 = 1.16.1 =
 

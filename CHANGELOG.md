@@ -2,6 +2,20 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.16.4]
+
+### Fixed
+
+- **1.16.3 shipped `karmcp.php` with a UTF-8 byte order mark, which broke every JSON response on the site.** Install it and the MCP server becomes unreachable — the client reports `Invalid JSON: expected value at line 1 column 1` — the OAuth discovery documents and the authorize endpoint 404, and connecting a client fails at registration. Meanwhile the site itself loads perfectly, which is what makes it so hard to place.
+
+  A BOM is three bytes *outside* `<?php`, so PHP emits them as output. `karmcp.php` loads on every request, so those bytes go in front of every response the site produces: JSON stops parsing, and `header()` calls in endpoints that emit their own documents come too late.
+
+  The file was rewritten to bump the version with PowerShell's `Set-Content -Encoding utf8`, which on Windows PowerShell 5.1 means "UTF-8 **with** BOM". The file stayed valid PHP, so nothing caught it — not the 969 tests, not PHPCS, not PHPStan, not `php -l`. Only the live site failed, pointing nowhere near the cause.
+
+  `NoByteOrderMarkTest` now fails on any BOM in the tree, with the entry point asserted separately because it is the one loaded on every request. It was verified by planting a BOM'd file and watching the test name it, rather than by assuming a passing test proves anything.
+
+  **Everything in 1.16.2 and 1.16.3 was fine.** The deferred load, the `%i` conversions and the three bug fixes were all unaffected — the failure was three bytes at the front of one file.
+
 ## [1.16.3]
 
 ### Changed

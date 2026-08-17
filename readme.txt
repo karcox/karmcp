@@ -1,9 +1,9 @@
-﻿=== KarMCP ===
+=== KarMCP ===
 Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.16.3
+Stable tag: 1.16.4
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.16.4 =
+
+* Fixed: 1.16.3 shipped the main plugin file with a UTF-8 byte order mark, which put three stray bytes in front of every response the site produced. The MCP server became unreachable, the OAuth discovery documents and the authorize endpoint returned 404, and connecting a client failed at registration — while the site itself kept loading normally. Upgrade straight to this version.
+* Added: a test that fails on a byte order mark anywhere in the plugin, since the file stays valid PHP and nothing else catches it.
 
 = 1.16.3 =
 

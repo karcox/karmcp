@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.19.1]
+
+### Fixed
+
+- **Clicking "KarMCP" in the sidebar opened the Skills list instead of the panel.** WordPress points a top-level menu at whatever sits *first* in its submenu array, and post types declaring `show_in_menu => karmcp` — Skills does — are added on an earlier `admin_menu` pass than `KarMCP_Admin` runs on. So Skills held index 0 and the menu followed it.
+
+  This was true before 1.19.0 and merely untidy: the submenu was open, so you could click Dashboard yourself. Hiding those rows in 1.19.0 turned the wrong first entry into the only way in. `order_submenu()` now runs at priority 99 and promotes the Dashboard row, late enough to hold however many post types attach themselves later.
+
+- **Skills disappeared from the sidebar entirely.** The rule hiding the duplicated section rows was positional — everything except the first — which assumed the first row was the Dashboard. It wasn't: it hid Skills, the one entry with nowhere else to live, since the panel's own rail only lists panel sections. The rule now matches the `page=karmcp-…` sections by href, so it hides exactly the duplicates and leaves anything else attached to the menu reachable.
+
+- `AdminSubmenuOrderTest` pins both: that the Dashboard leads even when a post type registered first, that the remaining entries keep their registration order, and that a submenu with no Dashboard row (or none at all) is left alone rather than emptied.
+
 ## [1.19.0]
 
 ### Changed

@@ -237,6 +237,8 @@ class KarMCP_Admin {
 	 */
 	public function init(): void {
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+		// Late, so it runs after every post type has attached its own submenu.
+		add_action( 'admin_menu', array( $this, 'order_submenu' ), 99 );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'handle_security_actions' ) );
 		add_action( 'wp_ajax_karmcp_nav_state', array( $this, 'ajax_nav_state' ) );
@@ -1796,6 +1798,53 @@ class KarMCP_Admin {
 	}
 
 	/**
+	 * Force the Dashboard to the top of KarMCP's submenu.
+	 *
+	 * WordPress points a top-level menu at whatever sits FIRST in its submenu
+	 * array, and custom post types that declare `show_in_menu => karmcp` are
+	 * added on an earlier `admin_menu` pass than this class runs on. So the
+	 * Skills CPT landed at index 0 and clicking "KarMCP" opened the skills list
+	 * instead of the panel.
+	 *
+	 * It was survivable while the submenu was visible — you could click
+	 * Dashboard yourself. Once 1.19.0 hid those rows, the wrong destination
+	 * became the only destination.
+	 *
+	 * Reordering the global is the fix rather than re-registering: the entries
+	 * are correct, only their order is wrong, and running late means it holds
+	 * however many post types attach themselves here later.
+	 *
+	 * @since 1.19.1
+	 * @global array $submenu
+	 * @return void
+	 */
+	public function order_submenu(): void {
+		global $submenu;
+
+		if ( empty( $submenu[ self::PAGE_SLUG ] ) || ! is_array( $submenu[ self::PAGE_SLUG ] ) ) {
+			return;
+		}
+
+		$dashboard = null;
+		$rest      = array();
+		foreach ( $submenu[ self::PAGE_SLUG ] as $item ) {
+			// $item[2] is the menu slug; ours matches the parent page exactly.
+			if ( null === $dashboard && isset( $item[2] ) && self::PAGE_SLUG === $item[2] ) {
+				$dashboard = $item;
+				continue;
+			}
+			$rest[] = $item;
+		}
+
+		if ( null === $dashboard ) {
+			return;
+		}
+
+		array_unshift( $rest, $dashboard );
+		$submenu[ self::PAGE_SLUG ] = $rest; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- reordering our own submenu; WordPress exposes no API for it.
+	}
+
+	/**
 	 * Add the settings page under the Settings menu.
 	 *
 	 * @since 1.0.0
@@ -1855,9 +1904,16 @@ class KarMCP_Admin {
 			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . '.wp-has-current-submenu .wp-menu-image img{'
 			. 'opacity:1;'
 			. '}'
-			// Every section now lives in the app bar's own nav, so the sidebar
-			// keeps only the top-level "KarMCP" entry — the sections were listed
-			// twice, in two different orders.
+			// The panel's own sections now live in its rail, so their sidebar rows
+			// go — they were listed twice, in two different orders.
+			//
+			// Matched by href, NOT by position: hiding everything except the first
+			// row assumes the first row is the Dashboard, and it isn't. Post types
+			// that declare `show_in_menu => karmcp` (Skills) are added ahead of us,
+			// so a positional rule hid Skills — the one row that has nowhere else
+			// to be — and kept whatever happened to be first. Targeting the
+			// `page=karmcp-…` sections hides exactly the duplicates and leaves
+			// anything else attached here reachable.
 			//
 			// Hidden, NOT unregistered: remove_submenu_page() drops the page from
 			// $submenu, which breaks user_can_access_admin_page() (the parent no
@@ -1866,11 +1922,10 @@ class KarMCP_Admin {
 			// the rows leaves every section a normal, fully-renderable submenu,
 			// still reachable by URL and still highlighting its parent.
 			//
-			// Two rows are deliberately kept: .wp-submenu-head is the label the
-			// collapsed sidebar shows on hover — hide it and the flyout is blank —
-			// and .wp-first-item is WordPress's auto-generated link back to the
-			// parent page, which is the one entry we still want.
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-submenu li:not(.wp-submenu-head):not(.wp-first-item){'
+			// :has() hides the whole <li>; the bare anchor rule is the fallback for
+			// browsers without it, which collapses the row instead.
+			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-submenu li:has(> a[href*="page=' . esc_attr( self::PAGE_SLUG ) . '-"]),'
+			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-submenu a[href*="page=' . esc_attr( self::PAGE_SLUG ) . '-"]{'
 			. 'display:none !important;'
 			. '}'
 			. '</style>';

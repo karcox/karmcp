@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.19.0
+Stable tag: 1.19.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.19.1 =
+
+* Fixed: clicking **KarMCP** in the sidebar opened the Skills list instead of the panel. WordPress sends a top-level menu to whatever sits first in its submenu, and Skills was getting there first. **If you installed 1.19.0, upgrade.**
+* Fixed: Skills vanished from the sidebar. Hiding the duplicated section rows was hiding it too, and the panel's own rail does not list it.
 
 = 1.19.0 =
 

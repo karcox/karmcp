@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.18.0
+Stable tag: 1.18.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.18.1 =
+
+* Fixed: on the Connection tab, the four status cards rendered as giant black discs. The 1.18.0 cleanup removed their styles while the page still used them, so the icons inside had no size and expanded to fill the screen. **If you installed 1.18.0, upgrade.**
 
 = 1.18.0 =
 

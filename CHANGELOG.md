@@ -2,6 +2,16 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.18.1]
+
+### Fixed
+
+- **The Connection tab's status cards rendered as giant black discs.** 1.18.0 removed the whole `elementor-mcp-status-*` family from the stylesheet while the markup still emitted it. Losing `.karmcp-status-card-icon`'s explicit `28px` box, and the `svg { width: 16px }` inside it, let the inline SVGs expand to the width of the page and paint solid black through `fill: currentColor`. The grid and the card, label and value styles went with them.
+
+  The cause was a prefix match, not a bad judgement call: the dead-family list named `elementor-mcp-stat`, and `startswith()` matched `elementor-mcp-status-*` too. The verification pass then re-used the same list, so it confirmed its own mistake and reported nothing.
+
+  The check that would have caught it, and that now stands as the rule for this stylesheet: **compare the classes the markup actually emits against the classes the stylesheet declares** — never trust a hand-written list of what is safe to delete. Run against every view, that comparison finds no other regression; the only other lost sizing rule, `.karmcp-stat-icon svg`, belonged to the stats bar, which nothing renders.
+
 ## [1.18.0]
 
 ### Changed

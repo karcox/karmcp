@@ -952,6 +952,83 @@
 }
 
 /* =========================================================================
+ * Status Cards (Connection tab)
+ *
+ * The icon box needs its explicit size: the SVGs inside carry no width or
+ * height of their own, so without it they expand to fill the card and render
+ * as a full-width black disc. 1.18.0 shipped exactly that bug for one build.
+ * ========================================================================= */
+
+.karmcp-status-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1px;
+	margin-bottom: var(--mcp-space-4);
+	background: var(--mcp-border);
+	border: 1px solid var(--mcp-border);
+	border-radius: var(--mcp-radius);
+	overflow: hidden;
+}
+
+.karmcp-status-card {
+	display: flex;
+	align-items: center;
+	gap: var(--mcp-space-3);
+	padding: var(--mcp-space-3) var(--mcp-space-4);
+	background: var(--mcp-surface);
+	border: none;
+	border-radius: 0;
+}
+
+.karmcp-status-card-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 1px solid transparent;
+	border-radius: var(--mcp-radius);
+	flex-shrink: 0;
+}
+
+.karmcp-status-card-icon--ok {
+	background: var(--mcp-success-light);
+	border-color: var(--mcp-success-border);
+	color: var(--mcp-success);
+}
+
+.karmcp-status-card-icon--warn {
+	background: var(--mcp-danger-light);
+	border-color: var(--mcp-danger-border);
+	color: var(--mcp-danger);
+}
+
+.karmcp-status-card-icon svg {
+	width: 16px;
+	height: 16px;
+	flex: none;
+	fill: currentColor;
+}
+
+.karmcp-status-card-info {
+	min-width: 0;
+}
+
+.karmcp-status-card-label {
+	font-size: var(--mcp-text-xs);
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--mcp-text-muted);
+}
+
+.karmcp-status-card-value {
+	font-size: var(--mcp-text-base);
+	font-weight: 600;
+	color: var(--mcp-text);
+}
+
+/* =========================================================================
  * Endpoint URL
  * ========================================================================= */
 

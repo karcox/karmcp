@@ -44,6 +44,71 @@ class UnknownSettingKeysTest extends TestCase {
 		return new KarMCP_Settings_Validator( $generator );
 	}
 
+	/**
+	 * The regression from the 18-08 verification pass, on the real control set.
+	 *
+	 * 1.20.0 shipped this check and it caught none of the two names that
+	 * motivated it: matching accepted anything sharing a prefix with a known
+	 * control, and on this widget `button_` prefixes half the schema. A pure
+	 * invention, `button_pepito_inventado`, went through as valid.
+	 *
+	 * The names below are the button widget's actual controls, read from
+	 * Elementor 4.2.x via get-widget-schema full:true on 2026-08-18.
+	 *
+	 * @return KarMCP_Settings_Validator
+	 */
+	private function button_validator(): KarMCP_Settings_Validator {
+		return $this->validator(
+			array(
+				'text', 'link', 'size', 'button_type', 'align', 'align_tablet', 'align_mobile',
+				'selected_icon', 'icon_align', 'icon_indent', 'button_css_id',
+				'button_text_color', 'background_background', 'background_color',
+				'button_box_shadow_box_shadow_type', 'button_box_shadow_box_shadow',
+				'hover_color', 'button_background_hover_background', 'button_background_hover_color',
+				'button_hover_border_color', 'button_hover_transition_duration', 'hover_animation',
+				'border_border', 'border_width', 'border_color', 'border_radius', 'text_padding',
+				'typography_typography', 'typography_font_family', 'typography_font_size',
+			)
+		);
+	}
+
+	/**
+	 * @return array<string,array{0:string,1:bool}>
+	 */
+	public static function buttonKeys(): array {
+		return array(
+			// The two that started all of this. Both are real controls — on the
+			// KIT, not on this widget — and both begin with `button_`.
+			'the kit padding'          => array( 'button_padding', true ),
+			'the kit background'       => array( 'button_background_color', true ),
+			// A pure invention wearing the same prefix.
+			'an invention'             => array( 'button_pepito_inventado', true ),
+			// Another widget's control.
+			"heading's title colour"   => array( 'title_color', true ),
+			// Real controls of this widget: silence, or the warning gets ignored.
+			'the widget padding'       => array( 'text_padding', false ),
+			'the hover background'     => array( 'button_background_hover_color', false ),
+			'a group sub-field'        => array( 'typography_font_family', false ),
+			'a responsive variant'     => array( 'text_padding_mobile', false ),
+		);
+	}
+
+	/**
+	 * @dataProvider buttonKeys
+	 *
+	 * @param string $key      Setting key written to a button widget.
+	 * @param bool   $reported Whether it must be reported as unknown.
+	 */
+	public function test_button_keys_are_judged_against_the_widgets_own_controls( string $key, bool $reported ): void {
+		$unknown = $this->button_validator()->unknown_keys( 'button', array( $key => 'x' ) );
+
+		$this->assertSame(
+			$reported ? array( $key ) : array(),
+			$unknown,
+			$reported ? $key . ' must be reported.' : $key . ' is a real control and must stay silent.'
+		);
+	}
+
 	public function test_a_control_the_widget_has_is_not_reported(): void {
 		$validator = $this->validator( array( 'text_padding', 'background_color' ) );
 
@@ -88,21 +153,46 @@ class UnknownSettingKeysTest extends TestCase {
 	}
 
 	/**
-	 * Responsive variants and group-control sub-keys are real, and flagging them
-	 * would train people to ignore the warning — which is worse than no warning.
+	 * Responsive variants stay tolerated by shape: Elementor registers only a
+	 * few of them explicitly, so `text_padding_mobile` will not be in the list
+	 * even though `text_padding` is.
 	 */
-	public function test_responsive_and_group_variants_are_not_reported(): void {
+	public function test_responsive_variants_are_not_reported(): void {
 		$validator = $this->validator( array( 'text_padding', 'typography_font_size' ) );
 
 		$this->assertSame(
 			array(),
-			$validator->unknown_keys(
-				'button',
-				array(
-					'text_padding_mobile'    => array(),
-					'typography_font_weight' => '700',
-				)
-			)
+			$validator->unknown_keys( 'button', array( 'text_padding_mobile' => array() ) )
+		);
+	}
+
+	/**
+	 * Group sub-fields are judged like anything else — by being in the list.
+	 *
+	 * This test previously asserted the opposite: that `typography_font_weight`
+	 * passed on the strength of sharing a prefix with `typography_font_size`.
+	 * That leniency is exactly what let `button_padding` through, and it is no
+	 * longer needed: get_full_controls() flips Elementor's style-control toggle
+	 * while reading, so the real schema carries every expanded group field —
+	 * the live button schema lists font_weight, font_style, line_height and the
+	 * rest alongside font_size.
+	 *
+	 * The trade is deliberate: on an install where the controls somehow come
+	 * back partial, a real sub-field would be reported as unknown. That is a
+	 * false warning on a call that still succeeds, against the alternative of
+	 * missing every wrong name that wears a familiar prefix.
+	 */
+	public function test_a_group_sub_field_is_reported_when_it_is_not_in_the_control_list(): void {
+		$validator = $this->validator( array( 'typography_font_size', 'typography_font_weight' ) );
+
+		$this->assertSame(
+			array(),
+			$validator->unknown_keys( 'button', array( 'typography_font_weight' => '700' ) )
+		);
+
+		$this->assertSame(
+			array( 'typography_invented_field' ),
+			$validator->unknown_keys( 'button', array( 'typography_invented_field' => 'x' ) )
 		);
 	}
 

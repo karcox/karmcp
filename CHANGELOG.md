@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.20.1]
+
+### Fixed
+
+- **The unknown-key warning added in 1.20.0 caught neither of the two names that motivated it.** It reused `is_group_control_subkey()`, which accepts any key sharing a prefix with a known control — and on the button widget `button_` prefixes half the schema. So `button_padding` and `button_background_color` both passed as valid, and so did `button_pepito_inventado`. A check that fires on `title_color` and stays silent on a pure invention is worse than none: it reads as coverage.
+
+  The leniency was there because Elementor's Optimized Control Loading strips style controls outside the editor, leaving the schema genuinely incomplete. That was already fixed at the source: `KarMCP_Schema_Generator::get_full_controls()` flips `Performance::use_style_controls` while it reads, so `properties` now carries the whole expanded set. Verified against Elementor 4.2.x — the live button schema contains `text_padding`, `typography_font_family` and `button_background_hover_color`, and contains neither `button_padding` (the kit's) nor `button_background_color`.
+
+  Keys are now matched against that list exactly, with responsive variants still allowed by shape since Elementor registers only some of them explicitly. `UnknownSettingKeysTest` runs the eight-case table from the field report: the two kit names, the invention and another widget's control must be reported; the widget's own padding, its hover background, a group sub-field and a responsive variant must stay silent.
+
+  One test from 1.20.0 asserted the old leniency and was rewritten rather than kept. The trade is deliberate and worth stating: on an install where the controls somehow come back partial, a real sub-field would be reported as unknown — a false warning on a call that still succeeds, against missing every wrong name that wears a familiar prefix.
+
 ## [1.20.0]
 
 Four fixes from a field report written while building three courses over MCP. Each was measured against real posts; each is pinned by a test that fails without its fix.

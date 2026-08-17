@@ -198,11 +198,37 @@ class KarMCP_Settings_Validator {
 		$valid_keys = array_keys( $schema['properties'] ?? array() );
 		$unknown    = array();
 
+		/*
+		 * Deliberately WITHOUT is_group_control_subkey().
+		 *
+		 * That helper accepts any key sharing a prefix with a known control,
+		 * and on this widget `button_` is a prefix of half the control set —
+		 * so `button_padding`, `button_background_color` and even
+		 * `button_pepito_inventado` all passed as valid. The check existed and
+		 * caught nothing that mattered: the two names that motivated it both
+		 * begin with `button_`.
+		 *
+		 * The helper was written when the schema was genuinely incomplete —
+		 * Elementor's Optimized Control Loading strips style controls outside
+		 * the editor. KarMCP_Schema_Generator::get_full_controls() has since
+		 * fixed that at the source by flipping Performance::use_style_controls
+		 * while it reads, so `properties` now carries the whole set: verified
+		 * against Elementor 4.2.x, where the button schema contains
+		 * `text_padding`, `typography_font_family` and
+		 * `button_background_hover_color`, and does NOT contain `button_padding`
+		 * (that one is the kit's) or `button_background_color`.
+		 *
+		 * With a complete list, exact matching is both possible and the point.
+		 * Responsive variants still need their own check, because Elementor
+		 * only registers a few of them explicitly.
+		 *
+		 * The helper stays for validate()'s logging, which is diagnostic and
+		 * where a loose match costs nothing.
+		 */
 		foreach ( array_keys( $settings ) as $key ) {
 			if ( in_array( $key, $valid_keys, true )
 				|| in_array( $key, self::$common_advanced_keys, true )
 				|| $this->is_responsive_variant( $key, $valid_keys )
-				|| $this->is_group_control_subkey( $key, $valid_keys )
 			) {
 				continue;
 			}

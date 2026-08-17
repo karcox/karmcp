@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.20.0
+Stable tag: 1.20.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.20.1 =
+
+* Fixed: the unknown-setting warning added in 1.20.0 let through any name starting with a prefix the widget already uses — which is exactly how the two names that prompted the feature were shaped, so it caught neither. Names are now checked against the widget's real control list.
 
 = 1.20.0 =
 

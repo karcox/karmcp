@@ -28,7 +28,7 @@ if ( $karmcp_has_pro ) {
 
 ?>
 
-<div class="elementor-mcp-templates">
+<div class="karmcp-templates">
 
 	<?php if ( ! KarMCP_Bootstrap::elementor_active() ) : ?>
 	<div class="notice notice-warning inline">
@@ -51,12 +51,12 @@ if ( $karmcp_has_pro ) {
 		}
 	?>
 
-		<div class="elementor-mcp-pro-prompts">
-			<div class="elementor-mcp-pro-prompts-header">
-				<div class="elementor-mcp-pro-prompts-heading">
+		<div class="karmcp-pro-prompts">
+			<div class="karmcp-pro-prompts-header">
+				<div class="karmcp-pro-prompts-heading">
 					<h2>
 						<?php esc_html_e( 'Premium Templates Library', 'karmcp' ); ?>
-						<span class="elementor-mcp-badge elementor-mcp-badge--pro">PRO</span>
+						<span class="karmcp-badge karmcp-badge--pro">PRO</span>
 					</h2>
 					<p class="description">
 						<?php
@@ -68,7 +68,7 @@ if ( $karmcp_has_pro ) {
 						);
 						?>
 						<?php if ( ! empty( $karmcp_pro_bundle['fetched_at'] ) ) : ?>
-							<span class="elementor-mcp-pro-prompts-meta">
+							<span class="karmcp-pro-prompts-meta">
 								<?php
 								printf(
 									/* translators: %s: human-readable time since last sync */
@@ -82,7 +82,7 @@ if ( $karmcp_has_pro ) {
 				</div>
 				<button
 					type="button"
-					class="button elementor-mcp-pro-sync-btn"
+					class="button karmcp-pro-sync-btn"
 					data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_sync_pro_templates' ) ); ?>"
 					data-sync-action="karmcp_sync_pro_templates"
 				>
@@ -91,21 +91,21 @@ if ( $karmcp_has_pro ) {
 				</button>
 			</div>
 
-			<div class="elementor-mcp-coming-soon" role="status">
-				<span class="elementor-mcp-coming-soon__icon" aria-hidden="true">
+			<div class="karmcp-coming-soon" role="status">
+				<span class="karmcp-coming-soon__icon" aria-hidden="true">
 					<svg viewBox="0 0 20 20" width="16" height="16" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M10 2a1 1 0 011 1v1.05a6.002 6.002 0 015 5.95v3.382l1.447 2.894A1 1 0 0116.553 18H3.447a1 1 0 01-.894-1.724L4 13.382V10a6.002 6.002 0 015-5.95V3a1 1 0 011-1zm-2 17a2 2 0 104 0H8z"/></svg>
 				</span>
-				<div class="elementor-mcp-coming-soon__text">
+				<div class="karmcp-coming-soon__text">
 					<strong><?php esc_html_e( '50+ more premium templates on the way.', 'karmcp' ); ?></strong>
 					<?php esc_html_e( 'We\'re actively expanding the library across every category. Click Sync Library above whenever you want the latest.', 'karmcp' ); ?>
 				</div>
 			</div>
 
 			<?php if ( $karmcp_total > 0 ) : ?>
-				<div class="elementor-mcp-pro-filters" role="tablist" aria-label="<?php esc_attr_e( 'Filter by category', 'karmcp' ); ?>">
-					<button type="button" class="elementor-mcp-pro-filter is-active" data-category="all">
+				<div class="karmcp-pro-filters" role="tablist" aria-label="<?php esc_attr_e( 'Filter by category', 'karmcp' ); ?>">
+					<button type="button" class="karmcp-pro-filter is-active" data-category="all">
 						<?php esc_html_e( 'All', 'karmcp' ); ?>
-						<span class="elementor-mcp-pro-filter-count"><?php echo (int) $karmcp_total; ?></span>
+						<span class="karmcp-pro-filter-count"><?php echo (int) $karmcp_total; ?></span>
 					</button>
 					<?php foreach ( $karmcp_pro_bundle['categories'] as $karmcp_cat ) :
 						$karmcp_cat_slug  = isset( $karmcp_cat['slug'] ) ? sanitize_key( $karmcp_cat['slug'] ) : '';
@@ -115,15 +115,15 @@ if ( $karmcp_has_pro ) {
 							continue;
 						}
 					?>
-						<button type="button" class="elementor-mcp-pro-filter" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
+						<button type="button" class="karmcp-pro-filter" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
 							<?php echo esc_html( $karmcp_cat_label ); ?>
-							<span class="elementor-mcp-pro-filter-count"><?php echo (int) $karmcp_cat_count; ?></span>
+							<span class="karmcp-pro-filter-count"><?php echo (int) $karmcp_cat_count; ?></span>
 						</button>
 					<?php endforeach; ?>
 				</div>
 
 				<div
-					class="elementor-mcp-template-grid"
+					class="karmcp-template-grid"
 					data-apply-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_apply_pro_template' ) ); ?>"
 					data-import-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_import_pro_template' ) ); ?>"
 				>
@@ -143,35 +143,35 @@ if ( $karmcp_has_pro ) {
 								continue;
 							}
 						?>
-							<div class="elementor-mcp-template-card" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
+							<div class="karmcp-template-card" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
 								<?php if ( '' !== $karmcp_t_thumb ) : ?>
-									<div class="elementor-mcp-template-thumb">
+									<div class="karmcp-template-thumb">
 										<img src="<?php echo esc_url( $karmcp_t_thumb ); ?>" alt="<?php echo esc_attr( $karmcp_t_title ); ?>" loading="lazy" />
 									</div>
 								<?php else : ?>
-									<div class="elementor-mcp-template-thumb elementor-mcp-template-thumb--placeholder" aria-hidden="true">
+									<div class="karmcp-template-thumb karmcp-template-thumb--placeholder" aria-hidden="true">
 										<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 4a2 2 0 012-2h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V4zm2 0v16h14V4H5zm2 3h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/></svg>
 									</div>
 								<?php endif; ?>
-								<div class="elementor-mcp-template-body">
-									<div class="elementor-mcp-template-header">
-										<h3 class="elementor-mcp-template-title"><?php echo esc_html( $karmcp_t_title ); ?></h3>
-										<span class="elementor-mcp-prompt-tag"><?php echo esc_html( $karmcp_cat_label ); ?></span>
+								<div class="karmcp-template-body">
+									<div class="karmcp-template-header">
+										<h3 class="karmcp-template-title"><?php echo esc_html( $karmcp_t_title ); ?></h3>
+										<span class="karmcp-prompt-tag"><?php echo esc_html( $karmcp_cat_label ); ?></span>
 									</div>
 										<?php
 										$karmcp_used = (int) ( $karmcp_usage_counts[ 'template:' . $karmcp_t_slug ] ?? 0 );
 										if ( $karmcp_used > 0 ) :
 											?>
-											<span class="elementor-mcp-template-usage"><?php echo esc_html( sprintf( /* translators: %s: times applied */ _n( 'Used %s time', 'Used %s times', $karmcp_used, 'karmcp' ), number_format_i18n( $karmcp_used ) ) ); ?></span>
+											<span class="karmcp-template-usage"><?php echo esc_html( sprintf( /* translators: %s: times applied */ _n( 'Used %s time', 'Used %s times', $karmcp_used, 'karmcp' ), number_format_i18n( $karmcp_used ) ) ); ?></span>
 										<?php endif; ?>
 									<?php if ( '' !== $karmcp_t_desc ) : ?>
-										<p class="elementor-mcp-template-desc"><?php echo esc_html( $karmcp_t_desc ); ?></p>
+										<p class="karmcp-template-desc"><?php echo esc_html( $karmcp_t_desc ); ?></p>
 									<?php endif; ?>
-									<div class="elementor-mcp-template-actions">
+									<div class="karmcp-template-actions">
 										<?php if ( '' !== $karmcp_t_preview ) : ?>
 											<a
 												href="<?php echo esc_url( $karmcp_t_preview ); ?>"
-												class="button elementor-mcp-template-preview"
+												class="button karmcp-template-preview"
 												target="_blank"
 												rel="noopener noreferrer"
 												title="<?php esc_attr_e( 'Open the live demo of this template in a new tab.', 'karmcp' ); ?>"
@@ -182,10 +182,10 @@ if ( $karmcp_has_pro ) {
 												<?php esc_html_e( 'Live Preview', 'karmcp' ); ?>
 											</a>
 										<?php endif; ?>
-										<div class="elementor-mcp-template-actions-row">
+										<div class="karmcp-template-actions-row">
 											<button
 												type="button"
-												class="button button-primary elementor-mcp-template-apply"
+												class="button button-primary karmcp-template-apply"
 												data-category-slug="<?php echo esc_attr( $karmcp_cat_slug ); ?>"
 												data-template-slug="<?php echo esc_attr( $karmcp_t_slug ); ?>"
 											>
@@ -193,7 +193,7 @@ if ( $karmcp_has_pro ) {
 											</button>
 											<button
 												type="button"
-												class="button elementor-mcp-template-import"
+												class="button karmcp-template-import"
 												data-category-slug="<?php echo esc_attr( $karmcp_cat_slug ); ?>"
 												data-template-slug="<?php echo esc_attr( $karmcp_t_slug ); ?>"
 												title="<?php esc_attr_e( 'Add to Elementor\'s Saved Templates library, insertable from the editor\'s Add Template picker on any page.', 'karmcp' ); ?>"
@@ -217,13 +217,13 @@ if ( $karmcp_has_pro ) {
 
 	<?php elseif ( $karmcp_has_pro && $karmcp_pro_error ) : ?>
 
-		<div class="elementor-mcp-pro-prompts">
+		<div class="karmcp-pro-prompts">
 			<div class="notice notice-warning inline">
 				<p><?php echo esc_html( $karmcp_pro_error ); ?></p>
 				<p>
 					<button
 						type="button"
-						class="button elementor-mcp-pro-sync-btn"
+						class="button karmcp-pro-sync-btn"
 						data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_sync_pro_templates' ) ); ?>"
 						data-sync-action="karmcp_sync_pro_templates"
 					>

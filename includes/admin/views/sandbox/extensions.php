@@ -25,7 +25,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 ?>
 
 <p class="karmcp-sandbox-back">
-	<a href="<?php echo esc_url( menu_page_url( 'karmcp-widgets', false ) ); ?>" class="elementor-mcp-header-btn elementor-mcp-header-btn--secondary">
+	<a href="<?php echo esc_url( menu_page_url( 'karmcp-widgets', false ) ); ?>" class="karmcp-header-btn karmcp-header-btn--secondary">
 		<span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
 		<?php esc_html_e( 'Back to Sandbox', 'karmcp' ); ?>
 	</a>
@@ -37,11 +37,11 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 	<div class="notice notice-error is-dismissible"><p><?php echo esc_html( $karmcp_ext_import_error ); ?></p></div>
 <?php endif; ?>
 
-<div class="elementor-mcp-widget-builder">
+<div class="karmcp-widget-builder">
 
-	<div class="elementor-mcp-pro-prompts">
-		<div class="elementor-mcp-pro-prompts-header">
-			<div class="elementor-mcp-pro-prompts-heading">
+	<div class="karmcp-pro-prompts">
+		<div class="karmcp-pro-prompts-header">
+			<div class="karmcp-pro-prompts-heading">
 				<h2><?php esc_html_e( 'Extensions', 'karmcp' ); ?></h2>
 				<p class="description">
 					<?php esc_html_e( 'Options added to Elementor\'s own elements — a section in the settings panel of the containers you target, compiled from a spec into wp-content/karmcp-sandbox. Requires Elementor 4.2 or newer: extensions attach to atomic elements, not to classic sections and columns.', 'karmcp' ); ?>
@@ -51,7 +51,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 
 		<?php if ( ! $karmcp_ext_can ) : ?>
 
-			<div class="elementor-mcp-pro-cta">
+			<div class="karmcp-pro-cta">
 				<p>
 					<?php esc_html_e( 'Managing element extensions requires an administrator account: an extension is executable code that runs wherever its target elements appear.', 'karmcp' ); ?>
 				</p>
@@ -91,7 +91,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 
 			<?php else : ?>
 
-				<table class="widefat striped elementor-mcp-extensions-table" data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_extensions' ) ); ?>" style="margin-top: 16px;">
+				<table class="widefat striped karmcp-extensions-table" data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_extensions' ) ); ?>" style="margin-top: 16px;">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Extension', 'karmcp' ); ?></th>
@@ -135,16 +135,16 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 									?>
 								</td>
 								<td>
-									<span class="elementor-mcp-badge <?php echo esc_attr( $karmcp_active ? 'elementor-mcp-badge--pro' : '' ); ?>">
+									<span class="karmcp-badge <?php echo esc_attr( $karmcp_active ? 'karmcp-badge--pro' : '' ); ?>">
 										<?php echo $karmcp_active ? esc_html__( 'Active', 'karmcp' ) : esc_html__( 'Inactive', 'karmcp' ); ?>
 									</span>
 								</td>
 								<td class="karmcp-sb-actions">
-									<button type="button" class="button elementor-mcp-wb-toggle" data-status="<?php echo esc_attr( $karmcp_active ? 'draft' : 'active' ); ?>">
+									<button type="button" class="button karmcp-wb-toggle" data-status="<?php echo esc_attr( $karmcp_active ? 'draft' : 'active' ); ?>">
 										<span class="dashicons dashicons-<?php echo $karmcp_active ? 'controls-pause' : 'controls-play'; ?>" aria-hidden="true"></span>
 										<?php echo $karmcp_active ? esc_html__( 'Deactivate', 'karmcp' ) : esc_html__( 'Activate', 'karmcp' ); ?>
 									</button>
-									<button type="button" class="button karmcp-sb-danger elementor-mcp-wb-delete">
+									<button type="button" class="button karmcp-sb-danger karmcp-wb-delete">
 										<span class="dashicons dashicons-trash" aria-hidden="true"></span><?php esc_html_e( 'Delete', 'karmcp' ); ?>
 									</button>
 									<a class="button" href="<?php echo esc_url( KarMCP_Admin::sandbox_export_url( 'extension', $karmcp_eid ) ); ?>">
@@ -171,7 +171,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 
 				<script>
 				( function () {
-					var table = document.querySelector( '.elementor-mcp-extensions-table' );
+					var table = document.querySelector( '.karmcp-extensions-table' );
 					if ( ! table ) { return; }
 					var nonce = table.getAttribute( 'data-nonce' ) || '';
 					var ajaxUrl = window.ajaxurl || '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>';
@@ -187,7 +187,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 						if ( ! row ) { return; }
 						var id = row.getAttribute( 'data-extension-id' );
 
-						if ( e.target.classList.contains( 'elementor-mcp-wb-toggle' ) ) {
+						if ( e.target.classList.contains( 'karmcp-wb-toggle' ) ) {
 							e.target.disabled = true;
 							var b = new FormData();
 							b.append( 'extension_id', id );
@@ -198,7 +198,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 							} ).catch( function () { e.target.disabled = false; } );
 						}
 
-						if ( e.target.classList.contains( 'elementor-mcp-wb-delete' ) ) {
+						if ( e.target.classList.contains( 'karmcp-wb-delete' ) ) {
 							/* global confirm */
 							if ( ! confirm( '<?php echo esc_js( __( 'Delete this extension permanently? Its option disappears from every element that had it.', 'karmcp' ) ); ?>' ) ) { return; }
 							e.target.disabled = true;

@@ -67,7 +67,7 @@ $karmcp_v1_available = class_exists( 'KarMCP_Pro_Prompts' )
 $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_url() : '';
 ?>
 
-<div class="elementor-mcp-prompts">
+<div class="karmcp-prompts">
 
 	<?php // -------------------------------------------------------------------
 	// One-time notice for users arriving from an older version: the prompt
@@ -75,8 +75,8 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 	// ------------------------------------------------------------------- ?>
 
 	<?php if ( ! KarMCP_Admin::prompts_notice_dismissed() ) : ?>
-		<div class="elementor-mcp-prompts-whatsnew">
-			<div class="elementor-mcp-prompts-whatsnew-body">
+		<div class="karmcp-prompts-whatsnew">
+			<div class="karmcp-prompts-whatsnew-body">
 				<h3><?php esc_html_e( 'The prompts have been rewritten', 'karmcp' ); ?></h3>
 				<p>
 					<?php esc_html_e( 'Prompts no longer dictate a fixed, section-by-section layout. Each one now gives the AI a style guide, a design direction, the exact content, and hard standards, accessibility, real photography, consistent SVG icons, and a working contact form, then lets it design the page. Expect noticeably better, more distinctive results.', 'karmcp' ); ?>
@@ -90,7 +90,7 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 			</div>
 			<a
 				href="<?php echo esc_url( KarMCP_Admin::prompts_notice_dismiss_url() ); ?>"
-				class="elementor-mcp-prompts-whatsnew-dismiss"
+				class="karmcp-prompts-whatsnew-dismiss"
 				aria-label="<?php esc_attr_e( 'Dismiss this notice', 'karmcp' ); ?>"
 			>
 				<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
@@ -107,14 +107,14 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 	?>
 
 	<?php if ( $karmcp_show_samples ) : ?>
-		<div class="elementor-mcp-prompts-intro">
+		<div class="karmcp-prompts-intro">
 			<h2><?php esc_html_e( 'Sample Prompts', 'karmcp' ); ?></h2>
 			<p class="description">
 				<?php esc_html_e( 'Ready-to-use landing page blueprints for AI agents. Copy any prompt below and paste it into your AI client (Claude, Cursor, etc.), it will automatically build a complete Elementor page using MCP tools.', 'karmcp' ); ?>
 			</p>
 		</div>
 
-		<div class="elementor-mcp-prompts-grid">
+		<div class="karmcp-prompts-grid">
 			<?php foreach ( $karmcp_prompt_meta as $karmcp_slug => $karmcp_meta ) :
 				$karmcp_file_path = $karmcp_prompts_dir . $karmcp_slug . '.md';
 				if ( ! file_exists( $karmcp_file_path ) ) {
@@ -122,21 +122,21 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 				}
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading local plugin file.
 				$karmcp_content = file_get_contents( $karmcp_file_path );
-				$karmcp_copy_id = 'elementor-mcp-prompt-' . sanitize_title( $karmcp_slug );
+				$karmcp_copy_id = 'karmcp-prompt-' . sanitize_title( $karmcp_slug );
 			?>
-				<div class="elementor-mcp-prompt-card">
-					<div class="elementor-mcp-prompt-header">
-						<h3 class="elementor-mcp-prompt-title"><?php echo esc_html( $karmcp_meta['title'] ); ?></h3>
-						<span class="elementor-mcp-prompt-tag"><?php echo esc_html( $karmcp_meta['industry'] ); ?></span>
+				<div class="karmcp-prompt-card">
+					<div class="karmcp-prompt-header">
+						<h3 class="karmcp-prompt-title"><?php echo esc_html( $karmcp_meta['title'] ); ?></h3>
+						<span class="karmcp-prompt-tag"><?php echo esc_html( $karmcp_meta['industry'] ); ?></span>
 					</div>
-					<p class="elementor-mcp-prompt-desc"><?php echo esc_html( $karmcp_meta['description'] ); ?></p>
-					<div class="elementor-mcp-prompt-actions">
-						<button type="button" class="button elementor-mcp-copy-btn" data-target="<?php echo esc_attr( $karmcp_copy_id ); ?>">
+					<p class="karmcp-prompt-desc"><?php echo esc_html( $karmcp_meta['description'] ); ?></p>
+					<div class="karmcp-prompt-actions">
+						<button type="button" class="button karmcp-copy-btn" data-target="<?php echo esc_attr( $karmcp_copy_id ); ?>">
 							<svg viewBox="0 0 20 20" width="14" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
 						<?php esc_html_e( 'Copy Prompt', 'karmcp' ); ?>
 						</button>
 					</div>
-					<textarea id="<?php echo esc_attr( $karmcp_copy_id ); ?>" class="elementor-mcp-copy-source"><?php echo esc_textarea( $karmcp_content ); ?></textarea>
+					<textarea id="<?php echo esc_attr( $karmcp_copy_id ); ?>" class="karmcp-copy-source"><?php echo esc_textarea( $karmcp_content ); ?></textarea>
 				</div>
 			<?php endforeach; ?>
 		</div>
@@ -148,12 +148,12 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 
 	<?php if ( $karmcp_has_pro && is_array( $karmcp_pro_bundle ) ) : ?>
 
-		<div class="elementor-mcp-pro-prompts">
-			<div class="elementor-mcp-pro-prompts-header">
-				<div class="elementor-mcp-pro-prompts-heading">
+		<div class="karmcp-pro-prompts">
+			<div class="karmcp-pro-prompts-header">
+				<div class="karmcp-pro-prompts-heading">
 					<h2>
 						<?php esc_html_e( 'Premium Prompts Library', 'karmcp' ); ?>
-						<span class="elementor-mcp-badge elementor-mcp-badge--pro">PRO</span>
+						<span class="karmcp-badge karmcp-badge--pro">PRO</span>
 					</h2>
 					<p class="description">
 						<?php
@@ -169,7 +169,7 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 						);
 						?>
 						<?php if ( ! empty( $karmcp_pro_bundle['fetched_at'] ) ) : ?>
-							<span class="elementor-mcp-pro-prompts-meta">
+							<span class="karmcp-pro-prompts-meta">
 								<?php
 								printf(
 									/* translators: %s: human-readable time since last sync */
@@ -181,11 +181,11 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 						<?php endif; ?>
 					</p>
 				</div>
-				<div class="elementor-mcp-pro-prompts-actions">
+				<div class="karmcp-pro-prompts-actions">
 					<?php if ( $karmcp_v1_available ) : ?>
 						<a
 							href="<?php echo esc_url( $karmcp_v1_url ); ?>"
-							class="button elementor-mcp-legacy-btn"
+							class="button karmcp-legacy-btn"
 							title="<?php esc_attr_e( 'The original prompts, which prescribe an explicit section-by-section Elementor layout.', 'karmcp' ); ?>"
 						>
 							<span class="dashicons dashicons-download" aria-hidden="true"></span>
@@ -194,7 +194,7 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 					<?php endif; ?>
 					<button
 						type="button"
-						class="button elementor-mcp-pro-sync-btn"
+						class="button karmcp-pro-sync-btn"
 						data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_sync_pro_prompts' ) ); ?>"
 					>
 						<span class="dashicons dashicons-update" aria-hidden="true"></span>
@@ -203,10 +203,10 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 				</div>
 			</div>
 
-			<div class="elementor-mcp-pro-filters" role="tablist" aria-label="<?php esc_attr_e( 'Filter by category', 'karmcp' ); ?>">
-				<button type="button" class="elementor-mcp-pro-filter is-active" data-category="all">
+			<div class="karmcp-pro-filters" role="tablist" aria-label="<?php esc_attr_e( 'Filter by category', 'karmcp' ); ?>">
+				<button type="button" class="karmcp-pro-filter is-active" data-category="all">
 					<?php esc_html_e( 'All', 'karmcp' ); ?>
-					<span class="elementor-mcp-pro-filter-count"><?php echo (int) $karmcp_total; ?></span>
+					<span class="karmcp-pro-filter-count"><?php echo (int) $karmcp_total; ?></span>
 				</button>
 				<?php foreach ( $karmcp_pro_bundle['categories'] as $karmcp_cat ) :
 					$karmcp_cat_slug  = isset( $karmcp_cat['slug'] ) ? sanitize_key( $karmcp_cat['slug'] ) : '';
@@ -216,14 +216,14 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 						continue;
 					}
 				?>
-					<button type="button" class="elementor-mcp-pro-filter" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
+					<button type="button" class="karmcp-pro-filter" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
 						<?php echo esc_html( $karmcp_cat_label ); ?>
-						<span class="elementor-mcp-pro-filter-count"><?php echo (int) $karmcp_cat_count; ?></span>
+						<span class="karmcp-pro-filter-count"><?php echo (int) $karmcp_cat_count; ?></span>
 					</button>
 				<?php endforeach; ?>
 			</div>
 
-			<div class="elementor-mcp-prompts-grid elementor-mcp-pro-prompts-grid">
+			<div class="karmcp-prompts-grid karmcp-pro-prompts-grid">
 				<?php foreach ( $karmcp_pro_bundle['categories'] as $karmcp_cat ) :
 					$karmcp_cat_slug  = isset( $karmcp_cat['slug'] ) ? sanitize_key( $karmcp_cat['slug'] ) : '';
 					$karmcp_cat_label = isset( $karmcp_cat['label'] ) ? (string) $karmcp_cat['label'] : '';
@@ -238,21 +238,21 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 						if ( '' === $karmcp_p_slug || '' === $karmcp_p_content ) {
 							continue;
 						}
-						$karmcp_copy_id = 'elementor-mcp-pro-prompt-' . $karmcp_cat_slug . '-' . $karmcp_p_slug;
+						$karmcp_copy_id = 'karmcp-pro-prompt-' . $karmcp_cat_slug . '-' . $karmcp_p_slug;
 					?>
-						<div class="elementor-mcp-prompt-card elementor-mcp-pro-prompt-card" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>" data-prompt-slug="<?php echo esc_attr( $karmcp_p_slug ); ?>">
-							<div class="elementor-mcp-prompt-header">
-								<h3 class="elementor-mcp-prompt-title"><?php echo esc_html( $karmcp_p_title ); ?></h3>
-								<span class="elementor-mcp-prompt-tag"><?php echo esc_html( $karmcp_cat_label ); ?></span>
+						<div class="karmcp-prompt-card karmcp-pro-prompt-card" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>" data-prompt-slug="<?php echo esc_attr( $karmcp_p_slug ); ?>">
+							<div class="karmcp-prompt-header">
+								<h3 class="karmcp-prompt-title"><?php echo esc_html( $karmcp_p_title ); ?></h3>
+								<span class="karmcp-prompt-tag"><?php echo esc_html( $karmcp_cat_label ); ?></span>
 							</div>
-							<p class="elementor-mcp-prompt-desc"><?php echo esc_html( $karmcp_p_desc ); ?></p>
-							<div class="elementor-mcp-prompt-actions">
-								<button type="button" class="button elementor-mcp-copy-btn" data-target="<?php echo esc_attr( $karmcp_copy_id ); ?>">
+							<p class="karmcp-prompt-desc"><?php echo esc_html( $karmcp_p_desc ); ?></p>
+							<div class="karmcp-prompt-actions">
+								<button type="button" class="button karmcp-copy-btn" data-target="<?php echo esc_attr( $karmcp_copy_id ); ?>">
 									<svg viewBox="0 0 20 20" width="14" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
 									<?php esc_html_e( 'Copy Prompt', 'karmcp' ); ?>
 								</button>
 							</div>
-							<textarea id="<?php echo esc_attr( $karmcp_copy_id ); ?>" class="elementor-mcp-copy-source"><?php echo esc_textarea( $karmcp_p_content ); ?></textarea>
+							<textarea id="<?php echo esc_attr( $karmcp_copy_id ); ?>" class="karmcp-copy-source"><?php echo esc_textarea( $karmcp_p_content ); ?></textarea>
 						</div>
 					<?php endforeach; ?>
 				<?php endforeach; ?>
@@ -261,21 +261,21 @@ $karmcp_v1_url       = $karmcp_v1_available ? KarMCP_Pro_Prompts::v1_download_ur
 
 	<?php elseif ( $karmcp_has_pro && $karmcp_pro_error ) : ?>
 
-		<div class="elementor-mcp-pro-prompts">
+		<div class="karmcp-pro-prompts">
 			<div class="notice notice-warning inline">
 				<p>
 					<?php echo esc_html( $karmcp_pro_error ); ?>
 				</p>
-				<p class="elementor-mcp-pro-prompts-actions">
+				<p class="karmcp-pro-prompts-actions">
 					<button
 						type="button"
-						class="button elementor-mcp-pro-sync-btn"
+						class="button karmcp-pro-sync-btn"
 						data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_sync_pro_prompts' ) ); ?>"
 					>
 						<?php esc_html_e( 'Retry Sync', 'karmcp' ); ?>
 					</button>
 					<?php if ( $karmcp_v1_available ) : ?>
-						<a href="<?php echo esc_url( $karmcp_v1_url ); ?>" class="button elementor-mcp-legacy-btn">
+						<a href="<?php echo esc_url( $karmcp_v1_url ); ?>" class="button karmcp-legacy-btn">
 							<span class="dashicons dashicons-download" aria-hidden="true"></span>
 							<?php esc_html_e( 'Download v1 Prompts', 'karmcp' ); ?>
 						</a>

@@ -2390,7 +2390,7 @@ class KarMCP_Admin {
 
 		if ( file_exists( $css_path ) ) {
 			wp_enqueue_style(
-				'elementor-mcp-admin',
+				'karmcp-admin',
 				KARMCP_URL . 'assets/css/admin.css',
 				array(),
 				$css_ver
@@ -2404,7 +2404,7 @@ class KarMCP_Admin {
 		}
 
 		wp_enqueue_script(
-			'elementor-mcp-admin',
+			'karmcp-admin',
 			KARMCP_URL . 'assets/js/admin.js',
 			array(),
 			$js_ver,
@@ -2426,7 +2426,7 @@ class KarMCP_Admin {
 		}
 
 		wp_localize_script(
-			'elementor-mcp-admin',
+			'karmcp-admin',
 			'karmcpToolsAdmin',
 			array(
 				'copied'      => __( 'Copied!', 'karmcp' ),
@@ -3193,7 +3193,7 @@ class KarMCP_Admin {
 		$active_tab = $this->get_active_tab();
 
 		?>
-		<div class="wrap elementor-mcp-admin">
+		<div class="wrap karmcp-admin">
 			<h1><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></h1>
 
 			<?php

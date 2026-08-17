@@ -2,6 +2,28 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.18.0]
+
+### Changed
+
+- **The admin panel was rebuilt on a token system, and repainted.** Every colour in `assets/css/admin.css` now comes from a variable: the stylesheet declares primitives (the raw ramps), semantics (`--mcp-surface`, `--mcp-border`, `--mcp-text` — what a colour is *for*), and geometry (radii, spacing, elevation, motion), and nothing below that block names a hex value. Before this release 305 colours were written literally throughout the file, so any change to the palette repainted part of the panel and left the rest behind.
+
+  The visual direction changed with it: flat surfaces separated by borders instead of cards floating on shadows, tighter radii (3/5/7px, was 6/10/14), a grey ramp tinted toward the brand indigo so every surface is related to the mark, an inverted app bar, and section navigation as pills on a sunken rail. The brand indigo itself is unchanged.
+
+- **Nine variables were being used without ever being declared** — `--mcp-radius-md`, `--mcp-amber-50/200/600/800`, `--mcp-blue-50/200/800` and `--mcp-line`. Each fell through to a hardcoded fallback, which meant those rules silently ignored the design system and would have kept the old geometry through any restyle. All nine now resolve to real tokens.
+
+- **The duplicate page header is gone.** `.elementor-mcp-header` and its parts were still styled but no longer rendered by anything: the app bar had taken over, and the two were competing for the top of every screen.
+
+### Removed
+
+- **494 lines of stylesheet for screens that no longer exist**: the stats bar, the Skills page, the dashboard promo cards and the announcements slider. None of their classes are emitted by any PHP or JS file. Verified by diffing the declared class list before and after, to confirm nothing live was caught in the sweep.
+
+### Internal
+
+- **The legacy `elementor-mcp-*` class prefix is renamed to `karmcp-*`** across PHP, CSS and JS — 18 files, zero occurrences left. This includes the shared asset handle, now `karmcp-admin`, which is both the enqueue handle and the target of `wp_localize_script`; those move together or the admin JS loses its localised data.
+
+  **The `elementor_mcp_*` option keys are deliberately untouched.** They are underscore-separated, they hold data from older installs, and `KarMCP_Migration` reads them to carry settings forward. So are the references to the legacy plugin folder in `class-migration.php` and `karmcp.php`, which identify a different plugin and are not ours to rename.
+
 ## [1.17.2]
 
 ### Fixed

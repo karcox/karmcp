@@ -28,7 +28,7 @@ $karmcp_io_toggle = static function ( $name, $on, $title, $desc, $child = false 
 	printf(
 		'<label class="karmcp-switch karmcp-io-toggle%s">
 			<input type="checkbox" name="%s" value="1"%s />
-			<span class="elementor-mcp-toggle" aria-hidden="true"><span class="elementor-mcp-toggle-track"></span></span>
+			<span class="karmcp-toggle" aria-hidden="true"><span class="karmcp-toggle-track"></span></span>
 			<span class="karmcp-io-toggle-text">
 				<span class="karmcp-io-toggle-title">%s</span>
 				<span class="karmcp-io-toggle-desc">%s</span>

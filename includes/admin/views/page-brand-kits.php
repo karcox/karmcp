@@ -59,7 +59,7 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 }
 ?>
 
-<div class="elementor-mcp-brand-kits">
+<div class="karmcp-brand-kits">
 
 	<?php if ( ! KarMCP_Bootstrap::elementor_active() ) : ?>
 	<div class="notice notice-warning inline">
@@ -74,15 +74,15 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 
 	<?php if ( $karmcp_bk_total > 0 ) : ?>
 
-		<div class="elementor-mcp-pro-prompts">
-			<div class="elementor-mcp-pro-prompts-header">
-				<div class="elementor-mcp-pro-prompts-heading">
+		<div class="karmcp-pro-prompts">
+			<div class="karmcp-pro-prompts-header">
+				<div class="karmcp-pro-prompts-heading">
 					<h2>
 						<?php esc_html_e( 'Brand Kits Library', 'karmcp' ); ?>
 						<?php if ( $karmcp_is_free_set ) : ?>
-							<span class="elementor-mcp-badge elementor-mcp-badge--free"><?php esc_html_e( 'FREE', 'karmcp' ); ?></span>
+							<span class="karmcp-badge karmcp-badge--free"><?php esc_html_e( 'FREE', 'karmcp' ); ?></span>
 						<?php else : ?>
-							<span class="elementor-mcp-badge elementor-mcp-badge--pro">PRO</span>
+							<span class="karmcp-badge karmcp-badge--pro">PRO</span>
 						<?php endif; ?>
 					</h2>
 					<p class="description">
@@ -104,7 +104,7 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 							);
 							?>
 							<?php if ( ! empty( $karmcp_render['fetched_at'] ) ) : ?>
-								<span class="elementor-mcp-pro-prompts-meta">
+								<span class="karmcp-pro-prompts-meta">
 									<?php
 									printf(
 										/* translators: %s: human-readable time since last sync */
@@ -120,7 +120,7 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 				<?php if ( ! $karmcp_is_free_set ) : ?>
 					<button
 						type="button"
-						class="button elementor-mcp-pro-sync-btn"
+						class="button karmcp-pro-sync-btn"
 						data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_sync_pro_brand_kits' ) ); ?>"
 						data-sync-action="karmcp_sync_pro_brand_kits"
 					>
@@ -140,10 +140,10 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 			<?php endif; ?>
 
 			<?php if ( count( $karmcp_render['categories'] ) > 1 ) : ?>
-				<div class="elementor-mcp-pro-filters" role="tablist" aria-label="<?php esc_attr_e( 'Filter by category', 'karmcp' ); ?>">
-					<button type="button" class="elementor-mcp-pro-filter is-active" data-category="all">
+				<div class="karmcp-pro-filters" role="tablist" aria-label="<?php esc_attr_e( 'Filter by category', 'karmcp' ); ?>">
+					<button type="button" class="karmcp-pro-filter is-active" data-category="all">
 						<?php esc_html_e( 'All', 'karmcp' ); ?>
-						<span class="elementor-mcp-pro-filter-count"><?php echo (int) $karmcp_bk_total; ?></span>
+						<span class="karmcp-pro-filter-count"><?php echo (int) $karmcp_bk_total; ?></span>
 					</button>
 					<?php foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) :
 						$karmcp_cat_slug  = isset( $karmcp_bk_cat['slug'] ) ? sanitize_key( $karmcp_bk_cat['slug'] ) : '';
@@ -153,16 +153,16 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 							continue;
 						}
 					?>
-						<button type="button" class="elementor-mcp-pro-filter" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
+						<button type="button" class="karmcp-pro-filter" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
 							<?php echo esc_html( $karmcp_cat_label ); ?>
-							<span class="elementor-mcp-pro-filter-count"><?php echo (int) $karmcp_cat_count; ?></span>
+							<span class="karmcp-pro-filter-count"><?php echo (int) $karmcp_cat_count; ?></span>
 						</button>
 					<?php endforeach; ?>
 				</div>
 			<?php endif; ?>
 
 			<div
-				class="elementor-mcp-brand-kit-grid"
+				class="karmcp-brand-kit-grid"
 				data-apply-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_apply_pro_brand_kit' ) ); ?>"
 			>
 				<?php foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) :
@@ -192,13 +192,13 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 							}
 						}
 				?>
-						<div class="elementor-mcp-brand-kit-card" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
+						<div class="karmcp-brand-kit-card" data-category="<?php echo esc_attr( $karmcp_cat_slug ); ?>">
 							<?php if ( '' !== $karmcp_k_thumb ) : ?>
-								<div class="elementor-mcp-brand-kit-preview">
+								<div class="karmcp-brand-kit-preview">
 									<img src="<?php echo esc_url( $karmcp_k_thumb ); ?>" alt="<?php echo esc_attr( $karmcp_k_title ); ?>" loading="lazy" />
 								</div>
 							<?php elseif ( ! empty( $karmcp_swatches ) ) : ?>
-								<div class="elementor-mcp-brand-kit-swatches" aria-hidden="true">
+								<div class="karmcp-brand-kit-swatches" aria-hidden="true">
 									<?php
 									$karmcp_widths = array( '50%', '25%', '15%', '10%' );
 									foreach ( array_slice( $karmcp_swatches, 0, 4 ) as $karmcp_i => $karmcp_hex ) :
@@ -208,24 +208,24 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 										}
 									?>
 										<span
-											class="elementor-mcp-brand-kit-swatch"
+											class="karmcp-brand-kit-swatch"
 											style="width:<?php echo esc_attr( $karmcp_widths[ $karmcp_i ] ?? '25%' ); ?>;background-color:<?php echo esc_attr( $karmcp_hex_safe ); ?>;"
 										></span>
 									<?php endforeach; ?>
 								</div>
 							<?php endif; ?>
-							<div class="elementor-mcp-brand-kit-body">
-								<div class="elementor-mcp-brand-kit-header">
-									<h3 class="elementor-mcp-brand-kit-title"><?php echo esc_html( $karmcp_k_title ); ?></h3>
-									<span class="elementor-mcp-prompt-tag"><?php echo esc_html( $karmcp_cat_label ); ?></span>
+							<div class="karmcp-brand-kit-body">
+								<div class="karmcp-brand-kit-header">
+									<h3 class="karmcp-brand-kit-title"><?php echo esc_html( $karmcp_k_title ); ?></h3>
+									<span class="karmcp-prompt-tag"><?php echo esc_html( $karmcp_cat_label ); ?></span>
 								</div>
 								<?php if ( '' !== $karmcp_k_desc ) : ?>
-									<p class="elementor-mcp-brand-kit-desc"><?php echo esc_html( $karmcp_k_desc ); ?></p>
+									<p class="karmcp-brand-kit-desc"><?php echo esc_html( $karmcp_k_desc ); ?></p>
 								<?php endif; ?>
-								<div class="elementor-mcp-brand-kit-actions">
+								<div class="karmcp-brand-kit-actions">
 									<button
 										type="button"
-										class="button button-primary elementor-mcp-brand-kit-apply"
+										class="button button-primary karmcp-brand-kit-apply"
 										data-category-slug="<?php echo esc_attr( $karmcp_cat_slug ); ?>"
 										data-kit-slug="<?php echo esc_attr( $karmcp_k_slug ); ?>"
 										data-kit-title="<?php echo esc_attr( $karmcp_k_title ); ?>"
@@ -240,24 +240,24 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 			</div>
 
 			<!-- Restore from backup -->
-			<div class="elementor-mcp-brand-kit-restore" data-restore-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_restore_pro_brand_kit' ) ); ?>">
+			<div class="karmcp-brand-kit-restore" data-restore-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_restore_pro_brand_kit' ) ); ?>">
 				<h3><?php esc_html_e( 'Restore from backup', 'karmcp' ); ?></h3>
 				<?php if ( ! empty( $karmcp_bk_backups ) ) : ?>
 					<p class="description"><?php esc_html_e( 'Roll your global colors and typography back to a saved point. By default only kit-applied tokens are restored; tick the box to clobber your custom colors/typography exactly as they were.', 'karmcp' ); ?></p>
-					<div class="elementor-mcp-brand-kit-restore-row">
-						<select class="elementor-mcp-brand-kit-backup-select">
+					<div class="karmcp-brand-kit-restore-row">
+						<select class="karmcp-brand-kit-backup-select">
 							<?php foreach ( $karmcp_bk_backups as $karmcp_backup ) : ?>
 								<option value="<?php echo esc_attr( (int) $karmcp_backup['id'] ); ?>">
 									<?php echo esc_html( $karmcp_backup['title'] ); ?>
 								</option>
 							<?php endforeach; ?>
 						</select>
-						<button type="button" class="button elementor-mcp-brand-kit-restore-btn">
+						<button type="button" class="button karmcp-brand-kit-restore-btn">
 							<?php esc_html_e( 'Restore', 'karmcp' ); ?>
 						</button>
 					</div>
-					<label class="elementor-mcp-brand-kit-clobber">
-						<input type="checkbox" class="elementor-mcp-brand-kit-clobber-input" value="1" />
+					<label class="karmcp-brand-kit-clobber">
+						<input type="checkbox" class="karmcp-brand-kit-clobber-input" value="1" />
 						<?php esc_html_e( 'Also restore my custom colors and typography exactly as they were', 'karmcp' ); ?>
 					</label>
 				<?php else : ?>
@@ -267,20 +267,20 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 		</div>
 
 		<!-- Apply confirmation modal -->
-		<div class="elementor-mcp-brand-kit-modal" hidden>
-			<div class="elementor-mcp-brand-kit-modal__backdrop" data-modal-dismiss></div>
-			<div class="elementor-mcp-brand-kit-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="elementor-mcp-bk-modal-title">
-				<h3 id="elementor-mcp-bk-modal-title" class="elementor-mcp-brand-kit-modal__title"></h3>
-				<p class="elementor-mcp-brand-kit-modal__body">
+		<div class="karmcp-brand-kit-modal" hidden>
+			<div class="karmcp-brand-kit-modal__backdrop" data-modal-dismiss></div>
+			<div class="karmcp-brand-kit-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="karmcp-bk-modal-title">
+				<h3 id="karmcp-bk-modal-title" class="karmcp-brand-kit-modal__title"></h3>
+				<p class="karmcp-brand-kit-modal__body">
 					<?php esc_html_e( 'This will replace your site\'s global colors and typography. Every widget using global color/type tokens will switch to the new palette.', 'karmcp' ); ?>
 				</p>
-				<label class="elementor-mcp-brand-kit-modal__backup">
-					<input type="checkbox" class="elementor-mcp-brand-kit-modal__backup-input" value="1" checked />
+				<label class="karmcp-brand-kit-modal__backup">
+					<input type="checkbox" class="karmcp-brand-kit-modal__backup-input" value="1" checked />
 					<?php esc_html_e( 'Back up current global settings (recommended)', 'karmcp' ); ?>
 				</label>
-				<div class="elementor-mcp-brand-kit-modal__actions">
+				<div class="karmcp-brand-kit-modal__actions">
 					<button type="button" class="button" data-modal-dismiss><?php esc_html_e( 'Cancel', 'karmcp' ); ?></button>
-					<button type="button" class="button button-primary elementor-mcp-brand-kit-modal__confirm"><?php esc_html_e( 'Apply Brand Kit', 'karmcp' ); ?></button>
+					<button type="button" class="button button-primary karmcp-brand-kit-modal__confirm"><?php esc_html_e( 'Apply Brand Kit', 'karmcp' ); ?></button>
 				</div>
 			</div>
 		</div>

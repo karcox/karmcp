@@ -12,20 +12,20 @@
 	 * Tools tab — Enable/Disable all toggles.
 	 */
 	function initToolsForm() {
-		var form = document.getElementById( 'elementor-mcp-tools-form' );
+		var form = document.getElementById( 'karmcp-tools-form' );
 		if ( ! form ) {
 			return;
 		}
 
 		// Global enable/disable all.
-		var enableAll = form.querySelector( '.elementor-mcp-enable-all' );
-		var disableAll = form.querySelector( '.elementor-mcp-disable-all' );
+		var enableAll = form.querySelector( '.karmcp-enable-all' );
+		var disableAll = form.querySelector( '.karmcp-disable-all' );
 
 		// Scope bulk actions to the per-tool checkboxes only — NOT the separate
 		// low-tools-mode toggle, which also lives in this form. (A bare
 		// form.querySelectorAll('input[type="checkbox"]') would flip low-tools
 		// mode too, silently overriding every individual toggle.)
-		var toolCheckboxSelector = '.elementor-mcp-tool-card input[type="checkbox"]';
+		var toolCheckboxSelector = '.karmcp-tool-card input[type="checkbox"]';
 
 		if ( enableAll ) {
 			enableAll.addEventListener( 'click', function () {
@@ -50,12 +50,12 @@
 		}
 
 		// Per-category enable/disable + collapsible section headers.
-		// (cat scopes to .elementor-mcp-category, which never contains the
+		// (cat scopes to .karmcp-category, which never contains the
 		// low-tools-mode toggle, so the bulk selects below are safe.)
 		var COLLAPSE_KEY = 'karmcpToolsCollapsed:';
-		form.querySelectorAll( '.elementor-mcp-category' ).forEach( function ( cat ) {
-			var catEnableAll = cat.querySelector( '.elementor-mcp-cat-enable-all' );
-			var catDisableAll = cat.querySelector( '.elementor-mcp-cat-disable-all' );
+		form.querySelectorAll( '.karmcp-category' ).forEach( function ( cat ) {
+			var catEnableAll = cat.querySelector( '.karmcp-cat-enable-all' );
+			var catDisableAll = cat.querySelector( '.karmcp-cat-disable-all' );
 
 			if ( catEnableAll ) {
 				catEnableAll.addEventListener( 'click', function () {
@@ -80,7 +80,7 @@
 			}
 
 			// Collapse/expand the section, persisting state per category.
-			var toggle = cat.querySelector( '.elementor-mcp-category-toggle' );
+			var toggle = cat.querySelector( '.karmcp-category-toggle' );
 			if ( toggle ) {
 				var key = COLLAPSE_KEY + ( cat.getAttribute( 'data-category' ) || '' );
 				var stored = null;
@@ -116,18 +116,18 @@
 	 */
 	function updateToolCounts( form ) {
 		var enabled = 0;
-		form.querySelectorAll( '.elementor-mcp-tool-card input[type="checkbox"]' ).forEach( function ( cb ) {
+		form.querySelectorAll( '.karmcp-tool-card input[type="checkbox"]' ).forEach( function ( cb ) {
 			if ( cb.checked ) {
 				enabled++;
 			}
 		} );
-		var strong = form.querySelector( '.elementor-mcp-tools-summary strong' );
+		var strong = form.querySelector( '.karmcp-tools-summary strong' );
 		if ( strong ) {
 			// Replace just the leading "enabled" number, keeping the localized
 			// "N of M" wording intact.
 			strong.textContent = strong.textContent.replace( /^\s*\d+/, enabled );
 		}
-		form.querySelectorAll( '.elementor-mcp-category' ).forEach( function ( cat ) {
+		form.querySelectorAll( '.karmcp-category' ).forEach( function ( cat ) {
 			var cbs = cat.querySelectorAll( 'input[type="checkbox"]' );
 			var ce = 0;
 			cbs.forEach( function ( cb ) {
@@ -135,21 +135,21 @@
 					ce++;
 				}
 			} );
-			var el = cat.querySelector( '.elementor-mcp-category-count' );
+			var el = cat.querySelector( '.karmcp-category-count' );
 			if ( el ) {
 				el.textContent = ce + ' / ' + cbs.length;
 			}
 		} );
 		// Plugin-group counts (Plugins tab): sum across the group's plugin cards.
-		form.querySelectorAll( '.elementor-mcp-plugin-group' ).forEach( function ( grp ) {
-			var cbs = grp.querySelectorAll( '.elementor-mcp-tool-card input[type="checkbox"]' );
+		form.querySelectorAll( '.karmcp-plugin-group' ).forEach( function ( grp ) {
+			var cbs = grp.querySelectorAll( '.karmcp-tool-card input[type="checkbox"]' );
 			var ge = 0;
 			cbs.forEach( function ( cb ) {
 				if ( cb.checked ) {
 					ge++;
 				}
 			} );
-			var el = grp.querySelector( '.elementor-mcp-plugin-group-count' );
+			var el = grp.querySelector( '.karmcp-plugin-group-count' );
 			if ( el ) {
 				el.textContent = ge + ' / ' + cbs.length;
 			}
@@ -162,7 +162,7 @@
 	 * @param {HTMLElement} form The form element.
 	 */
 	function updateCards( form ) {
-		form.querySelectorAll( '.elementor-mcp-tool-card' ).forEach( function ( card ) {
+		form.querySelectorAll( '.karmcp-tool-card' ).forEach( function ( card ) {
 			var cb = card.querySelector( 'input[type="checkbox"]' );
 			card.classList.toggle( 'is-enabled', cb.checked );
 			card.classList.toggle( 'is-disabled', ! cb.checked );
@@ -173,15 +173,15 @@
 	// hidden panels keep their checkboxes in the form, so switching tabs never
 	// affects what gets saved.
 	( function initToolSubtabs() {
-		var tabs = document.querySelectorAll( '.elementor-mcp-subtab' );
-		var panels = document.querySelectorAll( '.elementor-mcp-tabpanel' );
+		var tabs = document.querySelectorAll( '.karmcp-subtab' );
+		var panels = document.querySelectorAll( '.karmcp-tabpanel' );
 		if ( ! tabs.length || ! panels.length ) {
 			return;
 		}
 		// Per-page storage key so different sub-tab groups (Tools vs Connection)
 		// don't overwrite each other's remembered tab. Falls back to the legacy
 		// key when the tablist doesn't declare one.
-		var tablist = document.querySelector( '.elementor-mcp-subtabs' );
+		var tablist = document.querySelector( '.karmcp-subtabs' );
 		var STORAGE_KEY = ( tablist && tablist.getAttribute( 'data-subtab-key' ) ) || 'karmcpToolsActiveTab';
 
 		function activate( tabId ) {
@@ -243,7 +243,7 @@
 	 * Connection tab — Generate credentials and populate all HTTP config blocks.
 	 */
 	function initBase64Generator() {
-		var generateBtn = document.getElementById( 'elementor-mcp-generate-b64' );
+		var generateBtn = document.getElementById( 'karmcp-generate-b64' );
 		if ( ! generateBtn ) {
 			return;
 		}
@@ -258,7 +258,7 @@
 		var authRadios = document.querySelectorAll( 'input[name="karmcp_auth_method"]' );
 		function karmcpApplyAuthMethod() {
 			document.body.setAttribute( 'data-karmcp-auth', karmcpAuthMethod() );
-			var sel = document.querySelector( '.elementor-mcp-client-card.is-selected' );
+			var sel = document.querySelector( '.karmcp-client-card.is-selected' );
 			if ( sel ) { karmcpSelectClient( sel.getAttribute( 'data-client' ) ); }
 		}
 		for ( var ai = 0; ai < authRadios.length; ai++ ) {
@@ -267,11 +267,11 @@
 		document.body.setAttribute( 'data-karmcp-auth', karmcpAuthMethod() );
 
 		// The client picker is always visible now; auto-select so steps show.
-		var picker = document.getElementById( 'elementor-mcp-client-picker' );
+		var picker = document.getElementById( 'karmcp-client-picker' );
 		if ( picker ) {
 			picker.style.display = '';
 			var savedClient = window.localStorage.getItem( 'karmcpConnClient' );
-			var firstCard = document.querySelector( '.elementor-mcp-client-card' );
+			var firstCard = document.querySelector( '.karmcp-client-card' );
 			var pick = savedClient || ( firstCard ? firstCard.getAttribute( 'data-client' ) : '' );
 			if ( pick ) { karmcpSelectClient( pick ); }
 		}
@@ -286,14 +286,14 @@
 		// error. credentials:'omit' ensures ONLY the Authorization header
 		// authenticates (not the admin login cookie), so a 401 here is a true
 		// Basic-auth failure, not a false pass.
-		var authBtn = document.getElementById( 'elementor-mcp-authtest-btn' );
+		var authBtn = document.getElementById( 'karmcp-authtest-btn' );
 		if ( authBtn ) {
 			authBtn.addEventListener( 'click', function () {
 				if ( ! karmcpAuthHeader || typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.restMeUrl ) {
 					return;
 				}
-				var statusEl = document.getElementById( 'elementor-mcp-authtest-status' );
-				var fixEl = document.getElementById( 'elementor-mcp-authtest-fix' );
+				var statusEl = document.getElementById( 'karmcp-authtest-status' );
+				var fixEl = document.getElementById( 'karmcp-authtest-fix' );
 				if ( statusEl ) {
 					statusEl.style.display = '';
 					statusEl.className = 'description';
@@ -315,13 +315,13 @@
 						return;
 					}
 					if ( response.ok ) {
-						statusEl.className = 'description elementor-mcp-authtest-ok';
+						statusEl.className = 'description karmcp-authtest-ok';
 						statusEl.textContent = karmcpToolsAdmin.authOk || 'Authentication works.';
 						if ( fixEl ) {
 							fixEl.style.display = 'none';
 						}
 					} else {
-						statusEl.className = 'description elementor-mcp-authtest-bad';
+						statusEl.className = 'description karmcp-authtest-bad';
 						statusEl.textContent = ( karmcpToolsAdmin.authFail || 'Authentication failed (HTTP %d).' ).replace( '%d', response.status );
 						if ( fixEl ) {
 							fixEl.style.display = '';
@@ -330,7 +330,7 @@
 				} ).catch( function () {
 					authBtn.disabled = false;
 					if ( statusEl ) {
-						statusEl.className = 'description elementor-mcp-authtest-bad';
+						statusEl.className = 'description karmcp-authtest-bad';
 						statusEl.textContent = karmcpToolsAdmin.authError || 'Could not reach the REST API.';
 					}
 					if ( fixEl ) {
@@ -341,7 +341,7 @@
 		}
 
 		generateBtn.addEventListener( 'click', function () {
-			var usernameEl = document.getElementById( 'elementor-mcp-b64-username' );
+			var usernameEl = document.getElementById( 'karmcp-b64-username' );
 			if ( ! usernameEl || ! usernameEl.value ) {
 				/* global alert */
 				alert( 'Please select an administrator account.' );
@@ -350,7 +350,7 @@
 
 			var selectedOption = usernameEl.options[ usernameEl.selectedIndex ];
 			var selectedLogin = selectedOption ? ( selectedOption.getAttribute( 'data-login' ) || '' ) : '';
-			var manualEl = document.getElementById( 'elementor-mcp-b64-app-password' );
+			var manualEl = document.getElementById( 'karmcp-b64-app-password' );
 			var manualPassword = manualEl ? manualEl.value.trim() : '';
 
 			// If an existing password is supplied, use it directly and skip creation.
@@ -408,7 +408,7 @@
 		 * @param {boolean} isError  Whether to style it as an error.
 		 */
 		function setCredStatus( message, isError ) {
-			var statusEl = document.getElementById( 'elementor-mcp-cred-status' );
+			var statusEl = document.getElementById( 'karmcp-cred-status' );
 			if ( ! statusEl ) {
 				return;
 			}
@@ -423,9 +423,9 @@
 		 * @param {string} password  The newly created application password.
 		 */
 		function renderGeneratedPassword( password ) {
-			var row = document.getElementById( 'elementor-mcp-generated-pw-row' );
-			var code = document.getElementById( 'elementor-mcp-generated-pw' );
-			var copy = document.getElementById( 'elementor-mcp-generated-pw-copy' );
+			var row = document.getElementById( 'karmcp-generated-pw-row' );
+			var code = document.getElementById( 'karmcp-generated-pw' );
+			var copy = document.getElementById( 'karmcp-generated-pw-copy' );
 			if ( row && code && copy ) {
 				row.style.display = '';
 				code.textContent = password;
@@ -443,9 +443,9 @@
 			var headerValue = 'Basic ' + btoa( rawUsername + ':' + rawAppPassword );
 
 			// Show the result row.
-			var resultRow = document.getElementById( 'elementor-mcp-b64-result-row' );
-			var resultCode = document.getElementById( 'elementor-mcp-b64-result' );
-			var resultCopy = document.getElementById( 'elementor-mcp-b64-result-copy' );
+			var resultRow = document.getElementById( 'karmcp-b64-result-row' );
+			var resultCode = document.getElementById( 'karmcp-b64-result' );
+			var resultCopy = document.getElementById( 'karmcp-b64-result-copy' );
 
 			if ( resultRow && resultCode && resultCopy ) {
 				resultRow.style.display = '';
@@ -455,7 +455,7 @@
 
 			// Arm the auth self-test (#41) with these credentials.
 			karmcpAuthHeader = headerValue;
-			var authRow = document.getElementById( 'elementor-mcp-authtest-row' );
+			var authRow = document.getElementById( 'karmcp-authtest-row' );
 			if ( authRow ) {
 				authRow.style.display = '';
 			}
@@ -470,10 +470,10 @@
 				siteUrl: karmcpToolsAdmin.siteUrl || '',
 				username: rawUsername,
 				appPassword: rawAppPassword,
-				userId: ( document.getElementById( 'elementor-mcp-b64-username' ) || {} ).value || '',
+				userId: ( document.getElementById( 'karmcp-b64-username' ) || {} ).value || '',
 				b64: btoa( rawUsername + ':' + rawAppPassword )
 			};
-			var picker = document.getElementById( 'elementor-mcp-client-picker' );
+			var picker = document.getElementById( 'karmcp-client-picker' );
 			if ( picker ) { picker.style.display = ''; }
 			// Re-select a remembered client if any.
 			var saved = window.localStorage.getItem( 'karmcpConnClient' );
@@ -514,7 +514,7 @@
 	 */
 	function initCopyButtons() {
 		document.addEventListener( 'click', function ( e ) {
-			var btn = e.target.closest( '.elementor-mcp-copy-btn' );
+			var btn = e.target.closest( '.karmcp-copy-btn' );
 			if ( ! btn ) {
 				return;
 			}
@@ -535,7 +535,7 @@
 			} );
 
 			// Best-effort usage ping for premium (website-fetched) prompts only.
-			trackProPromptCopy( btn.closest( '.elementor-mcp-pro-prompt-card' ) );
+			trackProPromptCopy( btn.closest( '.karmcp-pro-prompt-card' ) );
 		} );
 	}
 
@@ -594,7 +594,7 @@
 
 		// Pager container lives directly after the grid.
 		var pager = document.createElement( 'nav' );
-		pager.className = 'elementor-mcp-pager';
+		pager.className = 'karmcp-pager';
 		pager.setAttribute( 'aria-label', 'Pagination' );
 		grid.parentNode.insertBefore( pager, grid.nextSibling );
 
@@ -608,7 +608,7 @@
 			opt = opt || {};
 			var btn = document.createElement( 'button' );
 			btn.type = 'button';
-			btn.className = 'elementor-mcp-pager-btn' + ( opt.current ? ' is-current' : '' );
+			btn.className = 'karmcp-pager-btn' + ( opt.current ? ' is-current' : '' );
 			btn.textContent = text;
 			if ( opt.disabled ) {
 				btn.disabled = true;
@@ -675,7 +675,7 @@
 			pageList( totalPages ).forEach( function ( item ) {
 				if ( '…' === item ) {
 					var span = document.createElement( 'span' );
-					span.className = 'elementor-mcp-pager-ellipsis';
+					span.className = 'karmcp-pager-ellipsis';
 					span.textContent = '…';
 					pager.appendChild( span );
 				} else {
@@ -692,7 +692,7 @@
 			} ) );
 
 			var status = document.createElement( 'p' );
-			status.className = 'elementor-mcp-pager-status';
+			status.className = 'karmcp-pager-status';
 			status.textContent = 'Showing ' + ( start + 1 ) + '–' + Math.min( end, list.length ) +
 				' of ' + list.length + ' ' + label;
 			pager.appendChild( status );
@@ -701,12 +701,12 @@
 		// Own the category filter pills (active state + reset to page 1).
 		if ( filterBar ) {
 			filterBar.addEventListener( 'click', function ( e ) {
-				var btn = e.target.closest( '.elementor-mcp-pro-filter' );
+				var btn = e.target.closest( '.karmcp-pro-filter' );
 				if ( ! btn ) {
 					return;
 				}
 				activeCategory = btn.getAttribute( 'data-category' ) || 'all';
-				filterBar.querySelectorAll( '.elementor-mcp-pro-filter' ).forEach( function ( b ) {
+				filterBar.querySelectorAll( '.karmcp-pro-filter' ).forEach( function ( b ) {
 					b.classList.toggle( 'is-active', b === btn );
 				} );
 				currentPage = 1;
@@ -721,7 +721,7 @@
 	 * Premium prompts — "Sync Library" button.
 	 */
 	function initProSync() {
-		document.querySelectorAll( '.elementor-mcp-pro-sync-btn' ).forEach( function ( btn ) {
+		document.querySelectorAll( '.karmcp-pro-sync-btn' ).forEach( function ( btn ) {
 			btn.addEventListener( 'click', function () {
 				if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) {
 					return;
@@ -770,7 +770,7 @@
 	 * button is configured for. Both open the result in a new tab on success.
 	 */
 	function initProTemplateActions() {
-		var grid = document.querySelector( '.elementor-mcp-template-grid' );
+		var grid = document.querySelector( '.karmcp-template-grid' );
 		if ( ! grid ) {
 			return;
 		}
@@ -778,8 +778,8 @@
 		var importNonce = grid.getAttribute( 'data-import-nonce' ) || '';
 
 		grid.addEventListener( 'click', function ( e ) {
-			var applyBtn  = e.target.closest( '.elementor-mcp-template-apply' );
-			var importBtn = e.target.closest( '.elementor-mcp-template-import' );
+			var applyBtn  = e.target.closest( '.karmcp-template-apply' );
+			var importBtn = e.target.closest( '.karmcp-template-import' );
 			var btn = applyBtn || importBtn;
 			if ( ! btn ) {
 				return;
@@ -849,7 +849,7 @@
 	 */
 	function showBrandKitToast( message, viewUrl ) {
 		var toast = document.createElement( 'div' );
-		toast.className = 'elementor-mcp-bk-toast';
+		toast.className = 'karmcp-bk-toast';
 		var span = document.createElement( 'span' );
 		span.textContent = message;
 		toast.appendChild( span );
@@ -877,18 +877,18 @@
 	 * restore-from-backup.
 	 */
 	function initBrandKits() {
-		var root = document.querySelector( '.elementor-mcp-brand-kits' );
+		var root = document.querySelector( '.karmcp-brand-kits' );
 		if ( ! root || typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) {
 			return;
 		}
 
-		var grid = root.querySelector( '.elementor-mcp-brand-kit-grid' );
+		var grid = root.querySelector( '.karmcp-brand-kit-grid' );
 
 		// Note: the category filter pills are handled by initGridPagination(),
 		// which owns both filtering and pagination so they stay in sync.
 
 		// Apply confirmation modal.
-		var modal = root.querySelector( '.elementor-mcp-brand-kit-modal' );
+		var modal = root.querySelector( '.karmcp-brand-kit-modal' );
 		var pending = null;
 
 		function closeModal() {
@@ -900,7 +900,7 @@
 
 		if ( grid && modal ) {
 			grid.addEventListener( 'click', function ( e ) {
-				var btn = e.target.closest( '.elementor-mcp-brand-kit-apply' );
+				var btn = e.target.closest( '.karmcp-brand-kit-apply' );
 				if ( ! btn ) {
 					return;
 				}
@@ -909,12 +909,12 @@
 					cat:   btn.getAttribute( 'data-category-slug' ) || '',
 					title: btn.getAttribute( 'data-kit-title' ) || ''
 				};
-				var titleEl = modal.querySelector( '.elementor-mcp-brand-kit-modal__title' );
+				var titleEl = modal.querySelector( '.karmcp-brand-kit-modal__title' );
 				if ( titleEl ) {
 					var tpl = ( karmcpToolsAdmin.applyKitTitle || 'Apply "%s" brand kit?' );
 					titleEl.textContent = tpl.replace( '%s', pending.title );
 				}
-				var bk = modal.querySelector( '.elementor-mcp-brand-kit-modal__backup-input' );
+				var bk = modal.querySelector( '.karmcp-brand-kit-modal__backup-input' );
 				if ( bk ) {
 					bk.checked = true;
 				}
@@ -926,12 +926,12 @@
 					closeModal();
 					return;
 				}
-				var confirmBtn = e.target.closest( '.elementor-mcp-brand-kit-modal__confirm' );
+				var confirmBtn = e.target.closest( '.karmcp-brand-kit-modal__confirm' );
 				if ( ! confirmBtn || ! pending ) {
 					return;
 				}
 
-				var backup = modal.querySelector( '.elementor-mcp-brand-kit-modal__backup-input' );
+				var backup = modal.querySelector( '.karmcp-brand-kit-modal__backup-input' );
 				var doBackup = backup ? backup.checked : true;
 				var title = pending.title;
 				var orig = confirmBtn.textContent;
@@ -973,13 +973,13 @@
 		}
 
 		// Restore from backup.
-		var restore = root.querySelector( '.elementor-mcp-brand-kit-restore' );
+		var restore = root.querySelector( '.karmcp-brand-kit-restore' );
 		if ( restore ) {
-			var restoreBtn = restore.querySelector( '.elementor-mcp-brand-kit-restore-btn' );
+			var restoreBtn = restore.querySelector( '.karmcp-brand-kit-restore-btn' );
 			if ( restoreBtn ) {
 				restoreBtn.addEventListener( 'click', function () {
-					var select = restore.querySelector( '.elementor-mcp-brand-kit-backup-select' );
-					var clobber = restore.querySelector( '.elementor-mcp-brand-kit-clobber-input' );
+					var select = restore.querySelector( '.karmcp-brand-kit-backup-select' );
+					var clobber = restore.querySelector( '.karmcp-brand-kit-clobber-input' );
 					if ( ! select || ! select.value ) {
 						return;
 					}
@@ -1031,29 +1031,29 @@
 	 */
 	function initPagers() {
 		initGridPagination( {
-			gridSelector: '.elementor-mcp-pro-prompts-grid',
-			cardSelector: '.elementor-mcp-pro-prompt-card',
-			filterSelector: '.elementor-mcp-pro-prompts .elementor-mcp-pro-filters',
+			gridSelector: '.karmcp-pro-prompts-grid',
+			cardSelector: '.karmcp-pro-prompt-card',
+			filterSelector: '.karmcp-pro-prompts .karmcp-pro-filters',
 			pageSize: 12,
 			label: 'prompts'
 		} );
 		initGridPagination( {
-			gridSelector: '.elementor-mcp-template-grid',
-			cardSelector: '.elementor-mcp-template-card',
-			filterSelector: '.elementor-mcp-templates .elementor-mcp-pro-filters',
+			gridSelector: '.karmcp-template-grid',
+			cardSelector: '.karmcp-template-card',
+			filterSelector: '.karmcp-templates .karmcp-pro-filters',
 			pageSize: 12,
 			label: 'templates'
 		} );
 		initGridPagination( {
-			gridSelector: '.elementor-mcp-brand-kit-grid',
-			cardSelector: '.elementor-mcp-brand-kit-card',
-			filterSelector: '.elementor-mcp-brand-kits .elementor-mcp-pro-filters',
+			gridSelector: '.karmcp-brand-kit-grid',
+			cardSelector: '.karmcp-brand-kit-card',
+			filterSelector: '.karmcp-brand-kits .karmcp-pro-filters',
 			pageSize: 12,
 			label: 'brand kits'
 		} );
 		initGridPagination( {
-			gridSelector: '.elementor-mcp-changelog-list',
-			cardSelector: '.elementor-mcp-changelog-version',
+			gridSelector: '.karmcp-changelog-list',
+			cardSelector: '.karmcp-changelog-version',
 			pageSize: 10,
 			label: 'releases'
 		} );
@@ -1314,18 +1314,18 @@
 
 	// Render one copy/download block.
 	function karmcpBlock( title, bodyHtml ) {
-		return '<div class="elementor-mcp-config-card"><div class="elementor-mcp-config-card-header">' +
-			'<span class="elementor-mcp-config-card-title">' + karmcpEscapeHtml( title ) + '</span></div>' +
-			'<div class="elementor-mcp-config-card-body">' + bodyHtml + '</div></div>';
+		return '<div class="karmcp-config-card"><div class="karmcp-config-card-header">' +
+			'<span class="karmcp-config-card-title">' + karmcpEscapeHtml( title ) + '</span></div>' +
+			'<div class="karmcp-config-card-body">' + bodyHtml + '</div></div>';
 	}
 
 	function karmcpCopyBlock( title, text ) {
 		var id = 'karmcp-opt-' + Math.abs( ( title + text ).length );
-		return '<div class="elementor-mcp-config-card"><div class="elementor-mcp-config-card-header">' +
-			'<span class="elementor-mcp-config-card-title">' + karmcpEscapeHtml( title ) + '</span>' +
-			'<button type="button" class="button elementor-mcp-copy-btn" data-target="' + id + '">Copy</button></div>' +
+		return '<div class="karmcp-config-card"><div class="karmcp-config-card-header">' +
+			'<span class="karmcp-config-card-title">' + karmcpEscapeHtml( title ) + '</span>' +
+			'<button type="button" class="button karmcp-copy-btn" data-target="' + id + '">Copy</button></div>' +
 			'<pre><code>' + karmcpEscapeHtml( text ) + '</code></pre>' +
-			'<textarea id="' + id + '" class="elementor-mcp-copy-source">' + karmcpEscapeHtml( text ) + '</textarea></div>';
+			'<textarea id="' + id + '" class="karmcp-copy-source">' + karmcpEscapeHtml( text ) + '</textarea></div>';
 	}
 
 	// The selected authentication method (falls back to whatever is available).
@@ -1424,15 +1424,15 @@
 		window.localStorage.setItem( 'karmcpConnClient', id );
 
 		// toggle card selected state
-		var cards = document.querySelectorAll( '.elementor-mcp-client-card' );
+		var cards = document.querySelectorAll( '.karmcp-client-card' );
 		for ( var i = 0; i < cards.length; i++ ) {
 			var on = cards[ i ].getAttribute( 'data-client' ) === id;
 			cards[ i ].classList.toggle( 'is-selected', on );
 			cards[ i ].setAttribute( 'aria-selected', on ? 'true' : 'false' );
 		}
 
-		var heading = document.getElementById( 'elementor-mcp-connect-heading' );
-		var nameEl = document.getElementById( 'elementor-mcp-connect-client-name' );
+		var heading = document.getElementById( 'karmcp-connect-heading' );
+		var nameEl = document.getElementById( 'karmcp-connect-client-name' );
 		if ( heading ) { heading.style.display = ''; }
 		if ( nameEl ) { nameEl.textContent = client.label; }
 
@@ -1464,10 +1464,10 @@
 		if ( m.bundle ) {
 			html += karmcpBlock( 'One-click bundle (.mcpb)',
 				'<p class="description">Download and double-click to install in Claude Desktop — no config files to edit.</p>' +
-				'<p class="elementor-mcp-mcpb-warning"><span class="dashicons dashicons-warning" aria-hidden="true"></span> ' +
+				'<p class="karmcp-mcpb-warning"><span class="dashicons dashicons-warning" aria-hidden="true"></span> ' +
 				'<strong>Treat this file as a secret.</strong> It embeds your WordPress application password in plaintext, so anyone with the file can access this site. ' +
 				'Don\'t email it, share it, commit it to git, or leave it in a cloud-synced folder — and delete it once it\'s imported into Claude Desktop.</p>' +
-				'<p><button type="button" class="button button-primary" id="elementor-mcp-mcpb-download">Download .mcpb bundle</button></p>' );
+				'<p><button type="button" class="button button-primary" id="karmcp-mcpb-download">Download .mcpb bundle</button></p>' );
 		}
 		// 2) CLI command
 		if ( m.cli ) {
@@ -1493,34 +1493,34 @@
 		} );
 		} // /else (app-password mode with generated credentials)
 
-		var host = document.getElementById( 'elementor-mcp-client-options' );
+		var host = document.getElementById( 'karmcp-client-options' );
 		if ( host ) { host.innerHTML = html; }
 
 		// Wire the .mcpb download button (if present) to submit the hidden form.
-		var dl = document.getElementById( 'elementor-mcp-mcpb-download' );
+		var dl = document.getElementById( 'karmcp-mcpb-download' );
 		if ( dl ) {
 			dl.addEventListener( 'click', function () {
-				document.getElementById( 'elementor-mcp-mcpb-user-id' ).value = window.karmcpConn.userId;
-				document.getElementById( 'elementor-mcp-mcpb-app-password' ).value = window.karmcpConn.appPassword;
-				document.getElementById( 'elementor-mcp-mcpb-form' ).submit();
+				document.getElementById( 'karmcp-mcpb-user-id' ).value = window.karmcpConn.userId;
+				document.getElementById( 'karmcp-mcpb-app-password' ).value = window.karmcpConn.appPassword;
+				document.getElementById( 'karmcp-mcpb-form' ).submit();
 			} );
 		}
 	}
 
 	// Delegate card clicks.
 	document.addEventListener( 'click', function ( e ) {
-		var card = e.target.closest ? e.target.closest( '.elementor-mcp-client-card' ) : null;
+		var card = e.target.closest ? e.target.closest( '.karmcp-client-card' ) : null;
 		if ( card ) { karmcpSelectClient( card.getAttribute( 'data-client' ) ); }
 	} );
 
 	// Context page: char/token counter, starter template, live preview.
 	function initContextPage() {
-		var ta = document.getElementById( 'elementor-mcp-context-text' );
+		var ta = document.getElementById( 'karmcp-context-text' );
 		if ( ! ta ) { return; }
-		var counter = document.getElementById( 'elementor-mcp-context-counter' );
-		var preview = document.getElementById( 'elementor-mcp-context-preview' );
+		var counter = document.getElementById( 'karmcp-context-counter' );
+		var preview = document.getElementById( 'karmcp-context-preview' );
 		var toggle  = document.querySelector( 'input[name="karmcp_tools_site_context_enabled"]' );
-		var tplBtn  = document.getElementById( 'elementor-mcp-context-template' );
+		var tplBtn  = document.getElementById( 'karmcp-context-template' );
 		var max     = parseInt( ta.getAttribute( 'maxlength' ) || '20000', 10 );
 		var base    = ( karmcpToolsAdmin && karmcpToolsAdmin.siteContextBase ) || '';
 		var delim   = ( karmcpToolsAdmin && karmcpToolsAdmin.siteContextDelimiter ) || '\n\n## Site context\n\n';

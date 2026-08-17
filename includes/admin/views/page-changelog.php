@@ -154,20 +154,20 @@ if ( null !== $karmcp_current ) {
 $karmcp_latest_version = isset( $karmcp_versions[0]['version'] ) ? $karmcp_versions[0]['version'] : '';
 ?>
 
-<div class="elementor-mcp-changelog">
+<div class="karmcp-changelog">
 
-	<div class="elementor-mcp-changelog-intro">
+	<div class="karmcp-changelog-intro">
 		<h2><?php esc_html_e( 'Changelog', 'karmcp' ); ?></h2>
 		<p class="description">
 			<?php esc_html_e( 'What changed in each release of KarMCP.', 'karmcp' ); ?>
 		</p>
 	</div>
 
-	<div class="elementor-mcp-changelog-list">
+	<div class="karmcp-changelog-list">
 		<?php foreach ( $karmcp_versions as $karmcp_entry ) : ?>
 			<?php $karmcp_is_latest = ( $karmcp_entry['version'] === $karmcp_latest_version ); ?>
-			<div class="elementor-mcp-changelog-version <?php echo esc_attr( $karmcp_is_latest ? 'is-latest' : '' ); ?>">
-				<div class="elementor-mcp-changelog-version-header">
+			<div class="karmcp-changelog-version <?php echo esc_attr( $karmcp_is_latest ? 'is-latest' : '' ); ?>">
+				<div class="karmcp-changelog-version-header">
 					<h3>
 						<?php
 						/* translators: %s: version number */
@@ -175,29 +175,29 @@ $karmcp_latest_version = isset( $karmcp_versions[0]['version'] ) ? $karmcp_versi
 						?>
 					</h3>
 					<?php if ( $karmcp_is_latest ) : ?>
-						<span class="elementor-mcp-changelog-badge"><?php esc_html_e( 'Latest', 'karmcp' ); ?></span>
+						<span class="karmcp-changelog-badge"><?php esc_html_e( 'Latest', 'karmcp' ); ?></span>
 					<?php endif; ?>
 				</div>
 
 				<?php foreach ( $karmcp_entry['notes'] as $karmcp_note ) : ?>
-					<div class="elementor-mcp-changelog-note">
+					<div class="karmcp-changelog-note">
 						<?php echo karmcp_changelog_inline_md( $karmcp_note ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?>
 					</div>
 				<?php endforeach; ?>
 
 				<?php if ( ! empty( $karmcp_entry['items'] ) ) : ?>
-					<ul class="elementor-mcp-changelog-items">
+					<ul class="karmcp-changelog-items">
 						<?php
 						foreach ( $karmcp_entry['items'] as $karmcp_item ) :
 							$karmcp_parts = karmcp_changelog_tag( $karmcp_item['text'] );
 							?>
 							<li>
 								<?php if ( '' !== $karmcp_parts['tag'] ) : ?>
-									<span class="elementor-mcp-cl-tag elementor-mcp-cl-tag--<?php echo esc_attr( strtolower( $karmcp_parts['tag'] ) ); ?>"><?php echo esc_html( $karmcp_parts['tag'] ); ?></span>
+									<span class="karmcp-cl-tag karmcp-cl-tag--<?php echo esc_attr( strtolower( $karmcp_parts['tag'] ) ); ?>"><?php echo esc_html( $karmcp_parts['tag'] ); ?></span>
 								<?php endif; ?>
 								<?php echo karmcp_changelog_inline_md( $karmcp_parts['rest'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?>
 								<?php if ( ! empty( $karmcp_item['children'] ) ) : ?>
-									<ul class="elementor-mcp-changelog-subitems">
+									<ul class="karmcp-changelog-subitems">
 										<?php foreach ( $karmcp_item['children'] as $karmcp_child ) : ?>
 											<li><?php echo karmcp_changelog_inline_md( $karmcp_child ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized via wp_kses inside the renderer. ?></li>
 										<?php endforeach; ?>

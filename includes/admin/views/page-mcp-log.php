@@ -22,9 +22,9 @@ if ( isset( $_POST['karmcp_mcp_log_clear'] ) && current_user_can( 'manage_option
 $karmcp_log   = array_reverse( KarMCP_MCP_Request_Log::all() ); // newest first.
 $karmcp_debug = KarMCP_MCP_Request_Log::debug_enabled();
 ?>
-<div class="elementor-mcp-section">
+<div class="karmcp-section">
 	<h2><?php esc_html_e( 'MCP Log', 'karmcp' ); ?></h2>
-	<p class="elementor-mcp-activate-note">
+	<p class="karmcp-activate-note">
 		<?php esc_html_e( 'The last 100 MCP requests to this site, with tool, result status and duration — use this to match a connector failure to a server-side outcome.', 'karmcp' ); ?>
 		<?php if ( ! $karmcp_debug ) : ?>
 			<br><?php esc_html_e( 'Enable WP_DEBUG to also record the underlying error message for failed requests.', 'karmcp' ); ?>

@@ -54,12 +54,12 @@ $karmcp_badge_labels = array(
 );
 ?>
 
-<form method="post" action="options.php" id="elementor-mcp-tools-form">
+<form method="post" action="options.php" id="karmcp-tools-form">
 	<?php settings_fields( KarMCP_Admin::SETTINGS_GROUP ); ?>
 
-	<div class="elementor-mcp-mode-cards">
-	<div class="elementor-mcp-low-mode-card">
-		<label class="elementor-mcp-low-mode-toggle">
+	<div class="karmcp-mode-cards">
+	<div class="karmcp-low-mode-card">
+		<label class="karmcp-low-mode-toggle">
 			<input type="hidden" name="<?php echo esc_attr( KarMCP_Plugin::OPTION_DISPATCHER_MODE ); ?>" value="0" />
 			<input
 				type="checkbox"
@@ -67,14 +67,14 @@ $karmcp_badge_labels = array(
 				value="1"
 				<?php checked( $karmcp_compact_mode ); ?>
 			/>
-			<span class="elementor-mcp-toggle" aria-hidden="true">
-				<span class="elementor-mcp-toggle-track"></span>
+			<span class="karmcp-toggle" aria-hidden="true">
+				<span class="karmcp-toggle-track"></span>
 			</span>
-			<span class="elementor-mcp-low-mode-info">
-				<span class="elementor-mcp-low-mode-title">
+			<span class="karmcp-low-mode-info">
+				<span class="karmcp-low-mode-title">
 					<?php esc_html_e( 'Compact tool mode', 'karmcp' ); ?>
 				</span>
-				<span class="elementor-mcp-low-mode-desc">
+				<span class="karmcp-low-mode-desc">
 					<?php esc_html_e( 'Exposes 3 dispatcher tools (list-tools, get-tool-schema, call-tool) instead of every individual tool, so MCP clients that cap the tool count can still reach the whole surface. Your per-tool toggles below stay in effect, call-tool refuses any tool you disable. Reconnect your client after changing this.', 'karmcp' ); ?>
 				</span>
 			</span>
@@ -83,8 +83,8 @@ $karmcp_badge_labels = array(
 
 	<?php if ( class_exists( 'KarMCP_Themer_Module' ) && KarMCP_Themer_Module::is_enabled() ) : ?>
 		<?php $karmcp_themer_php_on = '1' === (string) get_option( KarMCP_Themer_PHP::OPTION_ENABLED, '0' ); ?>
-		<div class="elementor-mcp-low-mode-card">
-			<label class="elementor-mcp-low-mode-toggle">
+		<div class="karmcp-low-mode-card">
+			<label class="karmcp-low-mode-toggle">
 				<input type="hidden" name="<?php echo esc_attr( KarMCP_Themer_PHP::OPTION_ENABLED ); ?>" value="0" />
 				<input
 					type="checkbox"
@@ -92,32 +92,32 @@ $karmcp_badge_labels = array(
 					value="1"
 					<?php checked( $karmcp_themer_php_on ); ?>
 				/>
-				<span class="elementor-mcp-toggle" aria-hidden="true">
-					<span class="elementor-mcp-toggle-track"></span>
+				<span class="karmcp-toggle" aria-hidden="true">
+					<span class="karmcp-toggle-track"></span>
 				</span>
-				<span class="elementor-mcp-low-mode-info">
-					<span class="elementor-mcp-low-mode-title">
+				<span class="karmcp-low-mode-info">
+					<span class="karmcp-low-mode-title">
 						<?php esc_html_e( 'Themer PHP Templates (advanced)', 'karmcp' ); ?>
 					</span>
-					<span class="elementor-mcp-low-mode-desc">
+					<span class="karmcp-low-mode-desc">
 						<?php esc_html_e( 'Lets AI agents author raw PHP region templates (header/footer/single/archive) into a validated sandbox, which you then select on a template to take over its render. Off by default, enabling it also reveals the “PHP Templates” screen under the KarMCP Themer menu and the per-template selector. The 5 MCP tools below still ship disabled until you enable them.', 'karmcp' ); ?>
 					</span>
 				</span>
 			</label>
 		</div>
 	<?php endif; ?>
-	</div><!-- .elementor-mcp-mode-cards -->
+	</div><!-- .karmcp-mode-cards -->
 
 	<?php if ( $karmcp_compact_mode ) : ?>
-		<div class="elementor-mcp-compact-banner">
+		<div class="karmcp-compact-banner">
 			<p>
 				<?php esc_html_e( 'Compact tool mode is active, your client sees only the 3 dispatcher tools (list-tools, get-tool-schema, call-tool). The per-tool toggles below still control what call-tool is allowed to run.', 'karmcp' ); ?>
 			</p>
 		</div>
 	<?php endif; ?>
 
-	<div class="elementor-mcp-bulk-actions">
-		<p class="elementor-mcp-tools-summary">
+	<div class="karmcp-bulk-actions">
+		<p class="karmcp-tools-summary">
 			<?php
 			printf(
 				/* translators: %1$s: opening strong tag, %2$d: enabled count, %3$d: total count, %4$s: closing strong tag */
@@ -129,24 +129,24 @@ $karmcp_badge_labels = array(
 			);
 			?>
 		</p>
-		<button type="button" class="button elementor-mcp-enable-all"><?php esc_html_e( 'Enable All', 'karmcp' ); ?></button>
-		<button type="button" class="button elementor-mcp-disable-all"><?php esc_html_e( 'Disable All', 'karmcp' ); ?></button>
-		<button type="submit" class="button button-primary elementor-mcp-bulk-save"><?php esc_html_e( 'Save Changes', 'karmcp' ); ?></button>
+		<button type="button" class="button karmcp-enable-all"><?php esc_html_e( 'Enable All', 'karmcp' ); ?></button>
+		<button type="button" class="button karmcp-disable-all"><?php esc_html_e( 'Disable All', 'karmcp' ); ?></button>
+		<button type="submit" class="button button-primary karmcp-bulk-save"><?php esc_html_e( 'Save Changes', 'karmcp' ); ?></button>
 	</div>
 
-	<div class="elementor-mcp-subtabs" role="tablist" aria-label="<?php esc_attr_e( 'Tool platforms', 'karmcp' ); ?>">
+	<div class="karmcp-subtabs" role="tablist" aria-label="<?php esc_attr_e( 'Tool platforms', 'karmcp' ); ?>">
 		<?php $karmcp_first = true; ?>
 		<?php foreach ( $karmcp_tabs as $karmcp_tab_id => $karmcp_tab_label ) : ?>
 			<button
 				type="button"
-				class="elementor-mcp-subtab <?php echo esc_attr( $karmcp_first ? 'is-active' : '' ); ?>"
+				class="karmcp-subtab <?php echo esc_attr( $karmcp_first ? 'is-active' : '' ); ?>"
 				role="tab"
 				data-tab="<?php echo esc_attr( $karmcp_tab_id ); ?>"
 				aria-selected="<?php echo esc_attr( $karmcp_first ? 'true' : 'false' ); ?>"
 				aria-controls="karmcp-tabpanel-<?php echo esc_attr( $karmcp_tab_id ); ?>"
 			>
-				<span class="elementor-mcp-subtab-label"><?php echo esc_html( $karmcp_tab_label ); ?></span>
-				<span class="elementor-mcp-subtab-count">
+				<span class="karmcp-subtab-label"><?php echo esc_html( $karmcp_tab_label ); ?></span>
+				<span class="karmcp-subtab-count">
 					<?php
 					printf(
 						/* translators: %1$d: enabled, %2$d: total */
@@ -164,13 +164,13 @@ $karmcp_badge_labels = array(
 	<?php $karmcp_first_panel = true; ?>
 	<?php foreach ( $karmcp_buckets as $karmcp_tab_id => $karmcp_tab_cats ) : ?>
 		<div
-			class="elementor-mcp-tabpanel <?php echo esc_attr( $karmcp_first_panel ? 'is-active' : '' ); ?>"
+			class="karmcp-tabpanel <?php echo esc_attr( $karmcp_first_panel ? 'is-active' : '' ); ?>"
 			id="karmcp-tabpanel-<?php echo esc_attr( $karmcp_tab_id ); ?>"
 			role="tabpanel"
 			data-tab="<?php echo esc_attr( $karmcp_tab_id ); ?>"
 		>
 			<?php if ( 'elementor' === $karmcp_tab_id && ! $karmcp_elementor_active ) : ?>
-			<div class="notice notice-warning inline elementor-mcp-elementor-inactive">
+			<div class="notice notice-warning inline karmcp-elementor-inactive">
 				<p>
 					<?php esc_html_e( 'Elementor is not active. Install and activate Elementor to use these tools.', 'karmcp' ); ?>
 					<a href="<?php echo esc_url( self_admin_url( 'plugin-install.php?s=Elementor&tab=search&type=term' ) ); ?>">
@@ -192,8 +192,8 @@ $karmcp_badge_labels = array(
 			}
 			?>
 			<?php if ( '' !== $karmcp_tab_note ) : ?>
-				<p class="elementor-mcp-cat-note elementor-mcp-tab-note">
-					<span class="elementor-mcp-cat-note-icon" aria-hidden="true">
+				<p class="karmcp-cat-note karmcp-tab-note">
+					<span class="karmcp-cat-note-icon" aria-hidden="true">
 						<svg viewBox="0 0 20 20" width="15" height="15"><path fill="currentColor" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 12H9v-4h2v4zm0-6H9V6h2v2z"/></svg>
 					</span>
 					<span><?php echo esc_html( $karmcp_tab_note ); ?></span>
@@ -205,7 +205,7 @@ $karmcp_badge_labels = array(
 			// grouped ones (nested under a group heading on the Plugins tab).
 			$karmcp_render_category = function ( $karmcp_category_id, $karmcp_category ) use ( $karmcp_disabled, $karmcp_elementor_active, $karmcp_badge_labels ) {
 				?>
-				<div class="elementor-mcp-category <?php echo esc_attr( ! empty( $karmcp_category['danger'] ) ? 'is-danger' : '' ); ?>" data-category="<?php echo esc_attr( $karmcp_category_id ); ?>">
+				<div class="karmcp-category <?php echo esc_attr( ! empty( $karmcp_category['danger'] ) ? 'is-danger' : '' ); ?>" data-category="<?php echo esc_attr( $karmcp_category_id ); ?>">
 					<?php
 					$karmcp_cat_total   = count( $karmcp_category['tools'] );
 					$karmcp_cat_enabled = 0;
@@ -217,21 +217,21 @@ $karmcp_badge_labels = array(
 					$karmcp_grid_id       = 'karmcp-cat-' . $karmcp_category_id;
 					$karmcp_cat_unavailable = ( ! $karmcp_elementor_active && KarMCP_Admin::is_elementor_category( $karmcp_category ) );
 					?>
-					<div class="elementor-mcp-category-header">
+					<div class="karmcp-category-header">
 						<button
 							type="button"
-							class="elementor-mcp-category-toggle"
+							class="karmcp-category-toggle"
 							aria-expanded="true"
 							aria-controls="<?php echo esc_attr( $karmcp_grid_id ); ?>"
 						>
-							<span class="elementor-mcp-category-chevron" aria-hidden="true">
+							<span class="karmcp-category-chevron" aria-hidden="true">
 								<svg viewBox="0 0 20 20" width="14" height="14"><path d="M6 8l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 							</span>
-							<span class="elementor-mcp-category-title"><?php echo esc_html( $karmcp_category['label'] ); ?></span>
+							<span class="karmcp-category-title"><?php echo esc_html( $karmcp_category['label'] ); ?></span>
 							<?php if ( ! empty( $karmcp_category['pro'] ) ) : ?>
-								<span class="elementor-mcp-badge elementor-mcp-badge--pro"><?php esc_html_e( 'Pro', 'karmcp' ); ?></span>
+								<span class="karmcp-badge karmcp-badge--pro"><?php esc_html_e( 'Pro', 'karmcp' ); ?></span>
 							<?php endif; ?>
-							<span class="elementor-mcp-category-count">
+							<span class="karmcp-category-count">
 								<?php
 								printf(
 									/* translators: %1$d: enabled, %2$d: total */
@@ -242,9 +242,9 @@ $karmcp_badge_labels = array(
 								?>
 							</span>
 						</button>
-						<span class="elementor-mcp-cat-toggle-group" role="group" aria-label="<?php esc_attr_e( 'Toggle all tools in this section', 'karmcp' ); ?>">
-							<button type="button" class="elementor-mcp-cat-btn elementor-mcp-cat-enable-all"><?php esc_html_e( 'All', 'karmcp' ); ?></button>
-							<button type="button" class="elementor-mcp-cat-btn elementor-mcp-cat-disable-all"><?php esc_html_e( 'None', 'karmcp' ); ?></button>
+						<span class="karmcp-cat-toggle-group" role="group" aria-label="<?php esc_attr_e( 'Toggle all tools in this section', 'karmcp' ); ?>">
+							<button type="button" class="karmcp-cat-btn karmcp-cat-enable-all"><?php esc_html_e( 'All', 'karmcp' ); ?></button>
+							<button type="button" class="karmcp-cat-btn karmcp-cat-disable-all"><?php esc_html_e( 'None', 'karmcp' ); ?></button>
 						</span>
 					</div>
 
@@ -262,14 +262,14 @@ $karmcp_badge_labels = array(
 					if ( ! empty( $karmcp_category['notice'] ) && ! empty( $karmcp_category['notice']['message'] ) ) :
 						$karmcp_notice_type = $karmcp_category['notice']['type'] ?? 'info';
 						?>
-					<div class="elementor-mcp-cat-notice is-<?php echo esc_attr( $karmcp_notice_type ); ?>">
-						<span class="elementor-mcp-cat-notice-icon" aria-hidden="true">
+					<div class="karmcp-cat-notice is-<?php echo esc_attr( $karmcp_notice_type ); ?>">
+						<span class="karmcp-cat-notice-icon" aria-hidden="true">
 							<svg viewBox="0 0 20 20" width="16" height="16"><path fill="currentColor" d="M10 1.6a8.4 8.4 0 100 16.8 8.4 8.4 0 000-16.8zM11 14H9v-2h2v2zm0-4H9V5h2v5z"/></svg>
 						</span>
 						<span><?php echo esc_html( $karmcp_category['notice']['message'] ); ?></span>
 					</div>
 					<?php endif; ?>
-					<div class="elementor-mcp-tools-grid <?php echo esc_attr( $karmcp_has_ops ? 'is-two-up' : '' ); ?>" id="<?php echo esc_attr( $karmcp_grid_id ); ?>">
+					<div class="karmcp-tools-grid <?php echo esc_attr( $karmcp_has_ops ? 'is-two-up' : '' ); ?>" id="<?php echo esc_attr( $karmcp_grid_id ); ?>">
 						<?php foreach ( $karmcp_category['tools'] as $karmcp_slug => $karmcp_tool ) : ?>
 							<?php
 							$karmcp_is_enabled = ! in_array( $karmcp_slug, $karmcp_disabled, true );
@@ -280,7 +280,7 @@ $karmcp_badge_labels = array(
 							$karmcp_tool_unavailable = $karmcp_cat_unavailable
 								|| ( array_key_exists( 'available', $karmcp_tool ) && ! $karmcp_tool['available'] );
 							?>
-							<label class="elementor-mcp-tool-card <?php echo esc_attr( ( $karmcp_is_enabled ? 'is-enabled' : 'is-disabled' ) . ( $karmcp_tool_unavailable ? ' is-unavailable' : '' ) ); ?>">
+							<label class="karmcp-tool-card <?php echo esc_attr( ( $karmcp_is_enabled ? 'is-enabled' : 'is-disabled' ) . ( $karmcp_tool_unavailable ? ' is-unavailable' : '' ) ); ?>">
 								<input
 									type="checkbox"
 									name="<?php echo esc_attr( KarMCP_Admin::OPTION_DISABLED_TOOLS ); ?>[]"
@@ -289,25 +289,25 @@ $karmcp_badge_labels = array(
 									<?php checked( $karmcp_is_enabled ); ?>
 									<?php disabled( $karmcp_tool_unavailable ); ?>
 								/>
-								<span class="elementor-mcp-toggle" aria-hidden="true">
-									<span class="elementor-mcp-toggle-track"></span>
+								<span class="karmcp-toggle" aria-hidden="true">
+									<span class="karmcp-toggle-track"></span>
 								</span>
-								<span class="elementor-mcp-tool-info">
-									<span class="elementor-mcp-tool-name">
+								<span class="karmcp-tool-info">
+									<span class="karmcp-tool-name">
 										<?php echo esc_html( $karmcp_tool['label'] ); ?>
 										<?php foreach ( $karmcp_tool['badges'] as $karmcp_badge ) : ?>
-											<span class="elementor-mcp-badge elementor-mcp-badge--<?php echo esc_attr( $karmcp_badge ); ?>">
+											<span class="karmcp-badge karmcp-badge--<?php echo esc_attr( $karmcp_badge ); ?>">
 												<?php echo esc_html( $karmcp_badge_labels[ $karmcp_badge ] ?? $karmcp_badge ); ?>
 											</span>
 										<?php endforeach; ?>
 									</span>
-									<span class="elementor-mcp-tool-desc"><?php echo esc_html( $karmcp_tool['description'] ); ?></span>
+									<span class="karmcp-tool-desc"><?php echo esc_html( $karmcp_tool['description'] ); ?></span>
 									<?php if ( $karmcp_tool_unavailable && ! empty( $karmcp_tool['unavailable_note'] ) ) : ?>
-										<span class="elementor-mcp-tool-unavailable-note"><?php echo esc_html( $karmcp_tool['unavailable_note'] ); ?></span>
+										<span class="karmcp-tool-unavailable-note"><?php echo esc_html( $karmcp_tool['unavailable_note'] ); ?></span>
 									<?php endif; ?>
 									<?php if ( ! empty( $karmcp_tool['operations'] ) ) : ?>
-										<span class="elementor-mcp-tool-ops">
-											<span class="elementor-mcp-tool-ops-label">
+										<span class="karmcp-tool-ops">
+											<span class="karmcp-tool-ops-label">
 												<?php
 												printf(
 													/* translators: %d: number of operations */
@@ -316,14 +316,14 @@ $karmcp_badge_labels = array(
 												);
 												?>
 											</span>
-											<span class="elementor-mcp-op-pills">
+											<span class="karmcp-op-pills">
 												<?php foreach ( $karmcp_tool['operations'] as $karmcp_op ) : ?>
-													<span class="elementor-mcp-op-pill"><?php echo esc_html( $karmcp_op ); ?></span>
+													<span class="karmcp-op-pill"><?php echo esc_html( $karmcp_op ); ?></span>
 												<?php endforeach; ?>
 											</span>
 										</span>
 									<?php endif; ?>
-									<code class="elementor-mcp-tool-slug"><?php echo esc_html( $karmcp_slug ); ?></code>
+									<code class="karmcp-tool-slug"><?php echo esc_html( $karmcp_slug ); ?></code>
 								</span>
 							</label>
 						<?php endforeach; ?>
@@ -367,13 +367,13 @@ $karmcp_badge_labels = array(
 					}
 				}
 				?>
-				<div class="elementor-mcp-plugin-group" data-group="<?php echo esc_attr( $karmcp_gid ); ?>">
-					<div class="elementor-mcp-plugin-group-head">
-						<span class="elementor-mcp-plugin-group-title"><?php echo esc_html( $karmcp_gdef['label'] ); ?></span>
+				<div class="karmcp-plugin-group" data-group="<?php echo esc_attr( $karmcp_gid ); ?>">
+					<div class="karmcp-plugin-group-head">
+						<span class="karmcp-plugin-group-title"><?php echo esc_html( $karmcp_gdef['label'] ); ?></span>
 						<?php if ( ! empty( $karmcp_gdef['desc'] ) ) : ?>
-							<span class="elementor-mcp-plugin-group-desc"><?php echo esc_html( $karmcp_gdef['desc'] ); ?></span>
+							<span class="karmcp-plugin-group-desc"><?php echo esc_html( $karmcp_gdef['desc'] ); ?></span>
 						<?php endif; ?>
-						<span class="elementor-mcp-plugin-group-count">
+						<span class="karmcp-plugin-group-count">
 							<?php
 							printf(
 								/* translators: %1$d: enabled, %2$d: total */
@@ -384,7 +384,7 @@ $karmcp_badge_labels = array(
 							?>
 						</span>
 					</div>
-					<div class="elementor-mcp-plugin-group-body">
+					<div class="karmcp-plugin-group-body">
 						<?php
 						foreach ( $karmcp_grouped[ $karmcp_gid ] as $karmcp_category_id => $karmcp_category ) {
 							$karmcp_render_category( $karmcp_category_id, $karmcp_category );

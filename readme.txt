@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.17.2
+Stable tag: 1.18.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,13 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.18.0 =
+
+* Changed: the admin panel has been redesigned. Flat surfaces separated by borders instead of cards on shadows, tighter corners, a grey palette tinted toward the brand colour, an inverted app bar and section navigation as pills. Nothing moved: same screens, same tools, same settings.
+* Changed: every colour in the admin stylesheet now comes from a variable, so the panel can be repainted from one block. Previously 305 colours were written literally, which is why past palette changes only ever landed on part of the screen.
+* Fixed: nine style variables were referenced but never defined, so those rules quietly ignored the design system and kept hardcoded values.
+* Removed: 494 lines of styling for screens the plugin no longer has, and a duplicate page header that was styled but never rendered.
 
 = 1.17.2 =
 

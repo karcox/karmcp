@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <p class="karmcp-sandbox-back">
-	<a href="<?php echo esc_url( menu_page_url( 'karmcp-widgets', false ) ); ?>" class="elementor-mcp-header-btn elementor-mcp-header-btn--secondary">
+	<a href="<?php echo esc_url( menu_page_url( 'karmcp-widgets', false ) ); ?>" class="karmcp-header-btn karmcp-header-btn--secondary">
 		<span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
 		<?php esc_html_e( 'Back to Sandbox', 'karmcp' ); ?>
 	</a>
@@ -44,12 +44,12 @@ $karmcp_sn_can   = class_exists( 'KarMCP_PHP_Snippet_Store' ) && KarMCP_PHP_Snip
 $karmcp_sn_list  = class_exists( 'KarMCP_PHP_Snippet_Store' ) ? KarMCP_PHP_Snippet_Store::list_snippets( 'any' ) : array();
 $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 ?>
-<div class="elementor-mcp-pro-prompts elementor-mcp-php-snippets" data-nonce="<?php echo esc_attr( $karmcp_sn_nonce ); ?>" style="margin-top: 28px;">
-	<div class="elementor-mcp-pro-prompts-header">
-		<div class="elementor-mcp-pro-prompts-heading">
+<div class="karmcp-pro-prompts karmcp-php-snippets" data-nonce="<?php echo esc_attr( $karmcp_sn_nonce ); ?>" style="margin-top: 28px;">
+	<div class="karmcp-pro-prompts-header">
+		<div class="karmcp-pro-prompts-heading">
 			<h2>
 				<?php esc_html_e( 'PHP Snippets', 'karmcp' ); ?>
-				<span class="elementor-mcp-badge elementor-mcp-badge--free"><?php esc_html_e( 'FREE', 'karmcp' ); ?></span>
+				<span class="karmcp-badge karmcp-badge--free"><?php esc_html_e( 'FREE', 'karmcp' ); ?></span>
 			</h2>
 			<p class="description">
 				<?php esc_html_e( 'Run small pieces of PHP on your site, as a [karmcp_snippet] shortcode or on a WordPress hook. An AI agent can draft snippets through the MCP tools, but they stay INACTIVE until you review and activate them here.', 'karmcp' ); ?>
@@ -87,9 +87,9 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 
 		<?php echo KarMCP_Admin::render_cloud_library( 'snippet' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built with esc_* internally. ?>
 
-		<details class="elementor-mcp-sn-add" style="margin: 14px 0;">
+		<details class="karmcp-sn-add" style="margin: 14px 0;">
 			<summary style="cursor:pointer;font-weight:600;"><?php esc_html_e( '+ Add a snippet', 'karmcp' ); ?></summary>
-			<form class="elementor-mcp-sn-form" style="margin-top: 12px; max-width: 760px;">
+			<form class="karmcp-sn-form" style="margin-top: 12px; max-width: 760px;">
 				<input type="hidden" name="snippet_id" value="0" />
 				<p>
 					<label><strong><?php esc_html_e( 'Title', 'karmcp' ); ?></strong><br />
@@ -109,25 +109,25 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 							<option value="both"><?php esc_html_e( 'Both', 'karmcp' ); ?></option>
 						</select>
 					</label>
-					<label class="elementor-mcp-sn-hookfield" style="display:none;"><strong><?php esc_html_e( 'Hook', 'karmcp' ); ?></strong><br />
+					<label class="karmcp-sn-hookfield" style="display:none;"><strong><?php esc_html_e( 'Hook', 'karmcp' ); ?></strong><br />
 						<input type="text" name="hook" class="regular-text" placeholder="wp_footer" />
 					</label>
-					<label class="elementor-mcp-sn-hookfield" style="display:none;"><strong><?php esc_html_e( 'Priority', 'karmcp' ); ?></strong><br />
+					<label class="karmcp-sn-hookfield" style="display:none;"><strong><?php esc_html_e( 'Priority', 'karmcp' ); ?></strong><br />
 						<input type="number" name="priority" value="10" style="width:80px;" />
 					</label>
 				</p>
 				<p>
-					<button type="submit" class="button button-primary elementor-mcp-sn-save"><?php esc_html_e( 'Save draft', 'karmcp' ); ?></button>
-					<span class="elementor-mcp-sn-formmsg" style="margin-left:10px;"></span>
+					<button type="submit" class="button button-primary karmcp-sn-save"><?php esc_html_e( 'Save draft', 'karmcp' ); ?></button>
+					<span class="karmcp-sn-formmsg" style="margin-left:10px;"></span>
 				</p>
-				<div class="elementor-mcp-sn-findings"></div>
+				<div class="karmcp-sn-findings"></div>
 			</form>
 		</details>
 
 		<?php if ( empty( $karmcp_sn_list ) ) : ?>
 			<p class="description"><?php esc_html_e( 'No snippets yet. Add one above, or ask your AI agent to draft one with the create-php-snippet tool.', 'karmcp' ); ?></p>
 		<?php else : ?>
-			<table class="widefat striped elementor-mcp-snippets-table" style="margin-top: 8px;">
+			<table class="widefat striped karmcp-snippets-table" style="margin-top: 8px;">
 				<thead>
 					<tr>
 						<th><?php esc_html_e( 'Snippet', 'karmcp' ); ?></th>
@@ -199,17 +199,17 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 								<?php endif; ?>
 							</td>
 							<td>
-								<span class="elementor-mcp-badge <?php echo esc_attr( $karmcp_sact ? 'elementor-mcp-badge--free' : '' ); ?>">
+								<span class="karmcp-badge <?php echo esc_attr( $karmcp_sact ? 'karmcp-badge--free' : '' ); ?>">
 									<?php echo $karmcp_sact ? esc_html__( 'Active', 'karmcp' ) : esc_html__( 'Inactive', 'karmcp' ); ?>
 								</span>
 							</td>
 							<td class="karmcp-sb-actions">
-								<button type="button" class="button elementor-mcp-sn-toggle" data-status="<?php echo esc_attr( $karmcp_sact ? 'draft' : 'active' ); ?>">
+								<button type="button" class="button karmcp-sn-toggle" data-status="<?php echo esc_attr( $karmcp_sact ? 'draft' : 'active' ); ?>">
 									<span class="dashicons dashicons-<?php echo $karmcp_sact ? 'controls-pause' : 'controls-play'; ?>" aria-hidden="true"></span>
 									<?php echo $karmcp_sact ? esc_html__( 'Deactivate', 'karmcp' ) : esc_html__( 'Activate', 'karmcp' ); ?>
 								</button>
-								<button type="button" class="button elementor-mcp-sn-edit"><span class="dashicons dashicons-edit" aria-hidden="true"></span><?php esc_html_e( 'Edit', 'karmcp' ); ?></button>
-								<button type="button" class="button karmcp-sb-danger elementor-mcp-sn-delete"><span class="dashicons dashicons-trash" aria-hidden="true"></span><?php esc_html_e( 'Delete', 'karmcp' ); ?></button>
+								<button type="button" class="button karmcp-sn-edit"><span class="dashicons dashicons-edit" aria-hidden="true"></span><?php esc_html_e( 'Edit', 'karmcp' ); ?></button>
+								<button type="button" class="button karmcp-sb-danger karmcp-sn-delete"><span class="dashicons dashicons-trash" aria-hidden="true"></span><?php esc_html_e( 'Delete', 'karmcp' ); ?></button>
 								<a class="button" href="<?php echo esc_url( KarMCP_Admin::sandbox_export_url( 'snippet', $karmcp_sid ) ); ?>">
 									<span class="dashicons dashicons-download" aria-hidden="true"></span><?php esc_html_e( 'Export', 'karmcp' ); ?>
 								</a>
@@ -225,7 +225,7 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 									data-karmcp-code-title="<?php echo esc_attr( $karmcp_s['title'] ); ?>"
 									data-karmcp-code-filename="snippet-<?php echo (int) $karmcp_sid; ?>.php"
 								><span class="dashicons dashicons-editor-code" aria-hidden="true"></span><?php esc_html_e( 'View code', 'karmcp' ); ?></button>
-								<pre class="karmcp-code-src elementor-mcp-sn-code" hidden><?php echo esc_html( $karmcp_scode ); ?></pre>
+								<pre class="karmcp-code-src karmcp-sn-code" hidden><?php echo esc_html( $karmcp_scode ); ?></pre>
 							</td>
 						</tr>
 					<?php endforeach; ?>
@@ -235,7 +235,7 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 
 		<script>
 		( function () {
-			var root = document.querySelector( '.elementor-mcp-php-snippets' );
+			var root = document.querySelector( '.karmcp-php-snippets' );
 			if ( ! root ) { return; }
 			var nonce = root.getAttribute( 'data-nonce' ) || '';
 			var ajaxUrl = window.ajaxurl || '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>';
@@ -261,12 +261,12 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 			}
 
 			// Show/hide the hook fields based on context.
-			var form = root.querySelector( '.elementor-mcp-sn-form' );
+			var form = root.querySelector( '.karmcp-sn-form' );
 			function syncHookFields() {
 				if ( ! form ) { return; }
 				var ctx = form.querySelector( '[name="context"]' ).value;
 				var show = ( ctx === 'hook' || ctx === 'both' );
-				root.querySelectorAll( '.elementor-mcp-sn-hookfield' ).forEach( function ( el ) {
+				root.querySelectorAll( '.karmcp-sn-hookfield' ).forEach( function ( el ) {
 					el.style.display = show ? '' : 'none';
 				} );
 			}
@@ -276,9 +276,9 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 
 				form.addEventListener( 'submit', function ( e ) {
 					e.preventDefault();
-					var btn = form.querySelector( '.elementor-mcp-sn-save' );
-					var msg = form.querySelector( '.elementor-mcp-sn-formmsg' );
-					var findings = form.querySelector( '.elementor-mcp-sn-findings' );
+					var btn = form.querySelector( '.karmcp-sn-save' );
+					var msg = form.querySelector( '.karmcp-sn-formmsg' );
+					var findings = form.querySelector( '.karmcp-sn-findings' );
 					findings.innerHTML = '';
 					msg.textContent = '';
 					btn.disabled = true;
@@ -293,14 +293,14 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 				} );
 			}
 
-			var table = root.querySelector( '.elementor-mcp-snippets-table' );
+			var table = root.querySelector( '.karmcp-snippets-table' );
 			if ( table ) {
 				table.addEventListener( 'click', function ( e ) {
 					var row = e.target.closest( 'tr[data-snippet-id]' );
 					if ( ! row ) { return; }
 					var id = row.getAttribute( 'data-snippet-id' );
 
-					if ( e.target.classList.contains( 'elementor-mcp-sn-toggle' ) ) {
+					if ( e.target.classList.contains( 'karmcp-sn-toggle' ) ) {
 						var status = e.target.getAttribute( 'data-status' );
 						if ( status === 'active' && ! confirm( '<?php echo esc_js( __( 'Activate this snippet? It will run real PHP on your site. Make sure you have read and trust the code.', 'karmcp' ) ); ?>' ) ) { return; }
 						e.target.disabled = true;
@@ -313,7 +313,7 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 						} ).catch( function () { e.target.disabled = false; } );
 					}
 
-					if ( e.target.classList.contains( 'elementor-mcp-sn-delete' ) ) {
+					if ( e.target.classList.contains( 'karmcp-sn-delete' ) ) {
 						if ( ! confirm( '<?php echo esc_js( __( 'Delete this snippet permanently?', 'karmcp' ) ); ?>' ) ) { return; }
 						e.target.disabled = true;
 						var db = new FormData();
@@ -324,15 +324,15 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 						} ).catch( function () { e.target.disabled = false; } );
 					}
 
-					if ( e.target.classList.contains( 'elementor-mcp-sn-edit' ) && form ) {
-						var add = root.querySelector( '.elementor-mcp-sn-add' );
+					if ( e.target.classList.contains( 'karmcp-sn-edit' ) && form ) {
+						var add = root.querySelector( '.karmcp-sn-add' );
 						if ( add ) { add.open = true; }
 						form.querySelector( '[name="snippet_id"]' ).value = id;
 						form.querySelector( '[name="title"]' ).value = row.getAttribute( 'data-title' ) || '';
 						form.querySelector( '[name="context"]' ).value = row.getAttribute( 'data-context' ) || 'shortcode';
 						form.querySelector( '[name="hook"]' ).value = row.getAttribute( 'data-hook' ) || '';
 						form.querySelector( '[name="priority"]' ).value = row.getAttribute( 'data-priority' ) || '10';
-						var pre = row.querySelector( '.elementor-mcp-sn-code' );
+						var pre = row.querySelector( '.karmcp-sn-code' );
 						form.querySelector( '[name="code"]' ).value = pre ? pre.textContent : '';
 						syncHookFields();
 						form.scrollIntoView( { behavior: 'smooth', block: 'center' } );

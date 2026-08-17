@@ -36,20 +36,20 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 	: ( '1' === (string) get_option( 'karmcp_server_enabled', '1' ) );
 ?>
 
-<div class="elementor-mcp-connection">
+<div class="karmcp-connection">
 
 	<div class="karmcp-conn-subhead">
-		<div class="elementor-mcp-subtabs elementor-mcp-subtabs--flush" data-subtab-key="connection" role="tablist" aria-label="<?php esc_attr_e( 'Connection sections', 'karmcp' ); ?>">
-			<button type="button" class="elementor-mcp-subtab is-active" role="tab" data-tab="conn-main" aria-selected="true" aria-controls="karmcp-conn-main">
-				<span class="elementor-mcp-subtab-label"><?php esc_html_e( 'MCP', 'karmcp' ); ?></span>
+		<div class="karmcp-subtabs karmcp-subtabs--flush" data-subtab-key="connection" role="tablist" aria-label="<?php esc_attr_e( 'Connection sections', 'karmcp' ); ?>">
+			<button type="button" class="karmcp-subtab is-active" role="tab" data-tab="conn-main" aria-selected="true" aria-controls="karmcp-conn-main">
+				<span class="karmcp-subtab-label"><?php esc_html_e( 'MCP', 'karmcp' ); ?></span>
 			</button>
 			<?php if ( class_exists( 'KarMCP_Cloud_Module' ) && KarMCP_Cloud_Module::is_enabled() ) : ?>
-			<button type="button" class="elementor-mcp-subtab" role="tab" data-tab="conn-cloud" aria-selected="false" aria-controls="karmcp-conn-cloud">
-				<span class="elementor-mcp-subtab-label"><?php esc_html_e( 'Cloud', 'karmcp' ); ?></span>
+			<button type="button" class="karmcp-subtab" role="tab" data-tab="conn-cloud" aria-selected="false" aria-controls="karmcp-conn-cloud">
+				<span class="karmcp-subtab-label"><?php esc_html_e( 'Cloud', 'karmcp' ); ?></span>
 			</button>
 			<?php endif; ?>
-			<button type="button" class="elementor-mcp-subtab" role="tab" data-tab="conn-services" aria-selected="false" aria-controls="karmcp-conn-services">
-				<span class="elementor-mcp-subtab-label"><?php esc_html_e( '3rd Party Services', 'karmcp' ); ?></span>
+			<button type="button" class="karmcp-subtab" role="tab" data-tab="conn-services" aria-selected="false" aria-controls="karmcp-conn-services">
+				<span class="karmcp-subtab-label"><?php esc_html_e( '3rd Party Services', 'karmcp' ); ?></span>
 			</button>
 		</div>
 		<div class="karmcp-subtab-actions">
@@ -59,59 +59,59 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 	</div>
 
 	<?php // ===== Sub-tab: Connections ===== ?>
-	<div class="elementor-mcp-tabpanel is-active" id="karmcp-conn-main" role="tabpanel" data-tab="conn-main">
+	<div class="karmcp-tabpanel is-active" id="karmcp-conn-main" role="tabpanel" data-tab="conn-main">
 
 		<!-- Server Status -->
-		<div class="elementor-mcp-section">
+		<div class="karmcp-section">
 			<h2><?php esc_html_e( 'Server Status', 'karmcp' ); ?></h2>
 			<p class="description"><?php esc_html_e( 'Current status of your MCP server and connected components.', 'karmcp' ); ?></p>
 
-			<div class="elementor-mcp-status-grid">
-				<div class="elementor-mcp-status-card">
-					<span class="elementor-mcp-status-card-icon elementor-mcp-status-card-icon--ok">
+			<div class="karmcp-status-grid">
+				<div class="karmcp-status-card">
+					<span class="karmcp-status-card-icon karmcp-status-card-icon--ok">
 						<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
 					</span>
-					<span class="elementor-mcp-status-card-info">
-						<span class="elementor-mcp-status-card-label"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
-						<span class="elementor-mcp-status-card-value"><?php esc_html_e( 'Active', 'karmcp' ); ?></span>
+					<span class="karmcp-status-card-info">
+						<span class="karmcp-status-card-label"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
+						<span class="karmcp-status-card-value"><?php esc_html_e( 'Active', 'karmcp' ); ?></span>
 					</span>
 				</div>
 
-				<div class="elementor-mcp-status-card">
-					<span class="elementor-mcp-status-card-icon <?php echo esc_attr( $karmcp_has_adapter ? 'elementor-mcp-status-card-icon--ok' : 'elementor-mcp-status-card-icon--warn' ); ?>">
+				<div class="karmcp-status-card">
+					<span class="karmcp-status-card-icon <?php echo esc_attr( $karmcp_has_adapter ? 'karmcp-status-card-icon--ok' : 'karmcp-status-card-icon--warn' ); ?>">
 						<?php if ( $karmcp_has_adapter ) : ?>
 							<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
 						<?php else : ?>
 							<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
 						<?php endif; ?>
 					</span>
-					<span class="elementor-mcp-status-card-info">
-						<span class="elementor-mcp-status-card-label"><?php esc_html_e( 'MCP Adapter', 'karmcp' ); ?></span>
-						<span class="elementor-mcp-status-card-value"><?php echo esc_html( $karmcp_adapter_label ); ?></span>
+					<span class="karmcp-status-card-info">
+						<span class="karmcp-status-card-label"><?php esc_html_e( 'MCP Adapter', 'karmcp' ); ?></span>
+						<span class="karmcp-status-card-value"><?php echo esc_html( $karmcp_adapter_label ); ?></span>
 					</span>
 				</div>
 
-				<div class="elementor-mcp-status-card">
-					<span class="elementor-mcp-status-card-icon <?php echo esc_attr( $karmcp_server_enabled ? 'elementor-mcp-status-card-icon--ok' : 'elementor-mcp-status-card-icon--warn' ); ?>">
+				<div class="karmcp-status-card">
+					<span class="karmcp-status-card-icon <?php echo esc_attr( $karmcp_server_enabled ? 'karmcp-status-card-icon--ok' : 'karmcp-status-card-icon--warn' ); ?>">
 						<?php if ( $karmcp_server_enabled ) : ?>
 							<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
 						<?php else : ?>
 							<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
 						<?php endif; ?>
 					</span>
-					<span class="elementor-mcp-status-card-info">
-						<span class="elementor-mcp-status-card-label"><?php esc_html_e( 'MCP Server', 'karmcp' ); ?></span>
-						<span class="elementor-mcp-status-card-value"><?php echo esc_html( $karmcp_server_enabled ? __( 'Enabled', 'karmcp' ) : __( 'Disabled', 'karmcp' ) ); ?></span>
+					<span class="karmcp-status-card-info">
+						<span class="karmcp-status-card-label"><?php esc_html_e( 'MCP Server', 'karmcp' ); ?></span>
+						<span class="karmcp-status-card-value"><?php echo esc_html( $karmcp_server_enabled ? __( 'Enabled', 'karmcp' ) : __( 'Disabled', 'karmcp' ) ); ?></span>
 					</span>
 				</div>
 
-				<div class="elementor-mcp-status-card">
-					<span class="elementor-mcp-status-card-icon elementor-mcp-status-card-icon--ok">
+				<div class="karmcp-status-card">
+					<span class="karmcp-status-card-icon karmcp-status-card-icon--ok">
 						<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
 					</span>
-					<span class="elementor-mcp-status-card-info">
-						<span class="elementor-mcp-status-card-label"><?php esc_html_e( 'Tools Enabled', 'karmcp' ); ?></span>
-						<span class="elementor-mcp-status-card-value">
+					<span class="karmcp-status-card-info">
+						<span class="karmcp-status-card-label"><?php esc_html_e( 'Tools Enabled', 'karmcp' ); ?></span>
+						<span class="karmcp-status-card-value">
 							<?php
 							printf(
 								/* translators: %1$d: enabled count, %2$d: total count */
@@ -125,14 +125,14 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 				</div>
 			</div>
 
-			<div class="elementor-mcp-endpoint">
+			<div class="karmcp-endpoint">
 				<code><?php echo esc_html( $karmcp_endpoint ); ?></code>
-				<button type="button" class="button elementor-mcp-copy-btn" data-target="elementor-mcp-endpoint-copy"><?php esc_html_e( 'Copy', 'karmcp' ); ?></button>
-				<textarea id="elementor-mcp-endpoint-copy" class="elementor-mcp-copy-source"><?php echo esc_html( $karmcp_endpoint ); ?></textarea>
+				<button type="button" class="button karmcp-copy-btn" data-target="karmcp-endpoint-copy"><?php esc_html_e( 'Copy', 'karmcp' ); ?></button>
+				<textarea id="karmcp-endpoint-copy" class="karmcp-copy-source"><?php echo esc_html( $karmcp_endpoint ); ?></textarea>
 			</div>
 		</div>
 
-		<form method="post" action="options.php" id="karmcp-conn-form" class="elementor-mcp-activate-form">
+		<form method="post" action="options.php" id="karmcp-conn-form" class="karmcp-activate-form">
 			<?php settings_fields( KarMCP_Admin::SETTINGS_GROUP_SERVER ); ?>
 
 			<div class="karmcp-conn-cards">
@@ -148,15 +148,15 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 							value="1"
 							<?php checked( $karmcp_server_enabled ); ?>
 						/>
-						<span class="elementor-mcp-toggle" aria-hidden="true"><span class="elementor-mcp-toggle-track"></span></span>
+						<span class="karmcp-toggle" aria-hidden="true"><span class="karmcp-toggle-track"></span></span>
 						<span class="karmcp-switch-label"><?php esc_html_e( 'Expose KarMCP tools to AI agents on this site', 'karmcp' ); ?></span>
 					</label>
 
-					<p class="elementor-mcp-activate-note elementor-mcp-activate-note--security">
+					<p class="karmcp-activate-note karmcp-activate-note--security">
 						<strong><?php esc_html_e( 'Security note:', 'karmcp' ); ?></strong>
 						<?php esc_html_e( 'When enabled, connected AI agents can create, edit, and delete Elementor pages and content on this site through the MCP server. Use a capable AI model and set your client to ask for confirmation before every action, read what the agent is about to do before approving.', 'karmcp' ); ?>
 					</p>
-					<p class="elementor-mcp-activate-note">
+					<p class="karmcp-activate-note">
 						<?php
 						if ( $karmcp_has_abilities ) {
 							printf(
@@ -184,14 +184,14 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 							value="1"
 							<?php checked( '1' === (string) get_option( 'karmcp_strict_schemas', '0' ) ); ?>
 						/>
-						<span class="elementor-mcp-toggle" aria-hidden="true"><span class="elementor-mcp-toggle-track"></span></span>
+						<span class="karmcp-toggle" aria-hidden="true"><span class="karmcp-toggle-track"></span></span>
 						<span class="karmcp-switch-label"><?php esc_html_e( 'Enable strict function-calling schemas', 'karmcp' ); ?></span>
 					</label>
 
-					<p class="elementor-mcp-activate-note">
+					<p class="karmcp-activate-note">
 						<?php esc_html_e( 'Enable only for OpenAI-compatible strict function-calling clients (e.g. CrewAI) that reject the default tool schemas. It lists every property as required (optional ones become nullable) and sets additionalProperties:false. Leave this OFF for Claude, Gemini, and Antigravity, they work with the default schemas, and strict mode can break Gemini/Antigravity.', 'karmcp' ); ?>
 					</p>
-					<p class="elementor-mcp-activate-note">
+					<p class="karmcp-activate-note">
 						<?php
 						printf(
 							/* translators: %s: link to the Tools tab. */
@@ -221,7 +221,7 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 						autocomplete="off"
 					/>
 
-					<p class="elementor-mcp-activate-note">
+					<p class="karmcp-activate-note">
 						<?php
 						printf(
 							/* translators: %s: the auto-detected base URL. */
@@ -245,16 +245,16 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 							<?php checked( class_exists( 'KarMCP_OAuth_Server' ) && KarMCP_OAuth_Server::option_enabled() ); ?>
 							<?php disabled( ! $karmcp_oauth_available ); ?>
 						/>
-						<span class="elementor-mcp-toggle" aria-hidden="true"><span class="elementor-mcp-toggle-track"></span></span>
+						<span class="karmcp-toggle" aria-hidden="true"><span class="karmcp-toggle-track"></span></span>
 						<span class="karmcp-switch-label"><?php esc_html_e( 'Let clients connect by signing in (OAuth), no password to copy', 'karmcp' ); ?></span>
 					</label>
 
 					<?php if ( ! $karmcp_oauth_available ) : ?>
-						<p class="elementor-mcp-activate-note elementor-mcp-activate-note--security">
+						<p class="karmcp-activate-note karmcp-activate-note--security">
 							<?php esc_html_e( 'OAuth requires HTTPS. This site is not served over HTTPS, so OAuth sign-in is unavailable, use an Application Password below.', 'karmcp' ); ?>
 						</p>
 					<?php endif; ?>
-					<p class="elementor-mcp-activate-note">
+					<p class="karmcp-activate-note">
 						<?php esc_html_e( 'Claude and other MCP clients connect through a standard authorization flow: they open a page where you approve access from your WordPress login. Administrators only; Application Passwords keep working alongside it.', 'karmcp' ); ?>
 					</p>
 
@@ -284,7 +284,7 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 
 		<?php // ===== Choose authentication method ===== ?>
 		<?php $karmcp_oauth_ok = class_exists( 'KarMCP_OAuth_Server' ) && KarMCP_OAuth_Server::is_enabled(); ?>
-		<div class="elementor-mcp-section">
+		<div class="karmcp-section">
 			<h2><?php esc_html_e( 'Choose your authentication method', 'karmcp' ); ?></h2>
 
 			<div class="karmcp-auth-methods" role="radiogroup" aria-label="<?php esc_attr_e( 'Authentication method', 'karmcp' ); ?>">
@@ -317,7 +317,7 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 		$karmcp_oauth_clients = ( $karmcp_oauth_ok && class_exists( 'KarMCP_OAuth_Store' ) ) ? KarMCP_OAuth_Store::list_authorized_clients() : array();
 		if ( ! empty( $karmcp_oauth_clients ) ) :
 			?>
-			<div class="elementor-mcp-section" id="karmcp-conn-manage-apps" data-authfor="oauth">
+			<div class="karmcp-section" id="karmcp-conn-manage-apps" data-authfor="oauth">
 				<h2><?php esc_html_e( 'Connected apps', 'karmcp' ); ?></h2>
 				<table class="widefat striped" style="max-width:760px;">
 					<thead>
@@ -355,7 +355,7 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 		<?php endif; ?>
 
 		<!-- Connect AI Client -->
-		<div class="elementor-mcp-section">
+		<div class="karmcp-section">
 			<h2><?php esc_html_e( 'Connect Your AI Client', 'karmcp' ); ?></h2>
 			<p class="description">
 				<?php esc_html_e( 'Pick your client below for tailored setup steps. Your choice of authentication method above changes what you paste.', 'karmcp' ); ?>
@@ -400,10 +400,10 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 			);
 			?>
 
-			<div class="elementor-mcp-cred-form">
-				<div class="elementor-mcp-cred-field">
-					<label for="elementor-mcp-b64-username"><?php esc_html_e( 'Administrator account', 'karmcp' ); ?></label>
-					<select id="elementor-mcp-b64-username">
+			<div class="karmcp-cred-form">
+				<div class="karmcp-cred-field">
+					<label for="karmcp-b64-username"><?php esc_html_e( 'Administrator account', 'karmcp' ); ?></label>
+					<select id="karmcp-b64-username">
 						<?php foreach ( $karmcp_admins as $karmcp_u ) : ?>
 							<option
 								value="<?php echo esc_attr( (string) $karmcp_u->ID ); ?>"
@@ -422,17 +422,17 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 						<?php endforeach; ?>
 					</select>
 				</div>
-				<button type="button" class="button button-primary elementor-mcp-generate-btn" id="elementor-mcp-generate-b64"><?php esc_html_e( 'Generate Password &amp; Configs', 'karmcp' ); ?></button>
+				<button type="button" class="button button-primary karmcp-generate-btn" id="karmcp-generate-b64"><?php esc_html_e( 'Generate Password &amp; Configs', 'karmcp' ); ?></button>
 
-				<p id="elementor-mcp-cred-status" class="description" style="display: none;"></p>
+				<p id="karmcp-cred-status" class="description" style="display: none;"></p>
 
-				<div id="elementor-mcp-generated-pw-row" style="display: none;">
-					<div class="elementor-mcp-cred-field">
-						<label for="elementor-mcp-generated-pw-copy"><?php esc_html_e( 'New Application Password (save it, shown only once)', 'karmcp' ); ?></label>
-						<div class="elementor-mcp-auth-result">
-							<code id="elementor-mcp-generated-pw"></code>
-							<button type="button" class="button elementor-mcp-copy-btn" data-target="elementor-mcp-generated-pw-copy"><?php esc_html_e( 'Copy', 'karmcp' ); ?></button>
-							<textarea id="elementor-mcp-generated-pw-copy" class="elementor-mcp-copy-source"></textarea>
+				<div id="karmcp-generated-pw-row" style="display: none;">
+					<div class="karmcp-cred-field">
+						<label for="karmcp-generated-pw-copy"><?php esc_html_e( 'New Application Password (save it, shown only once)', 'karmcp' ); ?></label>
+						<div class="karmcp-auth-result">
+							<code id="karmcp-generated-pw"></code>
+							<button type="button" class="button karmcp-copy-btn" data-target="karmcp-generated-pw-copy"><?php esc_html_e( 'Copy', 'karmcp' ); ?></button>
+							<textarea id="karmcp-generated-pw-copy" class="karmcp-copy-source"></textarea>
 						</div>
 						<p class="description">
 							<?php
@@ -446,36 +446,36 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 					</div>
 				</div>
 
-				<details class="elementor-mcp-cred-advanced">
+				<details class="karmcp-cred-advanced">
 					<summary><?php esc_html_e( 'Use an existing Application Password instead', 'karmcp' ); ?></summary>
-					<div class="elementor-mcp-cred-field" style="margin-top: 8px;">
-						<label for="elementor-mcp-b64-app-password"><?php esc_html_e( 'Application Password', 'karmcp' ); ?></label>
-						<input type="text" id="elementor-mcp-b64-app-password" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" autocomplete="off" />
+					<div class="karmcp-cred-field" style="margin-top: 8px;">
+						<label for="karmcp-b64-app-password"><?php esc_html_e( 'Application Password', 'karmcp' ); ?></label>
+						<input type="text" id="karmcp-b64-app-password" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" autocomplete="off" />
 						<p class="description"><?php esc_html_e( 'If filled in, this is used as-is and no new password is created.', 'karmcp' ); ?></p>
 					</div>
 				</details>
 
-				<div id="elementor-mcp-b64-result-row" style="display: none;">
-					<div class="elementor-mcp-cred-field">
-						<label for="elementor-mcp-b64-result-copy"><?php esc_html_e( 'Authorization header (for direct HTTP clients)', 'karmcp' ); ?></label>
-						<div class="elementor-mcp-auth-result">
-							<code id="elementor-mcp-b64-result"></code>
-							<button type="button" class="button elementor-mcp-copy-btn" data-target="elementor-mcp-b64-result-copy"><?php esc_html_e( 'Copy', 'karmcp' ); ?></button>
-							<textarea id="elementor-mcp-b64-result-copy" class="elementor-mcp-copy-source"></textarea>
+				<div id="karmcp-b64-result-row" style="display: none;">
+					<div class="karmcp-cred-field">
+						<label for="karmcp-b64-result-copy"><?php esc_html_e( 'Authorization header (for direct HTTP clients)', 'karmcp' ); ?></label>
+						<div class="karmcp-auth-result">
+							<code id="karmcp-b64-result"></code>
+							<button type="button" class="button karmcp-copy-btn" data-target="karmcp-b64-result-copy"><?php esc_html_e( 'Copy', 'karmcp' ); ?></button>
+							<textarea id="karmcp-b64-result-copy" class="karmcp-copy-source"></textarea>
 						</div>
 					</div>
 				</div>
 
-				<div id="elementor-mcp-authtest-row" style="display: none;">
-					<button type="button" class="button" id="elementor-mcp-authtest-btn"><?php esc_html_e( 'Test authentication', 'karmcp' ); ?></button>
-					<p id="elementor-mcp-authtest-status" class="description" style="display: none;"></p>
+				<div id="karmcp-authtest-row" style="display: none;">
+					<button type="button" class="button" id="karmcp-authtest-btn"><?php esc_html_e( 'Test authentication', 'karmcp' ); ?></button>
+					<p id="karmcp-authtest-status" class="description" style="display: none;"></p>
 
-					<div id="elementor-mcp-authtest-fix" class="elementor-mcp-authtest-fix" style="display: none;">
+					<div id="karmcp-authtest-fix" class="karmcp-authtest-fix" style="display: none;">
 						<p><strong><?php esc_html_e( 'Got 401 Unauthorized? Your server is most likely stripping the Authorization header.', 'karmcp' ); ?></strong></p>
 						<p class="description"><?php esc_html_e( 'Common on Apache, Plesk, LiteSpeed and some Azure/IIS stacks: the Authorization header never reaches PHP, so WordPress never sees the Application Password and every MCP "initialize" fails with Unauthorized. Pass the header through to PHP, then re-test:', 'karmcp' ); ?></p>
 
 						<p class="description" style="margin-bottom: 4px;"><strong><?php esc_html_e( 'Apache / Plesk / LiteSpeed', 'karmcp' ); ?></strong>: <?php esc_html_e( 'add to .htaccess, above the # BEGIN WordPress block:', 'karmcp' ); ?></p>
-						<pre class="elementor-mcp-authtest-snippet">&lt;IfModule mod_rewrite.c&gt;
+						<pre class="karmcp-authtest-snippet">&lt;IfModule mod_rewrite.c&gt;
 RewriteEngine On
 RewriteCond %{HTTP:Authorization} ^(.*)
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -483,7 +483,7 @@ RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 
 						<p class="description" style="margin-bottom: 4px;"><strong><?php esc_html_e( 'Nginx', 'karmcp' ); ?></strong>: <?php esc_html_e( 'add inside the PHP location block, then reload nginx:', 'karmcp' ); ?></p>
-						<pre class="elementor-mcp-authtest-snippet">fastcgi_param HTTP_AUTHORIZATION $http_authorization;</pre>
+						<pre class="karmcp-authtest-snippet">fastcgi_param HTTP_AUTHORIZATION $http_authorization;</pre>
 
 						<p class="description">
 							<?php
@@ -499,22 +499,22 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 			</div>
 			</div><?php // /[data-authfor="app-password"] (Step 1 generate) ?>
 
-			<div id="elementor-mcp-client-picker">
+			<div id="karmcp-client-picker">
 				<h3><?php esc_html_e( 'Connect Your AI Client', 'karmcp' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Pick the app you will connect from, the setup steps below are tailored to it.', 'karmcp' ); ?></p>
 
-				<div class="elementor-mcp-client-grid" role="tablist" aria-label="<?php esc_attr_e( 'AI client', 'karmcp' ); ?>">
+				<div class="karmcp-client-grid" role="tablist" aria-label="<?php esc_attr_e( 'AI client', 'karmcp' ); ?>">
 					<?php foreach ( KarMCP_Admin::connection_clients() as $karmcp_client ) : ?>
 						<button
 							type="button"
-							class="elementor-mcp-client-card"
+							class="karmcp-client-card"
 							role="tab"
 							aria-selected="false"
 							data-client="<?php echo esc_attr( $karmcp_client['id'] ); ?>"
 						>
 							<?php if ( ! empty( $karmcp_client['image'] ) ) : ?>
 								<img
-									class="elementor-mcp-client-card-logo"
+									class="karmcp-client-card-logo"
 									src="<?php echo esc_url( KARMCP_URL . 'assets/img/' . $karmcp_client['image'] ); ?>"
 									alt=""
 									aria-hidden="true"
@@ -522,29 +522,29 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 							<?php else : ?>
 								<span class="dashicons dashicons-<?php echo esc_attr( $karmcp_client['icon'] ); ?>" aria-hidden="true"></span>
 							<?php endif; ?>
-							<span class="elementor-mcp-client-card-label"><?php echo esc_html( $karmcp_client['label'] ); ?></span>
+							<span class="karmcp-client-card-label"><?php echo esc_html( $karmcp_client['label'] ); ?></span>
 						</button>
 					<?php endforeach; ?>
 				</div>
 
-				<h3 id="elementor-mcp-connect-heading" style="display: none;">
-					<?php esc_html_e( 'Step 3: Connect', 'karmcp' ); ?> <span id="elementor-mcp-connect-client-name"></span>
+				<h3 id="karmcp-connect-heading" style="display: none;">
+					<?php esc_html_e( 'Step 3: Connect', 'karmcp' ); ?> <span id="karmcp-connect-client-name"></span>
 				</h3>
 
 				<?php // JS renders the selected client's option blocks here. ?>
-				<div id="elementor-mcp-client-options"></div>
+				<div id="karmcp-client-options"></div>
 
 				<?php // Hidden form used to POST the .mcpb download (Claude Desktop). ?>
 				<form
-					id="elementor-mcp-mcpb-form"
+					id="karmcp-mcpb-form"
 					method="post"
 					action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
 					style="display: none;"
 				>
 					<input type="hidden" name="action" value="karmcp_download_mcpb" />
 					<input type="hidden" name="_karmcp_nonce" value="<?php echo esc_attr( wp_create_nonce( KarMCP_Admin::NONCE_DOWNLOAD_MCPB ) ); ?>" />
-					<input type="hidden" name="user_id" id="elementor-mcp-mcpb-user-id" value="" />
-					<input type="hidden" name="app_password" id="elementor-mcp-mcpb-app-password" value="" />
+					<input type="hidden" name="user_id" id="karmcp-mcpb-user-id" value="" />
+					<input type="hidden" name="app_password" id="karmcp-mcpb-app-password" value="" />
 				</form>
 			</div>
 		</div>
@@ -553,17 +553,17 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 
 	<?php // ===== Sub-tab: Cloud ===== ?>
 	<?php if ( class_exists( 'KarMCP_Cloud_Module' ) && KarMCP_Cloud_Module::is_enabled() ) : ?>
-	<div class="elementor-mcp-tabpanel" id="karmcp-conn-cloud" role="tabpanel" data-tab="conn-cloud">
+	<div class="karmcp-tabpanel" id="karmcp-conn-cloud" role="tabpanel" data-tab="conn-cloud">
 		<?php // ===== KarMCP Cloud connect/disconnect ===== ?>
 		<?php if ( class_exists( 'KarMCP_Cloud_Module' ) && KarMCP_Cloud_Module::is_enabled() ) :
 			$karmcp_cloud_status = KarMCP_Cloud::status(); ?>
-			<div class="elementor-mcp-section">
+			<div class="karmcp-section">
 				<h2><?php esc_html_e( 'KarMCP Cloud', 'karmcp' ); ?></h2>
 				<div class="karmcp-conn-cards">
 					<div class="karmcp-conn-card">
 						<h2 class="karmcp-conn-card-title"><?php esc_html_e( 'Cloud account', 'karmcp' ); ?></h2>
 						<?php if ( $karmcp_cloud_status['connected'] ) : ?>
-							<p class="elementor-mcp-activate-note">
+							<p class="karmcp-activate-note">
 								<?php esc_html_e( 'This site is connected to your KarMCP Cloud account.', 'karmcp' ); ?>
 								<?php if ( ! $karmcp_cloud_status['healthy'] ) : ?>
 									<strong><?php esc_html_e( 'Reconnect needed.', 'karmcp' ); ?></strong>
@@ -577,7 +577,7 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 								require KARMCP_DIR . 'includes/admin/views/partials/cloud-connect-form.php';
 							endif; ?>
 						<?php else : ?>
-							<p class="elementor-mcp-activate-note"><?php esc_html_e( 'Connect this site to your KarMCP Cloud account to back up and sync your work.', 'karmcp' ); ?></p>
+							<p class="karmcp-activate-note"><?php esc_html_e( 'Connect this site to your KarMCP Cloud account to back up and sync your work.', 'karmcp' ); ?></p>
 							<?php
 							$karmcp_connect_label = __( 'Connect to KarMCP Cloud', 'karmcp' );
 							require KARMCP_DIR . 'includes/admin/views/partials/cloud-connect-form.php';
@@ -602,7 +602,7 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 							<?php endif; ?>
 
 							<?php if ( $karmcp_sync_entitled ) : ?>
-								<p class="elementor-mcp-activate-note"><?php esc_html_e( 'Copy your KarMCP settings between connected sites: tool toggles, active modules, compact-tool mode, and behavior preferences. Secrets, API keys, and this site\'s connection are never synced.', 'karmcp' ); ?></p>
+								<p class="karmcp-activate-note"><?php esc_html_e( 'Copy your KarMCP settings between connected sites: tool toggles, active modules, compact-tool mode, and behavior preferences. Secrets, API keys, and this site\'s connection are never synced.', 'karmcp' ); ?></p>
 								<p>
 									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline">
 										<input type="hidden" name="action" value="karmcp_settings_push" />
@@ -616,7 +616,7 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 									</form>
 								</p>
 							<?php else : ?>
-								<p class="elementor-mcp-activate-note"><?php esc_html_e( 'Sync your KarMCP settings across all your sites. This is a paid KarMCP Cloud feature.', 'karmcp' ); ?></p>
+								<p class="karmcp-activate-note"><?php esc_html_e( 'Sync your KarMCP settings across all your sites. This is a paid KarMCP Cloud feature.', 'karmcp' ); ?></p>
 								<p><a href="<?php echo esc_url( trailingslashit( KarMCP_Cloud::base_url() ) . 'account/billing' ); ?>" class="button" target="_blank" rel="noopener"><?php esc_html_e( 'Upgrade your Cloud plan', 'karmcp' ); ?></a></p>
 							<?php endif; ?>
 						</div>
@@ -628,8 +628,8 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 	<?php endif; ?>
 
 	<?php // ===== Sub-tab: 3rd Party Services ===== ?>
-	<div class="elementor-mcp-tabpanel" id="karmcp-conn-services" role="tabpanel" data-tab="conn-services">
-		<div class="elementor-mcp-section">
+	<div class="karmcp-tabpanel" id="karmcp-conn-services" role="tabpanel" data-tab="conn-services">
+		<div class="karmcp-section">
 			<h2><?php esc_html_e( '3rd Party Services', 'karmcp' ); ?></h2>
 			<p class="description"><?php esc_html_e( 'Connect external services KarMCP tools can use. Stock-image providers power the search-images / add-stock-image tools, add at least one free key; the tools use the first connected provider unless a specific one is requested.', 'karmcp' ); ?></p>
 

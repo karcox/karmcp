@@ -28,7 +28,7 @@ $modules  = $registry ? $registry->all() : array();
 	<form method="post" action="options.php">
 		<?php settings_fields( KarMCP_Admin::SETTINGS_GROUP_MODULES ); ?>
 
-		<div class="elementor-mcp-tools-grid karmcp-modules-grid">
+		<div class="karmcp-tools-grid karmcp-modules-grid">
 			<?php
 			foreach ( $modules as $module ) :
 				$active    = $module->is_active();
@@ -41,7 +41,7 @@ $modules  = $registry ? $registry->all() : array();
 				// .karmcp-switch CSS), which reflects clicks live.
 				$state = $available ? '' : 'is-unavailable';
 				?>
-				<div class="elementor-mcp-tool-card karmcp-module-card <?php echo esc_attr( $state ); ?>">
+				<div class="karmcp-tool-card karmcp-module-card <?php echo esc_attr( $state ); ?>">
 					<label class="karmcp-module-head karmcp-switch">
 						<input
 							type="checkbox"
@@ -50,15 +50,15 @@ $modules  = $registry ? $registry->all() : array();
 							<?php checked( $active ); ?>
 							<?php disabled( ! $available ); ?>
 						/>
-						<span class="elementor-mcp-toggle" aria-hidden="true"><span class="elementor-mcp-toggle-track"></span></span>
-						<span class="elementor-mcp-tool-info">
-							<span class="elementor-mcp-tool-name">
+						<span class="karmcp-toggle" aria-hidden="true"><span class="karmcp-toggle-track"></span></span>
+						<span class="karmcp-tool-info">
+							<span class="karmcp-tool-name">
 								<?php echo esc_html( $module->title() ); ?>
-								<span class="elementor-mcp-badge elementor-mcp-badge--<?php echo $is_pro ? 'pro' : 'free'; ?>">
+								<span class="karmcp-badge karmcp-badge--<?php echo $is_pro ? 'pro' : 'free'; ?>">
 									<?php echo $is_pro ? esc_html__( 'Pro', 'karmcp' ) : esc_html__( 'Free', 'karmcp' ); ?>
 								</span>
 							</span>
-							<span class="elementor-mcp-tool-desc"><?php echo esc_html( $module->description() ); ?></span>
+							<span class="karmcp-tool-desc"><?php echo esc_html( $module->description() ); ?></span>
 						</span>
 					</label>
 

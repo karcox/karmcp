@@ -27,7 +27,7 @@ $karmcp_gr_toggle = static function ( $name, $on, $title, $desc ) {
 	printf(
 		'<label class="karmcp-switch karmcp-gr-toggle">
 			<input type="checkbox" name="%s" value="1"%s />
-			<span class="elementor-mcp-toggle" aria-hidden="true"><span class="elementor-mcp-toggle-track"></span></span>
+			<span class="karmcp-toggle" aria-hidden="true"><span class="karmcp-toggle-track"></span></span>
 			<span class="karmcp-gr-toggle-text">
 				<span class="karmcp-gr-toggle-title">%s</span>
 				<span class="karmcp-gr-toggle-desc">%s</span>

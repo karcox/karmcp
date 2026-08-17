@@ -26,7 +26,7 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 ?>
 
 <p class="karmcp-sandbox-back">
-	<a href="<?php echo esc_url( menu_page_url( 'karmcp-widgets', false ) ); ?>" class="elementor-mcp-header-btn elementor-mcp-header-btn--secondary">
+	<a href="<?php echo esc_url( menu_page_url( 'karmcp-widgets', false ) ); ?>" class="karmcp-header-btn karmcp-header-btn--secondary">
 		<span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
 		<?php esc_html_e( 'Back to Sandbox', 'karmcp' ); ?>
 	</a>
@@ -38,11 +38,11 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 	<div class="notice notice-error is-dismissible"><p><?php echo esc_html( $karmcp_bb_import_error ); ?></p></div>
 <?php endif; ?>
 
-<div class="elementor-mcp-widget-builder">
+<div class="karmcp-widget-builder">
 
-	<div class="elementor-mcp-pro-prompts">
-		<div class="elementor-mcp-pro-prompts-header">
-			<div class="elementor-mcp-pro-prompts-heading">
+	<div class="karmcp-pro-prompts">
+		<div class="karmcp-pro-prompts-header">
+			<div class="karmcp-pro-prompts-heading">
 				<h2><?php esc_html_e( 'Blocks', 'karmcp' ); ?></h2>
 				<p class="description">
 					<?php esc_html_e( 'Custom Gutenberg blocks your AI agent generated through the MCP tools, starting from a structured spec. Everything lives in an isolated sandbox under wp-content/karmcp-sandbox, never in your theme, core, or other plugins. Active blocks appear in the block editor inserter under "KarMCP Custom".', 'karmcp' ); ?>
@@ -52,7 +52,7 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 
 		<?php if ( ! $karmcp_bb_can ) : ?>
 
-			<div class="elementor-mcp-pro-cta">
+			<div class="karmcp-pro-cta">
 				<p>
 					<?php esc_html_e( 'Managing custom blocks requires an administrator account: a generated block is executable code that runs on every page it is placed on.', 'karmcp' ); ?>
 				</p>
@@ -92,7 +92,7 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 
 			<?php else : ?>
 
-				<table class="widefat striped elementor-mcp-blocks-table" data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_blocks' ) ); ?>" style="margin-top: 16px;">
+				<table class="widefat striped karmcp-blocks-table" data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_blocks' ) ); ?>" style="margin-top: 16px;">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'Block', 'karmcp' ); ?></th>
@@ -125,16 +125,16 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 								</td>
 								<td><code><?php echo esc_html( $karmcp_b['block_name'] ); ?></code></td>
 								<td>
-									<span class="elementor-mcp-badge <?php echo esc_attr( $karmcp_active ? 'elementor-mcp-badge--pro' : '' ); ?>">
+									<span class="karmcp-badge <?php echo esc_attr( $karmcp_active ? 'karmcp-badge--pro' : '' ); ?>">
 										<?php echo $karmcp_active ? esc_html__( 'Active', 'karmcp' ) : esc_html__( 'Inactive', 'karmcp' ); ?>
 									</span>
 								</td>
 								<td class="karmcp-sb-actions">
-									<button type="button" class="button elementor-mcp-wb-toggle" data-status="<?php echo esc_attr( $karmcp_active ? 'draft' : 'active' ); ?>">
+									<button type="button" class="button karmcp-wb-toggle" data-status="<?php echo esc_attr( $karmcp_active ? 'draft' : 'active' ); ?>">
 										<span class="dashicons dashicons-<?php echo $karmcp_active ? 'controls-pause' : 'controls-play'; ?>" aria-hidden="true"></span>
 										<?php echo $karmcp_active ? esc_html__( 'Deactivate', 'karmcp' ) : esc_html__( 'Activate', 'karmcp' ); ?>
 									</button>
-									<button type="button" class="button karmcp-sb-danger elementor-mcp-wb-delete">
+									<button type="button" class="button karmcp-sb-danger karmcp-wb-delete">
 										<span class="dashicons dashicons-trash" aria-hidden="true"></span><?php esc_html_e( 'Delete', 'karmcp' ); ?>
 									</button>
 									<a class="button" href="<?php echo esc_url( KarMCP_Admin::sandbox_export_url( 'block', $karmcp_bid ) ); ?>">
@@ -161,7 +161,7 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 
 				<script>
 				( function () {
-					var table = document.querySelector( '.elementor-mcp-blocks-table' );
+					var table = document.querySelector( '.karmcp-blocks-table' );
 					if ( ! table ) { return; }
 					var nonce = table.getAttribute( 'data-nonce' ) || '';
 					var ajaxUrl = window.ajaxurl || '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>';
@@ -177,7 +177,7 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 						if ( ! row ) { return; }
 						var id = row.getAttribute( 'data-block-id' );
 
-						if ( e.target.classList.contains( 'elementor-mcp-wb-toggle' ) ) {
+						if ( e.target.classList.contains( 'karmcp-wb-toggle' ) ) {
 							e.target.disabled = true;
 							var b = new FormData();
 							b.append( 'block_id', id );
@@ -188,7 +188,7 @@ $karmcp_bb_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field( 
 							} ).catch( function () { e.target.disabled = false; } );
 						}
 
-						if ( e.target.classList.contains( 'elementor-mcp-wb-delete' ) ) {
+						if ( e.target.classList.contains( 'karmcp-wb-delete' ) ) {
 							/* global confirm */
 							if ( ! confirm( '<?php echo esc_js( __( 'Delete this block permanently? Pages using it will lose it.', 'karmcp' ) ); ?>' ) ) { return; }
 							e.target.disabled = true;

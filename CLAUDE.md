@@ -229,5 +229,6 @@ Fuera de esta lista, sin abordar y verificado el 2026-08-14: **no hay CI** (`.gi
 | [docs/ROADMAP-OPTIMIZE.md](docs/ROADMAP-OPTIMIZE.md) | Continuación de la pestaña Optimize (1.11.0): prevención, autocargadas, cron, índices, coste por plugin. Lo que ya está hecho y lo que no debe entrar. |
 | [docs/ROADMAP-ELEMENT-EXTENSIONS.md](docs/ROADMAP-ELEMENT-EXTENSIONS.md) | Extensiones de elemento. Parte atómica **hecha** (1.13.0/1.13.1); **parte clásica pendiente y es la que más se usa** — los elementos atómicos solo existen con el Editor V4 activado y solo en lo construido después. Las costuras de ambos mundos están verificadas contra 4.2.2/Pro 4.2.1. |
 | [docs/MAINTENANCE-UPSTREAM.md](docs/MAINTENANCE-UPSTREAM.md) | Nota interna de mantenimiento: qué se ha revisado del árbol de origen y qué divergencias no deben reimportarse. |
+| [docs/WIDGETS-UNLIMITED-ELEMENTS.md](docs/WIDGETS-UNLIMITED-ELEMENTS.md) | Los doce widgets de Unlimited Elements que usa content.karcos.com, con sus claves reales leídas de instancias vivas. **Ninguno está en el catálogo curado y la introspección no los resuelve**, así que esto es la única descripción que existe de seis de ellos. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Cómo añadir una herramienta o una integración. |
 | `NOTICE` / `LICENSE` | Atribución y licencia. **No tocar.** |

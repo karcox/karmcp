@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.23.0
+Stable tag: 1.24.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -152,6 +152,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 
 == Changelog ==
 
+= 1.24.0 =
+
+* Fixed: **strip_defaults** barely did anything. On the template it was written for it saved 260 bytes of 28,499 — because it looked at widgets and the weight is on the containers, where third-party plugins register their pre-filled background sliders. On that block those account for 87% of its size, and across this site for roughly 80% of all the Elementor data stored. Containers are now read too.
+* Fixed: a repeater could never match its factory value, because Elementor writes a fresh internal row id every time it saves and the factory value has none. That one bookkeeping key is now ignored when comparing — and only that one: a row that differs anywhere else keeps the whole repeater.
+
 = 1.23.0 =
 
 * Added: **strip_defaults** on apply-template. Applying a saved block also copies every setting left at its factory value, including the sample photo galleries that third-party widgets ship pre-filled — often the great majority of a block's weight. This drops them. It cannot change how anything looks: a widget falls back to the same default when the setting is absent.
@@ -160,10 +165,6 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 = 1.22.1 =
 
 * Fixed: two sections of a skill whose headings start with the same number (a chapter and its "bis") shared one id, so one of them could not be opened at all.
-
-= 1.22.1 =
-
-* Fixed: two sections of a skill whose headings begin with the same number (a chapter and its "bis") shared a single id, so one of them could not be opened at all.
 
 = 1.22.0 =
 

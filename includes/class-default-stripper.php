@@ -4,11 +4,13 @@
  *
  * A template copied from a real page carries every control the original ever
  * touched, including the ones left at their factory value. Most of that is
- * invisible and enormous: the navigation template on this site is 5 elements
- * and 28,499 characters, of which the content is a few hundred — the rest is
- * third-party repeaters full of sample rows. Unlimited Elements ships its
- * background sliders pre-filled with six Unsplash photographs each, and those
- * ride along into every module of every course, and into the SCORM export.
+ * invisible and enormous, and it is not on the widgets: measured on this site,
+ * the navigation template is 5 elements and 28,499 characters, of which 24,714
+ * — 87% — is three Unlimited Elements background sliders registered on each of
+ * its three containers, one of them pre-filled with six Unsplash photographs
+ * nobody ever sees. Site-wide that is 10,992 containers carrying the same
+ * sample rows, around 80% of all the Elementor data stored. It rides into every
+ * module of every course, and into the SCORM export.
  *
  * The operation is deliberately narrow, and that is what makes it safe:
  * **a setting identical to its control's default is removed, nothing else.**
@@ -142,6 +144,16 @@ class KarMCP_Default_Stripper {
 			return (string) $value === (string) $default;
 		}
 
+		// Elementor stamps every repeater row with an `_id` when it saves, and
+		// that id is generated per save: three containers built from the same
+		// factory default hold byte-identical rows under three different ids,
+		// and the declared default has none at all. Comparing them would mean
+		// no repeater ever matches its default, which is precisely the case
+		// this exists for. The id is Elementor's bookkeeping, not content — it
+		// is regenerated on the way back in.
+		$value   = self::without_row_id( $value );
+		$default = self::without_row_id( $default );
+
 		if ( count( $value ) !== count( $default ) ) {
 			return false;
 		}
@@ -156,5 +168,24 @@ class KarMCP_Default_Stripper {
 		}
 
 		return true;
+	}
+
+	/**
+	 * An array without Elementor's generated repeater row id.
+	 *
+	 * Narrow on purpose: only `_id`, and only as a key of the array being
+	 * compared. Everything a person can set — including the row ids third
+	 * parties write themselves, like Unlimited Elements' `_generated_id` — is
+	 * left in place and still has to match.
+	 *
+	 * @since 1.24.0
+	 *
+	 * @param array $value An array value.
+	 * @return array The same array, minus `_id`.
+	 */
+	private static function without_row_id( array $value ): array {
+		unset( $value['_id'] );
+
+		return $value;
 	}
 }

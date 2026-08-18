@@ -2,6 +2,14 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.24.0]
+
+### Fixed
+
+- **`strip_defaults` was reading the wrong half of the page.** Measured against the template it was written for, 1.23.0 removed 8 settings and saved **260 bytes of 28,499** — 0.9%. It answered controls for widgets only, on the reasoning that containers resolve their defaults elsewhere and an unknown default must never authorise a deletion. The reasoning was sound; the premise was wrong. The weight is **on the containers**: Unlimited Elements registers three background sliders on every container, one pre-filled with six Unsplash photographs, so those three containers carried **24,714 of the 28,499 characters — 87%**. Site-wide, 10,992 containers hold the same sample rows, around **80% of all the Elementor data stored**. Containers are now resolved through Elementor's element registry, which is where `get-container-schema` already read them from, so this is a lookup rather than a guess.
+
+- **No repeater could ever equal its default.** Elementor stamps a fresh `_id` on each repeater row every time it saves: three containers built from one factory default hold byte-identical rows under three different ids, while the declared default carries none. Verified on the live data — the addon's own `_generated_id` is shared by 625 pages, Elementor's `_id` by only the 115 that were duplicated together. That single bookkeeping key defeated every comparison, which was precisely the case the feature exists for. It is now ignored when comparing, and nothing else is: a row differing anywhere a person could have touched — the addon's own row ids included — still keeps the whole repeater.
+
 ## [1.23.0]
 
 ### Added

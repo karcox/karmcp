@@ -56,6 +56,37 @@ class KarMCP_Schema_Generator {
 		return $this->get_full_controls( $widget );
 	}
 
+	/**
+	 * A non-widget element's raw registered controls (container, section, column).
+	 *
+	 * Containers are not widgets, so widgets_manager knows nothing about them --
+	 * their controls live in the element registry instead. They matter because
+	 * third-party plugins hang their heaviest controls there: Unlimited Elements
+	 * registers its background sliders on the container, pre-filled with sample
+	 * photographs, so a template of three containers carries three copies of them.
+	 *
+	 * @since 1.24.0
+	 *
+	 * @param string $el_type The element type name, e.g. 'container'.
+	 * @return array|\WP_Error Control id => control definition, or WP_Error.
+	 */
+	public function element_controls( string $el_type ) {
+		$element = \Elementor\Plugin::$instance->elements_manager->get_element_types( $el_type );
+
+		if ( ! $element ) {
+			return new \WP_Error(
+				'element_not_found',
+				sprintf(
+					/* translators: %s: element type name */
+					__( 'Element type "%s" not found.', 'karmcp' ),
+					$el_type
+				)
+			);
+		}
+
+		return $this->get_full_controls( $element );
+	}
+
 	public function generate( string $widget_type ) {
 		$widgets_manager = \Elementor\Plugin::$instance->widgets_manager;
 		$widget          = $widgets_manager->get_widget_types( $widget_type );

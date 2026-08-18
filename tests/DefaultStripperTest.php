@@ -182,6 +182,88 @@ class DefaultStripperTest extends TestCase {
 	}
 
 	/**
+	 * The case 1.23.0 could not reach, and the reason it saved 260 bytes of
+	 * 28,499 on the template it was written for.
+	 *
+	 * Elementor stamps a fresh `_id` on every repeater row each time it saves,
+	 * so three containers built from one factory default hold byte-identical
+	 * rows under three different ids — while the declared default carries none.
+	 * Compared literally, no repeater ever equals its default.
+	 */
+	public function test_a_repeater_matching_the_default_but_for_its_row_ids_is_dropped(): void {
+		$default = array(
+			array( 'title' => 'One', 'image' => array( 'url' => 'https://x/1.jpg' ), '_generated_id' => 'zbado' ),
+			array( 'title' => 'Two', 'image' => array( 'url' => 'https://x/2.jpg' ), '_generated_id' => 'pko6y' ),
+		);
+		$stored = array(
+			array( 'title' => 'One', 'image' => array( 'url' => 'https://x/1.jpg' ), '_generated_id' => 'zbado', '_id' => 'a464e9c' ),
+			array( 'title' => 'Two', 'image' => array( 'url' => 'https://x/2.jpg' ), '_generated_id' => 'pko6y', '_id' => '4e65d99' ),
+		);
+
+		list( $after, $removed ) = $this->strip(
+			array( 'uc_items' => $stored ),
+			$this->controls( array( 'uc_items' => array( 'type' => 'repeater', 'default' => $default ) ) )
+		);
+
+		$this->assertArrayNotHasKey( 'uc_items', $after );
+		$this->assertSame( 1, $removed );
+	}
+
+	/**
+	 * The id is ignored; nothing else is. A row that differs anywhere a person
+	 * could have touched — including the row ids the addon writes itself — is
+	 * still somebody's choice.
+	 */
+	public function test_ignoring_the_row_id_does_not_excuse_any_other_difference(): void {
+		$default = array( array( 'title' => 'One', '_generated_id' => 'zbado' ) );
+		$stored  = array( array( 'title' => 'One', '_generated_id' => 'CHANGED', '_id' => 'a464e9c' ) );
+
+		list( $after, $removed ) = $this->strip(
+			array( 'uc_items' => $stored ),
+			$this->controls( array( 'uc_items' => array( 'type' => 'repeater', 'default' => $default ) ) )
+		);
+
+		$this->assertSame( $stored, $after['uc_items'] );
+		$this->assertSame( 0, $removed );
+	}
+
+	/**
+	 * Containers are where the weight actually is: Unlimited Elements registers
+	 * its background sliders on the container, not on any widget. When the
+	 * resolver answers for one, its settings are stripped like any other.
+	 */
+	public function test_a_container_is_stripped_when_its_controls_are_known(): void {
+		$rows = array( array( 'title' => 'Slide 1', '_generated_id' => 'zbado' ) );
+
+		$tree = array(
+			array(
+				'id'       => 'c1',
+				'elType'   => 'container',
+				'settings' => array(
+					'uc_background_webgl_slider_uc_items' => array(
+						array( 'title' => 'Slide 1', '_generated_id' => 'zbado', '_id' => 'd9555f1' ),
+					),
+					'flex_direction'                      => 'row',
+				),
+				'elements' => array(),
+			),
+		);
+
+		$removed = 0;
+		$out     = KarMCP_Default_Stripper::strip(
+			$tree,
+			static fn( string $el, string $widget ): array => 'container' === $el ? array(
+				'uc_background_webgl_slider_uc_items' => array( 'type' => 'repeater', 'default' => $rows ),
+				'flex_direction'                      => array( 'type' => 'choose', 'default' => 'column' ),
+			) : array(),
+			$removed
+		);
+
+		$this->assertSame( array( 'flex_direction' => 'row' ), $out[0]['settings'] );
+		$this->assertSame( 1, $removed );
+	}
+
+	/**
 	 * And it reaches all the way down: the weight is in nested widgets.
 	 */
 	public function test_it_walks_nested_elements(): void {

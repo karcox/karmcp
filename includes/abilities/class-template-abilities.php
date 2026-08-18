@@ -45,13 +45,22 @@ class KarMCP_Template_Abilities {
 	/**
 	 * The registered controls for one element, for the default stripper.
 	 *
-	 * Only widgets are answered. Containers and sections resolve their defaults
-	 * through a different path, and returning an empty list for them makes the
-	 * stripper leave them untouched — which is the safe direction: an unknown
-	 * default must never authorise deleting a stored value.
+	 * Two registries, because Elementor keeps them apart: widgets_manager knows
+	 * widgets, elements_manager knows containers, sections and columns. The
+	 * container path is not an afterthought — it is where the weight is. Third
+	 * parties hang their heaviest controls on the container, pre-filled: on this
+	 * site Unlimited Elements registers three background sliders there, one of
+	 * them carrying six sample photographs, so a template of three containers
+	 * ships three copies of all of it. Answering only widgets, as 1.23.0 did,
+	 * left 87% of a real template untouched.
 	 *
-	 * Results are memoised per widget type. A template of 40 widgets is usually
-	 * five types repeated, and reading a widget's full control set is not free.
+	 * An element type nobody recognises still returns an empty list, and that
+	 * stays the safe direction: an unknown default must never authorise deleting
+	 * a stored value.
+	 *
+	 * Results are memoised per type. A template of 40 elements is usually five
+	 * types repeated, and reading a full control set is not free — least of all
+	 * the container's, which every plugin on the site has added to.
 	 *
 	 * @since 1.23.0
 	 *
@@ -62,22 +71,34 @@ class KarMCP_Template_Abilities {
 	public function controls_for_element( string $el_type, string $widget_type ): array {
 		static $cache = array();
 
-		if ( 'widget' !== $el_type || '' === $widget_type ) {
+		if ( '' === $el_type ) {
 			return array();
 		}
 
-		if ( isset( $cache[ $widget_type ] ) ) {
-			return $cache[ $widget_type ];
+		$key = ( 'widget' === $el_type ) ? 'widget:' . $widget_type : 'element:' . $el_type;
+
+		if ( isset( $cache[ $key ] ) ) {
+			return $cache[ $key ];
 		}
 
 		if ( ! class_exists( 'KarMCP_Schema_Generator' ) || ! class_exists( '\Elementor\Plugin' ) ) {
 			return array();
 		}
 
-		$controls = ( new KarMCP_Schema_Generator() )->controls( $widget_type );
-		$cache[ $widget_type ] = is_wp_error( $controls ) ? array() : (array) $controls;
+		$generator = new KarMCP_Schema_Generator();
 
-		return $cache[ $widget_type ];
+		if ( 'widget' === $el_type ) {
+			if ( '' === $widget_type ) {
+				return array();
+			}
+			$controls = $generator->controls( $widget_type );
+		} else {
+			$controls = $generator->element_controls( $el_type );
+		}
+
+		$cache[ $key ] = is_wp_error( $controls ) ? array() : (array) $controls;
+
+		return $cache[ $key ];
 	}
 
 	/**
@@ -303,7 +324,7 @@ class KarMCP_Template_Abilities {
 						),
 						'strip_defaults' => array(
 							'type'        => 'boolean',
-							'description' => __( 'Drop every setting the template carries that is already the control default. Safe by construction: a widget resolves an absent setting to that same default, so the result renders identically — it only stops the value being stored and shipped. This is where the weight is. A template copied from a real page carries every control the original ever touched, and third-party widgets ship their sliders pre-filled: the navigation block on one site is 5 elements and 28,499 characters, almost all of it sample rows nobody sees. Needs Elementor to read the defaults from; without it, nothing is removed. Off by default.', 'karmcp' ),
+							'description' => __( 'Drop every setting the template carries that is already the control default. Safe by construction: an element resolves an absent setting to that same default, so the result renders identically — it only stops the value being stored and shipped. This is where the weight is, and it is mostly on containers rather than widgets: third parties register pre-filled sliders there, so measured on one site a navigation block of 5 elements is 28,499 characters, of which 87% is sample photographs nobody sees, riding into every module and into the SCORM export. Elements whose controls cannot be read — a widget the site does not have, or Elementor absent — are left verbatim; an unknown default never authorises a deletion. Off by default.', 'karmcp' ),
 						),
 						'strip_media' => array(
 							'type'        => 'boolean',

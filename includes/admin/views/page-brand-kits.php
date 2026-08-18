@@ -90,7 +90,7 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 
 			<div
 				class="karmcp-brand-kit-grid"
-				data-apply-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_apply_pro_brand_kit' ) ); ?>"
+				data-apply-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_apply_brand_kit' ) ); ?>"
 			>
 				<?php foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) :
 					$karmcp_cat_slug  = isset( $karmcp_bk_cat['slug'] ) ? sanitize_key( $karmcp_bk_cat['slug'] ) : '';
@@ -167,7 +167,7 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 			</div>
 
 			<!-- Restore from backup -->
-			<div class="karmcp-brand-kit-restore" data-restore-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_restore_pro_brand_kit' ) ); ?>">
+			<div class="karmcp-brand-kit-restore" data-restore-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_restore_brand_kit' ) ); ?>">
 				<h3><?php esc_html_e( 'Restore from backup', 'karmcp' ); ?></h3>
 				<?php if ( ! empty( $karmcp_bk_backups ) ) : ?>
 					<p class="description"><?php esc_html_e( 'Roll your global colors and typography back to a saved point. By default only kit-applied tokens are restored; tick the box to clobber your custom colors/typography exactly as they were.', 'karmcp' ); ?></p>

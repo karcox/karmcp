@@ -370,7 +370,7 @@
 			setCredStatus( '', false );
 
 			var payload = new FormData();
-			payload.append( 'action', 'karmcp_tools_create_app_password' );
+			payload.append( 'action', 'karmcp_create_app_password' );
 			payload.append( 'nonce', karmcpToolsAdmin.createPwNonce );
 			payload.append( 'user_id', usernameEl.value );
 
@@ -534,30 +534,7 @@
 				}, 2000 );
 			} );
 
-			// Best-effort usage ping for premium (website-fetched) prompts only.
-			trackProPromptCopy( btn.closest( '.karmcp-pro-prompt-card' ) );
 		} );
-	}
-
-	/**
-	 * Fire a fire-and-forget "prompt copied" event for a Pro prompt card.
-	 * No-ops for free/bundled prompts (no card / no slug) or missing nonce.
-	 */
-	function trackProPromptCopy( card ) {
-		if ( ! card || typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.trackPromptNonce ) {
-			return;
-		}
-		var slug = card.getAttribute( 'data-prompt-slug' );
-		var category = card.getAttribute( 'data-category' );
-		if ( ! slug || ! category ) {
-			return;
-		}
-		var body = new FormData();
-		body.append( 'action', 'karmcp_tools_track_prompt_copy' );
-		body.append( 'nonce', karmcpToolsAdmin.trackPromptNonce );
-		body.append( 'prompt_slug', slug );
-		body.append( 'category_slug', category );
-		fetch( karmcpToolsAdmin.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } ).catch( function () {} );
 	}
 
 	/**
@@ -815,7 +792,7 @@
 				confirmBtn.textContent = karmcpToolsAdmin.applying || 'Applying…';
 
 				var body = new URLSearchParams();
-				body.append( 'action', 'karmcp_tools_apply_pro_brand_kit' );
+				body.append( 'action', 'karmcp_apply_brand_kit' );
 				body.append( 'nonce', grid.getAttribute( 'data-apply-nonce' ) || '' );
 				body.append( 'kit_slug', pending.slug );
 				body.append( 'category_slug', pending.cat );
@@ -867,7 +844,7 @@
 					restoreBtn.textContent = karmcpToolsAdmin.restoring || 'Restoring…';
 
 					var body = new URLSearchParams();
-					body.append( 'action', 'karmcp_tools_restore_pro_brand_kit' );
+					body.append( 'action', 'karmcp_restore_brand_kit' );
 					body.append( 'nonce', restore.getAttribute( 'data-restore-nonce' ) || '' );
 					body.append( 'backup_id', select.value );
 					body.append( 'full_clobber', ( clobber && clobber.checked ) ? '1' : '0' );
@@ -1381,7 +1358,7 @@
 		if ( ! ta ) { return; }
 		var counter = document.getElementById( 'karmcp-context-counter' );
 		var preview = document.getElementById( 'karmcp-context-preview' );
-		var toggle  = document.querySelector( 'input[name="karmcp_tools_site_context_enabled"]' );
+		var toggle  = document.querySelector( 'input[name="karmcp_site_context_enabled"]' );
 		var tplBtn  = document.getElementById( 'karmcp-context-template' );
 		var max     = parseInt( ta.getAttribute( 'maxlength' ) || '20000', 10 );
 		var base    = ( karmcpToolsAdmin && karmcpToolsAdmin.siteContextBase ) || '';

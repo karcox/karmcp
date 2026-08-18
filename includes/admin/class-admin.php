@@ -242,6 +242,8 @@ class KarMCP_Admin {
 		add_action( 'wp_ajax_karmcp_scan_step', array( $this, 'ajax_scan_step' ) );
 		add_action( 'wp_ajax_karmcp_vuln_update', array( $this, 'ajax_vuln_update' ) );
 		add_action( 'wp_ajax_karmcp_db_clean', array( $this, 'ajax_db_clean' ) );
+		add_action( 'wp_ajax_karmcp_apply_brand_kit', array( $this, 'ajax_apply_brand_kit' ) );
+		add_action( 'wp_ajax_karmcp_restore_brand_kit', array( $this, 'ajax_restore_brand_kit' ) );
 		add_action( 'admin_init', array( $this, 'maybe_apply_default_disabled_tools' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_head', array( $this, 'print_menu_icon_style' ) );
@@ -1667,6 +1669,93 @@ class KarMCP_Admin {
 		);
 	}
 
+	/**
+	 * Apply a bundled brand kit to the active Elementor kit. AJAX.
+	 *
+	 * Snapshots the current globals first when the confirmation modal asked for
+	 * it, so Restore on the same screen can put them back. The writing itself
+	 * belongs to KarMCP_System_Kit_Writer; this only resolves the kit, orders
+	 * the two steps, and reports back.
+	 */
+	public function ajax_apply_brand_kit(): void {
+		check_ajax_referer( 'karmcp_apply_brand_kit', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
+		}
+		if ( ! class_exists( 'KarMCP_Free_Brand_Kits' ) || ! class_exists( 'KarMCP_System_Kit_Writer' ) ) {
+			wp_send_json_error( array( 'message' => __( 'The brand kit service is unavailable.', 'karmcp' ) ), 409 );
+		}
+
+		$kit_slug = isset( $_POST['kit_slug'] ) ? sanitize_key( wp_unslash( $_POST['kit_slug'] ) ) : '';
+		$cat_slug = isset( $_POST['category_slug'] ) ? sanitize_key( wp_unslash( $_POST['category_slug'] ) ) : '';
+		if ( '' === $kit_slug ) {
+			wp_send_json_error( array( 'message' => __( 'No brand kit specified.', 'karmcp' ) ), 400 );
+		}
+
+		$kit = KarMCP_Free_Brand_Kits::find_kit( $kit_slug, $cat_slug );
+		if ( null === $kit ) {
+			wp_send_json_error( array( 'message' => __( 'That brand kit no longer exists.', 'karmcp' ) ), 404 );
+		}
+
+		// Back up BEFORE writing: an apply that fails halfway still has to leave
+		// the admin a way back to the palette they had.
+		$wants_backup = isset( $_POST['backup'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['backup'] ) );
+		if ( $wants_backup && class_exists( 'KarMCP_Kit_Backup_Store' ) ) {
+			$label  = isset( $kit['title'] ) ? (string) $kit['title'] : $kit_slug;
+			$backup = KarMCP_Kit_Backup_Store::create( $label );
+			if ( is_wp_error( $backup ) ) {
+				wp_send_json_error( array( 'message' => $backup->get_error_message() ), 500 );
+			}
+		}
+
+		$res = KarMCP_System_Kit_Writer::apply_kit( $kit );
+		if ( is_wp_error( $res ) ) {
+			wp_send_json_error( array( 'message' => $res->get_error_message() ), 500 );
+		}
+
+		wp_send_json_success(
+			array(
+				'applied'  => $res,
+				'view_url' => home_url( '/' ),
+			)
+		);
+	}
+
+	/**
+	 * Restore global colors and typography from a brand-kit backup. AJAX.
+	 *
+	 * `full_clobber` also restores custom colors/typography, not just the four
+	 * system slots — see KarMCP_System_Kit_Writer::restore_snapshot().
+	 */
+	public function ajax_restore_brand_kit(): void {
+		check_ajax_referer( 'karmcp_restore_brand_kit', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
+		}
+		if ( ! class_exists( 'KarMCP_Kit_Backup_Store' ) ) {
+			wp_send_json_error( array( 'message' => __( 'The brand kit backup store is unavailable.', 'karmcp' ) ), 409 );
+		}
+
+		$backup_id = isset( $_POST['backup_id'] ) ? absint( wp_unslash( $_POST['backup_id'] ) ) : 0;
+		if ( ! $backup_id ) {
+			wp_send_json_error( array( 'message' => __( 'No backup selected.', 'karmcp' ) ), 400 );
+		}
+
+		$full_clobber = isset( $_POST['full_clobber'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['full_clobber'] ) );
+
+		$res = KarMCP_Kit_Backup_Store::restore( $backup_id, $full_clobber );
+		if ( is_wp_error( $res ) ) {
+			wp_send_json_error( array( 'message' => $res->get_error_message() ), 500 );
+		}
+
+		wp_send_json_success(
+			array(
+				'message'  => __( 'Global colors and typography restored.', 'karmcp' ),
+				'view_url' => home_url( '/' ),
+			)
+		);
+	}
+
 	public function handle_security_actions(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
@@ -2132,7 +2221,6 @@ class KarMCP_Admin {
 				'authError'   => __( 'Could not reach the REST API to test. Check the site URL and that the REST API is enabled.', 'karmcp' ),
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'createPwNonce' => wp_create_nonce( 'karmcp_create_app_password' ),
-				'trackPromptNonce' => wp_create_nonce( 'karmcp_track_prompt_copy' ),
 				'generating'    => __( 'Generating…', 'karmcp' ),
 				'pwCreated'     => __( 'Application password created, save it below, it is shown only once.', 'karmcp' ),
 				'syncing'       => __( 'Syncing…', 'karmcp' ),

@@ -212,4 +212,65 @@ class CatalogAuditTest extends TestCase {
 
 		$this->assertSame( array(), $findings );
 	}
+
+	/**
+	 * A multiple select2 stores an array of option keys, so documenting it as an
+	 * array is right. This fired on four Pro widgets in the first real run —
+	 * form submit actions, countdown expiry actions, table-of-contents heading
+	 * tags — reporting the catalog for being correct, which is the fastest way
+	 * to make an audit worth ignoring.
+	 */
+	public function test_a_multiple_select_documented_as_an_array_is_correct(): void {
+		$findings = KarMCP_Catalog_Audit::run(
+			'form',
+			array( 'submit_actions' => array( 'type' => 'array', 'description' => 'Actions after submit.' ) ),
+			array(
+				'submit_actions' => array(
+					'type'     => 'select2',
+					'label'    => 'Add Action',
+					'multiple' => true,
+					'options'  => array( 'email' => 'Email', 'redirect' => 'Redirect' ),
+				),
+			)
+		);
+
+		$this->assertSame( array(), $findings );
+	}
+
+	/**
+	 * Same for a repeater, whatever name the plugin gives its control type.
+	 */
+	public function test_a_repeater_documented_as_an_array_is_correct(): void {
+		$findings = KarMCP_Catalog_Audit::run(
+			'form',
+			array( 'form_fields' => array( 'type' => 'array', 'description' => 'The fields.' ) ),
+			array( 'form_fields' => array( 'type' => 'form-fields-repeater', 'label' => '' ) )
+		);
+
+		$this->assertSame( array(), $findings );
+	}
+
+	/**
+	 * A control that ALSO uses the value untouched is not transforming it: the
+	 * calc() is a second, derived rule. Reporting those buries quote_size, where
+	 * calc() is the only thing the value ever feeds.
+	 */
+	public function test_a_derived_calc_alongside_a_plain_use_is_not_a_transform(): void {
+		$findings = KarMCP_Catalog_Audit::run(
+			'nav-menu',
+			array( 'item_gap' => array( 'type' => 'object', 'description' => 'Gap between items.' ) ),
+			array(
+				'item_gap' => array(
+					'type'      => 'slider',
+					'label'     => 'Gap',
+					'selectors' => array(
+						'{{WRAPPER}} .item' => 'padding-inline: {{SIZE}}{{UNIT}};',
+						'{{WRAPPER}} .sub'  => 'top: calc({{SIZE}}{{UNIT}} / 2);',
+					),
+				),
+			)
+		);
+
+		$this->assertSame( array(), $findings );
+	}
 }

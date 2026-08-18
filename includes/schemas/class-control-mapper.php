@@ -272,6 +272,17 @@ class KarMCP_Control_Mapper {
 	private static function map_select( array $control ): array {
 		$schema = array( 'type' => 'string' );
 
+		/*
+		 * A select2 with `multiple` takes — and stores — an array of the option
+		 * keys, not one of them. Reporting it as a string was wrong in both
+		 * directions: get-widget-schema told agents to send a string, and the
+		 * catalog audit then flagged the catalog for correctly documenting an
+		 * array. Elementor Pro uses this shape for the things most worth
+		 * setting: a form's submit actions, a countdown's expiry actions, the
+		 * heading tags a table of contents collects.
+		 */
+		$multiple = ! empty( $control['multiple'] );
+
 		if ( ! empty( $control['options'] ) && is_array( $control['options'] ) ) {
 			$enum = array_values(
 				array_filter(
@@ -284,6 +295,14 @@ class KarMCP_Control_Mapper {
 			if ( ! empty( $enum ) ) {
 				$schema['enum'] = $enum;
 			}
+		}
+
+		if ( $multiple ) {
+			$items = array( 'type' => 'string' );
+			if ( isset( $schema['enum'] ) ) {
+				$items['enum'] = $schema['enum'];
+			}
+			return array( 'type' => 'array', 'items' => $items );
 		}
 
 		return $schema;

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.21.0
+Stable tag: 1.21.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,6 +151,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.21.1 =
+
+* Fixed: the widget schema described a multi-select control as a single string when it takes a list — affecting a form's submit actions, a countdown's expiry actions and the heading tags of a table of contents.
+* Fixed: three sources of false findings in the new catalog audit, so what it reports is worth reading.
 
 = 1.21.0 =
 

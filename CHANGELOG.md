@@ -2,6 +2,16 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.21.1]
+
+### Fixed
+
+- **`get-widget-schema` reported a multiple `select2` as a string.** It takes and stores an **array** of option keys, and Elementor Pro uses that shape for some of the things most worth setting from an agent: a form's submit actions, a countdown's expiry actions, the heading tags a table of contents collects. So the schema was telling agents to send a string where an array belongs — the same class of defect the catalog audit exists to find, sitting in the mapper that feeds it.
+
+- **And it made the audit report the catalog for being correct.** In its first run against a real site, four of the sixty-six findings were exactly that: entries documented as arrays, which is right, flagged because the mapper claimed string. A repeater documented as an array is also correct however the plugin names its control type — Elementor Pro's form fields arrive as `form-fields-repeater` — and is no longer flagged either.
+
+- **A `calc()` in a second, derived rule is no longer read as a transformation.** Plenty of controls drive an extra rule off the same value while using it untouched elsewhere; only a value that is *never* used as given is worth reporting, which is the `quote_size` case the check was built for.
+
 ## [1.21.0]
 
 ### Removed

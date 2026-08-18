@@ -185,6 +185,17 @@ class KarMCP_Catalog_Audit {
 			return null;
 		}
 
+		/*
+		 * Repeaters are written as an array of rows whatever the control calls
+		 * itself, and third-party ones carry their own type name — Elementor
+		 * Pro's form fields come through as `form-fields-repeater`. Documenting
+		 * those as arrays is right, so flagging them would be reporting the
+		 * catalog for being correct.
+		 */
+		if ( 'array' === $documented && str_contains( $actual, 'repeater' ) ) {
+			return null;
+		}
+
 		return array(
 			'documented' => $documented,
 			'actual'     => $actual,
@@ -237,13 +248,29 @@ class KarMCP_Catalog_Audit {
 	 * @return string The offending CSS rule, or ''.
 	 */
 	private static function transforming_selector( array $control ): string {
+		$transformed = '';
+
 		foreach ( (array) ( $control['selectors'] ?? array() ) as $rule ) {
 			$rule = (string) $rule;
+
 			if ( preg_match( '/\{\{SIZE\}\}[^;]*[*\/]|[*\/][^;]*\{\{SIZE\}\}|-\s*\{\{SIZE\}\}/', $rule ) ) {
-				return trim( $rule );
+				$transformed = trim( $rule );
+				continue;
+			}
+
+			/*
+			 * The value also lands somewhere untouched, so what the caller sends
+			 * IS what that property gets. Plenty of controls drive a second,
+			 * derived rule off the same value — a offset computed from a size,
+			 * say — and reporting those would bury the case worth reporting:
+			 * `quote_size`, where calc() is the only thing the value ever feeds.
+			 */
+			if ( str_contains( $rule, '{{SIZE}}' ) ) {
+				return '';
 			}
 		}
-		return '';
+
+		return $transformed;
 	}
 
 	/**

@@ -185,7 +185,7 @@ class KarMCP_Filesystem_Abilities {
 			'karmcp/search-files',
 			array(
 				'label'               => __( 'Search Files', 'karmcp' ),
-				'description'         => __( 'Search file contents for a string across a directory tree inside the WordPress install. Returns file:line matches. Filter by extensions; results are bounded.', 'karmcp' ),
+				'description'         => __( 'Search file contents for a string inside the WordPress install, across a directory tree or within a single file. Returns file:line matches. This is how to check what a plugin really does rather than what its documentation says — the control a widget registers, where a hook is defined, which file paints a style. Filter by extensions; results are bounded. Read-only.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_search_files' ),
 				'permission_callback' => array( $this, 'check_permission' ),
@@ -193,8 +193,8 @@ class KarMCP_Filesystem_Abilities {
 					'type'       => 'object',
 					'properties' => array(
 						'query'       => array( 'type' => 'string', 'description' => __( 'Substring to search for (case-sensitive).', 'karmcp' ) ),
-						'path'        => array( 'type' => 'string', 'description' => __( 'Directory root, relative to the WP root. Defaults to the root.', 'karmcp' ) ),
-						'extensions'  => array( 'type' => 'array', 'items' => array( 'type' => 'string' ), 'description' => __( 'Limit to these extensions, e.g. ["php","js"].', 'karmcp' ) ),
+						'path'        => array( 'type' => 'string', 'description' => __( 'Where to search, relative to the WP root: a directory to search its whole tree, or one file to search only that file. Defaults to the root. To read a file rather than search it, use read-file.', 'karmcp' ) ),
+						'extensions'  => array( 'type' => 'array', 'items' => array( 'type' => 'string' ), 'description' => __( 'Limit to these extensions, e.g. ["php","js"]. Ignored when path names a single file, which is already the choice.', 'karmcp' ) ),
 						'max_results' => array( 'type' => 'integer', 'description' => __( 'Cap on matches (default 200, max 500).', 'karmcp' ) ),
 					),
 					'required'   => array( 'query' ),
@@ -218,24 +218,48 @@ class KarMCP_Filesystem_Abilities {
 		if ( is_wp_error( $abs ) ) {
 			return $abs;
 		}
-		if ( ! is_dir( $abs ) ) {
-			return new \WP_Error( 'not_a_dir', __( 'Not a directory.', 'karmcp' ) );
+
+		/*
+		 * A single file is a legitimate scope, and used to be an error.
+		 *
+		 * Narrowing a search to one file is the obvious move once you know where
+		 * to look — checking a generated stylesheet for a rule, confirming which
+		 * of two files declares a control — and the answer was "Not a directory."
+		 * with no hint that a directory was wanted or that read-file exists. The
+		 * cost was a failed call plus a wider search to filter by eye.
+		 */
+		$single_file = is_file( $abs );
+
+		if ( ! $single_file && ! is_dir( $abs ) ) {
+			return new \WP_Error(
+				'path_not_found',
+				__( 'No file or directory at that path. Pass a directory to search a tree, or a single file to search just that one.', 'karmcp' )
+			);
 		}
+
 		$exts = array();
 		if ( ! empty( $input['extensions'] ) && is_array( $input['extensions'] ) ) {
 			$exts = array_map( 'strtolower', array_map( 'strval', $input['extensions'] ) );
 		}
 		$cap     = min( 500, max( 1, isset( $input['max_results'] ) ? (int) $input['max_results'] : 200 ) );
 		$matches = array();
-		$it      = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator( $abs, \FilesystemIterator::SKIP_DOTS ),
-			\RecursiveIteratorIterator::LEAVES_ONLY
-		);
-		foreach ( $it as $f ) {
+
+		if ( $single_file ) {
+			$files = array( new \SplFileInfo( $abs ) );
+		} else {
+			$files = new \RecursiveIteratorIterator(
+				new \RecursiveDirectoryIterator( $abs, \FilesystemIterator::SKIP_DOTS ),
+				\RecursiveIteratorIterator::LEAVES_ONLY
+			);
+		}
+
+		foreach ( $files as $f ) {
 			if ( ! $f->isFile() ) {
 				continue;
 			}
-			if ( $exts && ! in_array( strtolower( $f->getExtension() ), $exts, true ) ) {
+			// `extensions` narrows a sweep; it has no business overruling a file
+			// the caller named outright.
+			if ( ! $single_file && $exts && ! in_array( strtolower( $f->getExtension() ), $exts, true ) ) {
 				continue;
 			}
 			if ( $f->getSize() > KarMCP_Filesystem_Guard::MAX_READ_BYTES ) {

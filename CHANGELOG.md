@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.21.3]
+
+### Changed
+
+- **`search-files` now accepts a single file, not only a directory.** Narrowing a search to one file is the obvious move once you know where to look — checking a generated stylesheet for one rule, confirming which of two files declares a control — and the answer was `Not a directory.`, with no hint that a directory was wanted or that `read-file` exists for reading one outright. It cost a failed call plus a wider search to filter by eye, twice, while auditing the widget catalog.
+
+  An `extensions` filter no longer vetoes a file named outright: that filter exists to narrow a sweep, and it has no business overruling an explicit choice — otherwise a leftover `["php"]` from a previous call makes searching a `.txt` return nothing at all.
+
+  A path that is neither file nor directory now says so, and says what it accepts.
+
+- The tool's own description says what it is *for*: checking what a plugin really does rather than what its documentation claims. That is what it was used for throughout this week's catalog work, and it was not what the description suggested.
+
 ## [1.21.2]
 
 ### Fixed

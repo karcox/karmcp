@@ -226,7 +226,8 @@ class KarMCP_Settings_Validator {
 		 * where a loose match costs nothing.
 		 */
 		foreach ( array_keys( $settings ) as $key ) {
-			if ( in_array( $key, $valid_keys, true )
+			if ( in_array( $key, self::STRUCTURAL_KEYS, true )
+				|| in_array( $key, $valid_keys, true )
 				|| in_array( $key, self::$common_advanced_keys, true )
 				|| $this->is_responsive_variant( $key, $valid_keys )
 			) {
@@ -237,6 +238,21 @@ class KarMCP_Settings_Validator {
 
 		return $unknown;
 	}
+
+	/**
+	 * Keys Elementor stores alongside the settings that are not controls.
+	 *
+	 * `__globals__` holds the bindings from a control to a global colour or
+	 * font, and `__dynamic__` the dynamic-tag bindings. Both sit in the same
+	 * settings array as the controls and neither will ever appear in a control
+	 * list, so the exact-match check introduced in 1.20.1 reported `__globals__`
+	 * on every write that used a global — which is the recommended way to
+	 * theme a course, so the warning fired on correct work.
+	 *
+	 * @since 1.20.2
+	 * @var string[]
+	 */
+	private const STRUCTURAL_KEYS = array( '__globals__', '__dynamic__' );
 
 	/**
 	 * Controls whose name is close to one that wasn't recognised.

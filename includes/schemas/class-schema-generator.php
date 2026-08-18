@@ -25,6 +25,37 @@ class KarMCP_Schema_Generator {
 	 * @param string $widget_type The widget type name (e.g. 'heading', 'button').
 	 * @return array|\WP_Error JSON Schema array on success, WP_Error if widget not found.
 	 */
+	/**
+	 * A widget's raw registered controls, as Elementor holds them.
+	 *
+	 * The JSON Schema from generate() is a lossy view: it keeps the shape of a
+	 * value and drops `range`, `selectors` and the original Controls_Manager
+	 * type. Auditing the curated catalog needs exactly those — a control whose
+	 * selector reads `calc({{SIZE}} * 100)` is a multiplier, and nothing in the
+	 * generated schema says so.
+	 *
+	 * @since 1.20.2
+	 *
+	 * @param string $widget_type The widget type name.
+	 * @return array|\WP_Error Control id => control definition, or WP_Error.
+	 */
+	public function controls( string $widget_type ) {
+		$widget = \Elementor\Plugin::$instance->widgets_manager->get_widget_types( $widget_type );
+
+		if ( ! $widget ) {
+			return new \WP_Error(
+				'widget_not_found',
+				sprintf(
+					/* translators: %s: widget type name */
+					__( 'Widget type "%s" not found.', 'karmcp' ),
+					$widget_type
+				)
+			);
+		}
+
+		return $this->get_full_controls( $widget );
+	}
+
 	public function generate( string $widget_type ) {
 		$widgets_manager = \Elementor\Plugin::$instance->widgets_manager;
 		$widget          = $widgets_manager->get_widget_types( $widget_type );

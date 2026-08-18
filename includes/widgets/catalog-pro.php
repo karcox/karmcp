@@ -556,7 +556,11 @@ return array(
 			'border_color'                   => array( 'type' => 'string', 'description' => 'Border color (border skin) or quotation mark color (quotation skin).' ),
 			'border_width'                   => array( 'type' => 'object', 'description' => 'Border width: {size, unit}.' ),
 			'border_gap'                     => array( 'type' => 'object', 'description' => 'Gap between border and content: {size, unit}.' ),
-			'quote_size'                     => array( 'type' => 'object', 'description' => 'Quotation mark size (quotation skin): {size, unit}.' ),
+			// A multiplier, not a length. The selector is
+			// `font-size: calc({{SIZE}}{{UNIT}} * 100)` (blockquote.php:842), so a
+			// value read as pixels is multiplied by 100: `62` produced a 3,720px
+			// quotation mark and a 4,008px tall block, with no error anywhere.
+			'quote_size'                     => array( 'type' => 'object', 'description' => 'Quotation mark size (quotation skin), as a MULTIPLIER from 0.5 to 2 in steps of 0.1, default 1: {size, unit}. Not pixels — the widget renders it as calc(size * 100), so 62 gives a 3,720px mark.' ),
 			'box_color'                      => array( 'type' => 'string', 'description' => 'Box background color (boxed skin).' ),
 			'button_color'                   => array( 'type' => 'string', 'description' => 'Tweet button text/icon color.' ),
 			'button_text_color'              => array( 'type' => 'string', 'description' => 'Tweet button background color.' ),

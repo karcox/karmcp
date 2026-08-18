@@ -176,6 +176,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/audits/class-color-contrast.php';
 		require_once KARMCP_DIR . 'includes/audits/class-seo-audit.php';
 		require_once KARMCP_DIR . 'includes/audits/class-a11y-audit.php';
+		require_once KARMCP_DIR . 'includes/audits/class-catalog-audit.php';
 		// Filesystem tools (read/scan + write/edit/delete; writes off by default).
 		require_once KARMCP_DIR . 'includes/class-filesystem-guard.php';
 		// Database tools (read-only query + structured writes; writes off by default).

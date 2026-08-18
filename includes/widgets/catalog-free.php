@@ -166,7 +166,14 @@ return array(
 			'youtube_url'        => array( 'type' => 'string', 'description' => 'YouTube URL.' ),
 			'vimeo_url'          => array( 'type' => 'string', 'description' => 'Vimeo URL.' ),
 			'dailymotion_url'    => array( 'type' => 'string', 'description' => 'Dailymotion URL.' ),
-			'insert_url'         => array( 'type' => 'object', 'description' => 'Self-hosted video URL object: {url}.' ),
+			// `insert_url` is a SWITCHER, not a URL (video.php:243). It selects
+			// between the two sources below, and the catalog used to describe it
+			// as the self-hosted URL itself — the opposite of what it does — while
+			// omitting `hosted_url` entirely, which left no documented way to
+			// insert a self-hosted video at all.
+			'insert_url'         => array( 'type' => 'string', 'enum' => array( 'yes', '' ), 'description' => 'Use an EXTERNAL url for a self-hosted video. Switch, not a URL: "yes" reads external_url, empty reads hosted_url. Only applies when video_type is "hosted".' ),
+			'hosted_url'         => array( 'type' => 'object', 'description' => 'The self-hosted video file: {url, id} from the media library. Used when video_type is "hosted" and insert_url is empty. This is the one that travels inside a SCORM package.' ),
+			'external_url'       => array( 'type' => 'object', 'description' => 'A video file hosted elsewhere: {url}. Used when video_type is "hosted" and insert_url is "yes". Does not travel inside a SCORM export.' ),
 			'autoplay'           => array( 'type' => 'string', 'enum' => array( 'yes', '' ), 'description' => 'Autoplay on load.' ),
 			'mute'               => array( 'type' => 'string', 'enum' => array( 'yes', '' ), 'description' => 'Mute audio.' ),
 			'loop'               => array( 'type' => 'string', 'enum' => array( 'yes', '' ), 'description' => 'Loop video.' ),

@@ -2,6 +2,26 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.20.2]
+
+### Added
+
+- **`audit-widget-catalog`**, which checks the curated catalog against the controls the widgets on this site actually register. Three defects of this kind arrived in two days — `button_padding`, `insert_url`, `quote_size` — and they share a shape rather than a cause: the key exists, the value is stored, nothing warns, and the result is not what the description promised. Since the catalog is what an agent reads *before* writing, disproving it costs opening Elementor's source.
+
+  Four checks, run per widget: a param the widget registers no control for; a documented type that describes something else (scalar vs composite, the mismatch that makes an agent send the wrong payload); a bounded range the description omits; and a value the widget transforms on render, detected by reading the control's own `selectors` for `{{SIZE}}` inside an operation.
+
+  Widgets the catalog knows but this site does not have — Pro on a free install, Woo with no shop — are reported as `unavailable` rather than as defects, or every partial stack would drown in false findings.
+
+  `KarMCP_Catalog_Audit` is pure: controls in, findings out, no WordPress. That is what lets the three real cases be pinned as tests without an Elementor install, the same split `KarMCP_Seo_Audit` uses.
+
+### Fixed
+
+- **`video` documented `insert_url` as the self-hosted video URL. It is a switch for using an external one** (`video.php:243`, `Controls_Manager::SWITCHER`, labelled "External URL") — the opposite of what the catalog said. And `hosted_url`, the control that actually takes the video file (`video.php:254`), was not published at all, so following the catalog there was **no documented way to insert a self-hosted video**. On a site that exports to SCORM that is the only kind that works: an external URL does not travel in the package. Both are now published, along with `external_url`.
+
+- **`blockquote`'s `quote_size` is a multiplier from 0.5 to 2, not a length.** The widget renders it as `font-size: calc({{SIZE}}{{UNIT}} * 100)` (`blockquote.php:842`), so a value read as pixels is multiplied by a hundred: `62` produced a 3,720px quotation mark and a 4,008px tall block, with no error and no `unknown_keys`, because the key is real and the value is valid.
+
+- **`__globals__` was reported as an unknown setting key.** It holds the bindings from a control to a global colour or font and sits in the same array as the controls, so the exact matching introduced in 1.20.1 flagged it — on every write that used a global, which is the recommended way to theme a course. The warning was firing on correct work. `__dynamic__` is excluded for the same reason.
+
 ## [1.20.1]
 
 ### Fixed

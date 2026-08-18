@@ -4313,6 +4313,11 @@ class KarMCP_Admin {
 						'description' => __( 'Returns the JSON schema for a specific widget type.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
 					),
+					'karmcp/audit-widget-catalog' => array(
+						'label'       => __( 'Audit Widget Catalog', 'karmcp' ),
+						'description' => __( 'Checks the curated widget catalog against the controls the widgets on this site actually register: params with no matching control, types that describe something else, undocumented ranges, and values the widget transforms on render. Read-only.', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
 					'karmcp/get-page-structure'   => array(
 						'label'       => __( 'Get Page Structure', 'karmcp' ),
 						'description' => __( 'Returns the full Elementor element tree for a page.', 'karmcp' ),

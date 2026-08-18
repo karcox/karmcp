@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.20.1
+Stable tag: 1.20.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,13 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.20.2 =
+
+* Added: **audit-widget-catalog**, a read-only tool that checks the documented widget parameters against the controls the widgets on your site really have, and reports the ones that mislead: a parameter with no matching control, a type that describes something else, an undocumented range, and a value the widget transforms before using it. This is the class of defect where a write is accepted, stored, and simply does nothing.
+* Fixed: the video widget documented `insert_url` as the self-hosted video URL when it is a switch for using an *external* one, and did not document `hosted_url` at all — so there was no documented way to insert a self-hosted video, which is the only kind that survives a SCORM export.
+* Fixed: blockquote's `quote_size` is a multiplier from 0.5 to 2, not a size in pixels. Read as pixels, 62 produced a 3,720px quotation mark.
+* Fixed: `__globals__` was reported as an unknown setting key on every write that bound a control to a global colour or font.
 
 = 1.20.1 =
 

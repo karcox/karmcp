@@ -93,6 +93,8 @@ class KarMCP_Widget_Abilities {
 		$this->register_add_free_widget();
 		$this->register_update_widget();
 
+		$this->register_audit_widget_catalog();
+
 		// Pro insert — only when Elementor Pro is active (natural tier gate).
 		if ( defined( 'ELEMENTOR_PRO_VERSION' ) ) {
 			$this->register_add_pro_widget();
@@ -148,6 +150,119 @@ class KarMCP_Widget_Abilities {
 	 *
 	 * @since 3.0.0
 	 */
+	/**
+	 * Registers audit-widget-catalog.
+	 *
+	 * @since 1.20.2
+	 */
+	private function register_audit_widget_catalog(): void {
+		$this->ability_names[] = 'karmcp/audit-widget-catalog';
+		karmcp_register_ability(
+			'karmcp/audit-widget-catalog',
+			array(
+				'label'               => __( 'Audit Widget Catalog', 'karmcp' ),
+				'description'         => __( 'Checks the curated widget catalog against the controls the widgets on THIS site actually register, and reports where the two disagree: a documented param the widget has no control for, a type that describes something else, a bounded range the description omits, and a value the widget transforms on render (a size rendered through calc(size * 100), say). Read-only. The catalog is what an agent reads before writing, so an entry that misleads is accepted, stored and never rendered — this is how those are found in bulk instead of one course at a time.', 'karmcp' ),
+				'category'            => 'karmcp',
+				'execute_callback'    => array( $this, 'execute_audit_widget_catalog' ),
+				'permission_callback' => array( $this, 'check_edit_permission' ),
+				'input_schema'        => array(
+					'type'       => 'object',
+					'properties' => array(
+						'widget_type' => array(
+							'type'        => 'string',
+							'description' => __( 'Audit a single widget. Omit to audit every cataloged widget registered on this site.', 'karmcp' ),
+						),
+						'severity'    => array(
+							'type'        => 'string',
+							'enum'        => array( 'error', 'warning' ),
+							'description' => __( 'Only report findings at this severity or worse. Default: report everything.', 'karmcp' ),
+						),
+					),
+				),
+				'output_schema'       => array(
+					'type'       => 'object',
+					'properties' => array(
+						'audited'      => array( 'type' => 'integer', 'description' => __( 'Cataloged widgets that are registered here and could be checked.', 'karmcp' ) ),
+						'unavailable'  => array( 'type' => 'array', 'description' => __( 'Cataloged widgets not registered on this site (Pro or an addon is absent), which were skipped rather than reported as wrong.', 'karmcp' ), 'items' => array( 'type' => 'string' ) ),
+						'findings'     => array( 'type' => 'array', 'items' => array( 'type' => 'object' ) ),
+						'counts'       => array( 'type' => 'object' ),
+					),
+				),
+				'meta'                => array(
+					'annotations'  => array( 'readonly' => true, 'destructive' => false, 'idempotent' => true ),
+					'show_in_rest' => true,
+				),
+			)
+		);
+	}
+
+	/**
+	 * Executes audit-widget-catalog.
+	 *
+	 * @since 1.20.2
+	 *
+	 * @param array $input The input parameters.
+	 * @return array|\WP_Error
+	 */
+	public function execute_audit_widget_catalog( $input ) {
+		if ( ! class_exists( '\Elementor\Plugin' ) ) {
+			return new \WP_Error( 'elementor_missing', __( 'This audit compares the catalog against Elementor\'s registered controls, so it needs Elementor active.', 'karmcp' ) );
+		}
+
+		$only     = isset( $input['widget_type'] ) ? sanitize_key( (string) $input['widget_type'] ) : '';
+		$severity = isset( $input['severity'] ) ? (string) $input['severity'] : '';
+
+		$catalog = KarMCP_Widget_Catalog::get();
+		if ( '' !== $only ) {
+			$catalog = isset( $catalog[ $only ] ) ? array( $only => $catalog[ $only ] ) : array();
+			if ( ! $catalog ) {
+				return new \WP_Error( 'not_cataloged', __( 'That widget is not in the curated catalog.', 'karmcp' ) );
+			}
+		}
+
+		$findings    = array();
+		$unavailable = array();
+		$audited     = 0;
+
+		foreach ( $catalog as $widget_type => $entry ) {
+			$controls = $this->schema_generator->controls( (string) $widget_type );
+
+			/*
+			 * A widget the catalog knows and this site does not have is not a
+			 * catalog defect: Pro widgets on a free install, Woo widgets with no
+			 * shop. Reporting those would drown the real findings on every site
+			 * that does not run the full stack.
+			 */
+			if ( is_wp_error( $controls ) ) {
+				$unavailable[] = (string) $widget_type;
+				continue;
+			}
+
+			++$audited;
+
+			$findings = array_merge(
+				$findings,
+				KarMCP_Catalog_Audit::run( (string) $widget_type, (array) ( $entry['params'] ?? array() ), (array) $controls )
+			);
+		}
+
+		if ( 'error' === $severity ) {
+			$findings = array_values( array_filter( $findings, static fn( array $f ): bool => 'error' === $f['severity'] ) );
+		}
+
+		$counts = array( 'error' => 0, 'warning' => 0 );
+		foreach ( $findings as $finding ) {
+			++$counts[ $finding['severity'] ];
+		}
+
+		return array(
+			'audited'     => $audited,
+			'unavailable' => $unavailable,
+			'findings'    => $findings,
+			'counts'      => $counts,
+		);
+	}
+
 	private function register_add_free_widget(): void {
 		$this->ability_names[] = 'karmcp/add-free-widget';
 		karmcp_register_ability(

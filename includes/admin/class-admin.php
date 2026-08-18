@@ -252,15 +252,9 @@ class KarMCP_Admin {
 		add_action( 'wp_ajax_karmcp_delete_block', array( $this, 'ajax_delete_block' ) );
 		add_action( 'wp_ajax_karmcp_toggle_extension', array( $this, 'ajax_toggle_extension' ) );
 		add_action( 'wp_ajax_karmcp_delete_extension', array( $this, 'ajax_delete_extension' ) );
-		add_action( 'wp_ajax_karmcp_backup_artifact', array( $this, 'ajax_backup_artifact' ) );
-		add_action( 'wp_ajax_karmcp_bulk_backup_artifacts', array( $this, 'ajax_bulk_backup_artifacts' ) );
-		add_action( 'wp_ajax_karmcp_resync_cloud', array( $this, 'ajax_resync_cloud' ) );
-		add_action( 'wp_ajax_karmcp_cloud_library', array( $this, 'ajax_cloud_library' ) );
-		add_action( 'wp_ajax_karmcp_cloud_import', array( $this, 'ajax_cloud_import' ) );
 		add_action( 'wp_ajax_karmcp_save_php_snippet', array( $this, 'ajax_save_php_snippet' ) );
 		add_action( 'wp_ajax_karmcp_toggle_php_snippet', array( $this, 'ajax_toggle_php_snippet' ) );
 		add_action( 'wp_ajax_karmcp_delete_php_snippet', array( $this, 'ajax_delete_php_snippet' ) );
-		add_action( 'wp_ajax_karmcp_notifications_read', array( $this, 'ajax_notifications_read' ) );
 		add_action( 'admin_post_karmcp_download_mcpb', array( $this, 'handle_download_mcpb' ) );
 		add_action( 'admin_post_' . self::ACTION_DISMISS_PROMPTS_NOTICE, array( $this, 'handle_dismiss_prompts_notice' ) );
 		add_action( 'admin_post_' . self::ACTION_ROLLBACK_CHANGE, array( $this, 'handle_rollback_change' ) );
@@ -269,8 +263,6 @@ class KarMCP_Admin {
 		add_action( 'admin_post_' . self::ACTION_REVOKE_OAUTH, array( $this, 'handle_revoke_oauth_client' ) );
 		add_action( 'admin_post_' . self::ACTION_EXPORT_ARTIFACT, array( $this, 'handle_export_artifact' ) );
 		add_action( 'admin_post_' . self::ACTION_IMPORT_ARTIFACT, array( $this, 'handle_import_artifact' ) );
-		add_action( 'admin_post_karmcp_settings_push', array( $this, 'handle_settings_push' ) );
-		add_action( 'admin_post_karmcp_settings_pull', array( $this, 'handle_settings_pull' ) );
 		add_action( 'admin_post_karmcp_redirect_save', array( $this, 'handle_redirect_save' ) );
 		add_action( 'admin_post_karmcp_redirect_delete', array( $this, 'handle_redirect_delete' ) );
 		add_action( 'admin_post_karmcp_redirect_toggle', array( $this, 'handle_redirect_toggle' ) );
@@ -545,420 +537,24 @@ class KarMCP_Admin {
 		);
 	}
 
-	/**
-	 * Push the local KarMCP settings to KarMCP Cloud (paid Cloud feature).
-	 */
-	public function handle_settings_push(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to do that.', 'karmcp' ), '', array( 'response' => 403 ) );
-		}
-		check_admin_referer( 'karmcp_settings_sync' );
-		$res = class_exists( 'KarMCP_Settings_Sync' ) ? KarMCP_Settings_Sync::push() : new \WP_Error( 'unavailable', '' );
-		$this->redirect_settings_sync( is_wp_error( $res ) ? 'err' : 'push' );
-	}
-
-	/**
-	 * Pull the KarMCP settings from KarMCP Cloud and apply them (paid Cloud feature).
-	 */
-	public function handle_settings_pull(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to do that.', 'karmcp' ), '', array( 'response' => 403 ) );
-		}
-		check_admin_referer( 'karmcp_settings_sync' );
-		$res = class_exists( 'KarMCP_Settings_Sync' ) ? KarMCP_Settings_Sync::pull_and_apply() : new \WP_Error( 'unavailable', '' );
-		$this->redirect_settings_sync( is_wp_error( $res ) ? 'err' : 'pull' );
-	}
-
-	/**
-	 * Back up a Sandbox artifact (block/widget/snippet) to KarMCP Cloud. AJAX.
-	 */
-	public function ajax_backup_artifact(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission to do this.', 'karmcp' ) ), 403 );
-		}
-		$kind   = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : '';
-		$nonces = array(
-			'widget'  => 'karmcp_widgets',
-			'block'   => 'karmcp_blocks',
-			'snippet' => 'karmcp_php_snippets',
-		);
-		if ( ! isset( $nonces[ $kind ] ) || ! check_ajax_referer( $nonces[ $kind ], 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
-		}
-		$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
-		if ( ! $id || ! class_exists( 'KarMCP_Cloud_Sync' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Nothing to save.', 'karmcp' ) ) );
-		}
-		$res = KarMCP_Cloud_Sync::backup( $kind, $id );
-		if ( is_wp_error( $res ) ) {
-			$msg = ( 'not_connected' === $res->get_error_code() )
-				? __( 'Connect this site to KarMCP Cloud first.', 'karmcp' )
-				: $res->get_error_message();
-			wp_send_json_error( array( 'message' => $msg ) );
-		}
-		// Record that this artifact now exists in the cloud + the checksum of what
-		// was pushed, so a later local edit is detectable.
-		update_post_meta( $id, '_karmcp_cloud_pushed', time() );
-		self::store_artifact_checksum( $kind, $id );
-		$payload            = self::cloud_action_payload( $kind, $id );
-		$payload['message'] = __( 'Saved to cloud.', 'karmcp' );
-		wp_send_json_success( $payload );
-	}
-
-	/**
-	 * Back up EVERY Sandbox artifact of a kind to KarMCP Cloud in one call — the
-	 * bulk counterpart to ajax_backup_artifact(), driving the "Save all to Cloud"
-	 * button. AJAX.
-	 */
-	public function ajax_bulk_backup_artifacts(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission to do this.', 'karmcp' ) ), 403 );
-		}
-		$kind   = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : '';
-		$nonces = array(
-			'widget'  => 'karmcp_widgets',
-			'block'   => 'karmcp_blocks',
-			'snippet' => 'karmcp_php_snippets',
-		);
-		if ( ! isset( $nonces[ $kind ] ) || ! check_ajax_referer( $nonces[ $kind ], 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
-		}
-		if ( ! class_exists( 'KarMCP_Cloud_Sync' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Cloud sync is unavailable.', 'karmcp' ) ) );
-		}
-		$res = KarMCP_Cloud_Sync::bulk_backup( array( $kind ) );
-		if ( is_wp_error( $res ) ) {
-			$msg = ( 'not_connected' === $res->get_error_code() )
-				? __( 'Connect this site to KarMCP Cloud first.', 'karmcp' )
-				: $res->get_error_message();
-			wp_send_json_error( array( 'message' => $msg ) );
-		}
-		// Mirror the per-artifact post-processing so each pushed row reflects "Saved".
-		foreach ( (array) ( $res['items'] ?? array() ) as $karmcp_item ) {
-			if ( empty( $karmcp_item['ok'] ) ) {
-				continue;
-			}
-			$karmcp_iid = (int) ( $karmcp_item['id'] ?? 0 );
-			if ( $karmcp_iid ) {
-				update_post_meta( $karmcp_iid, '_karmcp_cloud_pushed', time() );
-				self::store_artifact_checksum( $kind, $karmcp_iid );
-			}
-		}
-		$pushed = (int) ( $res['pushed'] ?? 0 );
-		$failed = (int) ( $res['failed'] ?? 0 );
-		/* translators: %d: number of artifacts saved to the cloud. */
-		$message = sprintf( _n( 'Saved %d item to the cloud.', 'Saved %d items to the cloud.', $pushed, 'karmcp' ), $pushed );
-		if ( $failed > 0 ) {
-			/* translators: %d: number of artifacts that failed to save. */
-			$message .= ' ' . sprintf( _n( '%d failed.', '%d failed.', $failed, 'karmcp' ), $failed );
-		}
-		wp_send_json_success(
-			array(
-				'pushed'  => $pushed,
-				'failed'  => $failed,
-				'message' => $message,
-			)
-		);
-	}
-
-	/** Nonce action for a sandbox artifact kind. */
-	private static function cloud_nonce_action( string $kind ): string {
-		$map = array( 'widget' => 'karmcp_widgets', 'block' => 'karmcp_blocks', 'snippet' => 'karmcp_php_snippets' );
-		return $map[ $kind ] ?? '';
-	}
-
-	/** Cache the current content checksum as the last-pushed checksum. */
-	private static function store_artifact_checksum( string $kind, int $id ): void {
-		$sum = self::artifact_checksum( $kind, $id );
-		if ( '' !== $sum ) {
-			update_post_meta( $id, '_karmcp_cloud_checksum', $sum );
-		}
-	}
-
-	/** Current content checksum for an artifact ('' if unresolvable). */
-	private static function artifact_checksum( string $kind, int $id ): string {
-		if ( ! class_exists( 'KarMCP_Sandbox_Cloud_Abilities' ) ) {
-			return '';
-		}
-		$art = ( new KarMCP_Sandbox_Cloud_Abilities() )->resolve_artifact( $kind );
-		return $art ? (string) $art->checksum( $id ) : '';
-	}
-
-	/** True when local content differs from what was last pushed to the cloud. */
-	private static function artifact_changed( string $kind, int $id ): bool {
-		if ( ! get_post_meta( $id, '_karmcp_cloud_pushed', true ) ) {
-			return false;
-		}
-		$pushed = (string) get_post_meta( $id, '_karmcp_cloud_checksum', true );
-		if ( '' === $pushed ) {
-			// No recorded baseline — e.g. the artifact was pushed/published before
-			// checksum tracking existed. We can't prove the content is unchanged,
-			// so allow an update rather than hide "Push update" forever. Pushing (or
-			// re-saving) records a fresh baseline via store_artifact_checksum(),
-			// which self-heals the state back to "Up to date".
-			return true;
-		}
-		return self::artifact_checksum( $kind, $id ) !== $pushed;
-	}
-
-
-	/**
-	 * Verify the artifact still exists as a cloud backup. If it was deleted
-	 * remotely, clear the local "pushed" flag so the button reverts from
-	 * "Saved" to "Save to Cloud".
-	 *
-	 * Only a definitive 404/410 resets the state — transient errors (network,
-	 * 5xx, not-connected) leave it untouched so a blip never drops a real save.
-	 */
-	private static function verify_cloud_backup( string $kind, int $id ): void {
-		if ( ! get_post_meta( $id, '_karmcp_cloud_pushed', true ) ) {
-			return; // nothing claims to be pushed.
-		}
-		if ( ! class_exists( 'KarMCP_Cloud_Client' ) || ! class_exists( 'KarMCP_Sandbox_Cloud_Abilities' ) ) {
-			return;
-		}
-		$art  = ( new KarMCP_Sandbox_Cloud_Abilities() )->resolve_artifact( $kind );
-		$uuid = $art ? (string) $art->uuid( $id ) : '';
-		if ( '' === $uuid ) {
-			return;
-		}
-		$res = KarMCP_Cloud_Client::get( '/api/cloud/v1/artifacts/' . rawurlencode( $uuid ) );
-		if ( is_wp_error( $res ) && in_array( $res->get_error_code(), array( 'cloud_http_404', 'cloud_http_410' ), true ) ) {
-			delete_post_meta( $id, '_karmcp_cloud_pushed' );
-			delete_post_meta( $id, '_karmcp_cloud_checksum' );
-		}
-	}
-
-	/** JS payload describing an artifact's cloud backup state (from cached meta). */
-	public static function cloud_action_payload( string $kind, int $id ): array {
-		return array(
-			'kind'    => $kind,
-			'id'      => $id,
-			'pushed'  => (bool) get_post_meta( $id, '_karmcp_cloud_pushed', true ),
-			'changed' => self::artifact_changed( $kind, $id ),
-		);
-	}
-
-	/**
-	 * Renders the Sandbox cloud button. Backup only — this plugin ships no
-	 * marketplace, so there is nothing to publish an artifact TO. The correct
-	 * state is rendered server-side (works without JS); sandbox-cloud.js refines
-	 * it after refreshing state.
-	 */
-	public static function render_sandbox_cloud_actions( string $kind, int $id ): string {
-		if ( ! class_exists( 'KarMCP_Cloud' ) || ! KarMCP_Cloud::is_connected() ) {
-			return '';
-		}
-		$s     = self::cloud_action_payload( $kind, $id );
-		$nonce = wp_create_nonce( self::cloud_nonce_action( $kind ) );
-
-		$pushed  = ! empty( $s['pushed'] );
-		$changed = ! empty( $s['changed'] );
-
-		$save_dis = false;
-		if ( ! $pushed ) {
-			$save_txt = __( 'Save to Cloud', 'karmcp' );
-		} elseif ( $changed ) {
-			$save_txt = __( 'Update cloud', 'karmcp' );
-		} else {
-			$save_txt = __( 'Saved', 'karmcp' );
-			$save_dis = true;
-		}
-
-		$icon = static function ( string $d ): string {
-			return '<span class="dashicons dashicons-' . esc_attr( $d ) . '" aria-hidden="true"></span>';
-		};
-
-		ob_start();
-		?>
-		<span class="karmcp-sb-cloud" data-kind="<?php echo esc_attr( $kind ); ?>" data-id="<?php echo esc_attr( (string) $id ); ?>" data-nonce="<?php echo esc_attr( $nonce ); ?>" data-state="<?php echo esc_attr( (string) wp_json_encode( $s ) ); ?>">
-			<button type="button" class="button karmcp-sb-save"<?php disabled( $save_dis ); ?>
-				data-t-save="<?php echo esc_attr__( 'Save to Cloud', 'karmcp' ); ?>"
-				data-t-update="<?php echo esc_attr__( 'Update cloud', 'karmcp' ); ?>"
-				data-t-saved="<?php echo esc_attr__( 'Saved', 'karmcp' ); ?>"><?php
-				echo $icon( 'backup' ) . '<span class="karmcp-sb-txt">' . esc_html( $save_txt ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			?></button>
-			<span class="karmcp-sb-msg" aria-live="polite"></span>
-		</span>
-		<?php
-		return (string) ob_get_clean();
-	}
-
-	/**
-	 * Renders the "Cloud Library" panel for a sandbox screen — a collapsible list
-	 * of the whole workspace's cloud artifacts of this kind (across every connected
-	 * site), each importable into THIS site as a new inactive draft. Empty string
-	 * when the site isn't cloud-connected. The list is fetched lazily on first open
-	 * (see assets/js/cloud-library.js); import runs KarMCP_Cloud_Sync::pull().
-	 *
-	 * @param string $kind Artifact kind (widget/block/snippet).
-	 * @return string
-	 */
-	public static function render_cloud_library( string $kind ): string {
-		if ( ! class_exists( 'KarMCP_Cloud' ) || ! KarMCP_Cloud::is_connected() ) {
-			return '';
-		}
-		$na = self::cloud_nonce_action( $kind );
-		if ( '' === $na ) {
-			return '';
-		}
-		$plural = array(
-			'widget'  => __( 'widgets', 'karmcp' ),
-			'block'   => __( 'blocks', 'karmcp' ),
-			'snippet' => __( 'snippets', 'karmcp' ),
-		);
-		$kl = $plural[ $kind ] ?? $kind;
-
-		ob_start();
-		?>
-		<details class="karmcp-cloud-lib karmcp-sb-disclosure karmcp-sb-disclosure--cloud" data-kind="<?php echo esc_attr( $kind ); ?>" data-nonce="<?php echo esc_attr( wp_create_nonce( $na ) ); ?>" data-site="<?php echo esc_attr( KarMCP_Cloud::site_uuid() ); ?>"
-			data-t-loading="<?php echo esc_attr__( 'Loading…', 'karmcp' ); ?>"
-			data-t-import="<?php echo esc_attr__( 'Import', 'karmcp' ); ?>"
-			data-t-importing="<?php echo esc_attr__( 'Importing…', 'karmcp' ); ?>"
-			data-t-imported="<?php echo esc_attr__( 'Imported', 'karmcp' ); ?>"
-			data-t-thissite="<?php echo esc_attr__( 'This site', 'karmcp' ); ?>"
-			data-t-othersite="<?php echo esc_attr__( 'Another site', 'karmcp' ); ?>"
-			data-t-empty="<?php echo esc_attr__( 'Nothing in your cloud library yet. Save one from another connected site, then it appears here.', 'karmcp' ); ?>"
-			data-t-error="<?php echo esc_attr__( 'Could not reach the cloud. Try again.', 'karmcp' ); ?>"
-			data-t-reloadhint="<?php echo esc_attr__( 'Imported as a new inactive draft below.', 'karmcp' ); ?>"
-			data-t-reload="<?php echo esc_attr__( 'Reload to view →', 'karmcp' ); ?>">
-			<summary>
-				<span class="dashicons dashicons-cloud" aria-hidden="true"></span>
-				<?php
-				/* translators: %s: artifact kind, plural (widgets / blocks / snippets). */
-				echo esc_html( sprintf( __( 'Cloud Library — import %s from your other connected sites', 'karmcp' ), $kl ) );
-				?>
-				<span class="karmcp-sb-disclosure__badge"><?php esc_html_e( 'Cross-site', 'karmcp' ); ?></span>
-			</summary>
-			<div class="karmcp-cloud-lib__body" style="margin-top:12px;">
-				<p class="karmcp-cloud-lib__status description"><?php esc_html_e( 'Open to load your cloud library…', 'karmcp' ); ?></p>
-				<table class="widefat striped karmcp-cloud-lib__table" style="display:none;">
-					<thead>
-						<tr>
-							<th><?php esc_html_e( 'Title', 'karmcp' ); ?></th>
-							<th><?php esc_html_e( 'From', 'karmcp' ); ?></th>
-							<th style="width:70px;"><?php esc_html_e( 'Version', 'karmcp' ); ?></th>
-							<th style="width:110px;"><?php esc_html_e( 'Updated', 'karmcp' ); ?></th>
-							<th style="width:120px;"></th>
-						</tr>
-					</thead>
-					<tbody></tbody>
-				</table>
-			</div>
-		</details>
-		<?php
-		return (string) ob_get_clean();
-	}
-
-	/**
-	 * List the workspace's cloud artifacts of a kind (across all connected sites).
-	 * Feeds the Cloud Library panel. AJAX.
-	 */
-	public function ajax_cloud_library(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Forbidden.', 'karmcp' ) ), 403 );
-		}
-		$kind = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : '';
-		$na   = self::cloud_nonce_action( $kind );
-		if ( '' === $na || ! check_ajax_referer( $na, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
-		}
-		if ( ! class_exists( 'KarMCP_Cloud_Sync' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Cloud is unavailable.', 'karmcp' ) ) );
-		}
-		$res = KarMCP_Cloud_Sync::list_remote( $kind );
-		if ( is_wp_error( $res ) ) {
-			wp_send_json_error( array( 'message' => $res->get_error_message() ) );
-		}
-		$arts = ( is_array( $res ) && isset( $res['artifacts'] ) && is_array( $res['artifacts'] ) ) ? $res['artifacts'] : array();
-		$out  = array();
-		foreach ( $arts as $a ) {
-			$out[] = array(
-				'uuid'        => (string) ( $a['artifact_uuid'] ?? '' ),
-				'title'       => (string) ( $a['title'] ?? '' ),
-				'version'     => (int) ( $a['version'] ?? 1 ),
-				'origin'      => (string) ( $a['origin_site_uuid'] ?? '' ),
-				'origin_url'  => (string) ( $a['origin_site_url'] ?? '' ),
-				'origin_name' => (string) ( $a['origin_site_name'] ?? '' ),
-				'updated'     => (string) ( $a['updated_at'] ?? '' ),
-			);
-		}
-		wp_send_json_success(
-			array(
-				'artifacts' => $out,
-				'site'      => class_exists( 'KarMCP_Cloud' ) ? KarMCP_Cloud::site_uuid() : '',
-			)
-		);
-	}
-
-	/**
-	 * Pull one cloud artifact into this site as a new inactive draft. AJAX.
-	 * Delegates to KarMCP_Cloud_Sync::pull() (imports the portable bundle).
-	 */
-	public function ajax_cloud_import(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Forbidden.', 'karmcp' ) ), 403 );
-		}
-		$kind = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : '';
-		$na   = self::cloud_nonce_action( $kind );
-		if ( '' === $na || ! check_ajax_referer( $na, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
-		}
-		$uuid = isset( $_POST['uuid'] ) ? sanitize_text_field( wp_unslash( $_POST['uuid'] ) ) : '';
-		if ( '' === $uuid || ! class_exists( 'KarMCP_Cloud_Sync' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Nothing to import.', 'karmcp' ) ) );
-		}
-		$res = KarMCP_Cloud_Sync::pull( $uuid, $kind );
-		if ( is_wp_error( $res ) ) {
-			wp_send_json_error( array( 'message' => $res->get_error_message() ) );
-		}
-		wp_send_json_success(
-			array(
-				'id'      => (int) ( $res['id'] ?? 0 ),
-				'message' => __( 'Imported as a new inactive draft.', 'karmcp' ),
-			)
-		);
-	}
 
 
 
-	/**
-	 * Resync an artifact's cloud state: verify the backup still exists remotely,
-	 * which self-heals a stale "Saved" after a cloud-side delete. Drives the
-	 * "Refresh cloud status" button.
-	 */
-	public function ajax_resync_cloud(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Forbidden.', 'karmcp' ) ), 403 );
-		}
-		$kind = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : '';
-		$na   = self::cloud_nonce_action( $kind );
-		if ( '' === $na || ! check_ajax_referer( $na, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
-		}
-		$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
-		if ( ! $id ) {
-			wp_send_json_error( array( 'message' => __( 'Missing id.', 'karmcp' ) ) );
-		}
-		self::verify_cloud_backup( $kind, $id );
-		$payload            = self::cloud_action_payload( $kind, $id );
-		$payload['message'] = __( 'Cloud status refreshed.', 'karmcp' );
-		wp_send_json_success( $payload );
-	}
 
-	/**
-	 * Redirect back to the Connection tab after a settings-sync action.
-	 *
-	 * @param string $status push|pull|err.
-	 */
-	private function redirect_settings_sync( string $status ): void {
-		$back = wp_get_referer();
-		if ( ! $back ) {
-			$back = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-connection' );
-		}
-		wp_safe_redirect( add_query_arg( 'synced', $status, $back ) );
-		exit;
-	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/**
 	 * Revoke every token issued to an OAuth client (disconnects it).
@@ -970,13 +566,6 @@ class KarMCP_Admin {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nonce verified just below against the per-client action.
 		$client_id = isset( $_GET['client'] ) ? sanitize_text_field( wp_unslash( $_GET['client'] ) ) : '';
 		check_admin_referer( self::ACTION_REVOKE_OAUTH . '_' . $client_id );
-
-		if ( '' !== $client_id && class_exists( 'KarMCP_Gateway_Credential' ) ) {
-			// Run before revoke_client() below so the gateway teardown observes the
-			// still-live token count. (Identity itself survives revoke_client(), which
-			// only deletes token rows, not the client registration.)
-			KarMCP_Gateway_Credential::handle_client_revoked( $client_id );
-		}
 
 		if ( '' !== $client_id && class_exists( 'KarMCP_OAuth_Store' ) ) {
 			KarMCP_OAuth_Store::revoke_client( $client_id );
@@ -2516,20 +2105,6 @@ class KarMCP_Admin {
 			true
 		);
 
-		// Sandbox cloud-backup button state machine (no-op unless the page
-		// renders .karmcp-sb-cloud clusters).
-		$sb_js = KARMCP_DIR . 'assets/js/sandbox-cloud.js';
-		if ( file_exists( $sb_js ) ) {
-			wp_enqueue_script( 'karmcp-sandbox-cloud', KARMCP_URL . 'assets/js/sandbox-cloud.js', array(), (string) filemtime( $sb_js ), true );
-		}
-
-		// Cloud Library: lazy list + import of the workspace's cloud artifacts
-		// (no-op unless the page renders a .karmcp-cloud-lib panel).
-		$cl_js = KARMCP_DIR . 'assets/js/cloud-library.js';
-		if ( file_exists( $cl_js ) ) {
-			wp_enqueue_script( 'karmcp-cloud-library', KARMCP_URL . 'assets/js/cloud-library.js', array(), (string) filemtime( $cl_js ), true );
-		}
-
 		wp_localize_script(
 			'karmcp-admin',
 			'karmcpToolsAdmin',
@@ -2761,27 +2336,6 @@ class KarMCP_Admin {
 		wp_send_json_success( $res );
 	}
 
-	/**
-	 * AJAX: mark app-bar notifications as read for the current user, called
-	 * when the notifications dropdown is opened.
-	 *
-	 * @since 3.10.0
-	 */
-	public function ajax_notifications_read(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Forbidden.', 'karmcp' ) ), 403 );
-		}
-		if ( ! check_ajax_referer( 'karmcp_notifications', 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'karmcp' ) ), 403 );
-		}
-
-		$ids = isset( $_POST['ids'] ) ? array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['ids'] ) ) : array();
-
-		$user_id = get_current_user_id();
-		KarMCP_Notifications::mark_read( $user_id, $ids );
-
-		wp_send_json_success( array( 'unread' => KarMCP_Notifications::unread_count( $user_id ) ) );
-	}
 
 	/**
 	 * AJAX: activate/deactivate a generated Gutenberg block from the Blocks tab.
@@ -3299,16 +2853,6 @@ class KarMCP_Admin {
 			endif;
 			?>
 
-			<?php
-			// App-bar notifications bell + cloud button state (Cloud-fed, cached,
-			// graceful offline — see KarMCP_Notifications).
-			$karmcp_notifs  = class_exists( 'KarMCP_Notifications' ) ? KarMCP_Notifications::get() : array();
-			$karmcp_uid     = get_current_user_id();
-			$karmcp_unread  = class_exists( 'KarMCP_Notifications' ) ? KarMCP_Notifications::unread_count( $karmcp_uid ) : 0;
-			$karmcp_seen    = (array) get_user_meta( $karmcp_uid, '_karmcp_read_notifications', true );
-			$karmcp_cloud_connected = class_exists( 'KarMCP_Cloud' ) && KarMCP_Cloud::is_connected();
-			?>
-
 			<!-- App bar -->
 
 			<?php
@@ -3378,60 +2922,6 @@ class KarMCP_Admin {
 								<a role="menuitem" href="<?php echo esc_url( self::SUPPORT_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-sos" aria-hidden="true"></span><?php esc_html_e( 'Support', 'karmcp' ); ?></a>
 							</div>
 						</div>
-						<div class="karmcp-notif">
-							<button type="button" class="karmcp-notif-toggle" aria-haspopup="true" aria-expanded="false" data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_notifications' ) ); ?>">
-								<span class="dashicons dashicons-bell" aria-hidden="true"></span>
-								<span class="karmcp-notif-badge<?php echo 0 === $karmcp_unread ? ' is-empty' : ''; ?>"><?php echo esc_html( (string) $karmcp_unread ); ?></span>
-							</button>
-							<div class="karmcp-notif-overlay" aria-hidden="true"></div>
-							<aside class="karmcp-notif-drawer" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'Announcements', 'karmcp' ); ?>">
-								<div class="karmcp-notif-header">
-									<span><?php esc_html_e( 'Announcements', 'karmcp' ); ?></span>
-									<button type="button" class="karmcp-notif-close" aria-label="<?php esc_attr_e( 'Close', 'karmcp' ); ?>"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
-								</div>
-								<div class="karmcp-notif-list">
-									<?php if ( empty( $karmcp_notifs ) ) : ?>
-										<div class="karmcp-notif-empty"><?php esc_html_e( 'No announcements yet.', 'karmcp' ); ?></div>
-									<?php else : ?>
-										<?php foreach ( $karmcp_notifs as $karmcp_n ) : ?>
-											<?php
-											$karmcp_n_id      = isset( $karmcp_n['id'] ) ? (string) $karmcp_n['id'] : '';
-											$karmcp_n_unread  = '' !== $karmcp_n_id && ! in_array( $karmcp_n_id, $karmcp_seen, true );
-											$karmcp_n_level   = isset( $karmcp_n['level'] ) && '' !== $karmcp_n['level'] ? sanitize_html_class( $karmcp_n['level'] ) : 'info';
-											$karmcp_n_icon    = isset( $karmcp_n['icon'] ) && '' !== $karmcp_n['icon'] ? sanitize_html_class( $karmcp_n['icon'] ) : 'megaphone';
-											$karmcp_n_created = isset( $karmcp_n['created_at'] ) ? strtotime( (string) $karmcp_n['created_at'] ) : false;
-											?>
-											<div class="karmcp-notif-item karmcp-notif-item--<?php echo esc_attr( $karmcp_n_level ); ?><?php echo $karmcp_n_unread ? ' is-unread' : ''; ?>" data-id="<?php echo esc_attr( $karmcp_n_id ); ?>">
-												<span class="karmcp-notif-item-icon dashicons dashicons-<?php echo esc_attr( $karmcp_n_icon ); ?>" aria-hidden="true"></span>
-												<div class="karmcp-notif-item-body">
-													<strong><?php echo esc_html( isset( $karmcp_n['title'] ) ? $karmcp_n['title'] : '' ); ?></strong>
-													<p><?php echo esc_html( isset( $karmcp_n['body'] ) ? $karmcp_n['body'] : '' ); ?></p>
-													<div class="karmcp-notif-item-meta">
-														<?php if ( false !== $karmcp_n_created && $karmcp_n_created > 0 ) : ?>
-															<span class="karmcp-notif-item-time">
-																<?php
-																/* translators: %s: human-readable time difference (e.g. "2 hours") */
-																echo esc_html( sprintf( __( '%s ago', 'karmcp' ), human_time_diff( $karmcp_n_created ) ) );
-																?>
-															</span>
-														<?php endif; ?>
-														<?php if ( ! empty( $karmcp_n['url'] ) ) : ?>
-															<a class="karmcp-notif-item-cta" href="<?php echo esc_url( $karmcp_n['url'] ); ?>" target="_blank" rel="noopener">
-																<?php echo esc_html( ! empty( $karmcp_n['cta'] ) ? $karmcp_n['cta'] : __( 'Learn more', 'karmcp' ) ); ?>
-															</a>
-														<?php endif; ?>
-													</div>
-												</div>
-											</div>
-										<?php endforeach; ?>
-									<?php endif; ?>
-								</div>
-							</aside>
-						</div>
-						<a class="karmcp-cloud-btn" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-connection' ) ); ?>" title="<?php echo esc_attr( $karmcp_cloud_connected ? __( 'KarMCP Cloud: Connected', 'karmcp' ) : __( 'KarMCP Cloud: Not connected — click to connect', 'karmcp' ) ); ?>">
-							<span class="dashicons dashicons-cloud karmcp-cloud-icon" aria-hidden="true"></span>
-							<span class="karmcp-cloud-dot<?php echo $karmcp_cloud_connected ? ' is-connected' : ''; ?>"></span>
-						</a>
 					</div>
 
 					<button type="button"

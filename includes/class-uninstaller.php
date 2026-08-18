@@ -64,8 +64,8 @@ class KarMCP_Uninstaller {
 	 * Delete every option and transient the plugin owns.
 	 *
 	 * Swept by prefix rather than listed by name. The plugin owns roughly thirty
-	 * option keys across settings, module state, schema versions, cloud
-	 * connection and audit logs, and the old hand-maintained list had drifted to
+	 * option keys across settings, module state, schema versions and audit
+	 * logs, and the old hand-maintained list had drifted to
 	 * seven of them — a list that has to be edited every time a feature is added
 	 * is a list that will be wrong again.
 	 *

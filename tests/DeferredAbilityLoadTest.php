@@ -31,8 +31,8 @@ class DeferredAbilityLoadTest extends TestCase {
 		// register_abilities() has run and loaded the tool classes.
 		'KarMCP_Dispatcher_Abilities'  => array( 'class-plugin.php' ),
 		// admin/ is loaded only in is_admin(), where load_admin() loads the tool
-		// classes up front. class-cloud-sync.php loads them in its own accessor.
-		'KarMCP_Sandbox_Cloud_Abilities' => array( 'class-admin.php', 'class-cloud-sync.php' ),
+		// classes up front.
+		'KarMCP_Sandbox_Cloud_Abilities' => array( 'class-admin.php' ),
 		'KarMCP_WPCLI_Abilities'       => array( 'class-admin.php' ),
 		// Named in a doc comment only.
 		'KarMCP_Seo_Audit_Abilities'   => array( 'class-page-snapshot.php' ),

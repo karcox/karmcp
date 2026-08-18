@@ -85,7 +85,6 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 			</form>
 		</details>
 
-		<?php echo KarMCP_Admin::render_cloud_library( 'snippet' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built with esc_* internally. ?>
 
 		<details class="karmcp-sn-add" style="margin: 14px 0;">
 			<summary style="cursor:pointer;font-weight:600;"><?php esc_html_e( '+ Add a snippet', 'karmcp' ); ?></summary>
@@ -216,7 +215,6 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 								<?php
 								// Cloud-backup button. Pre-escaped markup.
 								// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-								echo KarMCP_Admin::render_sandbox_cloud_actions( 'snippet', $karmcp_sid );
 								?>
 								<button
 									type="button"

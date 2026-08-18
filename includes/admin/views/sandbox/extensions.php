@@ -81,7 +81,6 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 				</form>
 			</details>
 
-			<?php echo KarMCP_Admin::render_cloud_library( 'extension' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built with esc_* internally. ?>
 
 			<?php if ( empty( $karmcp_ext_list ) ) : ?>
 
@@ -153,7 +152,6 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 									<?php
 									// Cloud-backup button. Pre-escaped markup.
 									// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-									echo KarMCP_Admin::render_sandbox_cloud_actions( 'extension', $karmcp_eid );
 									?>
 									<button
 										type="button"

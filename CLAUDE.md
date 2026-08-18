@@ -159,7 +159,7 @@ Los bloques se renderizan en servidor: un único script de editor genérico (`as
 
 Features que el admin enciende y apaga desde la pestaña **Modules**. Base `KarMCP_Module` + `KarMCP_Modules_Registry` en `includes/modules/`. Los activos se guardan en la opción `karmcp_active_modules` y arrancan en `init` (prioridad 5).
 
-Módulos presentes: Themer, Redirects, Prompts, Brand Kits, Templates, Agent Skills, Cloud, Image Optimization, SVG Support, Guardrails, Login Guard, Known Vulnerabilities.
+Módulos presentes: Themer, Redirects, Prompts, Brand Kits, Agent Skills, Image Optimization, SVG Support, Guardrails, Login Guard, Known Vulnerabilities.
 
 > **Patrón de gating a respetar:** las abilities se registran en `wp_abilities_api_init`, que corre **antes** de que el módulo arranque en `init:5`. Por eso el registrar consulta el estático `is_enabled()` del módulo, nunca su instancia.
 
@@ -175,7 +175,7 @@ Esto ahorra horas: hay guards por todo el código que comprueban clases que **nu
 - **No hay Freemius ni licenciamiento.** `KarMCP_License` y `karmcp_fs()` no existen (0 ocurrencias).
 - **No hay auto-updater.** La cabecera lleva `Update URI: false`; se actualiza sustituyendo la carpeta.
 - **Clases ausentes** que sus guards siempre resuelven a falso: `KarMCP_Migrate_Abilities` y los grupos GeneratePress / Blocksy / EssentialAddons / PremiumAddons / UAE / System Kit / SEO / A11y / Memory. **Skills, Woo y los dos builders del sandbox ya no están en esta lista**: Skills vive en `includes/skills/`, `KarMCP_Woo_Integration` en `includes/abilities/woo/`, y el Widget/Block Builder se implementó en 1.12.0 (ver abajo).
-- **Cloud está inerte:** `KarMCP_Cloud::DEFAULT_BASE_URL` está vacío a propósito, así que el plugin **no hace ninguna llamada saliente** salvo que se configure (`KARMCP_CLOUD_URL`, la opción `karmcp_cloud_base_url`, o el filtro homónimo).
+- **Cloud ya no existe.** El subsistema (cliente OAuth, sync, gateway credential, sus 5 herramientas MCP, el backup del Sandbox y las notificaciones que se alimentaban de él) se eliminó en 1.25.0: apuntaba a un servicio que nunca existió.
 
 ## Seguridad: el modelo
 

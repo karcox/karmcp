@@ -43,11 +43,6 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 			<button type="button" class="karmcp-subtab is-active" role="tab" data-tab="conn-main" aria-selected="true" aria-controls="karmcp-conn-main">
 				<span class="karmcp-subtab-label"><?php esc_html_e( 'MCP', 'karmcp' ); ?></span>
 			</button>
-			<?php if ( class_exists( 'KarMCP_Cloud_Module' ) && KarMCP_Cloud_Module::is_enabled() ) : ?>
-			<button type="button" class="karmcp-subtab" role="tab" data-tab="conn-cloud" aria-selected="false" aria-controls="karmcp-conn-cloud">
-				<span class="karmcp-subtab-label"><?php esc_html_e( 'Cloud', 'karmcp' ); ?></span>
-			</button>
-			<?php endif; ?>
 			<button type="button" class="karmcp-subtab" role="tab" data-tab="conn-services" aria-selected="false" aria-controls="karmcp-conn-services">
 				<span class="karmcp-subtab-label"><?php esc_html_e( '3rd Party Services', 'karmcp' ); ?></span>
 			</button>
@@ -340,9 +335,6 @@ $karmcp_server_enabled = class_exists( 'KarMCP_Plugin' )
 						<tr>
 							<td>
 								<?php echo esc_html( $karmcp_oc['client_name'] ); ?>
-								<?php if ( class_exists( 'KarMCP_Gateway_Credential' ) && KarMCP_Gateway_Credential::CLIENT_NAME === $karmcp_oc['client_name'] ) : ?>
-									<span class="description" style="display:block;"><?php esc_html_e( 'Used to manage this site from KarMCP Cloud across your other sites.', 'karmcp' ); ?></span>
-								<?php endif; ?>
 							</td>
 							<td><?php echo esc_html( $karmcp_oc_user ? $karmcp_oc_user->user_login : '#' . (int) $karmcp_oc['user_id'] ); ?></td>
 							<td><?php echo (int) $karmcp_oc['active_tokens']; ?></td>
@@ -550,82 +542,6 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
 		</div>
 
 	</div><?php // /#karmcp-conn-main ?>
-
-	<?php // ===== Sub-tab: Cloud ===== ?>
-	<?php if ( class_exists( 'KarMCP_Cloud_Module' ) && KarMCP_Cloud_Module::is_enabled() ) : ?>
-	<div class="karmcp-tabpanel" id="karmcp-conn-cloud" role="tabpanel" data-tab="conn-cloud">
-		<?php // ===== KarMCP Cloud connect/disconnect ===== ?>
-		<?php if ( class_exists( 'KarMCP_Cloud_Module' ) && KarMCP_Cloud_Module::is_enabled() ) :
-			$karmcp_cloud_status = KarMCP_Cloud::status(); ?>
-			<div class="karmcp-section">
-				<h2><?php esc_html_e( 'KarMCP Cloud', 'karmcp' ); ?></h2>
-				<div class="karmcp-conn-cards">
-					<div class="karmcp-conn-card">
-						<h2 class="karmcp-conn-card-title"><?php esc_html_e( 'Cloud account', 'karmcp' ); ?></h2>
-						<?php if ( $karmcp_cloud_status['connected'] ) : ?>
-							<p class="karmcp-activate-note">
-								<?php esc_html_e( 'This site is connected to your KarMCP Cloud account.', 'karmcp' ); ?>
-								<?php if ( ! $karmcp_cloud_status['healthy'] ) : ?>
-									<strong><?php esc_html_e( 'Reconnect needed.', 'karmcp' ); ?></strong>
-								<?php endif; ?>
-							</p>
-							<p>
-								<a href="<?php echo esc_url( KarMCP_Cloud_Connect::disconnect_url() ); ?>" class="button"><?php esc_html_e( 'Disconnect', 'karmcp' ); ?></a>
-							</p>
-							<?php if ( ! $karmcp_cloud_status['healthy'] ) :
-								$karmcp_connect_label = __( 'Reconnect', 'karmcp' );
-								require KARMCP_DIR . 'includes/admin/views/partials/cloud-connect-form.php';
-							endif; ?>
-						<?php else : ?>
-							<p class="karmcp-activate-note"><?php esc_html_e( 'Connect this site to your KarMCP Cloud account to back up and sync your work.', 'karmcp' ); ?></p>
-							<?php
-							$karmcp_connect_label = __( 'Connect to KarMCP Cloud', 'karmcp' );
-							require KARMCP_DIR . 'includes/admin/views/partials/cloud-connect-form.php';
-							?>
-						<?php endif; ?>
-					</div>
-
-					<?php // ===== Settings sync (paid Cloud feature) ===== ?>
-					<?php if ( $karmcp_cloud_status['connected'] ) : ?>
-						<?php
-						$karmcp_sync_entitled = class_exists( 'KarMCP_Settings_Sync' ) && KarMCP_Settings_Sync::entitled();
-						$karmcp_synced        = isset( $_GET['synced'] ) ? sanitize_key( wp_unslash( $_GET['synced'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-						?>
-						<div class="karmcp-conn-card">
-							<h2 class="karmcp-conn-card-title"><?php esc_html_e( 'Settings sync', 'karmcp' ); ?></h2>
-							<?php if ( 'push' === $karmcp_synced ) : ?>
-								<div class="notice notice-success inline"><p><?php esc_html_e( 'Settings pushed to the cloud.', 'karmcp' ); ?></p></div>
-							<?php elseif ( 'pull' === $karmcp_synced ) : ?>
-								<div class="notice notice-success inline"><p><?php esc_html_e( 'Settings pulled from the cloud and applied.', 'karmcp' ); ?></p></div>
-							<?php elseif ( 'err' === $karmcp_synced ) : ?>
-								<div class="notice notice-error inline"><p><?php esc_html_e( 'Settings sync failed. Make sure your Cloud plan includes settings sync.', 'karmcp' ); ?></p></div>
-							<?php endif; ?>
-
-							<?php if ( $karmcp_sync_entitled ) : ?>
-								<p class="karmcp-activate-note"><?php esc_html_e( 'Copy your KarMCP settings between connected sites: tool toggles, active modules, compact-tool mode, and behavior preferences. Secrets, API keys, and this site\'s connection are never synced.', 'karmcp' ); ?></p>
-								<p>
-									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline">
-										<input type="hidden" name="action" value="karmcp_settings_push" />
-										<?php wp_nonce_field( 'karmcp_settings_sync' ); ?>
-										<button type="submit" class="button button-primary"><?php esc_html_e( 'Push settings to cloud', 'karmcp' ); ?></button>
-									</form>
-									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline" onsubmit="return confirm('<?php echo esc_js( __( 'Pull settings from the cloud and overwrite this site\'s KarMCP settings?', 'karmcp' ) ); ?>');">
-										<input type="hidden" name="action" value="karmcp_settings_pull" />
-										<?php wp_nonce_field( 'karmcp_settings_sync' ); ?>
-										<button type="submit" class="button"><?php esc_html_e( 'Pull settings from cloud', 'karmcp' ); ?></button>
-									</form>
-								</p>
-							<?php else : ?>
-								<p class="karmcp-activate-note"><?php esc_html_e( 'Sync your KarMCP settings across all your sites. This is a paid KarMCP Cloud feature.', 'karmcp' ); ?></p>
-								<p><a href="<?php echo esc_url( trailingslashit( KarMCP_Cloud::base_url() ) . 'account/billing' ); ?>" class="button" target="_blank" rel="noopener"><?php esc_html_e( 'Upgrade your Cloud plan', 'karmcp' ); ?></a></p>
-							<?php endif; ?>
-						</div>
-					<?php endif; ?>
-				</div>
-			</div>
-		<?php endif; ?>
-	</div><?php // /#karmcp-conn-cloud ?>
-	<?php endif; ?>
 
 	<?php // ===== Sub-tab: 3rd Party Services ===== ?>
 	<div class="karmcp-tabpanel" id="karmcp-conn-services" role="tabpanel" data-tab="conn-services">

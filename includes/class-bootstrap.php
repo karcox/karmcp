@@ -125,13 +125,6 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/class-block-tree.php';
 		require_once KARMCP_DIR . 'includes/class-page-snapshot.php';
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-util.php';
-		require_once KARMCP_DIR . 'includes/cloud/class-cloud.php';
-		require_once KARMCP_DIR . 'includes/cloud/class-cloud-http.php';
-		require_once KARMCP_DIR . 'includes/cloud/class-cloud-connect.php';
-		require_once KARMCP_DIR . 'includes/cloud/class-cloud-client.php';
-		require_once KARMCP_DIR . 'includes/cloud/class-gateway-credential.php';
-		require_once KARMCP_DIR . 'includes/cloud/class-cloud-sync.php';
-		require_once KARMCP_DIR . 'includes/cloud/class-settings-sync.php';
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-store.php';
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-metadata.php';
 		require_once KARMCP_DIR . 'includes/oauth/class-oauth-clients.php';
@@ -149,7 +142,6 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/redirects/class-redirect-handler.php';
 		require_once KARMCP_DIR . 'includes/class-content-mirror.php';
 		require_once KARMCP_DIR . 'includes/class-admin-bar.php';
-		require_once KARMCP_DIR . 'includes/class-notifications.php';
 		require_once KARMCP_DIR . 'includes/class-package-guard.php';
 		require_once KARMCP_DIR . 'includes/class-nav-menu-shortcode.php';
 		add_action( 'init', array( 'KarMCP_Nav_Menu_Shortcode', 'register' ) );
@@ -281,7 +273,6 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/skills/class-skill-store.php';
 		require_once KARMCP_DIR . 'includes/skills/class-skill-catalog.php';
 		require_once KARMCP_DIR . 'includes/skills/class-skill-outline.php';
-		require_once KARMCP_DIR . 'includes/modules/class-cloud-module.php';
 		// KarMCP Themer (free): builder-agnostic theme builder engine + module + MCP tools.
 		require_once KARMCP_DIR . 'includes/themer/class-themer-matcher-registry.php';
 		require_once KARMCP_DIR . 'includes/themer/class-themer-conditions.php';
@@ -324,7 +315,6 @@ class KarMCP_Bootstrap {
 	 *   its tools. This is the hot path and the reason the split pays.
 	 * - `mcp_adapter_init` — the server build reads the dispatcher's names.
 	 * - wp-admin — the Tools tab lists every tool and seeds their defaults.
-	 * - KarMCP_Cloud_Sync — type-hints a tool class in a method signature.
 	 *
 	 * Idempotent: safe to call from all of them, and cheap after the first.
 	 * The order below is the original load order, which several groups depend
@@ -423,7 +413,6 @@ class KarMCP_Bootstrap {
 		// Sandbox Cloud abilities — export/import any sandbox artifact (block/
 		// widget/snippet) as a portable bundle over the cloud contract.
 		require_once KARMCP_DIR . 'includes/abilities/class-sandbox-cloud-abilities.php';
-		require_once KARMCP_DIR . 'includes/abilities/class-cloud-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-php-snippet-abilities.php';
 		// Atomic elements support (Elementor 4.0+).
 		require_once KARMCP_DIR . 'includes/abilities/class-atomic-widget-abilities.php';
@@ -506,7 +495,6 @@ class KarMCP_Bootstrap {
 		$karmcp_modules->register( new KarMCP_Guardrails_Module() );
 		$karmcp_modules->register( new KarMCP_Login_Guard_Module() );
 		$karmcp_modules->register( new KarMCP_Vulnerabilities_Module() );
-		$karmcp_modules->register( new KarMCP_Cloud_Module() );
 		do_action( 'karmcp_register_modules', $karmcp_modules );
 		$karmcp_modules->apply_defaults();
 		add_action( 'init', array( $karmcp_modules, 'boot_active' ), 5 );

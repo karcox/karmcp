@@ -1438,107 +1438,6 @@
 	}
 
 	/**
-	 * App-bar notifications bell: click-toggle dropdown (the neighboring Help
-	 * menu is a pure-CSS hover/focus-within dropdown with no JS counterpart —
-	 * the notif bell needs real JS so it can mark items read on open). Closes
-	 * on outside click / Escape, and marks the currently-visible unread items
-	 * read via admin-ajax the first time it's opened in a page view.
-	 */
-	function initNotifications() {
-		var wrap = document.querySelector( '.karmcp-notif' );
-		if ( ! wrap ) { return; }
-		var toggle = wrap.querySelector( '.karmcp-notif-toggle' );
-		var badge = wrap.querySelector( '.karmcp-notif-badge' );
-		var overlay = wrap.querySelector( '.karmcp-notif-overlay' );
-		var closeBtn = wrap.querySelector( '.karmcp-notif-close' );
-		if ( ! toggle ) { return; }
-
-		var markedThisView = false;
-
-		function close() {
-			wrap.classList.remove( 'is-open' );
-			toggle.setAttribute( 'aria-expanded', 'false' );
-		}
-
-		function markVisibleRead() {
-			if ( markedThisView ) { return; }
-
-			var items = wrap.querySelectorAll( '.karmcp-notif-item.is-unread[data-id]' );
-			if ( ! items.length ) { return; }
-
-			markedThisView = true;
-
-			var ids = [];
-			items.forEach( function ( item ) {
-				ids.push( item.getAttribute( 'data-id' ) );
-				item.classList.remove( 'is-unread' );
-			} );
-
-			if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) { return; }
-
-			var payload = new FormData();
-			payload.append( 'action', 'karmcp_tools_notifications_read' );
-			payload.append( 'nonce', toggle.getAttribute( 'data-nonce' ) || '' );
-			ids.forEach( function ( id ) {
-				payload.append( 'ids[]', id );
-			} );
-
-			/* global fetch */
-			fetch( karmcpToolsAdmin.ajaxUrl, {
-				method: 'POST',
-				credentials: 'same-origin',
-				body: payload
-			} ).then( function ( response ) {
-				return response.json();
-			} ).then( function ( result ) {
-				if ( result && result.success && badge ) {
-					var unread = result.data && typeof result.data.unread !== 'undefined' ? result.data.unread : 0;
-					badge.textContent = String( unread );
-					badge.classList.toggle( 'is-empty', 0 === unread );
-				}
-			} ).catch( function () {} );
-		}
-
-		function open() {
-			// Only one of help / notif open at a time.
-			var help = document.querySelector( '.karmcp-help-menu' );
-			if ( help && document.activeElement && help.contains( document.activeElement ) ) {
-				document.activeElement.blur();
-			}
-			wrap.classList.add( 'is-open' );
-			toggle.setAttribute( 'aria-expanded', 'true' );
-			markVisibleRead();
-		}
-
-		toggle.addEventListener( 'click', function ( e ) {
-			e.stopPropagation();
-			if ( wrap.classList.contains( 'is-open' ) ) {
-				close();
-			} else {
-				open();
-			}
-		} );
-
-		// Drawer: clicking the overlay or the close button dismisses it.
-		if ( overlay ) { overlay.addEventListener( 'click', close ); }
-		if ( closeBtn ) { closeBtn.addEventListener( 'click', close ); }
-
-		document.addEventListener( 'click', function ( e ) {
-			if ( wrap.classList.contains( 'is-open' ) && ! wrap.contains( e.target ) ) {
-				close();
-			}
-		} );
-
-		document.addEventListener( 'keydown', function ( e ) {
-			if ( 'Escape' === e.key && wrap.classList.contains( 'is-open' ) ) {
-				close();
-				toggle.focus();
-			}
-		} );
-	}
-
-	// Initialize on DOM ready.
-	/**
 	 * Collapse control for the section rail.
 	 *
 	 * The class is toggled first and the state saved after, deliberately: the
@@ -1582,7 +1481,6 @@
 		initClickToCopy();
 		initContextPage();
 		initNavCollapse();
-		initNotifications();
 	}
 
 	if ( document.readyState === 'loading' ) {

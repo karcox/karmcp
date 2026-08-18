@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.24.0
+Stable tag: 1.25.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,6 +151,16 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.25.0 =
+
+* Removed: **Templates**. The module could only ever show a locked card reading "Not included in this version" - its library backend was never part of this plugin, and there is no licence to buy that would bring it. Advertising something nobody can obtain is worse than not offering it. The save-as-template / apply-template / list-templates tools are untouched: those work on Elementor's own saved templates and only share the name.
+* Removed: **KarMCP Cloud**, and the announcements bell it fed. The base URL was empty by design, so every call was a no-op against a service that was never published - an OAuth client, a token store and a sync layer for an account that cannot be created. This also takes the Sandbox's "Save to Cloud" buttons and Cloud Library panels, which pointed at the same place.
+* Fixed: **applying a brand kit did nothing.** The button posted to an AJAX action no handler answered, so the request succeeded and the palette never changed. Everything needed was already in the plugin, unused. Applying now works, and backs up your current colors and typography first so Restore can put them back.
+* Fixed: **"Generate password"** on the Connection tab, silently broken the same way.
+* Fixed: the Context tab's live preview never appeared, because the toggle it watches was looked up under an old name.
+* Changed: the Prompts and Brand Kits tabs no longer carry a premium-library branch that could not run. The bundled prompts and the ten brand kits are unaffected.
+* Added: **Local News Site**, a sample prompt that shipped in every release without being listed anywhere, so no one could see it. Six samples now.
 
 = 1.24.0 =
 

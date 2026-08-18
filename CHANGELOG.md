@@ -2,6 +2,34 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.25.0]
+
+### Removed
+
+- **Templates.** The module was metadata and nothing else: `is_available()` returned `false` unconditionally, because the library backend shipped in an upstream Pro overlay that is not part of this plugin. What reached the user was a locked card reading "Not included in this version" - an advertisement for something that cannot be bought, since this build has no licensing at all. Gone with it: a 240-line view whose Pro branch never ran, the submenu entry and routing, the dashboard card and stats block, 117 lines of CSS, and a 77-line JS handler that POSTed to two AJAX actions no PHP here registers. The `save-as-template` / `apply-template` / `list-templates` tools are untouched - they operate on Elementor's own saved templates and share only the name.
+
+- **KarMCP Cloud.** `DEFAULT_BASE_URL` was empty on purpose, so nothing in the subsystem could reach anything unless someone defined `KARMCP_CLOUD_URL` against a host that was never published. Roughly 1,700 lines - an OAuth client, token store, sync layer, gateway credential, five MCP tools and a full connect/disconnect UI - for an account no one can create. Removed with it, because Cloud was their only source: the app-bar announcements bell (`KarMCP_Notifications` read from the Cloud endpoint, so the drawer could only ever say "No announcements"), the Sandbox "Save to Cloud" buttons and Cloud Library panels on all four sandbox screens, settings push/pull, and the Cloud sub-tab in Connection. `KarMCP_Sandbox_Cloud_Abilities` stays: despite the name it is local, backing `export-sandbox-artifact` / `import-sandbox-artifact`, and never talks to a remote.
+
+- **The dead Pro branches in Prompts and Brand Kits.** Both views carried a premium-library arm gated on a class that does not exist here, so about half of each file was unreachable. The bundled prompts and the ten bundled brand kits are unaffected.
+
+### Fixed
+
+- **Applying a brand kit did nothing at all.** The tab rendered ten kits with previews and an Apply button that posted `karmcp_tools_apply_pro_brand_kit`; the plugin's rename to the `karmcp_` prefix never reached that call site, and no handler by either name existed. WordPress answers an unregistered action with `0`, so the `fetch` resolved, no error surfaced, and the palette simply never changed - invisible in review and invisible at runtime.
+
+  Everything required was already present and unused: `KarMCP_Free_Brand_Kits::find_kit` resolves the kit, `KarMCP_System_Kit_Writer::apply_kit` writes colors, typography, custom colors and theme-style defaults, and `KarMCP_Kit_Backup_Store` snapshots and restores. All gate on `manage_options`, not on a licence. Only the two AJAX handlers were missing. Applying now backs up before it writes, so an apply that fails halfway still leaves a way back to the previous palette.
+
+- **"Generate password" on the Connection tab**, broken by the same half-finished rename - it posted `karmcp_tools_create_app_password` while the handler registers `karmcp_create_app_password`.
+
+- **The Context tab's live preview never bound**, because the toggle was queried by an input name still carrying the old prefix.
+
+- Removed prompt-copy telemetry that posted to an action with no handler and read attributes off cards the Pro branch used to render.
+
+### Added
+
+- **`LOCAL_NEWS_SITE`**, a finished sample prompt (hyperlocal news article with Google News structured data and image SEO) that shipped in every release zip while the Prompts tab's hand-written metadata map had no entry for it, leaving it unreachable. The tab lists six samples now.
+
+- **`AjaxActionContractTest`**, asserting that every AJAX action the admin JS posts has a registered handler. Three separate features were dead from this exact mismatch and nothing was checking it. **`BrandKitBundleTest`** asserts the ten bundled kits satisfy what `apply_kit()` demands - a complete four-slot palette with parseable hex - since one bad slot aborts the whole apply by design.
+
 ## [1.24.0]
 
 ### Fixed

@@ -43,6 +43,7 @@ There is no telemetry and no auto-updater: the plugin makes no outbound calls un
 * **Change ledger with rollback**: every recorded change is reversible from the History tab, across Elementor, filesystem and database.
 * **Content search** over your own pages and templates, and **content mirror** for git-trackable JSON exports.
 * **Performance analyzer**: server config, WordPress internals (database size, autoloaded options, revisions, cron backlog, object cache, OPcache) and a target page, returned as a scored report (0-100 plus Aâ€“F) with ranked recommendations. Read-only.
+* **Catalog audit**: checks the documented widget parameters against the controls your widgets really register, and reports the ones that mislead — no matching control, a type that describes something else, an undocumented range, a value transformed before use. The class of mistake where a write succeeds and does nothing. Read-only.
 * **Security scanner**: malware heuristics, core-file integrity against official checksums, hardening checks and outdated software, returned as a scored report. The malware walk is bounded and never returns full file contents. Read-only.
 
 **Speak your plugins**

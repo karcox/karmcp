@@ -139,7 +139,6 @@ class KarMCP_Admin {
 			'connection' => 'dashicons-admin-links',
 			'context'    => 'dashicons-info-outline',
 			'prompts'    => 'dashicons-lightbulb',
-			'templates'  => 'dashicons-layout',
 			'brand-kits' => 'dashicons-art',
 			'widgets'    => 'dashicons-editor-code',
 			'mcp-log'    => 'dashicons-list-view',
@@ -158,7 +157,6 @@ class KarMCP_Admin {
 				self::PAGE_SLUG . '-context'    => __( 'Context', 'karmcp' ),
 				self::PAGE_SLUG . '-redirects'  => __( 'Redirects', 'karmcp' ),
 				self::PAGE_SLUG . '-prompts'    => __( 'Prompts', 'karmcp' ),
-				self::PAGE_SLUG . '-templates'  => __( 'Templates', 'karmcp' ),
 				self::PAGE_SLUG . '-brand-kits' => __( 'Brand Kits', 'karmcp' ),
 				self::PAGE_SLUG . '-widgets'    => __( 'Sandbox', 'karmcp' ),
 				self::PAGE_SLUG . '-mcp-log'    => __( 'MCP Log', 'karmcp' ),
@@ -172,7 +170,7 @@ class KarMCP_Admin {
 				unset( $this->submenus[ self::PAGE_SLUG . '-redirects' ] );
 			}
 			// Module-backed tabs: drop each when its module is off/unavailable.
-			foreach ( array( 'prompts', 'templates', 'brand-kits' ) as $karmcp_mod_id ) {
+			foreach ( array( 'prompts', 'brand-kits' ) as $karmcp_mod_id ) {
 				if ( ! $this->module_tab_visible( $karmcp_mod_id ) ) {
 					unset( $this->submenus[ self::PAGE_SLUG . '-' . $karmcp_mod_id ] );
 				}
@@ -213,8 +211,6 @@ class KarMCP_Admin {
 				return 'context';
 			case self::PAGE_SLUG . '-prompts':
 				return 'prompts';
-			case self::PAGE_SLUG . '-templates':
-				return 'templates';
 			case self::PAGE_SLUG . '-brand-kits':
 				return 'brand-kits';
 			case self::PAGE_SLUG . '-skills':
@@ -3271,21 +3267,6 @@ class KarMCP_Admin {
 			}
 		}
 
-		// Templates: Pro shows the templates-library total (sum across
-		// categories). Hidden for free users and when the bundle can't be fetched.
-		if ( $this->module_tab_visible( 'templates' ) && class_exists( 'KarMCP_Pro_Templates' ) && KarMCP_Pro_Templates::user_has_access() ) {
-			$template_count  = 0;
-			$karmcp_tpl_bundle = KarMCP_Pro_Templates::get_bundle();
-			if ( ! is_wp_error( $karmcp_tpl_bundle ) && is_array( $karmcp_tpl_bundle ) && ! empty( $karmcp_tpl_bundle['categories'] ) ) {
-				foreach ( $karmcp_tpl_bundle['categories'] as $karmcp_tpl_cat ) {
-					$template_count += is_array( $karmcp_tpl_cat['templates'] ?? null ) ? count( $karmcp_tpl_cat['templates'] ) : 0;
-				}
-			}
-			if ( $template_count > 0 ) {
-				$stats[] = array( 'key' => 'templates', 'value' => $template_count, 'label' => __( 'Templates', 'karmcp' ) );
-			}
-		}
-
 		return $stats;
 	}
 
@@ -3475,8 +3456,6 @@ class KarMCP_Admin {
 					include KARMCP_DIR . 'includes/admin/views/page-context.php';
 				} elseif ( 'prompts' === $active_tab && $this->module_tab_visible( 'prompts' ) ) {
 					include KARMCP_DIR . 'includes/admin/views/page-prompts.php';
-				} elseif ( 'templates' === $active_tab && $this->module_tab_visible( 'templates' ) ) {
-					include KARMCP_DIR . 'includes/admin/views/page-templates.php';
 				} elseif ( 'brand-kits' === $active_tab && $this->module_tab_visible( 'brand-kits' ) ) {
 					include KARMCP_DIR . 'includes/admin/views/page-brand-kits.php';
 				} elseif ( 'security' === $active_tab ) {

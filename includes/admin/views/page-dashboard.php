@@ -30,7 +30,6 @@ $karmcp_stat_svgs = array(
 	'pro'        => '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>',
 	'prompts'    => '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>',
 	'brand-kits' => '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 5a2 2 0 012-2h3a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm6.5 9.5L12 6l3.8 1.5a1 1 0 01.56 1.3l-3 7.5a2 2 0 01-2.6 1.1l-2.26-.9zM11 4a2 2 0 114 0 2 2 0 01-4 0z"/></svg>',
-	'templates'  => '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 5a1 1 0 011-1h6a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm10 0a1 1 0 011-1h2a1 1 0 011 1v7a1 1 0 01-1 1h-2a1 1 0 01-1-1V9z"/></svg>',
 );
 
 /**
@@ -89,14 +88,6 @@ $karmcp_features = array(
 		'show'  => $this->module_tab_visible( 'brand-kits' ),
 	),
 	array(
-		'icon'  => 'dashicons-layout',
-		'title' => __( 'Templates', 'karmcp' ),
-		'desc'  => __( 'Import professionally designed Elementor templates straight into your pages.', 'karmcp' ),
-		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-templates' ),
-		'pro'   => true,
-		'show'  => $this->module_tab_visible( 'templates' ),
-	),
-	array(
 		'icon'  => 'dashicons-editor-code',
 		'title' => __( 'PHP Sandbox', 'karmcp' ),
 		'desc'  => __( 'Review and activate AI-authored PHP snippets behind a human approval gate, nothing runs unattended.', 'karmcp' ),
@@ -133,13 +124,8 @@ $karmcp_videos = array();
 	</section>
 
 	<?php
-	// Activity pulse: usage KPIs (Pro), change-ledger overview, most-used actions,
-	// and the Sandbox item count. History + Most-used + Sandbox are free features,
-	// so the whole section renders on both tiers.
-	$karmcp_has_usage   = class_exists( 'KarMCP_Pro_Usage' );
-	$karmcp_usage_local = $karmcp_has_usage
-		? KarMCP_Pro_Usage::local_summary()
-		: array( 'templates' => 0, 'prompts' => 0 );
+	// Activity pulse: change-ledger overview, most-used actions, and the
+	// Sandbox item count.
 
 	// Change-ledger overview + most-used actions.
 	$karmcp_log       = class_exists( 'KarMCP_Change_Log' ) ? KarMCP_Change_Log::all() : array();
@@ -192,29 +178,6 @@ $karmcp_videos = array();
 			<p class="karmcp-dash-section-sub"><?php esc_html_e( 'A quick pulse on what your AI has done on this site.', 'karmcp' ); ?></p>
 		</div>
 		<div class="karmcp-dash-usage-grid">
-
-			<!-- Usage KPIs -->
-			<a class="karmcp-dash-ucard" href="<?php echo esc_url( $karmcp_url_prompts ); ?>">
-				<span class="karmcp-dash-ucard-head">
-					<span class="karmcp-dash-ucard-ico karmcp-dash-ucard-ico--usage"><span class="dashicons dashicons-chart-bar" aria-hidden="true"></span></span>
-					<span class="karmcp-dash-ucard-title">
-						<?php esc_html_e( 'Usage', 'karmcp' ); ?>
-						<?php if ( ! $karmcp_has_usage ) : ?>
-							<span class="karmcp-dash-badge karmcp-dash-badge--pro"><?php esc_html_e( 'Pro', 'karmcp' ); ?></span>
-						<?php endif; ?>
-					</span>
-				</span>
-				<span class="karmcp-dash-ucard-kpis">
-					<span class="karmcp-dash-ucard-kpi">
-						<span class="karmcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $karmcp_usage_local['templates'] ) ); ?></span>
-						<span class="karmcp-dash-ucard-sub"><?php esc_html_e( 'templates applied', 'karmcp' ); ?></span>
-					</span>
-					<span class="karmcp-dash-ucard-kpi">
-						<span class="karmcp-dash-ucard-num"><?php echo esc_html( number_format_i18n( $karmcp_usage_local['prompts'] ) ); ?></span>
-						<span class="karmcp-dash-ucard-sub"><?php esc_html_e( 'prompts copied', 'karmcp' ); ?></span>
-					</span>
-				</span>
-			</a>
 
 			<!-- History overview -->
 			<a class="karmcp-dash-ucard" href="<?php echo esc_url( $karmcp_url_history ); ?>">

@@ -264,7 +264,6 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/modules/image-optimization/class-image-optimization-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-prompts-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-brand-kits-module.php';
-		require_once KARMCP_DIR . 'includes/modules/class-templates-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-agent-skills-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-login-guard-module.php';
 		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-stream-parser.php';
@@ -500,7 +499,6 @@ class KarMCP_Bootstrap {
 		$karmcp_modules->register( new KarMCP_Image_Optimization_Module() );
 		$karmcp_modules->register( new KarMCP_Prompts_Module() );
 		$karmcp_modules->register( new KarMCP_Brand_Kits_Module() );
-		$karmcp_modules->register( new KarMCP_Templates_Module() );
 		$karmcp_modules->register( new KarMCP_Themer_Module() );
 		$karmcp_modules->register( new KarMCP_Redirect_Module() );
 		$karmcp_modules->register( new KarMCP_Agent_Skills_Module() );

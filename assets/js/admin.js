@@ -765,83 +765,6 @@
 	}
 
 	/**
-	 * Templates page — Apply-to-New-Page and Import-to-Library buttons.
-	 * Single delegated click handler routes to whichever AJAX action the
-	 * button is configured for. Both open the result in a new tab on success.
-	 */
-	function initProTemplateActions() {
-		var grid = document.querySelector( '.karmcp-template-grid' );
-		if ( ! grid ) {
-			return;
-		}
-		var applyNonce  = grid.getAttribute( 'data-apply-nonce' )  || '';
-		var importNonce = grid.getAttribute( 'data-import-nonce' ) || '';
-
-		grid.addEventListener( 'click', function ( e ) {
-			var applyBtn  = e.target.closest( '.karmcp-template-apply' );
-			var importBtn = e.target.closest( '.karmcp-template-import' );
-			var btn = applyBtn || importBtn;
-			if ( ! btn ) {
-				return;
-			}
-			if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) {
-				return;
-			}
-
-			var isApply = !! applyBtn;
-			var action  = isApply ? 'karmcp_tools_apply_pro_template' : 'karmcp_tools_import_pro_template';
-			var nonce   = isApply ? applyNonce : importNonce;
-			var pending = isApply ? 'Creating…' : 'Importing…';
-			var failMsg = isApply ? 'Create failed.' : 'Import failed.';
-
-			var category = btn.getAttribute( 'data-category-slug' ) || '';
-			var template = btn.getAttribute( 'data-template-slug' ) || '';
-			var original = btn.innerHTML;
-			btn.disabled = true;
-			btn.textContent = pending;
-
-			var body = new URLSearchParams();
-			body.append( 'action', action );
-			body.append( 'nonce', nonce );
-			body.append( 'category_slug', category );
-			body.append( 'template_slug', template );
-			if ( isApply ) {
-				body.append( 'target_post_id', '0' );
-			}
-
-			fetch( karmcpToolsAdmin.ajaxUrl, {
-				method: 'POST',
-				credentials: 'same-origin',
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: body.toString(),
-			} )
-				.then( function ( r ) { return r.json(); } )
-				.then( function ( res ) {
-					var ok = res && res.success && res.data;
-					// Apply → open the new page's Elementor editor.
-					// Import → open the Saved Templates library list so the
-					// user can see the new entry.
-					var openUrl = ok ? ( isApply ? res.data.edit_url : res.data.library_url ) : '';
-					if ( openUrl ) {
-						window.open( openUrl, '_blank', 'noopener' );
-						btn.disabled = false;
-						btn.innerHTML = original;
-					} else {
-						var msg = ( res && res.data && res.data.message ) ? res.data.message : failMsg;
-						window.alert( msg );
-						btn.disabled = false;
-						btn.innerHTML = original;
-					}
-				} )
-				.catch( function () {
-					window.alert( failMsg + ' Check your connection and try again.' );
-					btn.disabled = false;
-					btn.innerHTML = original;
-				} );
-		} );
-	}
-
-	/**
 	 * Brand Kits page — transient success toast with an optional "View site" link.
 	 *
 	 * @param {string} message The toast message.
@@ -1036,13 +959,6 @@
 			filterSelector: '.karmcp-pro-prompts .karmcp-pro-filters',
 			pageSize: 12,
 			label: 'prompts'
-		} );
-		initGridPagination( {
-			gridSelector: '.karmcp-template-grid',
-			cardSelector: '.karmcp-template-card',
-			filterSelector: '.karmcp-templates .karmcp-pro-filters',
-			pageSize: 12,
-			label: 'templates'
 		} );
 		initGridPagination( {
 			gridSelector: '.karmcp-brand-kit-grid',
@@ -1716,7 +1632,6 @@
 		initCopyButtons();
 		initPagers();
 		initProSync();
-		initProTemplateActions();
 		initBrandKits();
 		initCodeOverlay();
 		initClickToCopy();

@@ -181,4 +181,66 @@ class PostDuplicatorTest extends TestCase {
 
 		$this->assertSame( array( $new_id, 7 ), $seen );
 	}
+	// ---- the copy has to be readable ---------------------------------------
+
+	/**
+	 * The regression this class exists to never repeat.
+	 *
+	 * `add_post_meta()` unslashes whatever it is given, because the metadata API
+	 * is written for values arriving slashed from a form post. A value read
+	 * straight out of the database is not slashed, so passing it through
+	 * unchanged loses every backslash in it. For most meta that is invisible.
+	 * For `_elementor_data` it is fatal: the JSON is full of \/ and \uXXXX
+	 * escapes, and a copy without them does not decode. Every tool then reads
+	 * the copy as an empty page, and the first write on top of it makes that
+	 * emptiness permanent.
+	 *
+	 * Measured on a real course page before the fix: 38,632 bytes of valid JSON
+	 * in, 37,529 out, all 1,103 backslashes gone.
+	 */
+	public function test_elementor_data_still_decodes_after_the_copy(): void {
+		$json = wp_json_encode(
+			array(
+				array(
+					'id'       => 'abc1234',
+					'settings' => array(
+						'link'  => array( 'url' => 'https://ejemplo.test/módulo-1/' ),
+						'title' => 'Introducción — «acentos» y "comillas"',
+					),
+				),
+			)
+		);
+
+		$this->assertIsArray( json_decode( $json, true ), 'The fixture itself must be valid JSON.' );
+
+		$GLOBALS['karmcp_test']['post_meta'][7]['_elementor_data'] = array( $json );
+
+		$new_id = $this->duplicate();
+		$copied = $GLOBALS['karmcp_test']['post_meta'][ $new_id ]['_elementor_data'][0];
+
+		$this->assertIsArray(
+			json_decode( $copied, true ),
+			'The copied Elementor data must still decode as JSON.'
+		);
+		$this->assertSame( $json, $copied, 'The copy must be byte-for-byte identical to the source.' );
+	}
+
+	/**
+	 * The same guarantee stated the way the bug presented: the copy lost bytes.
+	 */
+	public function test_the_copy_keeps_every_backslash(): void {
+		$escaped = '[{"id":"abc1234","url":"https:\/\/ejemplo.test\/a","t":"\u00e1rea"}]';
+
+		$GLOBALS['karmcp_test']['post_meta'][7]['_elementor_data'] = array( $escaped );
+
+		$new_id = $this->duplicate();
+		$copied = $GLOBALS['karmcp_test']['post_meta'][ $new_id ]['_elementor_data'][0];
+
+		$this->assertSame(
+			substr_count( $escaped, '\\' ),
+			substr_count( $copied, '\\' ),
+			'No backslash may be lost in the copy.'
+		);
+		$this->assertSame( strlen( $escaped ), strlen( $copied ) );
+	}
 }

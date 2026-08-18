@@ -120,6 +120,15 @@ class KarMCP_Svg_Icon_Abilities {
 					'properties' => array(
 						'attachment_id' => array( 'type' => 'integer' ),
 						'url'           => array( 'type' => 'string' ),
+						'width'         => array(
+							'type'        => 'number',
+							'description' => __( 'Intrinsic width in pixels, as the stored file now declares it. 0 when the file declares a size this tool cannot read as pixels (a percentage, a unit).', 'karmcp' ),
+						),
+						'height'        => array( 'type' => 'number' ),
+						'notice'        => array(
+							'type'        => 'string',
+							'description' => __( 'Present only when the file had to be dimensioned on the way in.', 'karmcp' ),
+						),
 						'icon_object'   => array(
 							'type'        => 'object',
 							'description' => __( 'Ready-to-use Elementor icon object. Pass this directly as the selected_icon setting.', 'karmcp' ),
@@ -336,6 +345,109 @@ class KarMCP_Svg_Icon_Abilities {
 	}
 
 	/**
+	 * Gives an SVG intrinsic dimensions when it only declares a viewBox.
+	 *
+	 * An SVG with a viewBox and no width/height is valid markup and scales
+	 * beautifully — in a context that tells it how big to be. A widget is not
+	 * that context. The browser reports naturalWidth 0 for it, Elementor's
+	 * `max-width: 100%` then resolves against a parent that is itself sized by
+	 * its content, and the element computes to 0x0: uploaded fine, sanitized
+	 * fine, present in the DOM, and invisible. Nothing errors, so the only
+	 * symptom is a hole in the page — and when the SVG is a logo wired as the
+	 * link back to the index, that hole is a navigation control that silently
+	 * stopped existing. Logos taken from a client's own site are the common
+	 * case: authoring tools drop width/height routinely.
+	 *
+	 * Pure on purpose (string in, array out, no WordPress): this is the part
+	 * worth testing, and it is testable without a media library.
+	 *
+	 * @since 1.25.1
+	 *
+	 * @param string $svg Raw SVG markup.
+	 * @return array{svg:string,injected:bool,width:float,height:float} The markup,
+	 *               rewritten only when something was injected, plus what it now
+	 *               declares. Width/height are 0.0 when not establishable.
+	 */
+	public static function ensure_intrinsic_size( string $svg ): array {
+		$unchanged = array(
+			'svg'      => $svg,
+			'injected' => false,
+			'width'    => 0.0,
+			'height'   => 0.0,
+		);
+
+		if ( ! preg_match( '/<svg\b[^>]*>/i', $svg, $tag_match, PREG_OFFSET_CAPTURE ) ) {
+			return $unchanged;
+		}
+
+		$tag    = $tag_match[0][0];
+		$offset = (int) $tag_match[0][1];
+
+		$has_width  = (bool) preg_match( '/\swidth\s*=/i', $tag );
+		$has_height = (bool) preg_match( '/\sheight\s*=/i', $tag );
+
+		// Already dimensioned. Report the values only when both are plain
+		// numbers: a percentage or a unit is the author's decision, and not ours
+		// to reinterpret as pixels.
+		if ( $has_width && $has_height ) {
+			preg_match( '/\swidth\s*=\s*(["\'])\s*([\d.]+)\s*\1/i', $tag, $w_match );
+			preg_match( '/\sheight\s*=\s*(["\'])\s*([\d.]+)\s*\1/i', $tag, $h_match );
+
+			$unchanged['width']  = isset( $w_match[2] ) ? (float) $w_match[2] : 0.0;
+			$unchanged['height'] = isset( $h_match[2] ) ? (float) $h_match[2] : 0.0;
+
+			return $unchanged;
+		}
+
+		// The viewBox is the only place the intrinsic size is recorded, so
+		// without one there is nothing to derive and the file is left alone.
+		if ( ! preg_match( '/viewBox\s*=\s*(["\'])\s*(-?[\d.]+)[\s,]+(-?[\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*\1/i', $tag, $view_box ) ) {
+			return $unchanged;
+		}
+
+		$width  = (float) $view_box[4];
+		$height = (float) $view_box[5];
+
+		if ( $width <= 0 || $height <= 0 ) {
+			return $unchanged;
+		}
+
+		// Only the missing half is written: an SVG carrying one of the two keeps
+		// whatever value its author chose for it.
+		$attrs = '';
+		if ( ! $has_width ) {
+			$attrs .= ' width="' . self::format_dimension( $width ) . '"';
+		}
+		if ( ! $has_height ) {
+			$attrs .= ' height="' . self::format_dimension( $height ) . '"';
+		}
+
+		$new_tag = '<svg' . $attrs . substr( $tag, 4 );
+
+		return array(
+			'svg'      => substr( $svg, 0, $offset ) . $new_tag . substr( $svg, $offset + strlen( $tag ) ),
+			'injected' => true,
+			'width'    => $width,
+			'height'   => $height,
+		);
+	}
+
+	/**
+	 * Formats a viewBox number as an attribute value, without a trailing `.0`.
+	 *
+	 * @since 1.25.1
+	 *
+	 * @param float $value The number.
+	 * @return string
+	 */
+	private static function format_dimension( float $value ): string {
+		if ( (float) (int) $value === $value ) {
+			return (string) (int) $value;
+		}
+		return rtrim( rtrim( number_format( $value, 4, '.', '' ), '0' ), '.' );
+	}
+
+	/**
 	 * Performs the actual sideload into the WordPress Media Library.
 	 *
 	 * @since 1.2.0
@@ -367,11 +479,64 @@ class KarMCP_Svg_Icon_Abilities {
 			);
 		}
 
+		// The sanitizers above may have rewritten the file, so dimension it only
+		// now, on the bytes that will actually be served.
+		$size = self::apply_intrinsic_size( $attachment_id );
+
 		$local_url = wp_get_attachment_url( $attachment_id );
 
 		return array(
 			'attachment_id' => $attachment_id,
 			'url'           => $local_url ? $local_url : '',
+			'width'         => $size['width'],
+			'height'        => $size['height'],
+			'size_injected' => $size['injected'],
+		);
+	}
+
+	/**
+	 * Reads an uploaded SVG back off disk, dimensions it if it needs it, and
+	 * writes it out again.
+	 *
+	 * The file-touching half of ensure_intrinsic_size(), kept separate so the
+	 * rule itself stays pure. Failure here is never fatal: an SVG that cannot be
+	 * read or written is still a perfectly good upload, it just does not get the
+	 * fix.
+	 *
+	 * @since 1.25.1
+	 *
+	 * @param int $attachment_id The attachment.
+	 * @return array{width:float,height:float,injected:bool}
+	 */
+	private static function apply_intrinsic_size( int $attachment_id ): array {
+		$none = array(
+			'width'    => 0.0,
+			'height'   => 0.0,
+			'injected' => false,
+		);
+
+		$path = get_attached_file( $attachment_id );
+		if ( ! $path || ! file_exists( $path ) ) {
+			return $none;
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$svg = file_get_contents( $path );
+		if ( ! is_string( $svg ) || '' === $svg ) {
+			return $none;
+		}
+
+		$result = self::ensure_intrinsic_size( $svg );
+
+		if ( $result['injected'] ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			file_put_contents( $path, $result['svg'] );
+		}
+
+		return array(
+			'width'    => $result['width'],
+			'height'   => $result['height'],
+			'injected' => $result['injected'],
 		);
 	}
 

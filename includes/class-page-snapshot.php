@@ -56,9 +56,10 @@ class KarMCP_Page_Snapshot {
 	 *
 	 * @param int   $post_id Target post.
 	 * @param array $args    { builder?, post?, sections?, include?, fresh?, url? }.
-	 * @return array
+	 * @return array|\WP_Error The snapshot, or a WP_Error when the post's
+	 *                          Elementor data is present but unreadable.
 	 */
-	public function build( int $post_id, array $args = array() ): array {
+	public function build( int $post_id, array $args = array() ) {
 		$sections = ( ! empty( $args['sections'] ) && is_array( $args['sections'] ) )
 			? array_values( array_intersect( self::CORE_SECTIONS, $args['sections'] ) )
 			: self::CORE_SECTIONS;
@@ -67,7 +68,19 @@ class KarMCP_Page_Snapshot {
 			: array();
 
 		$builder  = isset( $args['builder'] ) ? (string) $args['builder'] : 'elementor';
-		$elements = ( 'elementor' === $builder ) ? (array) $this->data->get_page_data( $post_id ) : array();
+		// get_page_data() returns a WP_Error when the post has Elementor data that
+		// does not parse. Casting that to an array would turn the error object into
+		// a bag of its own properties and hand it to normalize_tree() as if it were
+		// an element list, so check first and let the error out to the caller: a
+		// snapshot of a page nobody can read is not a snapshot of an empty page.
+		$elements = array();
+		if ( 'elementor' === $builder ) {
+			$elements = $this->data->get_page_data( $post_id );
+			if ( is_wp_error( $elements ) ) {
+				return $elements;
+			}
+			$elements = (array) $elements;
+		}
 
 		$norm    = self::normalize_tree( $elements );
 		$content = self::content_stats( $elements );

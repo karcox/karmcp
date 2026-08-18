@@ -579,6 +579,10 @@ class KarMCP_Layout_Abilities {
 						'success'  => array( 'type' => 'boolean' ),
 						'updated'  => array( 'type' => 'integer' ),
 						'failed'   => array( 'type' => 'array', 'items' => array( 'type' => 'object' ) ),
+						'saved'    => array(
+							'type'        => 'boolean',
+							'description' => __( 'Whether the document was written. False when no operation matched, in which case the page is left exactly as it was.', 'karmcp' ),
+						),
 						'unknown_keys' => array(
 							'type'        => 'array',
 							'description' => __( 'Per element, any setting that matched no known control. The writes still happened. Advisory only.', 'karmcp' ),
@@ -652,6 +656,23 @@ class KarMCP_Layout_Abilities {
 			}
 		}
 
+		// Nothing matched, so there is nothing to persist -- and persisting anyway
+		// is how a batch whose operations all failed used to REPLACE the page.
+		// When the document could not be read, $page_data came back empty, no
+		// element_id resolved, and this save then wrote that emptiness over a page
+		// that was full. get_page_data() now returns a WP_Error for the unreadable
+		// case and we never get this far, but the guard stays on its own merits: a
+		// save that cannot change anything has no business running, whatever put us
+		// in that state. Found on a live course build, 2026-08-18.
+		if ( 0 === $updated_count ) {
+			return array(
+				'success' => false,
+				'updated' => 0,
+				'failed'  => $failed,
+				'saved'   => false,
+			);
+		}
+
 		$result = $this->data->save_page_data( $post_id, $page_data );
 
 		if ( is_wp_error( $result ) ) {
@@ -662,6 +683,7 @@ class KarMCP_Layout_Abilities {
 			'success' => empty( $failed ),
 			'updated' => $updated_count,
 			'failed'  => $failed,
+			'saved'   => true,
 		);
 
 		if ( $unknown ) {

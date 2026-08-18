@@ -117,6 +117,35 @@ class KarMCP_Data {
 	}
 
 	/**
+	 * Whether a stored `_elementor_data` value holds something that cannot be
+	 * read back.
+	 *
+	 * The three states are worth naming, because two of them look alike and
+	 * only one is harmless:
+	 *
+	 * - empty  — no data. A blank page. Fine.
+	 * - array  — data that decodes. Fine.
+	 * - other  — bytes are there and JSON cannot read them. NOT fine, and the
+	 *            failure everything downstream used to mistake for the first
+	 *            case: a read tool reports an empty page, and a write tool
+	 *            builds on that emptiness and saves it, destroying the content
+	 *            it could not parse.
+	 *
+	 * The known cause is a copy that lost its backslashes, which is what
+	 * `duplicate-post` did before 1.25.1 — `add_post_meta()` unslashes what it
+	 * is given, and Elementor JSON is mostly escapes. Hence a predicate rather
+	 * than an inline check: this question gets asked on both the read and the
+	 * write path, and the two must never answer it differently.
+	 *
+	 * @since 1.25.1
+	 *
+	 * @param mixed $raw The raw meta value.
+	 * @return bool True when there is content that does not decode.
+	 */
+	public static function is_unreadable_elementor_data( $raw ): bool {
+		return is_string( $raw ) && '' !== $raw && ! is_array( json_decode( $raw, true ) );
+	}
+	/**
 	 * Gets the element tree for an Elementor page.
 	 *
 	 * Tries the Elementor document API first, falls back to reading raw
@@ -144,10 +173,33 @@ class KarMCP_Data {
 		$raw = get_post_meta( $post_id, '_elementor_data', true );
 
 		if ( ! empty( $raw ) && is_string( $raw ) ) {
-			$decoded = json_decode( $raw, true );
-			if ( is_array( $decoded ) ) {
-				return $decoded;
+			if ( ! self::is_unreadable_elementor_data( $raw ) ) {
+				$decoded = json_decode( $raw, true );
+				return is_array( $decoded ) ? $decoded : array();
 			}
+
+			// The meta holds something, and it is not readable. Returning an
+			// empty array here — which is what this did — makes a page whose
+			// data we cannot parse indistinguishable from a page with nothing
+			// on it, and that difference is the whole ballgame: a read tool
+			// reports "empty page" for a page that is full, and a write tool
+			// builds its edit on top of the emptiness and persists it, wiping
+			// content nobody asked it to touch. Fail loudly instead. Callers
+			// already handle WP_Error, and every write path returns it to the
+			// caller before reaching a save. Found on a live course build, 2026-08-18.
+			return new \WP_Error(
+				'unreadable_elementor_data',
+				sprintf(
+					/* translators: 1: post ID, 2: size of the meta value in bytes. */
+					__( 'The Elementor data of post %1$d is present (%2$d bytes) but does not decode as JSON. Nothing was read, and nothing should be written on top of it: a save now would replace the page with an empty one. The most likely cause is a copy that lost its backslashes; check for a `_elementor_data_karmcp_corrupt` meta on this post, which holds the last unreadable value.', 'karmcp' ),
+					$post_id,
+					strlen( $raw )
+				),
+				array(
+					'post_id' => $post_id,
+					'bytes'   => strlen( $raw ),
+				)
+			);
 		}
 
 		return array();
@@ -309,7 +361,7 @@ class KarMCP_Data {
 		// does not decode to an array, it is corrupt/unreadable. get_page_data()
 		// treats that as an empty page, so an edit built on top would overwrite
 		// the original for good — preserve it first so it stays recoverable.
-		if ( is_string( $karmcp_before_raw ) && '' !== $karmcp_before_raw && ! is_array( json_decode( $karmcp_before_raw, true ) ) ) {
+		if ( self::is_unreadable_elementor_data( $karmcp_before_raw ) ) {
 			update_post_meta( $post_id, '_elementor_data_karmcp_corrupt', wp_slash( $karmcp_before_raw ) );
 		}
 
@@ -384,21 +436,30 @@ class KarMCP_Data {
 			}
 
 			update_post_meta( $post_id, '_elementor_data', wp_slash( $json ) );
+		}
 
-			// Invalidate Elementor CSS cache so it regenerates on next page view.
-			delete_post_meta( $post_id, '_elementor_css' );
+		// Invalidate the cached CSS and the cached render on BOTH paths, not just
+		// the fallback. This used to sit inside the branch above, on the reasoning
+		// that a successful Document::save() invalidates its own caches — and this
+		// same method already documents (issues #98, #112) that a native save in a
+		// REST/CLI context can report success while dropping what it was given. A
+		// save we cannot fully trust is not a save whose cache invalidation we can
+		// trust either, and the failure is silent in the worst way: the data is
+		// right and the page still renders with the stylesheet of the version
+		// before it, so a background goes missing or a layout keeps the column
+		// widths it no longer has. Deleting a cache that was already clean costs
+		// nothing; the CSS is regenerated lazily on the next front-end view.
+		delete_post_meta( $post_id, '_elementor_css' );
 
-			// Invalidate Elementor 4.2's rendered-element cache — the update above
-			// fires the meta hook that clears it, but do it explicitly too so a
-			// re-save of identical data (which skips the hook) still refreshes a
-			// stale/empty cached render. See init() + issue #111.
-			delete_post_meta( $post_id, self::ELEMENT_CACHE_META );
+		// Elementor 4.2's rendered-element cache. The meta write above fires the
+		// hook that clears it, but a re-save of identical data skips that hook, so
+		// clear it explicitly too. See init() + issue #111.
+		delete_post_meta( $post_id, self::ELEMENT_CACHE_META );
 
-			$upload_dir = wp_get_upload_dir();
-			$css_path   = $upload_dir['basedir'] . '/elementor/css/post-' . $post_id . '.css';
-			if ( file_exists( $css_path ) ) {
-				wp_delete_file( $css_path );
-			}
+		$upload_dir = wp_get_upload_dir();
+		$css_path   = $upload_dir['basedir'] . '/elementor/css/post-' . $post_id . '.css';
+		if ( file_exists( $css_path ) ) {
+			wp_delete_file( $css_path );
 		}
 
 		// Mark the post as built with Elementor on BOTH paths, not just the

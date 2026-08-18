@@ -575,14 +575,14 @@ if ( ! function_exists( 'get_post_meta' ) ) {
 
 if ( ! function_exists( 'add_post_meta' ) ) {
 	function add_post_meta( $post_id, $key, $value, $unique = false ) {
-		$GLOBALS['karmcp_test']['post_meta'][ (int) $post_id ][ $key ][] = $value;
+		$GLOBALS['karmcp_test']['post_meta'][ (int) $post_id ][ $key ][] = wp_unslash( $value );
 		return true;
 	}
 }
 
 if ( ! function_exists( 'update_post_meta' ) ) {
 	function update_post_meta( $post_id, $key, $value, $prev = '' ) {
-		$GLOBALS['karmcp_test']['post_meta'][ (int) $post_id ][ $key ] = array( $value );
+		$GLOBALS['karmcp_test']['post_meta'][ (int) $post_id ][ $key ] = array( wp_unslash( $value ) );
 		return true;
 	}
 }
@@ -598,6 +598,30 @@ if ( ! function_exists( 'maybe_unserialize' ) ) {
 		if ( is_string( $value ) && preg_match( '/^[aOs]:\d+:/', $value ) ) {
 			$restored = @unserialize( $value ); // phpcs:ignore
 			return false === $restored ? $value : $restored;
+		}
+		return $value;
+	}
+}
+
+if ( ! function_exists( 'wp_slash' ) ) {
+	function wp_slash( $value ) {
+		if ( is_array( $value ) ) {
+			return array_map( 'wp_slash', $value );
+		}
+		if ( is_string( $value ) ) {
+			return addslashes( $value );
+		}
+		return $value;
+	}
+}
+
+if ( ! function_exists( 'wp_unslash' ) ) {
+	function wp_unslash( $value ) {
+		if ( is_array( $value ) ) {
+			return array_map( 'wp_unslash', $value );
+		}
+		if ( is_string( $value ) ) {
+			return stripslashes( $value );
 		}
 		return $value;
 	}

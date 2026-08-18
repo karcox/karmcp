@@ -2,6 +2,26 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.25.1]
+
+### Fixed
+
+- **`duplicate-post` corrupted `_elementor_data`, and a later `batch-update` then emptied the post.** One bug, three symptoms, and it destroyed content: on a live course build a duplicated popup came out at 37,529 bytes against the source's 38,632, `get-page-structure` reported `structure: []` for it, and the next `batch-update` — which failed every operation with "element not found" — left `_elementor_data` as `[]`. Three posts lost their contents this way, silently, while every response read as an ordinary failure.
+
+  The cause was one call. `copy_meta()` passed each value straight to `add_post_meta()`, and the metadata API runs `wp_unslash()` on what it is handed, because it is written for values arriving slashed from a form post. A value read out of the database is not slashed, so every backslash in it was eaten. Invisible for most meta; fatal for `_elementor_data`, which is JSON made largely of `\/`, `\uXXXX` and `\"` escapes. Measured on the affected post: the healthy value carries 1,105 backslashes, the copy carried **zero**. The rest of the plugin has always slashed this meta on the way in — the duplicator was the one path that did not.
+
+  Two more changes so a read failure can never again be mistaken for an empty page. `get_page_data()` returns a `WP_Error` (`unreadable_elementor_data`, with the byte count) when the stored data is present but does not decode, instead of the empty array that made "I cannot read this" indistinguishable from "there is nothing here" — the specific confusion that let the overwrite happen. And `batch-update` no longer saves when no operation matched: a save that cannot change anything has no business running. Its response now carries `saved` so the caller can tell a no-op from a write.
+
+- **Elementor's cached CSS was only invalidated on the fallback save path.** When `Document::save()` reported success we trusted it to invalidate its own caches — while this same method already documents that a native save in a REST/CLI context can report success and drop what it was given. The failure mode is quiet and looks like a rendering bug: the data is correct and the page still paints with the stylesheet of the version before it, so a background goes missing or a container keeps column widths it no longer has. Both paths now clear `_elementor_css`, the 4.2 element cache and the `post-<id>.css` file.
+
+- **`upload-svg-icon` accepted an SVG with no intrinsic size and let it render at 0×0.** A viewBox-only SVG — what authoring tools produce, and what a client logo downloaded from their own site usually is — reports `naturalWidth: 0`; Elementor's `max-width: 100%` then resolves against a parent sized by its content and the element measures nothing at all. No error, nothing visible, and when the logo is the link back to the index it is a navigation control that silently stopped existing. Width and height are now derived from the viewBox and written into the file, and the response reports the dimensions plus a notice when it had to do it. An SVG that already declares a size, or declares one in percentages, is left exactly as it was.
+
+- **`unknown_keys` invented typos in third-party widgets.** Introspection returns the whole control set for Elementor's own widgets, and does not for an addon that builds its controls from its own definition. On Unlimited Elements' `ucaddon_item_menu`, `border_top_width` and `border_top_height` — live on the page, visible on screen — came back flagged, with `minimum_height` offered as the correction for `border_top_height`. A wrong warning costs more than a missing one, so the report is now limited to widgets whose class lives in Elementor's namespaces. The test is positive: anywhere the origin cannot be established, the existing reporting stands.
+
+- **`get-widget-schema` sent callers down the long way round.** For a widget outside the curated catalog it suggested `full: true`, which on an addon widget returns several hundred controls and can still omit the keys the widget uses. It now names the route that actually resolves it — `find-element` on a page already using the widget, then `get-element-settings`.
+
+- **`render-page` reported a login screen as a successful render.** `scope: "full"` fetches over a loopback request, a loopback carries no session, and a site behind an access wall answers it with its sign-in form and a 200 — so the one tool meant to show what a visitor gets confirmed a page nobody had seen. The digest now raises `access_wall` (an error under `full`, a note under `content`) and carries the flag.
+
 ## [1.25.0]
 
 ### Removed

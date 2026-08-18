@@ -312,7 +312,8 @@ class KarMCP_Query_Abilities {
 			if ( null === $entry ) {
 				return array(
 					'widget_type' => $type,
-					'error'       => __( 'Not in the curated catalog. Retry with full:true for the raw control schema.', 'karmcp' ),
+					'error'       => __( 'Not in the curated catalog. For a third-party widget, reading a working instance is usually faster than the schema: find-element to locate one on a page that already uses it, then get-element-settings for the keys it actually carries. full:true returns the raw control schema, which for addon widgets runs to hundreds of controls and can still omit keys the widget uses.', 'karmcp' ),
+					'hint'        => array( 'find-element', 'get-element-settings' ),
 				);
 			}
 

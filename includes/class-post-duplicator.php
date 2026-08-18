@@ -202,10 +202,25 @@ class KarMCP_Post_Duplicator {
 				continue;
 			}
 			foreach ( (array) $values as $value ) {
-				// get_post_meta() in list mode returns serialized strings, so
-				// they go back through maybe_unserialize() or the copy stores a
-				// string where the source had an array.
-				add_post_meta( $to, $key, maybe_unserialize( $value ) );
+				// Two conversions, both required, and skipping either one
+				// corrupts the copy without saying so:
+				//
+				// - maybe_unserialize(): get_post_meta() in list mode returns
+				//   serialized strings, so without it the copy stores a string
+				//   where the source had an array.
+				// - wp_slash(): add_post_meta() runs wp_unslash() on whatever it
+				//   is handed, because the metadata API is written for values
+				//   arriving slashed from a form post. This value comes from the
+				//   database, which is not slashed, so every backslash in it is
+				//   eaten on the way back in. Invisible for most meta and fatal
+				//   for `_elementor_data`: it is JSON full of \/ and \uXXXX
+				//   escapes, and stripping those backslashes leaves a string
+				//   json_decode() cannot read. The copy then looks like an empty
+				//   page to every tool that reads it, and the first write on top
+				//   of it persists that emptiness. Measured on a real course
+				//   page: 38,632 bytes in, 37,529 out, 1,103 backslashes gone,
+				//   zero left. Found on a live course build, 2026-08-18.
+				add_post_meta( $to, $key, wp_slash( maybe_unserialize( $value ) ) );
 				++$written;
 			}
 		}

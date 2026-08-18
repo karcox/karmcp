@@ -433,4 +433,54 @@ class ContentExtractorTest extends TestCase {
 		$this->assertSame( 1, $digest['landmarks']['section'] );
 		$this->assertSame( 0, $digest['landmarks']['aside'] );
 	}
+	// ---- the access wall ---------------------------------------------------
+
+	/**
+	 * The worst result this tool can return is a confident one about a page it
+	 * never saw. `scope: full` goes over a loopback request, a loopback carries
+	 * no session, and a site behind an access wall answers it with its sign-in
+	 * form and a 200 — so "rendered fine" is exactly what a caller checking
+	 * their work would read, and it would be wrong.
+	 */
+	public function test_a_login_screen_under_full_scope_is_an_error(): void {
+		$html = '<body class="login"><form action="/wp-login.php" method="post">'
+			. '<label for="user_login">Usuario</label><input id="user_login" type="text">'
+			. '<label for="user_pass">Contraseña</label><input id="user_pass" type="password">'
+			. '<input type="submit" value="Acceder"></form></body>';
+
+		$digest = KarMCP_Content_Extractor::analyze( $html, array( 'scope' => 'full' ) );
+
+		$warning = $this->assertWarns( $digest, 'access_wall' );
+		$this->assertSame( 'error', $warning['severity'] );
+		$this->assertTrue( $digest['access_wall'] );
+	}
+
+	/**
+	 * Under `content` the markup was rendered directly, so a password field is
+	 * just what the page holds. Worth saying, not worth calling an error.
+	 */
+	public function test_a_password_field_under_content_scope_is_only_a_note(): void {
+		$html = '<form><label for="p">Clave</label><input id="p" type="password">'
+			. '<input type="submit" value="Entrar"></form>';
+
+		$digest = KarMCP_Content_Extractor::analyze( $html );
+
+		$warning = $this->assertWarns( $digest, 'access_wall' );
+		$this->assertSame( 'info', $warning['severity'] );
+	}
+
+	/**
+	 * And it has to stay quiet on the pages this tool is actually pointed at,
+	 * or it becomes one more warning nobody reads.
+	 */
+	public function test_an_ordinary_page_raises_no_access_wall(): void {
+		$html = '<main><h1>Módulo 1</h1><p>Contenido del curso.</p>'
+			. '<form><label for="q">Tu respuesta</label><input id="q" type="text">'
+			. '<input type="submit" value="Enviar"></form></main>';
+
+		$digest = KarMCP_Content_Extractor::analyze( $html, array( 'scope' => 'full' ) );
+
+		$this->assertNotContains( 'access_wall', $this->codes( $digest ) );
+		$this->assertFalse( $digest['access_wall'] );
+	}
 }

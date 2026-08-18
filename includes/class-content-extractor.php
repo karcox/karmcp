@@ -135,6 +135,7 @@ class KarMCP_Content_Extractor {
 		self::collect_images( $xpath, $digest );
 		self::collect_links( $xpath, $digest );
 		self::collect_forms( $xpath, $digest );
+		self::collect_access_wall( $xpath, $digest, $scope );
 		self::collect_landmarks( $xpath, $digest );
 		self::collect_empty_containers( $xpath, $digest );
 		self::collect_duplicate_ids( $xpath, $digest );
@@ -675,6 +676,47 @@ class KarMCP_Content_Extractor {
 	}
 
 	/**
+	 * Whether what came back is an authentication screen rather than the page.
+	 *
+	 * `scope: "full"` fetches the page over a loopback request, and a loopback
+	 * carries no session. A site behind an access wall answers it with its login
+	 * screen and a perfectly ordinary 200, so the tool reports a successful
+	 * render of a page the caller never saw — the single most misleading result
+	 * this tool can produce, because a green status code is exactly what someone
+	 * checking their work is looking for.
+	 *
+	 * A password field is the tell. No content page has one; a login, register
+	 * or reset screen always does. Reporting it on a page that genuinely hosts a
+	 * login form is a false positive worth having: the message says what was
+	 * found, and the reader knows whether they asked for that page.
+	 *
+	 * @param DOMXPath $xpath  Query engine.
+	 * @param array    $digest Digest, by reference.
+	 * @param string   $scope  Render scope, 'content' or 'full'.
+	 */
+	private static function collect_access_wall( DOMXPath $xpath, array &$digest, string $scope ): void {
+		$password  = $xpath->query( '//form//input[@type="password"]' )->length;
+		$wp_login  = $xpath->query( '//form[contains(@action, "wp-login.php")]' )->length;
+		$body_flag = $xpath->query( '//body[contains(concat(" ", normalize-space(@class), " "), " login ")]' )->length;
+
+		if ( 0 === $password && 0 === $wp_login && 0 === $body_flag ) {
+			return;
+		}
+
+		$digest['access_wall'] = true;
+
+		// An error under `full`, where it means the digest describes something
+		// other than the page that was asked for. Under `content` the markup was
+		// rendered directly, so a login form in it is just what the page holds.
+		$digest['warnings'][] = self::warning(
+			'access_wall',
+			'full' === $scope ? 'error' : 'info',
+			'full' === $scope
+				? __( 'This is a login screen, not the page. The loopback request carries no session, so a site behind an access wall answers it with its sign-in form and a 200 — nothing here describes the real page. Pass the key that site accepts through query_args, or verify the page as a signed-in visitor.', 'karmcp' )
+				: __( 'This page contains a password field, so part of what it renders is a sign-in form.', 'karmcp' )
+		);
+	}
+	/**
 	 * Landmark counts. Cheap, and the fastest way to spot a page assembled out
 	 * of bare divs.
 	 *
@@ -873,6 +915,7 @@ class KarMCP_Content_Extractor {
 				'scripts'  => 0,
 			),
 			'warnings'         => array(),
+			'access_wall'      => false,
 			'truncated'        => false,
 		);
 	}

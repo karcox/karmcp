@@ -168,6 +168,54 @@ class KarMCP_Settings_Validator {
 	}
 
 	/**
+	 * Whether this widget comes from something other than Elementor, in which
+	 * case its introspected control list cannot be treated as the whole
+	 * vocabulary.
+	 *
+	 * For Elementor's own widgets it can be: `get_full_controls()` flips
+	 * Performance::use_style_controls while it reads, so the set comes back
+	 * complete. A third-party addon is a different animal. Unlimited Elements is
+	 * the case that proved it — its `ucaddon_*` widgets build controls from the
+	 * addon's own definition, and keys demonstrably live on the page
+	 * (`border_top_width` / `border_top_height` on `ucaddon_item_menu`, the top
+	 * rule of a module card, visible on screen) are absent from the ~600
+	 * controls introspection returns. Flagging those produced a warning that was
+	 * wrong and a `did_you_mean` that was worse: `minimum_height` offered as the
+	 * correction for `border_top_height`, pushing the caller to "fix" a name
+	 * that already worked.
+	 *
+	 * The test is deliberately positive — it answers true only with the widget
+	 * object in hand and a class outside Elementor's namespaces. Anywhere the
+	 * question cannot be settled (Elementor absent, widget unregistered) it
+	 * answers false and the existing reporting stands: silence is for evidence
+	 * of a third-party widget, not for the absence of evidence.
+	 *
+	 * @since 1.25.1
+	 *
+	 * @param string $widget_type The widget type name.
+	 * @return bool
+	 */
+	private function is_third_party_widget( string $widget_type ): bool {
+		if ( ! class_exists( '\Elementor\Plugin' ) || ! isset( \Elementor\Plugin::$instance->widgets_manager ) ) {
+			return false;
+		}
+
+		$manager = \Elementor\Plugin::$instance->widgets_manager;
+		if ( ! is_object( $manager ) || ! method_exists( $manager, 'get_widget_types' ) ) {
+			return false;
+		}
+
+		$widget = $manager->get_widget_types( $widget_type );
+		if ( ! is_object( $widget ) ) {
+			return false;
+		}
+
+		$class = get_class( $widget );
+
+		return 0 !== strpos( $class, 'Elementor\\' ) && 0 !== strpos( $class, 'ElementorPro\\' );
+	}
+
+	/**
 	 * The settings keys that match no control this widget is known to have.
 	 *
 	 * Same accounting `validate()` has always done, returned instead of only
@@ -187,6 +235,12 @@ class KarMCP_Settings_Validator {
 	 * @return string[] Unaccounted-for keys, in the order given.
 	 */
 	public function unknown_keys( string $widget_type, array $settings ): array {
+		// A third-party widget's control list is not its whole vocabulary. See
+		// is_third_party_widget().
+		if ( $this->is_third_party_widget( $widget_type ) ) {
+			return array();
+		}
+
 		$schema = $this->schema_generator->generate( $widget_type );
 
 		// Can't introspect controls (unknown widget, Elementor unavailable, etc.):

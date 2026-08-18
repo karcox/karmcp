@@ -110,6 +110,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/class-site-context.php';
 		require_once KARMCP_DIR . 'includes/class-elementor-data.php';
 		require_once KARMCP_DIR . 'includes/class-element-factory.php';
+		require_once KARMCP_DIR . 'includes/class-default-stripper.php';
 		require_once KARMCP_DIR . 'includes/schemas/class-control-mapper.php';
 		require_once KARMCP_DIR . 'includes/schemas/class-schema-generator.php';
 		require_once KARMCP_DIR . 'includes/validators/class-element-validator.php';

@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.23.0]
+
+### Added
+
+- **`apply-template { strip_defaults: true }`** drops every setting the template carries that already equals its control default. That is where the weight is: a template copied from a real page keeps every control the original ever touched, and third-party widgets ship theirs pre-filled — the navigation block on one site is **5 elements and 28,499 characters**, almost all of it sample rows nobody sees, and it is applied to every module of every course and travels into the SCORM export.
+
+  **Safe by construction, not by care:** a widget resolves an absent setting to that same default, so removing a value identical to it cannot change what renders. It only stops the value being stored and shipped. Anything a person actually chose differs from the default and stays — one changed row keeps a whole repeater.
+
+  Deliberately NOT folded into `strip_media`, which was the obvious request. Media stripping is a judgement about content — *these pictures belong to the previous brand* — and it cannot tell a sample slider from one somebody wanted. This makes no judgement at all, which is exactly why it can be trusted with a repeater it has never seen.
+
+  Where the defaults cannot be read — a container, a widget this site does not have, Elementor absent — nothing is removed. An unknown default must never authorise deleting a stored value.
+
+- **`bytes_saved`** on the response, because the point is the size and it should be visible rather than inferred.
+
+### Fixed
+
+- **`media_removed: 0` claimed the template carried no imagery.** It cannot know that: `strip_media` reaches the known media keys on an element and nothing inside a third-party repeater, which is exactly where the Unsplash photographs live. A zero was read as "clean" on a block carrying twelve pictures. The description now says what the number does and does not cover, and points at `strip_defaults` for the rest.
+
 ## [1.22.1]
 
 ### Fixed

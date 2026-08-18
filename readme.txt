@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.22.1
+Stable tag: 1.23.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,6 +151,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.23.0 =
+
+* Added: **strip_defaults** on apply-template. Applying a saved block also copies every setting left at its factory value, including the sample photo galleries that third-party widgets ship pre-filled — often the great majority of a block's weight. This drops them. It cannot change how anything looks: a widget falls back to the same default when the setting is absent.
+* Fixed: the "media removed" count reported zero on blocks that clearly carried images, because it only ever looked at an element's own media settings and not inside third-party repeaters. It now says so instead of implying the block was clean.
 
 = 1.22.1 =
 

@@ -43,6 +43,44 @@ class KarMCP_Template_Abilities {
 	}
 
 	/**
+	 * The registered controls for one element, for the default stripper.
+	 *
+	 * Only widgets are answered. Containers and sections resolve their defaults
+	 * through a different path, and returning an empty list for them makes the
+	 * stripper leave them untouched — which is the safe direction: an unknown
+	 * default must never authorise deleting a stored value.
+	 *
+	 * Results are memoised per widget type. A template of 40 widgets is usually
+	 * five types repeated, and reading a widget's full control set is not free.
+	 *
+	 * @since 1.23.0
+	 *
+	 * @param string $el_type     The element type.
+	 * @param string $widget_type The widget type, for widgets.
+	 * @return array Control id => definition, or empty when unknown.
+	 */
+	public function controls_for_element( string $el_type, string $widget_type ): array {
+		static $cache = array();
+
+		if ( 'widget' !== $el_type || '' === $widget_type ) {
+			return array();
+		}
+
+		if ( isset( $cache[ $widget_type ] ) ) {
+			return $cache[ $widget_type ];
+		}
+
+		if ( ! class_exists( 'KarMCP_Schema_Generator' ) || ! class_exists( '\Elementor\Plugin' ) ) {
+			return array();
+		}
+
+		$controls = ( new KarMCP_Schema_Generator() )->controls( $widget_type );
+		$cache[ $widget_type ] = is_wp_error( $controls ) ? array() : (array) $controls;
+
+		return $cache[ $widget_type ];
+	}
+
+	/**
 	 * Returns the ability names registered by this class.
 	 *
 	 * @since 1.0.0
@@ -263,6 +301,10 @@ class KarMCP_Template_Abilities {
 							'type'        => 'integer',
 							'description' => __( 'Insert position. -1 = append.', 'karmcp' ),
 						),
+						'strip_defaults' => array(
+							'type'        => 'boolean',
+							'description' => __( 'Drop every setting the template carries that is already the control default. Safe by construction: a widget resolves an absent setting to that same default, so the result renders identically — it only stops the value being stored and shipped. This is where the weight is. A template copied from a real page carries every control the original ever touched, and third-party widgets ship their sliders pre-filled: the navigation block on one site is 5 elements and 28,499 characters, almost all of it sample rows nobody sees. Needs Elementor to read the defaults from; without it, nothing is removed. Off by default.', 'karmcp' ),
+						),
 						'strip_media' => array(
 							'type'        => 'boolean',
 							'description' => __( 'Insert the block without the template\'s own imagery: background images and their responsive overrides, background overlays, widget images and image filters are dropped from every element copied. Use it when the block is a layout you want and the pictures are the previous brand\'s — CSS cannot override an element\'s own background-image, so otherwise they have to be cleared one element at a time. Off by default; the copy is verbatim as before. Classic elements only: atomic (v4) elements keep their background in the typed styles map, which this does not touch.', 'karmcp' ),
@@ -277,7 +319,15 @@ class KarMCP_Template_Abilities {
 						'elements_added' => array( 'type' => 'integer' ),
 						'media_removed'  => array(
 							'type'        => 'integer',
-							'description' => __( 'With strip_media, how many media settings were actually removed. Zero means the template carried none.', 'karmcp' ),
+							'description' => __( 'With strip_media, how many media settings were removed. A zero does NOT mean the template carries no imagery: this only reaches the known media keys on an element, so pictures held inside a third-party repeater are not counted and not removed — use strip_defaults for those.', 'karmcp' ),
+						),
+						'defaults_removed' => array(
+							'type'        => 'integer',
+							'description' => __( 'With strip_defaults, how many settings were dropped for being identical to their control default.', 'karmcp' ),
+						),
+						'bytes_saved'    => array(
+							'type'        => 'integer',
+							'description' => __( 'How much smaller the inserted block is after stripping, in characters of stored data. This is what leaves the page, and what a SCORM export stops carrying.', 'karmcp' ),
 						),
 					),
 				),
@@ -334,10 +384,23 @@ class KarMCP_Template_Abilities {
 		$count         = $this->data->count_elements( $template_data );
 
 		// Optionally drop the source template's own imagery before inserting.
-		$media_removed = 0;
+		$media_removed    = 0;
+		$defaults_removed = 0;
+		$before_bytes     = strlen( (string) wp_json_encode( $template_data ) );
+
 		if ( ! empty( $input['strip_media'] ) ) {
 			$template_data = $this->data->strip_media( $template_data, $media_removed );
 		}
+
+		if ( ! empty( $input['strip_defaults'] ) ) {
+			$template_data = KarMCP_Default_Stripper::strip(
+				$template_data,
+				array( $this, 'controls_for_element' ),
+				$defaults_removed
+			);
+		}
+
+		$bytes_saved = $before_bytes - strlen( (string) wp_json_encode( $template_data ) );
 
 		// Insert template elements.
 		if ( ! empty( $parent_id ) ) {
@@ -378,6 +441,12 @@ class KarMCP_Template_Abilities {
 		);
 		if ( ! empty( $input['strip_media'] ) ) {
 			$out['media_removed'] = $media_removed;
+		}
+		if ( ! empty( $input['strip_defaults'] ) ) {
+			$out['defaults_removed'] = $defaults_removed;
+		}
+		if ( $bytes_saved > 0 ) {
+			$out['bytes_saved'] = $bytes_saved;
 		}
 		return $out;
 	}

@@ -2,7 +2,7 @@
 /**
  * Prompts tab view for the KarMCP admin settings page.
  *
- * Shows the 5 bundled sample prompts.
+ * Shows the bundled sample prompts.
  *
  * @package KarMCP
  * @since   1.3.0
@@ -35,6 +35,11 @@ $karmcp_prompt_meta = array(
 		'title'       => __( 'Hair Salon', 'karmcp' ),
 		'industry'    => __( 'Lifestyle', 'karmcp' ),
 		'description' => __( 'Stylish salon page with services menu, stylist profiles, gallery, and online booking.', 'karmcp' ),
+	),
+	'LOCAL_NEWS_SITE'         => array(
+		'title'       => __( 'Local News Site', 'karmcp' ),
+		'industry'    => __( 'Media', 'karmcp' ),
+		'description' => __( 'Hyperlocal news article as a standalone page, with Google News structured data and image SEO built in.', 'karmcp' ),
 	),
 	'CAR_WASH'                => array(
 		'title'       => __( 'Car Wash', 'karmcp' ),

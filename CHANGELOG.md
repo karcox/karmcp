@@ -2,6 +2,16 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.25.3]
+
+### Fixed
+
+- **Both Antigravity recipes on the Connection tab produced a config that could not connect.** The OAuth recipe told the user to run `npx mcp-remote <endpoint>`. Antigravity's MCP client sends a `server/discover` request of its own *before* `initialize`; a stdio server answers "method not found" and the client moves on, but through mcp-remote that request becomes an HTTP POST with no `Mcp-Session-Id` — mcp-remote's http-first probe had initialized a *separate* test transport, so the real one never got a session — and the WordPress MCP adapter refuses it with HTTP 400 (`Missing Mcp-Session-Id header`, as the spec says it should). The client transport raises instead of returning a JSON-RPC error, mcp-remote logs it and forwards nothing, and Antigravity waits until `context deadline exceeded`. Reproduced verbatim on a live site.
+
+  Antigravity does not need the proxy: it speaks Streamable HTTP natively and does OAuth by Dynamic Client Registration, which KarMCP already publishes. The OAuth recipe now emits `{ "serverUrl": "<endpoint>" }` and nothing else — the client registers itself and opens the browser to authorize. The application-password recipe was wrong in a second way: it emitted the Claude/Cursor shape (`type`, `url`, `headers`), and Antigravity's `mcp_config.json` rejects `url` outright — its docs say only `serverUrl` is accepted. That variant now emits `serverUrl` + `headers`. Other clients keep their formats.
+
+- **"Generate" on the Connection tab reported every failure as "Could not create an application password."** The PHP handler always sends a specific message, so that generic text only ever meant one of two things the JavaScript was throwing away: admin-ajax answered `-1` (the page's nonce had expired — the tab had been open too long, or the user had signed in again elsewhere) or `0` (the handler never ran). The script now reads the HTTP status and the raw body and says which it was, and what to do: reload the page, check the plugin is active and nothing blocks `admin-ajax.php`, or look at the fatal log for a 4xx/5xx.
+
 ## [1.25.2]
 
 ### Fixed

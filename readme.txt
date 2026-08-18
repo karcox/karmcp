@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.25.2
+Stable tag: 1.25.3
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,6 +151,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.25.3 =
+
+* Fixed: **the Antigravity recipes on the Connection tab could not connect.** The OAuth one launched `npx mcp-remote`, but Antigravity sends its own `server/discover` before `initialize`, and through the proxy that becomes a session-less POST the MCP adapter refuses with HTTP 400 - the client waits until it times out. Antigravity speaks Streamable HTTP natively, so both recipes now emit its own `mcp_config.json` shape (`serverUrl`, plus `headers` for the application-password variant); with OAuth it registers itself and opens the browser to authorize.
+* Fixed: the "Generate" button on the Connection tab said only "Could not create an application password." whichever way it failed. It now says whether the page's security token expired (reload and retry), whether WordPress never ran the handler, or which HTTP status came back.
 
 = 1.25.0 =
 

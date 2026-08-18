@@ -3201,7 +3201,11 @@ class KarMCP_Admin {
 				array( 'path' => '~/.gemini/antigravity/mcp_config.json', 'label' => __( 'macOS / Linux', 'karmcp' ) ),
 				array( 'path' => '%USERPROFILE%\\.gemini\\antigravity\\mcp_config.json', 'label' => __( 'Windows', 'karmcp' ) ),
 			),
-			'template' => "{\n    \"mcpServers\": {\n        \"%NAME%\": {\n            \"command\": \"npx\",\n            \"args\": [\n                \"-y\",\n                \"mcp-remote\",\n                \"%ENDPOINT%\"\n            ]\n        }\n    }\n}",
+			// Native Streamable HTTP + OAuth: Antigravity registers itself via Dynamic
+			// Client Registration and opens the browser to authorize. Never mcp-remote:
+			// Antigravity sends its own `server/discover` before `initialize`, which the
+			// proxy turns into a session-less POST the adapter rejects with 400 (#46).
+			'template' => "{\n    \"mcpServers\": {\n        \"%NAME%\": {\n            \"serverUrl\": \"%ENDPOINT%\"\n        }\n    }\n}",
 		);
 		$oauth_mcp_remote = array(
 			'type' => 'cmd',
@@ -3295,7 +3299,7 @@ class KarMCP_Admin {
 				'label'   => __( 'Antigravity', 'karmcp' ),
 				'icon'    => 'editor-code',
 				'image'   => 'antigravity.png',
-				'methods' => array( 'bundle' => false, 'cli' => null, 'ai_prompt' => false, 'json' => array( 'http' ) ),
+				'methods' => array( 'bundle' => false, 'cli' => null, 'ai_prompt' => false, 'json' => array( 'antigravity-http' ) ),
 				'oauth'   => $oauth_antigravity,
 			),
 			array(

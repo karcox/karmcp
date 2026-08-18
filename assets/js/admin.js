@@ -380,13 +380,35 @@
 				credentials: 'same-origin',
 				body: payload
 			} ).then( function ( response ) {
-				return response.json();
-			} ).then( function ( result ) {
+				// Keep the HTTP status: a 403 with body "-1" (expired nonce) and a
+				// 500 with an HTML error page both need a different message.
+				return response.text().then( function ( text ) {
+					var parsed = null;
+					try {
+						parsed = JSON.parse( text );
+					} catch ( e ) {
+						parsed = null;
+					}
+					return { status: response.status, body: parsed, raw: text };
+				} );
+			} ).then( function ( reply ) {
 				generateBtn.disabled = false;
 				generateBtn.textContent = origLabel;
 
+				var result = reply.body;
 				if ( ! result || ! result.success || ! result.data || ! result.data.password ) {
-					var message = ( result && result.data && result.data.message ) ? result.data.message : 'Could not create an application password.';
+					var message;
+					if ( result && result.data && result.data.message ) {
+						message = result.data.message;
+					} else if ( -1 === result || '-1' === reply.raw.trim() ) {
+						message = 'Your session on this page has expired (security token rejected). Reload the page and click Generate again.';
+					} else if ( 0 === result || '0' === reply.raw.trim() ) {
+						message = 'WordPress did not run the KarMCP handler (admin-ajax.php returned 0). Check that KarMCP is active and that no security plugin or server rule blocks admin-ajax.php.';
+					} else if ( reply.status >= 400 ) {
+						message = 'Could not create an application password (HTTP ' + reply.status + '). Check the PHP error log or the KarMCP fatal log for the failing request.';
+					} else {
+						message = 'Could not create an application password.';
+					}
 					setCredStatus( message, true );
 					return;
 				}
@@ -1113,6 +1135,15 @@
 		var http = { type: 'http', url: c.endpoint, headers: { Authorization: 'Basic ' + c.b64 } };
 		var servers = {};
 		if ( variant === 'http' ) { servers[ key ] = http; return { mcpServers: servers }; }
+		// Antigravity: native Streamable HTTP, but its mcp_config.json wants
+		// `serverUrl` (it rejects `url` / `httpUrl`) and no `type` key. Never
+		// route it through mcp-remote: Antigravity sends its own `server/discover`
+		// before `initialize`, which the proxy turns into a session-less HTTP
+		// POST the WordPress adapter refuses with 400 (GitHub #46).
+		if ( variant === 'antigravity-http' ) {
+			servers[ key ] = { serverUrl: c.endpoint, headers: { Authorization: 'Basic ' + c.b64 } };
+			return { mcpServers: servers };
+		}
 		if ( variant === 'remote' ) {
 			servers[ key ] = { command: 'npx', args: [ '-y', 'mcp-remote', c.endpoint, '--header', 'Authorization: Basic ' + c.b64 ] };
 			return { mcpServers: servers };
@@ -1325,7 +1356,7 @@
 			else if ( variant === 'openclaw-http' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (openclaw.json)', karmcpOpenclawConfig() ); }
 			else if ( variant === 'hermes-http' ) { html += karmcpCopyBlock( 'Manual config — direct HTTP (config.yaml)', karmcpHermesConfig() ); }
 			else {
-				var label = variant === 'http' ? 'Manual config — direct HTTP'
+				var label = ( variant === 'http' || variant === 'antigravity-http' ) ? 'Manual config — direct HTTP'
 					: 'Manual config — npx mcp-remote';
 				html += karmcpCopyBlock( label, JSON.stringify( karmcpJsonConfig( variant ), null, 4 ) );
 			}

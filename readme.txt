@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.20.3
+Stable tag: 1.21.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,6 +151,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.21.0 =
+
+* Removed: the dark bar across the top of the panel. Everything it held moved into the side rail — the KarMCP mark and version at the top, and MCP Log, History, Changelog, Get Help, notifications and cloud status at the bottom — so nothing became harder to reach.
+* Removed: the "KarMCP found N critical security issues" notice that appeared on every screen of the WordPress admin. The Security tab already shows the same counts and when the site was last checked. Scanning is unchanged.
 
 = 1.20.3 =
 

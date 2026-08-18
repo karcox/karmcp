@@ -50,7 +50,6 @@ class KarMCP_Security_Monitor {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', self::CRON_HOOK );
 		}
 
-		add_action( 'admin_notices', array( __CLASS__, 'critical_notice' ) );
 
 		// Keep the fatal-handler drop-in in step with the plugin. It is a copy in
 		// wp-content, so a plugin update leaves the old one running — which meant
@@ -202,47 +201,18 @@ class KarMCP_Security_Monitor {
 		}
 	}
 
-	/**
-	 * An admin notice when the last scan found something critical, or when it
-	 * could not run. The second half matters as much as the first.
+	/*
+	 * There used to be a critical_notice() here, hooked to `admin_notices`, that
+	 * printed a red banner on every screen in wp-admin whenever the last scan
+	 * had found something critical.
 	 *
-	 * @since 1.5.0
-	 * @return void
+	 * Removed on request, and it loses nothing: the Security tab already leads
+	 * with the same two numbers and how old the scan is ("3 critical, 5
+	 * warnings. Last checked 2 hours ago."), which is where someone acting on
+	 * them is going anyway. A site-wide banner that cannot be dismissed is also
+	 * the kind that gets read once and then stops being read at all.
+	 *
+	 * The findings themselves are untouched: the scan still runs, still scores,
+	 * and still records what it found.
 	 */
-	public static function critical_notice(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-
-		$stored = self::last();
-		$fresh  = self::freshness( $stored, time() );
-		$url    = admin_url( 'admin.php?page=' . KarMCP_Admin::PAGE_SLUG . '-security' );
-
-		if ( 'failed' === $fresh['state'] ) {
-			printf(
-				'<div class="notice notice-warning"><p><strong>%s</strong> %s <a href="%s">%s</a></p></div>',
-				esc_html__( 'KarMCP security scan failed.', 'karmcp' ),
-				esc_html__( 'The site has not been checked — this is not the same as being clean.', 'karmcp' ),
-				esc_url( $url ),
-				esc_html__( 'Open Security', 'karmcp' )
-			);
-			return;
-		}
-
-		$critical = (int) ( $stored['summary']['counts']['critical'] ?? 0 );
-		if ( $critical > 0 ) {
-			printf(
-				'<div class="notice notice-error"><p><strong>%s</strong> <a href="%s">%s</a></p></div>',
-				esc_html(
-					sprintf(
-						/* translators: %d: number of critical findings. */
-						_n( 'KarMCP found %d critical security issue.', 'KarMCP found %d critical security issues.', $critical, 'karmcp' ),
-						$critical
-					)
-				),
-				esc_url( $url ),
-				esc_html__( 'Review them', 'karmcp' )
-			);
-		}
-	}
 }

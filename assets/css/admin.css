@@ -3067,31 +3067,36 @@ body.karmcp-modal-open { overflow: hidden; }
 /* Full-width admin header (app bar + tab nav + Help dropdown) ---------------- */
 .karmcp-admin > h1 { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 
-/* Brand left, actions right. The sections are NOT here — they are in the rail
-   below, so this bar stays a fixed, uncrowded strip no matter how many
-   sections the plugin grows.
+/* The dark top bar is gone. Everything it carried moved into the rail: the
+   mark at its head, and the log/history/changelog/help/notifications/cloud
+   controls at its foot — none of those live anywhere else, and three of them
+   are pages deliberately kept out of both the section list and the WordPress
+   menu, so removing the bar without moving them would have made them
+   URL-only.
 
-   It is the only inverted surface in the panel: the mark reversed out of
-   near-black, everything below it on white. */
-.karmcp-appbar { display: flex; align-items: stretch; gap: var(--mcp-space-4); flex-wrap: nowrap; background: var(--mcp-surface-inverse); border-bottom: 1px solid var(--mcp-surface-inverse); padding: 0 var(--mcp-space-5); margin: 0 -20px 0 -22px; border-top: none; }
-.karmcp-appbar-brand { display: flex; align-items: center; gap: var(--mcp-space-3); min-width: 0; flex: 0 0 auto; padding: var(--mcp-space-3) 0; }
-.karmcp-appbar-logo { width: 28px; height: 28px; border-radius: var(--mcp-radius); object-fit: contain; }
-.karmcp-appbar-mark { display: inline-flex; align-items: center; color: var(--mcp-white); flex: none; }
-.karmcp-appbar-mark svg { display: block; }
-.karmcp-appbar-title { font-size: var(--mcp-text-lg); font-weight: 600; color: var(--mcp-white); letter-spacing: -0.01em; }
-.karmcp-appbar-version { font-size: var(--mcp-text-xs); font-weight: 600; color: var(--mcp-gray-300); background: transparent; border: 1px solid var(--mcp-gray-700); border-radius: var(--mcp-radius-sm); padding: 1px 6px; font-variant-numeric: tabular-nums; }
-.karmcp-appbar-actions { display: flex; align-items: center; gap: var(--mcp-space-1); flex: 0 0 auto; margin-left: auto; }
+   The panel now has no inverted surface at all, which is the point: it sits
+   inside wp-admin instead of pretending to be its own application. */
+.karmcp-rail-brand { display: flex; align-items: center; gap: var(--mcp-space-2); min-width: 0; padding: var(--mcp-space-3); border-bottom: 1px solid var(--mcp-border); }
+.karmcp-appbar-logo { width: 24px; height: 24px; border-radius: var(--mcp-radius); object-fit: contain; }
+.karmcp-appbar-mark { display: inline-flex; align-items: center; color: var(--mcp-primary); flex: none; }
+.karmcp-appbar-mark svg { display: block; width: 22px; height: 22px; }
+.karmcp-appbar-title { font-size: var(--mcp-text-md); font-weight: 600; color: var(--mcp-text); letter-spacing: -0.01em; }
+.karmcp-appbar-version { font-size: var(--mcp-text-xs); font-weight: 600; color: var(--mcp-text-muted); background: transparent; border: 1px solid var(--mcp-border); border-radius: var(--mcp-radius-sm); padding: 1px 5px; font-variant-numeric: tabular-nums; margin-left: auto; }
+
+/* Secondary destinations, at the foot of the rail above the collapse control.
+   Quieter than the section pills on purpose: these are things you visit, not
+   where you work. */
+.karmcp-rail-tools { display: flex; flex-direction: column; align-items: stretch; gap: 1px; padding: var(--mcp-space-2); border-top: 1px solid var(--mcp-border); }
 .karmcp-appbar-btn-label { display: inline; }
 
 .karmcp-help-menu { position: relative; }
-/* App-bar controls all sit on the inverted surface: transparent by default,
-   lifting to a translucent white on hover so they never look like white
-   buttons pasted onto a dark bar. */
-.karmcp-help-toggle { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--mcp-space-3); box-sizing: border-box; background: transparent; border: 1px solid transparent; border-radius: var(--mcp-radius); font-size: var(--mcp-text-base); font-weight: 500; color: var(--mcp-gray-300); text-decoration: none; cursor: pointer; transition: background var(--mcp-transition), color var(--mcp-transition); }
-.karmcp-help-toggle:hover { background: rgba(255, 255, 255, 0.1); border-color: transparent; color: var(--mcp-white); }
+/* Rail-foot controls, on the light surface the rest of the rail uses. */
+.karmcp-help-toggle { display: flex; width: 100%; align-items: center; gap: var(--mcp-space-3); padding: 6px var(--mcp-space-3); box-sizing: border-box; background: transparent; border: 1px solid transparent; border-radius: var(--mcp-radius); font-size: var(--mcp-text-sm); font-weight: 500; color: var(--mcp-text-muted); text-align: left; text-decoration: none; cursor: pointer; transition: background var(--mcp-transition), color var(--mcp-transition); }
+.karmcp-help-toggle:hover { background: var(--mcp-surface); border-color: transparent; color: var(--mcp-text); }
 .karmcp-help-toggle .dashicons { font-size: 16px; width: 16px; height: 16px; }
 .karmcp-help-caret { font-size: 16px; width: 16px; height: 16px; line-height: 1; color: inherit; }
-.karmcp-help-toggle:hover .karmcp-help-caret { color: var(--mcp-white); }
+.karmcp-help-toggle:hover .karmcp-help-caret { color: var(--mcp-text); }
+.karmcp-help-caret { margin-left: auto; }
 .karmcp-help-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 6px); min-width: 210px; background: var(--mcp-white); border: 1px solid var(--mcp-gray-200); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.14); padding: 6px; z-index: 1000; }
 .karmcp-help-dropdown::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; }
 .karmcp-help-menu:hover .karmcp-help-dropdown, .karmcp-help-menu:focus-within .karmcp-help-dropdown { display: block; }
@@ -3102,11 +3107,11 @@ body.karmcp-modal-open { overflow: hidden; }
 
 /* Notifications bell + dropdown (Cloud-fed) — mirrors .karmcp-help-menu. */
 .karmcp-notif { position: relative; }
-.karmcp-notif-toggle { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; box-sizing: border-box; background: transparent; border: 1px solid transparent; border-radius: var(--mcp-radius); cursor: pointer; transition: background var(--mcp-transition); }
-.karmcp-notif-toggle:hover { background: rgba(255, 255, 255, 0.1); border-color: transparent; }
-.karmcp-notif-toggle .dashicons { font-size: 18px; width: 18px; height: 18px; color: var(--mcp-gray-300); }
-.karmcp-notif-toggle:hover .dashicons { color: var(--mcp-white); }
-.karmcp-notif-badge { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center; background: var(--mcp-danger); color: var(--mcp-white); border-radius: 9px; font-size: 10px; line-height: 1; font-weight: 700; }
+.karmcp-notif-toggle { position: relative; display: flex; width: 100%; align-items: center; gap: var(--mcp-space-3); padding: 6px var(--mcp-space-3); box-sizing: border-box; background: transparent; border: 1px solid transparent; border-radius: var(--mcp-radius); cursor: pointer; transition: background var(--mcp-transition); }
+.karmcp-notif-toggle:hover { background: var(--mcp-surface); border-color: transparent; }
+.karmcp-notif-toggle .dashicons { font-size: 16px; width: 16px; height: 16px; color: var(--mcp-text-muted); flex: none; }
+.karmcp-notif-toggle:hover .dashicons { color: var(--mcp-text); }
+.karmcp-notif-badge { position: static; margin-left: auto; min-width: 16px; height: 16px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center; background: var(--mcp-danger); color: var(--mcp-white); border-radius: 9px; font-size: 10px; line-height: 1; font-weight: 700; }
 .karmcp-notif-badge.is-empty { display: none; }
 /* Notifications slide-in drawer (right side) + overlay. */
 .karmcp-notif-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); opacity: 0; visibility: hidden; transition: opacity .2s ease; z-index: 100000; }
@@ -3135,11 +3140,11 @@ body.karmcp-modal-open { overflow: hidden; }
 .karmcp-notif-item--success .karmcp-notif-item-icon { color: var(--mcp-success); }
 
 /* Cloud / avatar button. */
-.karmcp-cloud-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-sizing: border-box; background: transparent; border: 1px solid transparent; border-radius: var(--mcp-radius); text-decoration: none; transition: background var(--mcp-transition); }
-.karmcp-cloud-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: transparent; }
-.karmcp-cloud-icon { display: block; font-size: 20px; width: 20px; height: 20px; color: var(--mcp-gray-300); }
-.karmcp-cloud-btn:hover .karmcp-cloud-icon { color: var(--mcp-white); }
-.karmcp-cloud-dot { position: absolute; right: 2px; bottom: 2px; width: 8px; height: 8px; border-radius: 50%; background: var(--mcp-gray-500); border: 2px solid var(--mcp-surface-inverse); }
+.karmcp-cloud-btn { position: relative; display: flex; width: 100%; align-items: center; gap: var(--mcp-space-3); padding: 6px var(--mcp-space-3); box-sizing: border-box; background: transparent; border: 1px solid transparent; border-radius: var(--mcp-radius); text-decoration: none; transition: background var(--mcp-transition); }
+.karmcp-cloud-btn:hover { background: var(--mcp-surface); border-color: transparent; }
+.karmcp-cloud-icon { display: block; font-size: 16px; width: 16px; height: 16px; color: var(--mcp-text-muted); flex: none; }
+.karmcp-cloud-btn:hover .karmcp-cloud-icon { color: var(--mcp-text); }
+.karmcp-cloud-dot { position: static; margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--mcp-gray-400); border: none; flex: none; }
 .karmcp-cloud-dot.is-connected { background: var(--mcp-success); }
 
 .karmcp-appbar-upgrade { display: inline-flex; align-items: center; gap: 6px; padding: 5px var(--mcp-space-3); background: var(--mcp-primary); color: var(--mcp-white); border: 1px solid var(--mcp-primary); border-radius: var(--mcp-radius); font-size: var(--mcp-text-base); font-weight: 600; text-decoration: none; }
@@ -3254,9 +3259,11 @@ body.karmcp-modal-open { overflow: hidden; }
 .karmcp-appnav-toggle:focus-visible { outline: none; box-shadow: var(--mcp-focus); }
 .karmcp-appnav-toggle-icon { font-size: 18px; width: 18px; height: 18px; flex: none; transition: transform var(--mcp-transition); }
 .karmcp-shell.is-collapsed .karmcp-appnav-toggle-icon { transform: rotate(180deg); }
-.karmcp-appbar-changelog { display: inline-flex; align-items: center; gap: 6px; padding: 0 var(--mcp-space-3); height: 32px; background: transparent; border: 1px solid transparent; border-radius: var(--mcp-radius); font-size: var(--mcp-text-base); font-weight: 500; color: var(--mcp-gray-300); text-decoration: none; transition: background var(--mcp-transition), color var(--mcp-transition); }
-.karmcp-appbar-changelog:hover, .karmcp-appbar-changelog.is-active { background: rgba(255, 255, 255, 0.1); border-color: transparent; color: var(--mcp-white); }
-.karmcp-appbar-changelog .dashicons { font-size: 16px; width: 16px; height: 16px; }
+.karmcp-rail-tool { display: flex; align-items: center; gap: var(--mcp-space-3); padding: 6px var(--mcp-space-3); background: transparent; border: 1px solid transparent; border-radius: var(--mcp-radius); font-size: var(--mcp-text-sm); font-weight: 500; color: var(--mcp-text-muted); text-decoration: none; transition: background var(--mcp-transition), color var(--mcp-transition); }
+.karmcp-rail-tool:hover { background: var(--mcp-surface); color: var(--mcp-text); }
+.karmcp-rail-tool.is-active { background: var(--mcp-surface); color: var(--mcp-text); font-weight: 600; }
+.karmcp-rail-tool:focus-visible { outline: none; box-shadow: var(--mcp-focus); }
+.karmcp-rail-tool .dashicons { font-size: 16px; width: 16px; height: 16px; flex: none; }
 /* =========================================================================
  * Focus reset (utility) — remove the default WP/browser outline + box-shadow
  * that flashes on click for our themed anchors/buttons; show a subtle indigo
@@ -3285,23 +3292,29 @@ body.karmcp-modal-open { overflow: hidden; }
 .karmcp-stats { scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
 .karmcp-stats::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
-/* Narrowing order, and it is deliberate: the rail is the navigation, so the
-   app bar gives up room first — labels off the action buttons, then the
-   version pill. Below the WordPress admin breakpoint the rail collapses to
-   icons on its own, whatever the stored preference. */
-@media screen and (max-width: 1400px) {
-	.karmcp-appbar-btn-label { display: none; }
-	.karmcp-appbar-changelog { padding: 0 var(--mcp-space-2); }
-}
-
-@media screen and (max-width: 1100px) {
-	.karmcp-appbar-version { display: none; }
-	.karmcp-help-toggle { font-size: 0; gap: 0; padding: 0 var(--mcp-space-2); }
-	.karmcp-help-toggle .dashicons { font-size: 16px; }
-}
-
+/* With the bar gone there is nothing left to narrow at the top: the rail is
+   fixed-width and the content takes the rest. The only step left is the rail
+   collapsing to icons below the WordPress admin breakpoint, whatever the
+   stored preference says — and everything in it has to follow, including the
+   secondary tools now living at its foot. */
 @media screen and (max-width: 782px) {
 	.karmcp-shell { --karmcp-rail: 46px; }
+	.karmcp-shell .karmcp-appbar-title,
+	.karmcp-shell .karmcp-appbar-version,
+	.karmcp-shell .karmcp-appbar-btn-label,
+	.karmcp-shell .karmcp-help-caret { display: none; }
+	.karmcp-shell .karmcp-rail-brand { justify-content: center; padding-left: 0; padding-right: 0; }
+	/* The tools keep their icon and lose the words, like the sections above. */
+	.karmcp-shell .karmcp-rail-tool,
+	.karmcp-shell .karmcp-help-toggle,
+	.karmcp-shell .karmcp-notif-toggle,
+	.karmcp-shell .karmcp-cloud-btn { justify-content: center; gap: 0; padding-left: 0; padding-right: 0; font-size: 0; }
+	.karmcp-shell .karmcp-rail-tool .dashicons,
+	.karmcp-shell .karmcp-help-toggle .dashicons,
+	.karmcp-shell .karmcp-notif-toggle .dashicons,
+	.karmcp-shell .karmcp-cloud-btn .karmcp-cloud-icon { font-size: 16px; }
+	.karmcp-shell .karmcp-notif-badge,
+	.karmcp-shell .karmcp-cloud-dot { position: absolute; top: 2px; right: 4px; margin: 0; }
 	.karmcp-shell .karmcp-appnav-label {
 		position: absolute;
 		width: 1px;
@@ -3316,13 +3329,9 @@ body.karmcp-modal-open { overflow: hidden; }
 	.karmcp-appnav-toggle { display: none; }
 }
 
-/* Compact header title on small screens: show the short form instead of the
-   full name wrapping to multiple lines. */
-.karmcp-appbar-title--short { display: none; }
-@media screen and (max-width: 782px) {
-	.karmcp-appbar-title--full { display: none; }
-	.karmcp-appbar-title--short { display: inline; white-space: nowrap; }
-}
+/* The long/short title pair went with the bar: the rail shows one name and
+   hides it outright when collapsed, so there was nothing left for the second
+   span to do but duplicate the first. */
 
 /* =========================================================================
  * Dashboard tab

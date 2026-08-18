@@ -3329,103 +3329,6 @@ class KarMCP_Admin {
 			?>
 
 			<!-- App bar -->
-			<div class="karmcp-appbar">
-				<div class="karmcp-appbar-brand">
-					<span class="karmcp-appbar-mark" aria-hidden="true">
-						<svg viewBox="0 0 24 24" width="24" height="24" focusable="false"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M5.5 3.5v17"/><path d="M5.7 12.6 14.6 5.4"/><path d="M5.7 11.4 14.6 18.6"/></g><circle cx="17.6" cy="4.2" r="2.7" fill="currentColor"/><circle cx="17.6" cy="19.8" r="2.7" fill="currentColor"/></svg>
-					</span>
-					<span class="karmcp-appbar-title karmcp-appbar-title--full"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
-					<span class="karmcp-appbar-title karmcp-appbar-title--short"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
-					<span class="karmcp-appbar-version">v<?php echo esc_html( KARMCP_VERSION ); ?></span>
-				</div>
-				<?php
-				/*
-				 * The three log/history links carry their label in a span so the CSS
-				 * can drop it on narrow screens: with the sections now sharing the
-				 * row, three text buttons are what runs out of space first. The
-				 * title attribute keeps them identifiable once the text is gone.
-				 */
-				?>
-				<div class="karmcp-appbar-actions">
-					<a class="karmcp-appbar-changelog<?php echo 'mcp-log' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-mcp-log' ) ); ?>" title="<?php esc_attr_e( 'MCP Log', 'karmcp' ); ?>">
-						<span class="dashicons dashicons-list-view" aria-hidden="true"></span>
-						<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'MCP Log', 'karmcp' ); ?></span>
-					</a>
-					<a class="karmcp-appbar-changelog<?php echo 'history' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-history' ) ); ?>" title="<?php esc_attr_e( 'History', 'karmcp' ); ?>">
-						<span class="dashicons dashicons-clock" aria-hidden="true"></span>
-						<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'History', 'karmcp' ); ?></span>
-					</a>
-					<a class="karmcp-appbar-changelog<?php echo 'changelog' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-changelog' ) ); ?>" title="<?php esc_attr_e( 'Changelog', 'karmcp' ); ?>">
-						<span class="dashicons dashicons-backup" aria-hidden="true"></span>
-						<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'Changelog', 'karmcp' ); ?></span>
-					</a>
-					<div class="karmcp-help-menu">
-						<button type="button" class="karmcp-help-toggle" aria-haspopup="true">
-							<span class="dashicons dashicons-info-outline" aria-hidden="true"></span>
-							<?php esc_html_e( 'Get Help', 'karmcp' ); ?>
-							<span class="dashicons dashicons-arrow-down-alt2 karmcp-help-caret" aria-hidden="true"></span>
-						</button>
-						<div class="karmcp-help-dropdown" role="menu">
-							<a role="menuitem" href="<?php echo esc_url( self::DOCS_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-book" aria-hidden="true"></span><?php esc_html_e( 'Documentation', 'karmcp' ); ?></a>
-							<a role="menuitem" href="<?php echo esc_url( self::SUPPORT_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-sos" aria-hidden="true"></span><?php esc_html_e( 'Support', 'karmcp' ); ?></a>
-						</div>
-					</div>
-					<div class="karmcp-notif">
-						<button type="button" class="karmcp-notif-toggle" aria-haspopup="true" aria-expanded="false" data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_notifications' ) ); ?>">
-							<span class="dashicons dashicons-bell" aria-hidden="true"></span>
-							<span class="karmcp-notif-badge<?php echo 0 === $karmcp_unread ? ' is-empty' : ''; ?>"><?php echo esc_html( (string) $karmcp_unread ); ?></span>
-						</button>
-						<div class="karmcp-notif-overlay" aria-hidden="true"></div>
-						<aside class="karmcp-notif-drawer" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'Announcements', 'karmcp' ); ?>">
-							<div class="karmcp-notif-header">
-								<span><?php esc_html_e( 'Announcements', 'karmcp' ); ?></span>
-								<button type="button" class="karmcp-notif-close" aria-label="<?php esc_attr_e( 'Close', 'karmcp' ); ?>"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
-							</div>
-							<div class="karmcp-notif-list">
-								<?php if ( empty( $karmcp_notifs ) ) : ?>
-									<div class="karmcp-notif-empty"><?php esc_html_e( 'No announcements yet.', 'karmcp' ); ?></div>
-								<?php else : ?>
-									<?php foreach ( $karmcp_notifs as $karmcp_n ) : ?>
-										<?php
-										$karmcp_n_id      = isset( $karmcp_n['id'] ) ? (string) $karmcp_n['id'] : '';
-										$karmcp_n_unread  = '' !== $karmcp_n_id && ! in_array( $karmcp_n_id, $karmcp_seen, true );
-										$karmcp_n_level   = isset( $karmcp_n['level'] ) && '' !== $karmcp_n['level'] ? sanitize_html_class( $karmcp_n['level'] ) : 'info';
-										$karmcp_n_icon    = isset( $karmcp_n['icon'] ) && '' !== $karmcp_n['icon'] ? sanitize_html_class( $karmcp_n['icon'] ) : 'megaphone';
-										$karmcp_n_created = isset( $karmcp_n['created_at'] ) ? strtotime( (string) $karmcp_n['created_at'] ) : false;
-										?>
-										<div class="karmcp-notif-item karmcp-notif-item--<?php echo esc_attr( $karmcp_n_level ); ?><?php echo $karmcp_n_unread ? ' is-unread' : ''; ?>" data-id="<?php echo esc_attr( $karmcp_n_id ); ?>">
-											<span class="karmcp-notif-item-icon dashicons dashicons-<?php echo esc_attr( $karmcp_n_icon ); ?>" aria-hidden="true"></span>
-											<div class="karmcp-notif-item-body">
-												<strong><?php echo esc_html( isset( $karmcp_n['title'] ) ? $karmcp_n['title'] : '' ); ?></strong>
-												<p><?php echo esc_html( isset( $karmcp_n['body'] ) ? $karmcp_n['body'] : '' ); ?></p>
-												<div class="karmcp-notif-item-meta">
-													<?php if ( false !== $karmcp_n_created && $karmcp_n_created > 0 ) : ?>
-														<span class="karmcp-notif-item-time">
-															<?php
-															/* translators: %s: human-readable time difference (e.g. "2 hours") */
-															echo esc_html( sprintf( __( '%s ago', 'karmcp' ), human_time_diff( $karmcp_n_created ) ) );
-															?>
-														</span>
-													<?php endif; ?>
-													<?php if ( ! empty( $karmcp_n['url'] ) ) : ?>
-														<a class="karmcp-notif-item-cta" href="<?php echo esc_url( $karmcp_n['url'] ); ?>" target="_blank" rel="noopener">
-															<?php echo esc_html( ! empty( $karmcp_n['cta'] ) ? $karmcp_n['cta'] : __( 'Learn more', 'karmcp' ) ); ?>
-														</a>
-													<?php endif; ?>
-												</div>
-											</div>
-										</div>
-									<?php endforeach; ?>
-								<?php endif; ?>
-							</div>
-						</aside>
-					</div>
-					<a class="karmcp-cloud-btn" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-connection' ) ); ?>" title="<?php echo esc_attr( $karmcp_cloud_connected ? __( 'KarMCP Cloud: Connected', 'karmcp' ) : __( 'KarMCP Cloud: Not connected — click to connect', 'karmcp' ) ); ?>">
-						<span class="dashicons dashicons-cloud karmcp-cloud-icon" aria-hidden="true"></span>
-						<span class="karmcp-cloud-dot<?php echo $karmcp_cloud_connected ? ' is-connected' : ''; ?>"></span>
-					</a>
-				</div>
-			</div>
 
 			<?php
 			/*
@@ -3443,6 +3346,14 @@ class KarMCP_Admin {
 			?>
 			<div class="karmcp-shell<?php echo $karmcp_nav_collapsed ? ' is-collapsed' : ''; ?>">
 				<div class="karmcp-appnav-wrap">
+					<div class="karmcp-rail-brand">
+						<span class="karmcp-appbar-mark" aria-hidden="true">
+							<svg viewBox="0 0 24 24" width="24" height="24" focusable="false"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M5.5 3.5v17"/><path d="M5.7 12.6 14.6 5.4"/><path d="M5.7 11.4 14.6 18.6"/></g><circle cx="17.6" cy="4.2" r="2.7" fill="currentColor"/><circle cx="17.6" cy="19.8" r="2.7" fill="currentColor"/></svg>
+						</span>
+						<span class="karmcp-appbar-title"><?php esc_html_e( 'KarMCP', 'karmcp' ); ?></span>
+						<span class="karmcp-appbar-version">v<?php echo esc_html( KARMCP_VERSION ); ?></span>
+					</div>
+
 					<nav class="karmcp-appnav" aria-label="<?php esc_attr_e( 'KarMCP sections', 'karmcp' ); ?>">
 						<?php
 						foreach ( $this->get_submenus() as $karmcp_slug => $karmcp_label ) :
@@ -3462,6 +3373,86 @@ class KarMCP_Admin {
 							</a>
 						<?php endforeach; ?>
 					</nav>
+					<div class="karmcp-rail-tools">
+						<a class="karmcp-rail-tool<?php echo 'mcp-log' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-mcp-log' ) ); ?>" title="<?php esc_attr_e( 'MCP Log', 'karmcp' ); ?>">
+							<span class="dashicons dashicons-list-view" aria-hidden="true"></span>
+							<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'MCP Log', 'karmcp' ); ?></span>
+						</a>
+						<a class="karmcp-rail-tool<?php echo 'history' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-history' ) ); ?>" title="<?php esc_attr_e( 'History', 'karmcp' ); ?>">
+							<span class="dashicons dashicons-clock" aria-hidden="true"></span>
+							<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'History', 'karmcp' ); ?></span>
+						</a>
+						<a class="karmcp-rail-tool<?php echo 'changelog' === $active_tab ? ' is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-changelog' ) ); ?>" title="<?php esc_attr_e( 'Changelog', 'karmcp' ); ?>">
+							<span class="dashicons dashicons-backup" aria-hidden="true"></span>
+							<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'Changelog', 'karmcp' ); ?></span>
+						</a>
+						<div class="karmcp-help-menu">
+							<button type="button" class="karmcp-help-toggle" aria-haspopup="true">
+								<span class="dashicons dashicons-info-outline" aria-hidden="true"></span>
+								<?php esc_html_e( 'Get Help', 'karmcp' ); ?>
+								<span class="dashicons dashicons-arrow-down-alt2 karmcp-help-caret" aria-hidden="true"></span>
+							</button>
+							<div class="karmcp-help-dropdown" role="menu">
+								<a role="menuitem" href="<?php echo esc_url( self::DOCS_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-book" aria-hidden="true"></span><?php esc_html_e( 'Documentation', 'karmcp' ); ?></a>
+								<a role="menuitem" href="<?php echo esc_url( self::SUPPORT_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-sos" aria-hidden="true"></span><?php esc_html_e( 'Support', 'karmcp' ); ?></a>
+							</div>
+						</div>
+						<div class="karmcp-notif">
+							<button type="button" class="karmcp-notif-toggle" aria-haspopup="true" aria-expanded="false" data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_notifications' ) ); ?>">
+								<span class="dashicons dashicons-bell" aria-hidden="true"></span>
+								<span class="karmcp-notif-badge<?php echo 0 === $karmcp_unread ? ' is-empty' : ''; ?>"><?php echo esc_html( (string) $karmcp_unread ); ?></span>
+							</button>
+							<div class="karmcp-notif-overlay" aria-hidden="true"></div>
+							<aside class="karmcp-notif-drawer" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'Announcements', 'karmcp' ); ?>">
+								<div class="karmcp-notif-header">
+									<span><?php esc_html_e( 'Announcements', 'karmcp' ); ?></span>
+									<button type="button" class="karmcp-notif-close" aria-label="<?php esc_attr_e( 'Close', 'karmcp' ); ?>"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+								</div>
+								<div class="karmcp-notif-list">
+									<?php if ( empty( $karmcp_notifs ) ) : ?>
+										<div class="karmcp-notif-empty"><?php esc_html_e( 'No announcements yet.', 'karmcp' ); ?></div>
+									<?php else : ?>
+										<?php foreach ( $karmcp_notifs as $karmcp_n ) : ?>
+											<?php
+											$karmcp_n_id      = isset( $karmcp_n['id'] ) ? (string) $karmcp_n['id'] : '';
+											$karmcp_n_unread  = '' !== $karmcp_n_id && ! in_array( $karmcp_n_id, $karmcp_seen, true );
+											$karmcp_n_level   = isset( $karmcp_n['level'] ) && '' !== $karmcp_n['level'] ? sanitize_html_class( $karmcp_n['level'] ) : 'info';
+											$karmcp_n_icon    = isset( $karmcp_n['icon'] ) && '' !== $karmcp_n['icon'] ? sanitize_html_class( $karmcp_n['icon'] ) : 'megaphone';
+											$karmcp_n_created = isset( $karmcp_n['created_at'] ) ? strtotime( (string) $karmcp_n['created_at'] ) : false;
+											?>
+											<div class="karmcp-notif-item karmcp-notif-item--<?php echo esc_attr( $karmcp_n_level ); ?><?php echo $karmcp_n_unread ? ' is-unread' : ''; ?>" data-id="<?php echo esc_attr( $karmcp_n_id ); ?>">
+												<span class="karmcp-notif-item-icon dashicons dashicons-<?php echo esc_attr( $karmcp_n_icon ); ?>" aria-hidden="true"></span>
+												<div class="karmcp-notif-item-body">
+													<strong><?php echo esc_html( isset( $karmcp_n['title'] ) ? $karmcp_n['title'] : '' ); ?></strong>
+													<p><?php echo esc_html( isset( $karmcp_n['body'] ) ? $karmcp_n['body'] : '' ); ?></p>
+													<div class="karmcp-notif-item-meta">
+														<?php if ( false !== $karmcp_n_created && $karmcp_n_created > 0 ) : ?>
+															<span class="karmcp-notif-item-time">
+																<?php
+																/* translators: %s: human-readable time difference (e.g. "2 hours") */
+																echo esc_html( sprintf( __( '%s ago', 'karmcp' ), human_time_diff( $karmcp_n_created ) ) );
+																?>
+															</span>
+														<?php endif; ?>
+														<?php if ( ! empty( $karmcp_n['url'] ) ) : ?>
+															<a class="karmcp-notif-item-cta" href="<?php echo esc_url( $karmcp_n['url'] ); ?>" target="_blank" rel="noopener">
+																<?php echo esc_html( ! empty( $karmcp_n['cta'] ) ? $karmcp_n['cta'] : __( 'Learn more', 'karmcp' ) ); ?>
+															</a>
+														<?php endif; ?>
+													</div>
+												</div>
+											</div>
+										<?php endforeach; ?>
+									<?php endif; ?>
+								</div>
+							</aside>
+						</div>
+						<a class="karmcp-cloud-btn" href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-connection' ) ); ?>" title="<?php echo esc_attr( $karmcp_cloud_connected ? __( 'KarMCP Cloud: Connected', 'karmcp' ) : __( 'KarMCP Cloud: Not connected — click to connect', 'karmcp' ) ); ?>">
+							<span class="dashicons dashicons-cloud karmcp-cloud-icon" aria-hidden="true"></span>
+							<span class="karmcp-cloud-dot<?php echo $karmcp_cloud_connected ? ' is-connected' : ''; ?>"></span>
+						</a>
+					</div>
+
 					<button type="button"
 						class="karmcp-appnav-toggle"
 						aria-expanded="<?php echo $karmcp_nav_collapsed ? 'false' : 'true'; ?>"

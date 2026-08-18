@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.21.0]
+
+### Removed
+
+- **The dark bar across the top of the panel is gone**, and with it the last inverted surface: the panel now sits inside wp-admin instead of presenting itself as a separate application.
+
+  Everything it carried moved into the rail rather than disappearing with it — the mark and version at its head, and MCP Log, History, Changelog, Get Help, notifications and the cloud status at its foot. That part was not optional: those three pages are deliberately kept out of both the section list and the WordPress menu, so removing the bar without relocating them would have left them reachable only by typing a URL.
+
+- **The site-wide "KarMCP found N critical security issues" admin notice.** The Security tab already opens with the same two numbers and the age of the scan, which is where anyone acting on them is heading anyway; a red banner on every screen in wp-admin, that cannot be dismissed, gets read once and then stops being read. The scan itself is untouched — it still runs, still scores, still records.
+
+### Changed
+
+- The controls that moved were dressed for a dark bar (translucent white hovers, an icon-only bell with a floating badge). They are rows on a light surface now, with their labels visible and the unread count and cloud dot at the end of the row.
+
+- The narrowing rules collapsed with the bar: there is nothing left to narrow at the top, so the only remaining step is the rail going to icons below the WordPress admin breakpoint — where the new tools follow the sections and drop their labels too.
+
 ## [1.20.3]
 
 ### Fixed

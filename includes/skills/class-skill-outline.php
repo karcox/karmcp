@@ -156,6 +156,8 @@ class KarMCP_Skill_Outline {
 			$sections[] = $current;
 		}
 
+		$sections = self::disambiguate( $sections );
+
 		// A subsection belongs to the chapter above it, so a chapter's text
 		// absorbs every deeper section that follows it.
 		$count = count( $sections );
@@ -185,22 +187,75 @@ class KarMCP_Skill_Outline {
 			return $m[1];
 		}
 
+		return self::slug( $title );
+	}
+
+	/**
+	 * A readable, copyable id from a heading.
+	 *
+	 * Headings without a number are usually the warnings, and they are
+	 * sentences: slugging one whole gives a 76-character id nobody will copy
+	 * correctly. Cut to the first few words — enough to be recognisable, and the
+	 * full title still resolves through the prefix match.
+	 *
+	 * @param string $title The heading text.
+	 * @return string
+	 */
+	private static function slug( string $title ): string {
 		$slug = strtolower( $title );
 		$slug = preg_replace( '/[^a-z0-9]+/', '-', $slug );
 		$slug = trim( (string) $slug, '-' );
 
-		/*
-		 * Headings without a number are usually the warnings, and they are
-		 * sentences: slugging one whole gives a 76-character id nobody will copy
-		 * correctly. Cut to the first few words — enough to be recognisable, and
-		 * the title still resolves in full through the prefix match.
-		 */
 		if ( strlen( $slug ) > 48 ) {
 			$slug = substr( $slug, 0, 48 );
 			$slug = substr( $slug, 0, (int) strrpos( $slug, '-' ) ?: 48 );
 		}
 
 		return $slug;
+	}
+
+	/**
+	 * Makes every id unique, keeping the first claimant.
+	 *
+	 * Numbering in a real manual is not as tidy as the regex assumes: this
+	 * site's has "4. Bloques con solución" and "4 bis. Multimedia" as separate
+	 * chapters, and both reduce to "4". Left alone, the second is unreachable by
+	 * id — every request lands on the first — which is worse than an ugly id,
+	 * because nothing about the outline reveals that a section is unreachable.
+	 *
+	 * A collision falls back to the title slug, and only if that also collides
+	 * does it take a counter.
+	 *
+	 * @param array<int,array<string,mixed>> $sections Parsed sections.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function disambiguate( array $sections ): array {
+		$seen = array();
+
+		foreach ( $sections as $i => $section ) {
+			$id = (string) $section['id'];
+
+			if ( ! isset( $seen[ $id ] ) ) {
+				$seen[ $id ] = true;
+				continue;
+			}
+
+			$slug = self::slug( (string) $section['title'] );
+			if ( '' !== $slug && ! isset( $seen[ $slug ] ) ) {
+				$sections[ $i ]['id'] = $slug;
+				$seen[ $slug ]        = true;
+				continue;
+			}
+
+			$n = 2;
+			while ( isset( $seen[ $id . '-' . $n ] ) ) {
+				++$n;
+			}
+			$sections[ $i ]['id'] = $id . '-' . $n;
+			$seen[ $id . '-' . $n ] = true;
+		}
+
+		return $sections;
 	}
 
 	/**

@@ -115,4 +115,45 @@ class SkillOutlineTest extends TestCase {
 	public function test_a_body_without_headings_yields_an_empty_outline(): void {
 		$this->assertSame( array(), KarMCP_Skill_Outline::outline( "Just prose.\nNo headings here.\n" ) );
 	}
+
+	/**
+	 * Real manuals do not number as tidily as the regex assumes: this site's has
+	 * "4. Bloques con solucion" and "4 bis. Multimedia" as separate chapters, and
+	 * both reduce to "4". Found on the first real call, where the outline listed
+	 * two sections with the same id — and the second was unreachable, since every
+	 * request landed on the first.
+	 */
+	public function test_two_headings_that_reduce_to_the_same_number_get_distinct_ids(): void {
+		$body = "## 4. Bloques con solucion
+First chapter.
+
+## 4 bis. Multimedia
+Second chapter.
+";
+
+		$ids = array_column( KarMCP_Skill_Outline::outline( $body ), 'id' );
+
+		$this->assertCount( 2, array_unique( $ids ), 'Both chapters must be addressable.' );
+		$this->assertSame( '4', $ids[0], 'The first claimant keeps the plain number.' );
+	}
+
+	/**
+	 * And the one that had to give up its number is still reachable — by the id
+	 * it was given, and by its title.
+	 */
+	public function test_the_displaced_section_is_reachable_both_ways(): void {
+		$body = "## 4. Bloques con solucion
+First chapter.
+
+## 4 bis. Multimedia
+Second chapter.
+";
+
+		$ids   = array_column( KarMCP_Skill_Outline::outline( $body ), 'id' );
+		$byId  = KarMCP_Skill_Outline::section( $body, $ids[1] );
+		$byTtl = KarMCP_Skill_Outline::section( $body, '4 bis. Multimedia' );
+
+		$this->assertStringContainsString( 'Second chapter.', $byId['text'] );
+		$this->assertStringContainsString( 'Second chapter.', $byTtl['text'] );
+	}
 }

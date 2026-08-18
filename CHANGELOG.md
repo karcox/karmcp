@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.22.1]
+
+### Fixed
+
+- **Two sections could share an id, which made one of them unreachable.** Found on the first real call: this site's manual has `4. Bloques con solución` and `4 bis. Multimedia` as separate chapters, and both reduce to `4`, so every request for section 4 landed on the first and the second could not be addressed at all. Nothing in the outline revealed that — it listed the id twice and looked fine.
+
+  A collision now falls back to the title slug, and only takes a counter if that collides too. The first claimant keeps the plain number, so the ids a manual cross-references itself by stay stable.
+
+## [1.22.1]
+
+### Fixed
+
+- **Two sections could share an id, which left one of them unreachable.** Found on the first real call: this site's manual has `4. Bloques con solución` and `4 bis. Multimedia` as separate chapters, and both reduce to `4` — so every request for section 4 landed on the first, and the second could not be addressed at all. Nothing in the outline revealed it; the id simply appeared twice and looked fine.
+
+  A collision now falls back to the title slug, and only takes a counter if that collides too. The first claimant keeps the plain number, so the ids a manual cross-references itself by stay stable.
+
 ## [1.22.0]
 
 ### Changed

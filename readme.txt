@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.22.0
+Stable tag: 1.22.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,6 +151,14 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.22.1 =
+
+* Fixed: two sections of a skill whose headings start with the same number (a chapter and its "bis") shared one id, so one of them could not be opened at all.
+
+= 1.22.1 =
+
+* Fixed: two sections of a skill whose headings begin with the same number (a chapter and its "bis") shared a single id, so one of them could not be opened at all.
 
 = 1.22.0 =
 

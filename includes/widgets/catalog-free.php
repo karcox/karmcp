@@ -40,10 +40,14 @@ return array(
 			'typography_line_height'        => array( 'type' => 'object', 'description' => 'Line height: {size, unit}. Units: px, em.' ),
 			'typography_letter_spacing'     => array( 'type' => 'object', 'description' => 'Letter spacing: {size, unit}. Units: px, em.' ),
 			'typography_word_spacing'       => array( 'type' => 'object', 'description' => 'Word spacing: {size, unit}.' ),
-			'text_stroke_text_stroke'       => array( 'type' => 'string', 'enum' => array( 'yes', '' ), 'description' => 'Enable text stroke.' ),
-			'text_stroke_stroke_width'      => array( 'type' => 'object', 'description' => 'Stroke width: {size, unit}.' ),
+			// The Text Stroke group registers two controls (text-stroke.php:59):
+			// `text_stroke_text_stroke` IS the width, and there is no separate
+			// `text_stroke_stroke_width` — nor any switch to "enable" it.
+			'text_stroke_text_stroke'       => array( 'type' => 'object', 'description' => 'Text stroke width: {size, unit}. Accepts 0-10 px, or 0-1 in em/rem. Setting it is what enables the stroke; there is no separate toggle.' ),
 			'text_stroke_stroke_color'      => array( 'type' => 'string', 'description' => 'Stroke color (hex/rgba).' ),
-			'title_text_shadow_text_shadow' => array( 'type' => 'object', 'description' => 'Text shadow: {horizontal, vertical, blur, color}.' ),
+			// No `title_` prefix: the heading widget applies the Text Shadow
+			// group to itself, so the control is plain `text_shadow_text_shadow`.
+			'text_shadow_text_shadow'       => array( 'type' => 'object', 'description' => 'Text shadow: {horizontal, vertical, blur, color}.' ),
 		),
 		'required' => array( 'title' ),
 		'defaults' => array( 'header_size' => 'h2' ),
@@ -88,13 +92,17 @@ return array(
 			'caption'                           => array( 'type' => 'string', 'description' => 'Custom caption text.' ),
 			'link_to'                           => array( 'type' => 'string', 'enum' => array( 'none', 'file', 'custom' ), 'description' => 'Link behavior.' ),
 			'link'                              => array( 'type' => 'object', 'description' => 'Link: {url, is_external, nofollow}.' ),
-			'width'                             => array( 'type' => 'object', 'description' => 'Image width: {size, unit}. Units: px, %, vw.' ),
-			'max_width'                         => array( 'type' => 'object', 'description' => 'Max width: {size, unit}.' ),
-			'height'                            => array( 'type' => 'object', 'description' => 'Image height: {size, unit}.' ),
-			'object_fit'                        => array( 'type' => 'string', 'enum' => array( '', 'fill', 'cover', 'contain' ), 'description' => 'Object fit when height is set.' ),
-			'opacity'                           => array( 'type' => 'object', 'description' => 'Image opacity: {size, unit}. 0-1 range.' ),
+			// `width` already writes `max-width` on the img (image.php:351), which
+			// is why there is no separate max_width control — the catalog used to
+			// publish one, and it did nothing.
+			'width'                             => array( 'type' => 'object', 'description' => 'Image width, applied as max-width: {size, unit}. Ranges by unit: 1-100 for % and vw, 1-1000 for px.' ),
+			'height'                            => array( 'type' => 'object', 'description' => 'Image height: {size, unit}. Ranges: 1-500 px, 1-100 vh.' ),
+			// Hyphen, not underscore: the control is registered as `object-fit`
+			// (image.php:379). The catalog had normalised it to an underscore,
+			// which stores fine and never renders.
+			'object-fit'                        => array( 'type' => 'string', 'enum' => array( '', 'cover', 'contain', 'scale-down' ), 'description' => 'How the image fills its box. Only applies when height is set.' ),
+			'opacity'                           => array( 'type' => 'object', 'description' => 'Image opacity: {size, unit}. Accepts 0.1 to 1 in steps of 0.01 — a 0 is out of range.' ),
 			'hover_animation'                   => array( 'type' => 'string', 'description' => 'Hover animation (grow, shrink, pulse, push, etc).' ),
-			'hover_opacity'                     => array( 'type' => 'object', 'description' => 'Hover opacity: {size, unit}. 0-1 range.' ),
 			'css_filters_css_filter'            => array( 'type' => 'string', 'enum' => array( 'custom', '' ), 'description' => 'Set to "custom" to enable CSS filter controls.' ),
 			'css_filters_blur'                  => array( 'type' => 'object', 'description' => 'Blur: {size, unit}. px.' ),
 			'css_filters_brightness'            => array( 'type' => 'object', 'description' => 'Brightness: {size, unit}. 0-200%.' ),

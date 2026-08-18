@@ -561,9 +561,14 @@ return array(
 			// value read as pixels is multiplied by 100: `62` produced a 3,720px
 			// quotation mark and a 4,008px tall block, with no error anywhere.
 			'quote_size'                     => array( 'type' => 'object', 'description' => 'Quotation mark size (quotation skin), as a MULTIPLIER from 0.5 to 2 in steps of 0.1, default 1: {size, unit}. Not pixels — the widget renders it as calc(size * 100), so 62 gives a 3,720px mark.' ),
-			'box_color'                      => array( 'type' => 'string', 'description' => 'Box background color (boxed skin).' ),
-			'button_color'                   => array( 'type' => 'string', 'description' => 'Tweet button text/icon color.' ),
-			'button_text_color'              => array( 'type' => 'string', 'description' => 'Tweet button background color.' ),
+			// Neither `box_color` nor `button_color` exists on this widget. The
+			// tweet button's colours are `button_text_color` and
+			// `button_background_color` (blockquote.php:426, :442), each with a
+			// `_hover` sibling; the boxed skin has no background control of its
+			// own at all.
+			'button_text_color'              => array( 'type' => 'string', 'description' => 'Tweet button text and icon color.' ),
+			'button_background_color'        => array( 'type' => 'string', 'description' => 'Tweet button background. Not applied on the "link" skin.' ),
+			'button_background_color_hover'  => array( 'type' => 'string', 'description' => 'Tweet button background on hover.' ),
 		),
 		'required' => array( 'blockquote_content' ),
 		'defaults' => array( 'blockquote_skin' => 'border' ),

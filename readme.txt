@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.21.1
+Stable tag: 1.21.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,6 +151,11 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.21.2 =
+
+* Fixed: eight wrong parameters in the documented catalog for the image, heading and blockquote widgets — including one that was spelled with an underscore where Elementor registers a hyphen, so setting it did nothing. Each was checked against the widget's real control.
+* Fixed: several parameters now state the range they actually accept, so a value outside it is not silently stored.
 
 = 1.21.1 =
 

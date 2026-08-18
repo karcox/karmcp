@@ -2,6 +2,26 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.21.2]
+
+### Fixed
+
+- **Eight wrong entries in the catalog for the three widgets this site actually builds with**, each checked against the registered control rather than against the audit's name suggestion — which is a similarity guess, and following it blindly would have written keys that exist and mean something else.
+
+  `image`: **`object_fit` is registered as `object-fit`, with a hyphen** (`image.php:379`) — the catalog had normalised it to an underscore, so it stored and never rendered. `max_width` was removed: `width` already writes `max-width` on the image (`image.php:351`), so there was never a second control. `hover_opacity` was removed too; the widget registers no hover state for opacity at all.
+
+  `heading`: `text_stroke_stroke_width` does not exist — **`text_stroke_text_stroke` IS the width** (`text-stroke.php:59`), and it is a slider taking `{size, unit}`, not the on/off switch the catalog described. There is no separate toggle: setting a width is what enables the stroke. And `title_text_shadow_text_shadow` loses its prefix; the widget applies the Text Shadow group to itself, so the control is `text_shadow_text_shadow`.
+
+  `blockquote`: neither `box_color` nor `button_color` exists. The tweet button's colours are `button_text_color` and `button_background_color`, each with a `_hover` sibling (`blockquote.php:426`, `:442`). The boxed skin has no background control of its own.
+
+- **Ranges the descriptions never mentioned**, from the same audit: image `width` (1-100 %, 1-1000 px), `height` (1-500 px), `opacity` (0.1 to 1 in steps of 0.01 — a plain `0` is out of range), and the text stroke (0-10 px).
+
+- A duplicate `button_text_color` key in the blockquote entry, whose second copy described the text colour as the background. PHPStan caught it on the way in.
+
+### Note
+
+Prioritised by measured use, not by finding count. The audit's biggest single group is `hotspot` with 13 — a widget with **zero** instances across the 45 courses on this site — while `image`, `heading` and `blockquote` are in daily use. The remaining ~52 findings are real and documented, and worth doing when someone reaches for those widgets.
+
 ## [1.21.1]
 
 ### Fixed

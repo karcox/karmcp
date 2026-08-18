@@ -90,7 +90,7 @@ class KarMCP_Skill_Abilities {
 			'karmcp/get-skill',
 			array(
 				'label'               => __( 'Get Skill', 'karmcp' ),
-				'description'         => __( 'Return the full text of one skill by its machine name, as listed by list-skills or in the Skills block of the discovery context. Read-only.', 'karmcp' ),
+				'description'         => __( 'Return one skill by its machine name, as listed by list-skills or in the Skills block of the discovery context. A short skill comes back whole. A long one comes back as its outline — the sections, their ids and their sizes — because a manual past ~20 KB does not fit in a tool response, and erroring is worse than pointing: call again with `section` to read a part, or `full: true` to insist on everything. Read-only.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_skill' ),
 				'permission_callback' => array( $this, 'check_permission' ),
@@ -98,9 +98,17 @@ class KarMCP_Skill_Abilities {
 					'type'       => 'object',
 					'required'   => array( 'name' ),
 					'properties' => array(
-						'name' => array(
+						'name'    => array(
 							'type'        => 'string',
-							'description' => __( 'The skill\'s machine name, e.g. "landing-pages".', 'karmcp' ),
+							'description' => __( 'The machine name of the skill, e.g. "landing-pages".', 'karmcp' ),
+						),
+						'section' => array(
+							'type'        => 'string',
+							'description' => __( 'Read one section instead of the whole skill. Takes the id from the outline ("1.5"), the section title, or the start of it — all three resolve to the same section. A section includes its subsections.', 'karmcp' ),
+						),
+						'full'    => array(
+							'type'        => 'boolean',
+							'description' => __( 'Return the entire body even when it is long. The call may exceed the response limit; that choice belongs to the caller.', 'karmcp' ),
 						),
 					),
 				),
@@ -110,7 +118,10 @@ class KarMCP_Skill_Abilities {
 						'name'    => array( 'type' => 'string' ),
 						'title'   => array( 'type' => 'string' ),
 						'summary' => array( 'type' => 'string' ),
-						'body'    => array( 'type' => 'string' ),
+						'body'    => array( 'type' => 'string', 'description' => __( 'The text: the whole skill, or the requested section. Absent when only an outline was returned.', 'karmcp' ) ),
+						'section' => array( 'type' => 'string', 'description' => __( 'Which section this body is, when one was requested.', 'karmcp' ) ),
+						'chars'   => array( 'type' => 'integer', 'description' => __( 'Size of the whole skill, so a caller knows what it is choosing not to read.', 'karmcp' ) ),
+						'outline' => array( 'type' => 'array', 'description' => __( 'The sections, each with the id to pass as `section` and its size. Returned instead of the body when the skill is long.', 'karmcp' ), 'items' => array( 'type' => 'object' ) ),
 					),
 				),
 				'meta'                => array( 'annotations' => array( 'readonly' => true, 'destructive' => false, 'idempotent' => true ), 'show_in_rest' => true ),
@@ -166,6 +177,58 @@ class KarMCP_Skill_Abilities {
 			);
 		}
 
-		return KarMCP_Skill_Store::expand( $skill );
+		$expanded          = KarMCP_Skill_Store::expand( $skill );
+		$body              = (string) ( $expanded['body'] ?? '' );
+		$expanded['chars'] = strlen( $body );
+
+		$section = isset( $input['section'] ) ? (string) $input['section'] : '';
+
+		if ( '' !== $section ) {
+			$found = KarMCP_Skill_Outline::section( $body, $section );
+
+			if ( null === $found ) {
+				// The outline rides along in the error: a caller that guessed a
+				// section can correct itself from the response, instead of
+				// fetching the whole skill to find out what it should have asked
+				// for — which is the trip this whole change exists to remove.
+				return new WP_Error(
+					'karmcp_skill_section_not_found',
+					sprintf(
+						/* translators: 1: requested section, 2: skill name */
+						__( 'No section "%1$s" in "%2$s". The outline of what it does have is attached.', 'karmcp' ),
+						$section,
+						(string) ( $expanded['name'] ?? '' )
+					),
+					array(
+						'status'  => 404,
+						'outline' => KarMCP_Skill_Outline::outline( $body ),
+					)
+				);
+			}
+
+			$expanded['body']    = $found['text'];
+			$expanded['section'] = $found['id'];
+
+			return $expanded;
+		}
+
+		/*
+		 * A long skill comes back as its outline unless the caller insists.
+		 *
+		 * Returning the body regardless is what this did before, and past the
+		 * response limit that is not a truncation but a failed call: the reader
+		 * gets nothing usable and has to dump the JSON to a file and slice it by
+		 * character offsets to read a word. This site's manual is 90 KB and grows
+		 * with every fix it documents, so it crossed that line and stayed there.
+		 *
+		 * An outline is smaller than the failure and says exactly what to ask for
+		 * next.
+		 */
+		if ( empty( $input['full'] ) && strlen( $body ) > KarMCP_Skill_Outline::WHOLE_BODY_LIMIT ) {
+			unset( $expanded['body'] );
+			$expanded['outline'] = KarMCP_Skill_Outline::outline( $body );
+		}
+
+		return $expanded;
 	}
 }

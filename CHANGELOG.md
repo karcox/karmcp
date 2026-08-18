@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.22.0]
+
+### Changed
+
+- **`get-skill` returns an outline when the skill is too long to return.** A skill is a manual and manuals grow: this site's is **90 KB** and gains length with every fix it documents, which put it past what a tool response can carry. That is not a truncation — the call fails, and the reader has to dump the JSON to a file, pull the headings out with a regex and slice it by character offsets before reading a word. Every agent that starts work paid that, and the skill is required reading before touching anything.
+
+  Now a body over 20 KB comes back as its sections, each with the id to ask for and its size. Measured on the real manual: **50 sections, 6 KB of outline against 92 KB of body** — and it says what to fetch next instead of failing.
+
+- **`get-skill { section }` returns one part.** The id is the heading's own number when it has one, because that is how a manual cross-references itself and therefore what a reader tries first — `section: "1.5"` gives 987 characters instead of 92,000. A title or the start of one resolves to the same section, since an agent reading an outline will copy whichever is at hand.
+
+  Asking for a chapter brings its subsections with it. Without that, "read section 1" returns a single paragraph and the reader concludes the manual is empty.
+
+- **A wrong section id returns the outline in the error**, so a caller that guessed can correct itself from the response rather than fetching the whole skill to find out what it should have asked for — which is the trip this change exists to remove.
+
+- `full: true` still returns everything, for a caller that wants it and can take it.
+
 ## [1.21.3]
 
 ### Changed

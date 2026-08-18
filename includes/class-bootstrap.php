@@ -280,6 +280,7 @@ class KarMCP_Bootstrap {
 		// must exist so an admin can write skills), the module gates exposure.
 		require_once KARMCP_DIR . 'includes/skills/class-skill-store.php';
 		require_once KARMCP_DIR . 'includes/skills/class-skill-catalog.php';
+		require_once KARMCP_DIR . 'includes/skills/class-skill-outline.php';
 		require_once KARMCP_DIR . 'includes/modules/class-cloud-module.php';
 		// KarMCP Themer (free): builder-agnostic theme builder engine + module + MCP tools.
 		require_once KARMCP_DIR . 'includes/themer/class-themer-matcher-registry.php';

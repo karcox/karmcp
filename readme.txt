@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.21.3
+Stable tag: 1.22.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -151,6 +151,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.22.0 =
+
+* Changed: a long skill no longer fails to load. It comes back as an outline of its sections — with the id and size of each — and you can then ask for one section by its number or its title. A 90 KB manual becomes a 6 KB table of contents plus whatever part you actually need.
 
 = 1.21.3 =
 

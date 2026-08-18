@@ -2,21 +2,13 @@
 /**
  * Brand Kits tab view.
  *
- * Free users: a curated set of 10 bundled brand kits (coordinated colors +
- * typography) they can apply, with backup-before-apply + restore, plus an
- * upgrade banner to unlock the full library.
- * Pro users: the full categorized library fetched from the server (50+), a
- * "Sync Library" refresh, apply confirmation modal, and restore.
+ * A curated set of bundled brand kits (coordinated colors + typography) that
+ * can be applied with backup-before-apply + restore. `$karmcp_render` feeds
+ * the single rendering path.
  *
- * A single rendering path is fed by `$karmcp_render` — the Pro bundle
- * when the site has Pro AND it loaded, otherwise the bundled free set (which
- * also serves as a graceful fallback if the Pro fetch errors). Applying and
- * backup/restore are free features as of 1.9.0; the Pro value is the bigger
- * library + the MCP brand-kit tools.
- *
- * Previews use pre-rendered, font-outlined SVGs (thumbnail_url) — bundled in the
- * plugin for the free set, served from the bundle for Pro. When absent we fall
- * back to a CSS swatch strip; no Google Fonts are ever loaded in wp-admin.
+ * Previews use pre-rendered, font-outlined SVGs (thumbnail_url) bundled in the
+ * plugin. When absent we fall back to a CSS swatch strip; no Google Fonts are
+ * ever loaded in wp-admin.
  *
  * @package KarMCP
  * @since   1.8.0
@@ -26,28 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$karmcp_has_pro    = class_exists( 'KarMCP_Pro_Brand_Kits' ) && KarMCP_Pro_Brand_Kits::user_has_access();
-$karmcp_pro_bundle = null;
-$karmcp_pro_error  = null;
-if ( $karmcp_has_pro ) {
-	$karmcp_pro_result = KarMCP_Pro_Brand_Kits::get_bundle();
-	if ( is_wp_error( $karmcp_pro_result ) ) {
-		$karmcp_pro_error = $karmcp_pro_result->get_error_message();
-	} else {
-		$karmcp_pro_bundle = $karmcp_pro_result;
-	}
-}
-
-$karmcp_free_bundle = class_exists( 'KarMCP_Free_Brand_Kits' )
+$karmcp_render = class_exists( 'KarMCP_Free_Brand_Kits' )
 	? KarMCP_Free_Brand_Kits::get_bundle()
 	: array( 'categories' => array() );
-
-// Pick what to render: the Pro library when present, else the free set (which
-// also covers a Pro fetch error as a graceful fallback).
-$karmcp_render      = ( $karmcp_has_pro && is_array( $karmcp_pro_bundle ) )
-	? $karmcp_pro_bundle
-	: $karmcp_free_bundle;
-$karmcp_is_free_set = ! ( $karmcp_has_pro && is_array( $karmcp_pro_bundle ) );
 
 $karmcp_bk_backups = class_exists( 'KarMCP_Kit_Backup_Store' )
 	? KarMCP_Kit_Backup_Store::list_backups()
@@ -79,65 +52,19 @@ foreach ( $karmcp_render['categories'] as $karmcp_bk_cat ) {
 				<div class="karmcp-pro-prompts-heading">
 					<h2>
 						<?php esc_html_e( 'Brand Kits Library', 'karmcp' ); ?>
-						<?php if ( $karmcp_is_free_set ) : ?>
-							<span class="karmcp-badge karmcp-badge--free"><?php esc_html_e( 'FREE', 'karmcp' ); ?></span>
-						<?php else : ?>
-							<span class="karmcp-badge karmcp-badge--pro">PRO</span>
-						<?php endif; ?>
+						<span class="karmcp-badge karmcp-badge--free"><?php esc_html_e( 'FREE', 'karmcp' ); ?></span>
 					</h2>
 					<p class="description">
-						<?php if ( $karmcp_is_free_set ) : ?>
-							<?php
-							printf(
-								/* translators: %d: number of free brand kits */
-								esc_html__( '%d coordinated color + typography kits, free to apply. One click replaces your site\'s global palette and fonts, back up first and restore any time.', 'karmcp' ),
-								(int) $karmcp_bk_total
-							);
-							?>
-						<?php else : ?>
-							<?php
-							printf(
-								/* translators: %1$d: kits, %2$d: categories */
-								esc_html__( '%1$d coordinated color + typography kits across %2$d categories. One click replaces your site\'s global palette and fonts.', 'karmcp' ),
-								(int) $karmcp_bk_total,
-								(int) count( $karmcp_render['categories'] )
-							);
-							?>
-							<?php if ( ! empty( $karmcp_render['fetched_at'] ) ) : ?>
-								<span class="karmcp-pro-prompts-meta">
-									<?php
-									printf(
-										/* translators: %s: human-readable time since last sync */
-										esc_html__( 'Last synced %s ago.', 'karmcp' ),
-										esc_html( human_time_diff( (int) $karmcp_render['fetched_at'], time() ) )
-									);
-									?>
-								</span>
-							<?php endif; ?>
-						<?php endif; ?>
+						<?php
+						printf(
+							/* translators: %d: number of free brand kits */
+							esc_html__( '%d coordinated color + typography kits, free to apply. One click replaces your site\'s global palette and fonts, back up first and restore any time.', 'karmcp' ),
+							(int) $karmcp_bk_total
+						);
+						?>
 					</p>
 				</div>
-				<?php if ( ! $karmcp_is_free_set ) : ?>
-					<button
-						type="button"
-						class="button karmcp-pro-sync-btn"
-						data-nonce="<?php echo esc_attr( wp_create_nonce( 'karmcp_sync_pro_brand_kits' ) ); ?>"
-						data-sync-action="karmcp_sync_pro_brand_kits"
-					>
-						<span class="dashicons dashicons-update" aria-hidden="true"></span>
-						<?php esc_html_e( 'Sync Library', 'karmcp' ); ?>
-					</button>
-				<?php endif; ?>
 			</div>
-
-			<?php if ( $karmcp_has_pro && $karmcp_pro_error ) : ?>
-				<div class="notice notice-warning inline">
-					<p>
-						<?php echo esc_html( $karmcp_pro_error ); ?>
-						<?php esc_html_e( 'Showing the bundled starter kits in the meantime.', 'karmcp' ); ?>
-					</p>
-				</div>
-			<?php endif; ?>
 
 			<?php if ( count( $karmcp_render['categories'] ) > 1 ) : ?>
 				<div class="karmcp-pro-filters" role="tablist" aria-label="<?php esc_attr_e( 'Filter by category', 'karmcp' ); ?>">

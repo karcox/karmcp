@@ -718,53 +718,6 @@
 	}
 
 	/**
-	 * Premium prompts — "Sync Library" button.
-	 */
-	function initProSync() {
-		document.querySelectorAll( '.karmcp-pro-sync-btn' ).forEach( function ( btn ) {
-			btn.addEventListener( 'click', function () {
-				if ( typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) {
-					return;
-				}
-				var original = btn.innerHTML;
-				btn.disabled = true;
-				btn.innerHTML = '<span class="dashicons dashicons-update spin" aria-hidden="true"></span> ' + ( karmcpToolsAdmin.syncing || 'Syncing…' );
-
-				// Action override via data-sync-action lets the same button
-				// pattern work for prompts and templates. Falls back to the
-				// prompts action for backwards compat with the existing UI.
-				var action = btn.getAttribute( 'data-sync-action' ) || 'karmcp_tools_sync_pro_prompts';
-				var body = new URLSearchParams();
-				body.append( 'action', action );
-				body.append( 'nonce', btn.getAttribute( 'data-nonce' ) || '' );
-
-				fetch( karmcpToolsAdmin.ajaxUrl, {
-					method: 'POST',
-					credentials: 'same-origin',
-					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-					body: body.toString(),
-				} )
-					.then( function ( r ) { return r.json(); } )
-					.then( function ( res ) {
-						if ( res && res.success ) {
-							window.location.reload();
-						} else {
-							var msg = ( res && res.data && res.data.message ) ? res.data.message : 'Sync failed.';
-							window.alert( msg );
-							btn.disabled = false;
-							btn.innerHTML = original;
-						}
-					} )
-					.catch( function () {
-						window.alert( 'Sync failed. Check your connection and try again.' );
-						btn.disabled = false;
-						btn.innerHTML = original;
-					} );
-			} );
-		} );
-	}
-
-	/**
 	 * Brand Kits page — transient success toast with an optional "View site" link.
 	 *
 	 * @param {string} message The toast message.
@@ -953,13 +906,6 @@
 	 * run all three regardless of which tab rendered.
 	 */
 	function initPagers() {
-		initGridPagination( {
-			gridSelector: '.karmcp-pro-prompts-grid',
-			cardSelector: '.karmcp-pro-prompt-card',
-			filterSelector: '.karmcp-pro-prompts .karmcp-pro-filters',
-			pageSize: 12,
-			label: 'prompts'
-		} );
 		initGridPagination( {
 			gridSelector: '.karmcp-brand-kit-grid',
 			cardSelector: '.karmcp-brand-kit-card',
@@ -1631,7 +1577,6 @@
 		initBase64Generator();
 		initCopyButtons();
 		initPagers();
-		initProSync();
 		initBrandKits();
 		initCodeOverlay();
 		initClickToCopy();

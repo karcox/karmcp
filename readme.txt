@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.20.2
+Stable tag: 1.20.3
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -150,6 +150,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.20.3 =
+
+* Fixed: when the WebP copy of an image came out **bigger** than the original — which happens on ordinary photographs more often than you would expect — it was kept anyway and served to visitors in place of the smaller original. It is now discarded, and the number of discards is reported: if it happens to every image, the WebP quality setting is too high for your photos.
 
 = 1.20.2 =
 

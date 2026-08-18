@@ -158,9 +158,10 @@ class KarMCP_Image_Optimizer {
 		$generator  = new KarMCP_Webp_Generator( $this->settings['quality'] );
 		$webp_ok    = $this->settings['webp'] && $generator->is_available();
 		$full_abs   = '' !== $full_rel ? rtrim( $basedir, '/\\' ) . '/' . $full_rel : '';
-		$before     = 0;
-		$after      = 0;
-		$webp_bytes = 0;
+		$before         = 0;
+		$after          = 0;
+		$webp_bytes     = 0;
+		$webp_discarded = 0;
 		$backups    = array();
 		$webps      = array();
 
@@ -197,6 +198,11 @@ class KarMCP_Image_Optimizer {
 				if ( ! is_wp_error( $sibling ) && file_exists( $sibling ) ) {
 					$webps[]     = $sibling;
 					$webp_bytes += (int) filesize( $sibling );
+				} elseif ( is_wp_error( $sibling ) && 'webp_not_smaller' === $sibling->get_error_code() ) {
+					// Counted, not hidden: a library where every image lands here
+					// is telling you the encode quality is wrong for it, and that
+					// only shows up if the number is reported.
+					++$webp_discarded;
 				}
 			}
 		}
@@ -206,6 +212,7 @@ class KarMCP_Image_Optimizer {
 			'original_bytes'  => $before,
 			'optimized_bytes' => $after,
 			'webp_bytes'      => $webp_bytes,
+			'webp_discarded'  => $webp_discarded,
 			'backups'         => $backups,
 			'webps'           => $webps,
 		);

@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.20.3]
+
+### Fixed
+
+- **A WebP that came out bigger than its source is now discarded instead of kept and served.** WebP being smaller is the premise of generating it, not a guarantee: on photographic JPEGs already saved at a sensible quality the re-encode regularly grows. Measured on one site's library, **ten photographs and every one of their generated sub-sizes came out larger, from +15% to +43%** — so each upload left a second file on disk, and the rewriter, which prefers the sibling whenever it exists, then served the **larger** of the two to every visitor. A loss twice over.
+
+  `KarMCP_Webp_Generator` compares the two sizes after encoding and deletes a sibling that saved nothing, returning `webp_not_smaller` with both byte counts. Nothing else needed changing: the rewriter already falls back to the original when the sibling is absent, and the optimizer already tolerated an error from the generator.
+
+  The optimizer now also returns `webp_discarded`, deliberately: **a library where every image lands there is telling you the encode quality is wrong for that material**, and that only becomes visible if the number is reported. This check fixes the outcome at upload time; it is not a verdict on WebP, and the quality setting is a separate conversation.
+
+  The default stays `convert_webp: true`. Inverting it would have hidden the cause behind a switch, and would give up the real savings WebP does deliver on flat graphics and screenshots.
+
 ## [1.20.2]
 
 ### Added

@@ -474,6 +474,20 @@ function admin_url( $path = '' ): string {
 	return 'http://example.test/wp-admin/' . $path;
 }
 
+if ( ! function_exists( 'wp_delete_file' ) ) {
+	function wp_delete_file( $file ) {
+		if ( file_exists( $file ) ) {
+			unlink( $file );
+		}
+	}
+}
+
+if ( ! function_exists( 'number_format_i18n' ) ) {
+	function number_format_i18n( $number, $decimals = 0 ) {
+		return number_format( (float) $number, (int) $decimals );
+	}
+}
+
 if ( ! function_exists( 'untrailingslashit' ) ) {
 	function untrailingslashit( $value ) {
 		return rtrim( (string) $value, '/\\' );

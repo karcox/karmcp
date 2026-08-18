@@ -657,6 +657,17 @@ class KarMCP_Ability_Registrar {
 			$this->ability_names = array_merge( $this->ability_names, $skills->get_ability_names() );
 		}
 
+		// Skills write-side, same gate. Ships disabled in KarMCP -> Tools like
+		// everything else that writes, and needs manage_options + unfiltered_html
+		// on top of that.
+		if ( class_exists( 'KarMCP_Skill_Write_Abilities' )
+			&& class_exists( 'KarMCP_Agent_Skills_Module' )
+			&& KarMCP_Agent_Skills_Module::is_enabled() ) {
+			$skills_write = new KarMCP_Skill_Write_Abilities();
+			$skills_write->register();
+			$this->ability_names = array_merge( $this->ability_names, $skills_write->get_ability_names() );
+		}
+
 		// Project Memory (Pro; self-guards on license). Not Elementor-dependent;
 		// gated by the Memory module so the admin can switch the runtime exposure
 		// off. is_enabled() runs before the module's init boot.

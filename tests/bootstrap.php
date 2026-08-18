@@ -135,6 +135,11 @@ function sanitize_text_field( $value ): string {
 	return trim( preg_replace( '/[\r\n\t ]+/', ' ', strip_tags( (string) $value ) ) );
 }
 
+function sanitize_textarea_field( $value ): string {
+	// sanitize_text_field with the line breaks kept, same as WordPress.
+	return trim( preg_replace( '/[	 ]+/', ' ', strip_tags( (string) $value ) ) );
+}
+
 function sanitize_key( $value ): string {
 	return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) );
 }
@@ -544,6 +549,31 @@ if ( ! function_exists( 'wp_insert_post' ) ) {
 		$GLOBALS['karmcp_test']['inserted_posts'][]   = $postarr;
 
 		return $id;
+	}
+}
+
+if ( ! function_exists( 'wp_update_post' ) ) {
+	function wp_update_post( $postarr, $wp_error = false ) {
+		$id   = (int) ( $postarr['ID'] ?? 0 );
+		$post = $GLOBALS['karmcp_test']['posts'][ $id ] ?? null;
+		if ( ! $post ) {
+			return $wp_error ? new WP_Error( 'invalid_post', 'No post.' ) : 0;
+		}
+		foreach ( $postarr as $key => $value ) {
+			if ( 'ID' === $key ) {
+				continue;
+			}
+			// WordPress unslashes on the way in, same as the metadata API.
+			$post->$key = is_string( $value ) ? wp_unslash( $value ) : $value;
+		}
+		$GLOBALS['karmcp_test']['updated_posts'][] = $postarr;
+		return $id;
+	}
+}
+
+if ( ! function_exists( 'get_edit_post_link' ) ) {
+	function get_edit_post_link( $post_id, $context = 'display' ) {
+		return 'https://example.test/wp-admin/post.php?post=' . (int) $post_id . '&action=edit';
 	}
 }
 

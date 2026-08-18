@@ -89,7 +89,10 @@ class KarMCP_Skill_Store {
 					'delete_published_posts' => $cap,
 					'delete_others_posts'    => $cap,
 				),
-				'supports'            => array( 'title', 'editor', 'excerpt', 'revisions', 'page-attributes' ),
+				// No 'editor': a skill is Markdown, and the block editor escapes it a
+				// level deeper on every save. KarMCP_Skill_Editor puts a verbatim
+				// textarea in its place.
+				'supports'            => array( 'title', 'excerpt', 'revisions', 'page-attributes' ),
 				'labels'              => array(
 					'name'               => __( 'Skills', 'karmcp' ),
 					'singular_name'      => __( 'Skill', 'karmcp' ),

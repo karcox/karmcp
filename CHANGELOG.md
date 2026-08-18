@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.25.2]
+
+### Fixed
+
+- **Editing a skill by hand was corrupting it.** The `karmcp_skill` post type declared `editor` support with `show_in_rest`, which means the block editor — and a skill is Markdown, not HTML. Gutenberg escaped it: every `<` and `>` came back as an entity, and again on the next save, so the damage compounded silently. Found on this site's `montar-curso` skill, 112 KB of guide that had already been through it once: 113 `&lt;` and 218 `&gt;` where the author had typed angle brackets, and one further edit turned those into `&amp;lt;` and `&amp;gt;`. The code examples stop reading as code and the block quotes stop being block quotes, in a document whose whole job is to be read literally by an agent.
+
+  The post type no longer declares `editor` support. `KarMCP_Skill_Editor` puts a plain monospaced textarea in its place and writes the body through `wp_insert_post_data`, after the `_save_pre` filters, so what was typed is what is stored. Nonce and `manage_options` on the way in — the same bar the post type already sets for touching a skill at all.
+
+### Added
+
+- **`skill-write`**, so a skill can be written through the API instead of through a browser. This goes against what the read side says in as many words — that letting an agent rewrite its own instructions is a governance hole dressed up as a feature — and that objection is right, so the tool gets the treatment this plugin already gives everything powerful enough to be dangerous: it **ships disabled**, an administrator turns it on under KarMCP → Tools, it needs `manage_options` **and** `unfiltered_html`, replacing a whole body needs `confirm`, and every write leaves a WordPress revision.
+
+  Three operations, and the important one is `edit`: a search and replace over the body, with the uniqueness contract `edit-file` uses — `old_string` must match exactly once unless `replace_all` is set, so an ambiguous edit is refused instead of applied to a guess. That contract is the whole point on a document of this size, where a wrong replacement is a silent corruption nobody reads back. It is also the only operation that works at scale: a 120 KB skill cannot be re-sent whole in a tool call, so `update`'s whole-body replacement stops working at exactly the size where it is needed. `edit` is additionally what can repair a skill the editor already escaped, which by hand was impossible — the editor put the escaping straight back on save.
+
+  `unfiltered_html` is required for a specific reason rather than out of caution: without it WordPress runs the body through kses on the way in, which escapes the angle brackets in every code example and reproduces the exact corruption this release exists to end.
+
 ## [1.25.1]
 
 ### Fixed

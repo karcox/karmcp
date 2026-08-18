@@ -644,7 +644,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 40;
+	const DEFAULTS_VERSION = 41;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1268,6 +1268,14 @@ class KarMCP_Admin {
 		// executable code, same posture as the widget and block builders.
 		if ( $applied < 40 ) {
 			$add = array_merge( $add, self::extension_tool_slugs() );
+		}
+
+		// v41 - skill-write edits the operating manuals every agent reads before
+		// working here. The read side is deliberately read-only for that reason;
+		// this one exists because editing a skill by hand was corrupting it, and
+		// it ships off so that turning it on stays a decision a human makes.
+		if ( $applied < 41 ) {
+			$add[] = 'karmcp/skill-write';
 		}
 
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
@@ -5664,6 +5672,11 @@ class KarMCP_Admin {
 						'label'       => __( 'Get Skill', 'karmcp' ),
 						'description' => __( 'Full text of one skill by machine name.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/skill-write' => array(
+						'label'       => __( 'Write Skill', 'karmcp' ),
+						'description' => __( 'Creates and edits skills through the API, so a body is stored exactly as written instead of being escaped a level deeper on every save by the editor. Search-and-replace editing for long skills. Off by default: a skill steers every agent on this site. Needs manage_options + unfiltered_html, and every write leaves a revision.', 'karmcp' ),
+						'badges'      => array( 'writes' ),
 					),
 				),
 			);

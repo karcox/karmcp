@@ -273,6 +273,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/skills/class-skill-store.php';
 		require_once KARMCP_DIR . 'includes/skills/class-skill-catalog.php';
 		require_once KARMCP_DIR . 'includes/skills/class-skill-outline.php';
+		require_once KARMCP_DIR . 'includes/skills/class-skill-editor.php';
 		// KarMCP Themer (free): builder-agnostic theme builder engine + module + MCP tools.
 		require_once KARMCP_DIR . 'includes/themer/class-themer-matcher-registry.php';
 		require_once KARMCP_DIR . 'includes/themer/class-themer-conditions.php';
@@ -355,6 +356,7 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/abilities/class-vulnerability-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-db-cleanup-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-skill-abilities.php';
+		require_once KARMCP_DIR . 'includes/abilities/class-skill-write-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-content-mirror-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-content-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-dispatcher-abilities.php';
@@ -462,6 +464,7 @@ class KarMCP_Bootstrap {
 		add_action( 'init', array( 'KarMCP_Kit_Backup_Store', 'register_post_type' ) );
 		add_action( 'init', array( 'KarMCP_Widget_Store', 'register_post_type' ) );
 		add_action( 'init', array( 'KarMCP_Skill_Store', 'register_post_type' ) );
+		KarMCP_Skill_Editor::init();
 		( new KarMCP_Widget_Loader() )->register_hooks();
 		add_action( 'init', array( 'KarMCP_PHP_Snippet_Store', 'register_post_type' ) );
 		( new KarMCP_PHP_Snippet_Loader() )->register_hooks();

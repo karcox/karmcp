@@ -157,7 +157,7 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 * Changed: **KarMCP stopped charging every visitor for work only the admin and the MCP server do.** Four of its tables each asked the database "am I installed?" on every single page load - three or four queries per visit to answer a question that changes only when the plugin updates. They now share one autoloaded record and the check costs nothing.
 * Changed: **image-heavy pages got much cheaper.** Serving WebP asked the filesystem whether each `.webp` file existed once per image size, per image, on every page - around a hundred checks on a gallery page. It now asks once per file.
 * Changed: **the editor's background chatter stopped loading the whole plugin.** Every autosave, every heartbeat, and every background request made by any other plugin was loading KarMCP's admin screens and its full tool set - about 2.9 MB of code for a request that never uses any of it. That only happens now for KarMCP's own requests.
-* Added: a written performance audit of the plugin itself, in `docs/AUDIT-RENDIMIENTO-PLUGIN.md`: what each kind of request costs, how it was measured, what is worth fixing next, and which obvious suspects turned out to be harmless.
+* Added: a written performance audit of the plugin itself, published in the source repository: what each kind of request costs, how it was measured, what is worth fixing next, and which obvious suspects turned out to be harmless.
 
 = 1.25.3 =
 

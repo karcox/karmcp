@@ -78,6 +78,20 @@ Every tool runs a real WordPress capability check before it does anything, so an
 
 Anything that writes, deletes, or renders site-wide **ships disabled** and is opt-in from **KarMCP → Tools**. Destructive operations additionally require an explicit `confirm: true`. Administrators cannot be edited over MCP, there is no delete-user tool, and filesystem access is confined to the WordPress root with automatic backups and an audit log.
 
+## Languages
+
+English and Spanish (`es_ES`). Switch your site's language and the admin, the Themer, the sandbox screens, the SEO and accessibility findings and every tool error message follow it — 2,184 strings, everything a person can see.
+
+The `label` and `description` of each MCP tool stay in English on purpose. They are read by the AI agent, never rendered in the admin, and their wording is tested against agent behaviour; the POT marks them so nobody translates them by mistake.
+
+To add a language, or after changing any translatable string:
+
+```bash
+php tools/make-pot.php && php tools/make-po.php fr_FR && php tools/make-mo.php fr_FR
+```
+
+No WP-CLI or GNU gettext needed — extract, merge and compile are self-contained PHP. `TranslationFilesTest` then checks that the PO matches the POT, that no placeholder was lost, and that the MO is really the compiled form of the PO.
+
 ## Tests
 
 The suite runs with plain PHPUnit against a self-contained WordPress stub harness — no WordPress install required:

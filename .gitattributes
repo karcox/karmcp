@@ -37,3 +37,8 @@
 /CLAUDE.md       export-ignore
 /CONTRIBUTING.md export-ignore
 /SECURITY.md     export-ignore
+
+# Compiled translations are binary. Git's own heuristic already gets this right,
+# but a .mo whose byte offsets went through a CRLF conversion is a corrupt file
+# that still looks plausible, so it is not left to a heuristic.
+*.mo binary

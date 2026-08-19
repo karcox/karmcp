@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.27.0]
+
+### Added
+
+- **A Spanish translation, and the toolchain that keeps it honest.** The plugin has called `load_plugin_textdomain()` since 1.2.0 and has ~3,400 translatable strings, but `languages/` was empty: there was no POT, so nobody could translate it, and nothing checked that the strings stayed translatable. This release ships `languages/karmcp.pot`, `languages/karmcp-es_ES.po` and the compiled `languages/karmcp-es_ES.mo` — **2,184 strings, every one a person can see**: the whole admin, the Themer, the sandbox screens, the SEO and accessibility audit findings, the OAuth consent screen, the Guardrails messages and every error a tool returns.
+
+- **`tools/make-pot.php`, `tools/make-po.php` and `tools/make-mo.php`.** Neither WP-CLI nor the GNU gettext binaries are a given on a Windows dev box, and both were missing here, so the three steps are self-contained PHP: extract, merge (what `msgmerge` does — existing translations are kept, dropped strings go, new ones arrive empty), compile (what `msgfmt` does). Extraction runs on `token_get_all()`, not a regex, so `'a' . 'b'` concatenation, both quote styles and their escapes all resolve, and a gettext call inside a comment or a string never matches.
+
+- **`TranslationFilesTest`**, eight tests over the shipped files: the PO holds exactly what the POT does, every user-facing string is translated, every plural has all its forms, every translation carries the same printf placeholders as its original, and the MO is genuinely the compiled form of the PO next to it — read back by a second implementation of the format, so a bug in the writer cannot agree with itself. `bin/check.ps1` gained a POT freshness step, because nothing inside the suite can tell whether the POT still matches the source: a newly added `__()` would simply never reach a translator.
+
+### Changed
+
+- **The 1,192 strings the AI agent reads are deliberately left in English**, and the POT says so on each of them. They are the `label` and `description` of every MCP tool, and they travel in the tool schema — the admin never shows them, because the Tools page renders its own curated catalogue. They are operating instructions whose wording was tuned against real agent behaviour; translating them would change what the agent is told, on Spanish sites only, with nobody re-testing the result. An empty `msgstr` makes gettext return the English original, which is the intended behaviour, and the test above fails if anyone fills them in.
+
+### Fixed
+
+- **Eleven error messages in the sandbox screens could not be translated.** The inline `<script>` blocks behind the block, widget, extension and PHP-snippet tables fell back to a hardcoded `'Failed.'` (and one `'Request failed.'`) when an AJAX call returned no message of its own — English on every site, whatever its locale. They now come from `__()` through `wp_json_encode()`, like the confirmation prompts next to them already did.
+
 ## [1.26.0]
 
 ### Changed

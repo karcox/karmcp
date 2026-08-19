@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.26.0
+Stable tag: 1.27.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,6 +17,8 @@ KarMCP exposes your WordPress site as **MCP (Model Context Protocol) tools**, so
 It builds on the official WordPress MCP Adapter, which ships bundled. The MCP endpoint is `/wp-json/mcp/karmcp-server` and tool names are prefixed `karmcp-`.
 
 There is no telemetry and no auto-updater: the plugin makes no outbound calls unless you configure one. Third-party copyright notices are in the bundled NOTICE file.
+
+**Available in English and Spanish.** Set your site's language and the whole interface follows it. The descriptions of the MCP tools stay in English on purpose: the AI agent reads them, not you.
 
 **Elementor is optional.** Every WordPress domain below works without it; installing Elementor unlocks the page-building family.
 
@@ -151,6 +153,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.27.0 =
+
+* Added: **the plugin now speaks Spanish.** It has always been written to be translatable, but `languages/` shipped empty, so there was nothing to translate from and nothing to translate to. This release adds the translation template plus a complete Spanish translation: 2,184 strings, which is everything a person can see - the whole admin, the Themer, the sandbox screens, the SEO and accessibility findings, the sign-in consent screen, and every error message a tool can return. Set your site to Spanish and it is simply in Spanish.
+* Changed: the descriptions of the MCP tools themselves stay in English on purpose. They are read by the AI agent, never shown in the admin, and their exact wording has been tested against how agents behave - translating them would change the instructions the agent receives without anyone checking the result.
+* Fixed: eleven error messages in the Sandbox screens ("Failed.", "Request failed.") were hardcoded English and appeared that way whatever the site language. They are translatable now.
 
 = 1.26.0 =
 

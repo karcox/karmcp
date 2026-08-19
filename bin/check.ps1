@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-    Runs the three checks a change has to pass: PHPUnit, PHPCS, PHPStan.
+    Runs the checks a change has to pass: PHPUnit, the POT freshness check,
+    PHPStan and PHPCS.
 
 .DESCRIPTION
     One command, because the alternative is what actually happened for months —
@@ -63,6 +64,14 @@ try {
         $failed += 'PHPUnit (not found)'
     }
     if ($LASTEXITCODE -ne 0) { $failed += 'PHPUnit' }
+
+    # --- POT freshness (blocking) -----------------------------------------
+    # The suite checks that the PO and MO agree with the POT, but nothing in it
+    # can tell whether the POT itself still matches the source: a new __() just
+    # never reaches translators.
+    Section 'POT'
+    php tools\make-pot.php --check
+    if ($LASTEXITCODE -ne 0) { $failed += 'POT' }
 
     # --- PHPStan (blocking) -----------------------------------------------
     Section 'PHPStan'

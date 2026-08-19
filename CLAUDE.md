@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.26.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.27.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -37,9 +37,9 @@ Estándares de WordPress, estrictos: `snake_case` en funciones y variables, `Upp
 pwsh bin/check.ps1
 ```
 
-PHPUnit + PHPStan (bloqueante) + PHPCS (informativo). Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
+PHPUnit + comprobación de frescura del POT + PHPStan + PHPCS, las cuatro bloqueantes. Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
 
-Estado de referencia (1.26.0): **1.139 tests, 4.562 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
+Estado de referencia (1.27.0): **1.147 tests, 8.955 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
 
 ### El entorno, montado en la 1.16.2
 
@@ -170,6 +170,24 @@ Módulos presentes: Themer, Redirects, Prompts, Brand Kits, Agent Skills, Image 
 ### Modo compacto (dispatcher)
 
 Opción `karmcp_dispatcher_mode` (pestaña Tools, por defecto OFF). Encendida, el servidor expone solo 3 meta-herramientas — `list-tools`, `get-tool-schema`, `call-tool` — en vez de ~130, para clientes con tope de herramientas. `call-tool` **delega en el `check_permissions()` de cada ability destino**: no hay escalada de privilegios, y los toggles por herramienta siguen mandando.
+
+### Traducciones (1.27.0)
+
+`languages/` lleva el POT, el `.po` y el `.mo` de español, y **viaja en el zip** (no está en `.gitattributes` como `export-ignore`). El text domain se carga desde siempre en `KarMCP_Bootstrap::load_textdomain()`; lo que faltaba era el material.
+
+Ni WP-CLI ni las utilidades de GNU gettext están en esta máquina, así que los tres pasos son PHP autocontenido en `tools/` (que sí es `export-ignore`, y queda fuera de PHPStan y PHPCS):
+
+```bash
+php tools/make-pot.php          # extrae; --check falla si el POT está viejo
+php tools/make-po.php es_ES     # lo que hace msgmerge
+php tools/make-mo.php es_ES     # lo que hace msgfmt
+```
+
+La extracción va con `token_get_all()`, no con regex: resuelve `'a' . 'b'`, las dos comillas y sus escapes, y nunca captura una llamada que esté dentro de un comentario o de una cadena. `tools/lib-po.php` es el formato compartido por los tres, y la clave de una entrada es exactamente la de gettext (contexto, `\4`, singular) — cambiar eso pierde traducciones en el siguiente merge, en silencio.
+
+> **Las 1.192 cadenas de `includes/abilities/` se quedan en inglés a propósito.** Son el `label` y la `description` de cada herramienta MCP: viajan en el esquema que lee el agente y **no las muestra el admin**, que renderiza su propio catálogo curado desde `class-admin.php:3860`. Son instrucciones operativas afinadas contra el comportamiento real de un agente; traducirlas cambiaría lo que se le dice, solo en sitios en español, sin que nadie vuelva a probarlo. Con el `msgstr` vacío gettext devuelve el original, que es justo lo que se quiere. `make-pot.php` les pone la nota `DO NOT TRANSLATE` a cada una, y `TranslationFilesTest` falla si alguien las rellena.
+
+`bin/check.ps1` corre `make-pot.php --check` porque **la suite no puede saber si el POT sigue cuadrando con el código**: un `__()` nuevo simplemente no llegaría nunca a un traductor. Lo demás sí lo fija `TranslationFilesTest`: el `.po` contiene exactamente lo que el POT, no falta ninguna cadena visible, los plurales están completos, los placeholders de `printf` sobreviven a la traducción, y el `.mo` es de verdad la compilación del `.po` de al lado — releído por una **segunda** implementación del formato binario, para que un fallo del escritor no se dé la razón a sí mismo.
 
 ## Lo que NO existe en este árbol
 

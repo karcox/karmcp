@@ -237,6 +237,8 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 			if ( ! root ) { return; }
 			var nonce = root.getAttribute( 'data-nonce' ) || '';
 			var ajaxUrl = window.ajaxurl || '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>';
+			var failed = <?php echo wp_json_encode( __( 'Failed.', 'karmcp' ) ); ?>;
+			var requestFailed = <?php echo wp_json_encode( __( 'Request failed.', 'karmcp' ) ); ?>;
 
 			function post( action, body ) {
 				body.append( 'action', action );
@@ -285,9 +287,9 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 						btn.disabled = false;
 						if ( res && res.success ) { window.location.reload(); return; }
 						msg.style.color = '#b32d2e';
-						msg.textContent = ( res && res.data && res.data.message ) || 'Failed.';
+						msg.textContent = ( res && res.data && res.data.message ) || failed;
 						if ( res && res.data && res.data.validation ) { renderFindings( findings, res.data.validation ); }
-					} ).catch( function () { btn.disabled = false; msg.textContent = 'Request failed.'; } );
+					} ).catch( function () { btn.disabled = false; msg.textContent = requestFailed; } );
 				} );
 			}
 
@@ -307,7 +309,7 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 						tb.append( 'status', status );
 						post( 'karmcp_toggle_php_snippet', tb ).then( function ( res ) {
 							if ( res && res.success ) { window.location.reload(); }
-							else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || 'Failed.' ); }
+							else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || failed ); }
 						} ).catch( function () { e.target.disabled = false; } );
 					}
 
@@ -318,7 +320,7 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 						db.append( 'snippet_id', id );
 						post( 'karmcp_delete_php_snippet', db ).then( function ( res ) {
 							if ( res && res.success ) { row.parentNode.removeChild( row ); }
-							else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || 'Failed.' ); }
+							else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || failed ); }
 						} ).catch( function () { e.target.disabled = false; } );
 					}
 

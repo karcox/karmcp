@@ -173,6 +173,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 					if ( ! table ) { return; }
 					var nonce = table.getAttribute( 'data-nonce' ) || '';
 					var ajaxUrl = window.ajaxurl || '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>';
+					var failed = <?php echo wp_json_encode( __( 'Failed.', 'karmcp' ) ); ?>;
 
 					function post( action, body ) {
 						body.append( 'action', action );
@@ -192,7 +193,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 							b.append( 'status', e.target.getAttribute( 'data-status' ) );
 							post( 'karmcp_toggle_extension', b ).then( function ( res ) {
 								if ( res && res.success ) { window.location.reload(); }
-								else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || 'Failed.' ); }
+								else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || failed ); }
 							} ).catch( function () { e.target.disabled = false; } );
 						}
 
@@ -204,7 +205,7 @@ $karmcp_ext_import_error = isset( $_GET['import_error'] ) ? sanitize_text_field(
 							d.append( 'extension_id', id );
 							post( 'karmcp_delete_extension', d ).then( function ( res ) {
 								if ( res && res.success ) { row.parentNode.removeChild( row ); }
-								else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || 'Failed.' ); }
+								else { e.target.disabled = false; alert( ( res && res.data && res.data.message ) || failed ); }
 							} ).catch( function () { e.target.disabled = false; } );
 						}
 					} );

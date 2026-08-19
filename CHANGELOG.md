@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.26.0]
+
+### Changed
+
+- **The plugin stopped charging every visitor for work only wp-admin and the MCP server do.** An audit of its own per-request cost — written up in [docs/AUDIT-RENDIMIENTO-PLUGIN.md](docs/AUDIT-RENDIMIENTO-PLUGIN.md), with the measurements and the method — found three costs that were paid on requests that could never use what they bought. This release takes the three that needed no change of architecture; the two structural ones (a generated classmap autoloader, and not registering the whole MCP tool surface on REST requests that are not MCP requests) are written up there with their trade-offs and are not in this release.
+
+- **Three or four database queries per page view, to ask a question whose answer changes only when the plugin is updated.** The four stores that own a table — the search index, the change-ledger blobs, OAuth, and redirects — each checked "is my table already at the current version?" on `init` of every request, including a page load by an anonymous visitor. Each answered from its own `karmcp_*_db_version` option written with autoload **off**, so on a site without a persistent object cache that is one `SELECT` per option per request, forever, for four booleans.
+
+  They now share one autoloaded map, `karmcp_schema_state` (`KarMCP_Schema_State`), which arrives inside the `alloptions` WordPress already fetches, and the comparison happens in PHP. Zero extra queries. It is a per-store map and not a single "installed for build X" stamp on purpose: redirects is a module, so its table has to be able to install when someone switches the module on months later, and one global stamp would skip it forever. No migration runs — a site upgrading has an empty map, so each `maybe_install()` executes once more, `dbDelta()` on an already-correct table is a no-op, and the map is written from then on.
+
+- **The WebP rewriter called `stat()` roughly a hundred times on an image-heavy page.** It hooks `wp_calculate_image_srcset`, which hands it the whole srcset, and it asked the filesystem whether a `.webp` sibling existed once per candidate — then again for the same attachment's `src`, and again for any lazy-load attribute. It also re-sanitized the request's `Accept` header on every one of those calls, over a string that cannot change mid-request. Both are now memoized per request. On local disk this was cheap and invisible; on network storage it was not.
+
+- **`admin-ajax.php` no longer loads the admin screens and the entire tool layer.** `is_admin()` is true for AJAX too, so the heartbeat tick of an open editor — plus every autosave, and every AJAX call made by any *other* plugin on the site — was parsing ~2.9 MB of this plugin's PHP for a request that touches none of it. The admin bootstrap now runs on an AJAX request only when the action is one of ours, which is a complete test because every handler this plugin registers there is prefixed `karmcp_`. `admin-post.php` is not an AJAX request, so the `admin_post_karmcp_*` handlers are unaffected.
+
+### Added
+
+- **A performance audit of the plugin itself**, [docs/AUDIT-RENDIMIENTO-PLUGIN.md](docs/AUDIT-RENDIMIENTO-PLUGIN.md): what each kind of request costs, measured with `opcache_compile_file()` over the exact file set each path loads, seven findings with their fix and their effort, the commands to reproduce every number — and the list of obvious suspects that turned out to be innocent, so nobody spends a day optimizing them. `get_tool_catalog()` is the headline there: 1,880 lines and 251 entries, and **0.21 ms** per call. It is a maintainability problem, not a speed one.
+
 ## [1.25.3]
 
 ### Fixed

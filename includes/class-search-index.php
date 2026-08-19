@@ -22,9 +22,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class KarMCP_Search_Index {
 
-	const DB_VERSION        = 1;
-	const DB_VERSION_OPTION = 'karmcp_search_index_db_version';
-	const OBJECT_TYPES      = array( 'page', 'template', 'widget', 'global_color', 'global_font', 'global_class' );
+	const DB_VERSION   = 1;
+	const OBJECT_TYPES = array( 'page', 'template', 'widget', 'global_color', 'global_font', 'global_class' );
 
 	/**
 	 * The index table name.
@@ -49,8 +48,10 @@ class KarMCP_Search_Index {
 	 * Create/upgrade the index table when the stored version is behind.
 	 */
 	public static function maybe_install(): void {
-		$installed = (int) get_option( self::DB_VERSION_OPTION, 0 );
-		if ( $installed >= self::DB_VERSION ) {
+		// Read from the autoloaded schema map, not from an own option with
+		// autoload off — this runs on init:20 of every request, visitors
+		// included. See KarMCP_Schema_State.
+		if ( KarMCP_Schema_State::installed( KarMCP_Schema_State::KEY_SEARCH ) >= self::DB_VERSION ) {
 			return;
 		}
 		if ( ! function_exists( 'dbDelta' ) ) {
@@ -78,7 +79,7 @@ class KarMCP_Search_Index {
 			) {$charset};";
 			dbDelta( $sql );
 		}
-		update_option( self::DB_VERSION_OPTION, self::DB_VERSION, false );
+		KarMCP_Schema_State::mark( KarMCP_Schema_State::KEY_SEARCH, self::DB_VERSION );
 	}
 
 	/**
@@ -332,7 +333,7 @@ class KarMCP_Search_Index {
 		if ( function_exists( 'wp_is_post_revision' ) && wp_is_post_revision( $post_id ) ) {
 			return;
 		}
-		if ( (int) get_option( self::DB_VERSION_OPTION, 0 ) < self::DB_VERSION ) {
+		if ( KarMCP_Schema_State::installed( KarMCP_Schema_State::KEY_SEARCH ) < self::DB_VERSION ) {
 			return;
 		}
 		// Elementor inserts its default kit during its OWN activation (a save_post

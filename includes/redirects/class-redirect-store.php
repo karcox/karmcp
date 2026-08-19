@@ -4,8 +4,9 @@
  * normalization, loop guarding, target resolution, and the ledger-rollback
  * applier for the `redirect-row` change type.
  *
- * Follows the KarMCP_Search_Index storage pattern (version-gated dbDelta,
- * a DB_VERSION const + option, maybe_install() on init). The pure methods
+ * Follows the KarMCP_Search_Index storage pattern (version-gated dbDelta, a
+ * DB_VERSION const checked against KarMCP_Schema_State, maybe_install() on
+ * init). The pure methods
  * (normalize_path/would_loop/resolve_target and create()'s validation) are
  * DB-free so they unit-test without a database; persistence is exercised by the
  * live smoke test.
@@ -25,9 +26,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class KarMCP_Redirect_Store {
 
-	const DB_VERSION        = 1;
-	const DB_VERSION_OPTION = 'karmcp_redirects_db_version';
-	const MAX_SOURCE_LEN    = 191;
+	const DB_VERSION     = 1;
+	const MAX_SOURCE_LEN = 191;
 
 	/**
 	 * The redirects table name.
@@ -50,7 +50,11 @@ class KarMCP_Redirect_Store {
 	 * Create/upgrade the table when the stored version is behind.
 	 */
 	public static function maybe_install(): void {
-		if ( (int) get_option( self::DB_VERSION_OPTION, 0 ) >= self::DB_VERSION ) {
+		// Autoloaded schema map, not an own option with autoload off: this runs
+		// on init:20 of every request while the module is on. A per-store key
+		// (rather than one plugin-version stamp) is what lets the table still
+		// install when the module is switched on later. See KarMCP_Schema_State.
+		if ( KarMCP_Schema_State::installed( KarMCP_Schema_State::KEY_REDIRECTS ) >= self::DB_VERSION ) {
 			return;
 		}
 		if ( ! function_exists( 'dbDelta' ) ) {
@@ -83,7 +87,7 @@ class KarMCP_Redirect_Store {
 			) {$charset};";
 			dbDelta( $sql );
 		}
-		update_option( self::DB_VERSION_OPTION, self::DB_VERSION, false );
+		KarMCP_Schema_State::mark( KarMCP_Schema_State::KEY_REDIRECTS, self::DB_VERSION );
 	}
 
 	// ---------------------------------------------------------------------

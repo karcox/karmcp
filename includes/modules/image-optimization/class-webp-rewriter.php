@@ -33,6 +33,32 @@ class KarMCP_Webp_Rewriter {
 	private $serve_frontend;
 
 	/**
+	 * Memoized `Accept` header for this request.
+	 *
+	 * The header cannot change mid-request, but `filter_srcset` calls the check
+	 * once per srcset candidate — so a page with 20 images and 5 sizes each ran
+	 * `sanitize_text_field( wp_unslash( … ) )` a hundred times over the same
+	 * string. Only the header is cached: the REST/CLI/cron probe stays live,
+	 * because `REST_REQUEST` is defined partway through a REST request and a
+	 * cached "not REST yet" would be wrong for the rest of it.
+	 *
+	 * @var string|null
+	 */
+	private $accept = null;
+
+	/**
+	 * Memoized `<file>.webp` existence, keyed by the source file's absolute path.
+	 *
+	 * Same reason: the srcset filter asks about every candidate, and the same
+	 * attachment shows up again in `src`, in the srcset, and in any lazy-load
+	 * attribute — so without this a single image costs a handful of `stat()`
+	 * calls and a whole page costs ~100. Per instance, so it dies with the request.
+	 *
+	 * @var array<string,bool>
+	 */
+	private $sibling = array();
+
+	/**
 	 * @param bool $serve_frontend Rewrite frontend requests too (REST/CLI is always on).
 	 */
 	public function __construct( bool $serve_frontend = true ) {
@@ -91,8 +117,23 @@ class KarMCP_Webp_Rewriter {
 
 	/** @return bool Whether the current request should get WebP. */
 	private function allowed(): bool {
-		$accept = isset( $_SERVER['HTTP_ACCEPT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ACCEPT'] ) ) : '';
-		return self::should_rewrite( $accept, $this->is_rest_context(), $this->serve_frontend );
+		if ( null === $this->accept ) {
+			$this->accept = isset( $_SERVER['HTTP_ACCEPT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ACCEPT'] ) ) : '';
+		}
+		return self::should_rewrite( $this->accept, $this->is_rest_context(), $this->serve_frontend );
+	}
+
+	/**
+	 * Whether a `.webp` sibling exists next to a source file, memoized per request.
+	 *
+	 * @param string $path Absolute path of the source (jpg/png) file.
+	 * @return bool
+	 */
+	private function has_sibling( string $path ): bool {
+		if ( ! isset( $this->sibling[ $path ] ) ) {
+			$this->sibling[ $path ] = file_exists( $path . '.webp' );
+		}
+		return $this->sibling[ $path ];
 	}
 
 	/**
@@ -125,7 +166,7 @@ class KarMCP_Webp_Rewriter {
 			return $url;
 		}
 		$path = $this->url_to_path( $url );
-		if ( '' === $path || ! file_exists( $path . '.webp' ) ) {
+		if ( '' === $path || ! $this->has_sibling( $path ) ) {
 			return $url;
 		}
 		return $webp;

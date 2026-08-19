@@ -19,8 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class KarMCP_OAuth_Store {
 
-	const DB_VERSION        = 2; // v2: BIGINT timestamps (2038-safe) + refresh_of index.
-	const DB_VERSION_OPTION = 'karmcp_oauth_db_version';
+	const DB_VERSION = 2; // v2: BIGINT timestamps (2038-safe) + refresh_of index.
 	// A freshly-registered client legitimately has no tokens until the user
 	// finishes authorizing, so orphan-client pruning only touches rows older
 	// than this grace window.
@@ -61,12 +60,14 @@ class KarMCP_OAuth_Store {
 	 * Create/upgrade the OAuth tables when the stored version is behind.
 	 */
 	public static function maybe_install(): void {
-		$installed = (int) get_option( self::DB_VERSION_OPTION, 0 );
-		if ( $installed >= self::DB_VERSION ) {
+		// Autoloaded schema map, not an own option with autoload off: OAuth's
+		// on_init runs on init:20 of every request, whether or not the sign-in
+		// flow is enabled. See KarMCP_Schema_State.
+		if ( KarMCP_Schema_State::installed( KarMCP_Schema_State::KEY_OAUTH ) >= self::DB_VERSION ) {
 			return;
 		}
 		self::install_tables();
-		update_option( self::DB_VERSION_OPTION, self::DB_VERSION, false );
+		KarMCP_Schema_State::mark( KarMCP_Schema_State::KEY_OAUTH, self::DB_VERSION );
 	}
 
 	/**

@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.25.3` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.26.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -39,7 +39,7 @@ pwsh bin/check.ps1
 
 PHPUnit + PHPStan (bloqueante) + PHPCS (informativo). Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
 
-Estado de referencia (1.25.3): **1.124 tests, 4.536 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
+Estado de referencia (1.26.0): **1.139 tests, 4.562 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
 
 ### El entorno, montado en la 1.16.2
 
@@ -67,7 +67,7 @@ php tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon
 
 ### La suite
 
-Corre sobre stubs, sin instalar WordPress. Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local. Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
+Corre sobre stubs, sin instalar WordPress. Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
 
 El harness comparte stubs en `tests/bootstrap.php`, y ahí está la trampa: **un stub del harness gana al que declare un fichero de test**, porque el bootstrap carga primero. Si añades ahí una función que un test ya simulaba por su cuenta, ese test empieza a leer una fixture distinta y falla lejos del cambio. Pasó con `wp_get_object_terms()` y los menús.
 
@@ -85,9 +85,13 @@ Tres hooks, en este orden:
 
 ### Las clases de herramientas se cargan bajo demanda (1.16.2)
 
-`load_classes()` carga el runtime. Los **76 archivos de `includes/abilities/`** los carga `KarMCP_Bootstrap::load_ability_classes()` — idempotente, pública— y solo cuando alguien pide una herramienta: `wp_abilities_api_init` (que es **perezoso**: dispara en la primera llamada a `wp_get_ability()`), `wp-admin`, y `KarMCP_Cloud_Sync`. Una visita al front que no toca ninguna herramienta no parsea 1,1 MB de PHP.
+`load_classes()` carga el runtime. Los **76 archivos de `includes/abilities/`** los carga `KarMCP_Bootstrap::load_ability_classes()` — idempotente, pública— y solo cuando alguien pide una herramienta: `wp_abilities_api_init` (que es **perezoso**: dispara en la primera llamada a `wp_get_ability()`), `mcp_adapter_init`, y wp-admin. Una visita al front que no toca ninguna herramienta no parsea 1,2 MB de PHP.
 
 **Si añades un archivo de abilities, va en `load_ability_classes()`, no en `load_classes()`.** Y el orden importa: el trait de dispatch antes de las integraciones, cada base abstracta antes de sus subclases.
+
+> **`is_admin()` también es cierto en `admin-ajax.php`**, así que el diferido se caía por ahí: el latido del editor y cualquier llamada AJAX de otro plugin cargaban las pantallas de admin y toda la capa de herramientas. Desde la 1.26.0 `boot()` pasa por `admin_context_needs_tools()`, que en una petición AJAX solo deja pasar las acciones `karmcp_`. **Si registras un handler de admin-ajax, tiene que llevar ese prefijo** o no se cargará la clase que lo atiende. `admin-post.php` no es AJAX y no está afectado.
+
+> **Lo que se carga en cada petición está medido**, no estimado: [docs/AUDIT-RENDIMIENTO-PLUGIN.md](docs/AUDIT-RENDIMIENTO-PLUGIN.md) tiene las cifras por ruta, el método para reproducirlas, y los dos cambios estructurales que quedan pendientes (autoloader por classmap, y no montar el servidor MCP en peticiones REST que no son MCP).
 
 > **La regla que lo sostiene:** ningún archivo fuera de `includes/abilities/` puede depender de una clase de ahí en tiempo de carga. Hay seis referencias permitidas, cada una con su motivo, y `DeferredAbilityLoadTest` las fija. Si añades una séptima el test te dice qué hacer: quitarla, llamar a `load_ability_classes()` antes, o justificarla en `ALLOWED`. Sin ese test, romperlo es un fatal en producción que la suite no ve.
 
@@ -227,6 +231,7 @@ Fuera de esta lista, sin abordar y verificado el 2026-08-14: **no hay CI** (`.gi
 | [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) | Themer extendido: **hecho** (referencia en el apéndice). SEO: **`audit-page-seo` hecho**. Accesibilidad: pendiente, con los seams verificados y el motor de reglas ya construido. |
 | [docs/ROADMAP-SECURITY.md](docs/ROADMAP-SECURITY.md) | El apartado de Seguridad, para sustituir a Wordfence: CI, pestaña Security, `harden-site`, drop-in de fatales, `update-core`, módulo de vulnerabilidades y parcheo. Escrito para implementarse desde cero. |
 | [docs/ROADMAP-OPTIMIZE.md](docs/ROADMAP-OPTIMIZE.md) | Continuación de la pestaña Optimize (1.11.0): prevención, autocargadas, cron, índices, coste por plugin. Lo que ya está hecho y lo que no debe entrar. |
+| [docs/AUDIT-RENDIMIENTO-PLUGIN.md](docs/AUDIT-RENDIMIENTO-PLUGIN.md) | Lo que cuesta **este** plugin por petición (2026-08-19, medido): 1,5 MB en cada visita, 2,7 MB en cada petición REST, 3-4 consultas de opción evitables. Siete hallazgos, y la lista de sospechosos que resultaron inocentes. |
 | [docs/ROADMAP-ELEMENT-EXTENSIONS.md](docs/ROADMAP-ELEMENT-EXTENSIONS.md) | Extensiones de elemento. Parte atómica **hecha** (1.13.0/1.13.1); **parte clásica pendiente y es la que más se usa** — los elementos atómicos solo existen con el Editor V4 activado y solo en lo construido después. Las costuras de ambos mundos están verificadas contra 4.2.2/Pro 4.2.1. |
 | [docs/MAINTENANCE-UPSTREAM.md](docs/MAINTENANCE-UPSTREAM.md) | Nota interna de mantenimiento: qué se ha revisado del árbol de origen y qué divergencias no deben reimportarse. |
 | [docs/WIDGETS-UNLIMITED-ELEMENTS.md](docs/WIDGETS-UNLIMITED-ELEMENTS.md) | Los doce widgets de Unlimited Elements que usa content.karcos.com, con sus claves reales leídas de instancias vivas. **Ninguno está en el catálogo curado y la introspección no los resuelve**, así que esto es la única descripción que existe de seis de ellos. |

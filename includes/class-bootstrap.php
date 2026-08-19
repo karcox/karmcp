@@ -56,7 +56,7 @@ class KarMCP_Bootstrap {
 
 		self::wire_hooks();
 
-		if ( is_admin() ) {
+		if ( is_admin() && self::admin_context_needs_tools() ) {
 			self::load_admin();
 		}
 
@@ -105,6 +105,9 @@ class KarMCP_Bootstrap {
 		// Schema compatibility + the karmcp_register_ability() entry point
 		// must load before any ability group registers.
 		require_once KARMCP_DIR . 'includes/class-schema-compat.php';
+		// Installed-schema map. Loads before every store that owns a table, all
+		// of which ask it on init:20 whether their dbDelta still has work to do.
+		require_once KARMCP_DIR . 'includes/class-schema-state.php';
 		require_once KARMCP_DIR . 'includes/class-id-generator.php';
 		require_once KARMCP_DIR . 'includes/class-url-guard.php';
 		require_once KARMCP_DIR . 'includes/class-site-context.php';
@@ -511,6 +514,40 @@ class KarMCP_Bootstrap {
 		KarMCP_Security_Monitor::init();
 
 		( new KarMCP_Admin_Bar() )->init();
+	}
+
+	/**
+	 * Whether this wp-admin request is one that actually needs the admin screens
+	 * and the tool classes behind them.
+	 *
+	 * `is_admin()` is true for `admin-ajax.php` too, so without this check the
+	 * heartbeat tick of an open editor — plus every autosave and every AJAX call
+	 * made by any OTHER plugin on the site — loaded the admin class and the whole
+	 * ability layer: ~2.9 MB of PHP for a request that never touches either.
+	 *
+	 * Every handler this plugin registers on admin-ajax is prefixed `karmcp_`
+	 * (KarMCP_Admin, KarMCP_Bulk_Optimizer, KarMCP_Themer_Extended), so the action
+	 * name is a complete and reliable test. Note the last two live in
+	 * load_classes(), not here, so they keep working either way.
+	 *
+	 * `admin-post.php` is not an AJAX request, so the `admin_post_karmcp_*`
+	 * handlers on KarMCP_Admin are unaffected and still load.
+	 *
+	 * @since 1.26.0
+	 *
+	 * @return bool
+	 */
+	private static function admin_context_needs_tools(): bool {
+		if ( ! function_exists( 'wp_doing_ajax' ) || ! wp_doing_ajax() ) {
+			return true;
+		}
+		// Routing only — this decides which files to load, never what to do with
+		// the request. The handler that acts on it does its own nonce and
+		// capability checks, which is where that belongs.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+
+		return 0 === strpos( $action, 'karmcp_' );
 	}
 
 	/**

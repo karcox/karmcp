@@ -48,6 +48,8 @@ function karmcp_test_reset(): void {
 		'now'                => null,      // format => value, pinning current_time().
 		'cpt_posts'          => array(),   // post_type => WP_Post[] for get_posts().
 		'options'            => array(),   // option name => value (get_option/update_option).
+		'option_autoload'    => array(),   // option name => the $autoload update_option() was called with.
+		'upload_dir'         => null,      // wp_upload_dir() override: [ basedir, baseurl ].
 		'cpt_tax_supported'  => true,      // Toggles the ACF 6.1+ CPT/tax API stubs.
 		'acf_post_types'     => array(),   // key/ID => acf-post-type definition.
 		'acf_taxonomies'     => array(),   // key/ID => acf-taxonomy definition.
@@ -420,8 +422,21 @@ function get_option( $name, $default = false ) {
 	return $GLOBALS['karmcp_test']['options'][ $name ] ?? $default;
 }
 
+if ( ! function_exists( 'wp_upload_dir' ) ) {
+	function wp_upload_dir() {
+		return $GLOBALS['karmcp_test']['upload_dir'] ?? array(
+			'basedir' => sys_get_temp_dir() . '/karmcp-uploads',
+			'baseurl' => 'https://example.com/wp-content/uploads',
+		);
+	}
+}
+
 function update_option( $name, $value, $autoload = null ): bool {
 	$GLOBALS['karmcp_test']['options'][ $name ] = $value;
+	// Recorded, not just discarded: whether an option is autoloaded is a
+	// performance property with no visible symptom when it regresses — the code
+	// keeps working and quietly costs a query per request.
+	$GLOBALS['karmcp_test']['option_autoload'][ $name ] = $autoload;
 	return true;
 }
 

@@ -24,8 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class KarMCP_Change_Blobs {
 
-	const DB_VERSION        = 1;
-	const DB_VERSION_OPTION = 'karmcp_changelog_db_version';
+	const DB_VERSION = 1;
 
 	/**
 	 * The blob table name.
@@ -48,8 +47,9 @@ class KarMCP_Change_Blobs {
 	 * Create/upgrade the blob table when the stored version is behind.
 	 */
 	public static function maybe_install(): void {
-		$installed = (int) get_option( self::DB_VERSION_OPTION, 0 );
-		if ( $installed >= self::DB_VERSION ) {
+		// Autoloaded schema map, not an own option with autoload off: this runs
+		// on init:20 of every request. See KarMCP_Schema_State.
+		if ( KarMCP_Schema_State::installed( KarMCP_Schema_State::KEY_CHANGELOG ) >= self::DB_VERSION ) {
 			return;
 		}
 		if ( ! function_exists( 'dbDelta' ) ) {
@@ -71,7 +71,7 @@ class KarMCP_Change_Blobs {
 			) {$charset};";
 			dbDelta( $sql );
 		}
-		update_option( self::DB_VERSION_OPTION, self::DB_VERSION, false );
+		KarMCP_Schema_State::mark( KarMCP_Schema_State::KEY_CHANGELOG, self::DB_VERSION );
 	}
 
 	/**

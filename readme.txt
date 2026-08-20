@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.28.0
+Stable tag: 1.29.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,13 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.29.0 =
+
+* Removed: **the Prompts and Brand Kits tabs,** and the two modules that existed only to switch them on and off. Both were tab-only features - the admin screen was the whole feature - so their toggles in the Modules tab were switches with nothing behind them. Their Dashboard cards, the six bundled prompt blueprints and the ten bundled kits go with them.
+* Note: **editing the Elementor kit from your AI client is unaffected.** Reading and writing global colors, typography and global classes were never part of those tabs and still work. What went is the visual browser for the bundled kits inside wp-admin.
+* Removed: the Get Help menu at the foot of the section rail. Documentation and Support are still linked from the Dashboard.
+* Fixed: **collapsing the section rail left its text sitting on top of the page.** The rail shrinks to a strip of icons, but the plugin name, the version badge and the rows at its foot kept their full-width wording inside it, so the words ran over the content beside them. Everything in the rail now collapses together.
 
 = 1.28.0 =
 

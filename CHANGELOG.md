@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.29.0]
+
+Two admin tabs come out, the Get Help menu goes with them, and the section rail stops spilling its labels across the page when you collapse it.
+
+### Removed
+
+- **The Prompts and Brand Kits tabs are gone,** along with the two modules that existed only to switch them on and off. Both were tab-only features: the admin screen *was* the whole feature, so the module toggles in the Modules tab were a switch with nothing behind them but a link back to the screen you were already on. Removing the screens removes the modules, their two entries in the Modules list, their stat cards and quick-action cards on the Dashboard, the six bundled landing-page blueprints in `prompts/` and the ten bundled kits in `assets/brand-kits/`.
+
+- **Editing the Elementor kit over MCP is unaffected.** The tools that read and write global colors, typography and global classes were never part of these tabs and are untouched: `karmcp/get-global-settings`, `karmcp/update-global-colors`, `karmcp/update-global-typography` and the global-classes tools all still work, as do the gated kit writer and the kit backup store behind them. What went is the visual browser for the bundled kits — the card grid, its Apply button and its confirmation modal — and its two AJAX endpoints, `karmcp_apply_brand_kit` and `karmcp_restore_brand_kit`, which nothing else called.
+
+- **The Get Help menu at the foot of the section rail is gone,** with its Documentation and Support dropdown. Both links are still on the Dashboard, under its own help block, which is where a first-time reader actually looks; carrying a second copy in a 46px-wide rail earned nothing.
+
+### Fixed
+
+- **Collapsing the section rail left its text on top of the page.** The rail collapses to a 46px icon strip, and the sections hid their labels correctly — but the brand name, the version badge and the four rail-foot rows (MCP Log, History, Changelog, Get Help) kept their full-width wording inside that strip, so the words ran straight over the content beside them. The rule that hides them existed, but only inside the `max-width: 782px` step, so it fired on a narrow window and never on the toggle. Collapsing now hides everything in the rail, at any width, exactly as the narrow-window step already did.
+
 ## [1.28.0]
 
 Five fixes: one that could take a site down, and four in the sign-in path that stopped AI apps connecting or left them with nothing to act on. Please update.

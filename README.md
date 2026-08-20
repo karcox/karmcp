@@ -100,10 +100,6 @@ The suite runs with plain PHPUnit against a self-contained WordPress stub harnes
 composer install && vendor/bin/phpunit
 ```
 
-## Sample prompts
-
-The [`prompts/`](prompts/) directory has complete landing-page blueprints that build an entire page from a single paste.
-
 ## License
 
 [GNU General Public License v2.0 or later](LICENSE). Third-party copyright notices are in [NOTICE](NOTICE).

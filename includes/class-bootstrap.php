@@ -83,7 +83,7 @@ class KarMCP_Bootstrap {
 	 * Whether Elementor is loaded/active in this request.
 	 *
 	 * Single source of truth for the optional-Elementor gate: the tool registrar,
-	 * the admin Tools page, and the Brand Kits / Templates tabs all read this.
+	 * the admin Tools page, and the Templates tab all read this.
 	 *
 	 * @since 3.0.0
 	 *
@@ -197,13 +197,11 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/security/class-security-scan-run.php';
 		require_once KARMCP_DIR . 'includes/performance/class-db-cleaner.php';
 		require_once KARMCP_DIR . 'includes/security/class-fatal-handler-template.php';
-		// Brand Kits. The writer + backup store + bundled-kit fetcher load
-		// unconditionally so the MCP REST/CLI/proxy surface can reach them. The
-		// extended brand-kit admin + system-kit abilities were upstream Pro files
-		// and are not in this build.
+		// Brand Kits. The writer + backup store load unconditionally so the MCP
+		// REST/CLI/proxy surface can reach them. The bundled-kit admin browser
+		// was removed in 3.2.0; the kit-writing abilities are all that is left.
 		require_once KARMCP_DIR . 'includes/class-system-kit-writer.php';
 		require_once KARMCP_DIR . 'includes/class-kit-backup-store.php';
-		require_once KARMCP_DIR . 'includes/class-free-brand-kits.php';
 		// Widget Builder. Central sandbox storage location
 		// (wp-content/karmcp-sandbox) first: every store resolves paths through
 		// it. Then the spec vocabulary + template compiler + generator (pure,
@@ -257,8 +255,6 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/modules/image-optimization/class-bulk-optimizer.php';
 		require_once KARMCP_DIR . 'includes/modules/image-optimization/class-image-resizer.php';
 		require_once KARMCP_DIR . 'includes/modules/image-optimization/class-image-optimization-module.php';
-		require_once KARMCP_DIR . 'includes/modules/class-prompts-module.php';
-		require_once KARMCP_DIR . 'includes/modules/class-brand-kits-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-agent-skills-module.php';
 		require_once KARMCP_DIR . 'includes/modules/class-login-guard-module.php';
 		require_once KARMCP_DIR . 'includes/modules/vulnerabilities/class-vuln-stream-parser.php';
@@ -485,15 +481,10 @@ class KarMCP_Bootstrap {
 			add_action( 'init', array( 'KarMCP_Extension_Store', 'register_post_type' ) );
 			( new KarMCP_Extension_Loader() )->register_hooks();
 		}
-		// Background refresh of the Pro Prompts / Brand Kits libraries — registered
-		// unconditionally (cron runs in a non-admin context) so an expired 24h
-		// cache self-heals without the user clicking "Sync Library".
 		// Modules: register built-ins + Pro modules, seed defaults once, boot the
 		// active ones on `init` (after registration, before most feature hooks).
 		$karmcp_modules = KarMCP_Modules_Registry::instance();
 		$karmcp_modules->register( new KarMCP_Image_Optimization_Module() );
-		$karmcp_modules->register( new KarMCP_Prompts_Module() );
-		$karmcp_modules->register( new KarMCP_Brand_Kits_Module() );
 		$karmcp_modules->register( new KarMCP_Themer_Module() );
 		$karmcp_modules->register( new KarMCP_Redirect_Module() );
 		$karmcp_modules->register( new KarMCP_Agent_Skills_Module() );

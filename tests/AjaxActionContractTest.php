@@ -76,16 +76,6 @@ class AjaxActionContractTest extends TestCase {
 	}
 
 	/**
-	 * The two brand-kit actions specifically — they are the ones that were
-	 * broken, and the ones this release restores.
-	 */
-	public function test_brand_kit_actions_are_registered(): void {
-		$php = $this->php_actions();
-		$this->assertContains( 'karmcp_apply_brand_kit', $php );
-		$this->assertContains( 'karmcp_restore_brand_kit', $php );
-	}
-
-	/**
 	 * The upstream prefix is gone; a new one creeping back in means another
 	 * half-finished rename.
 	 */

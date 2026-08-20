@@ -138,8 +138,6 @@ class KarMCP_Admin {
 			'modules'    => 'dashicons-screenoptions',
 			'connection' => 'dashicons-admin-links',
 			'context'    => 'dashicons-info-outline',
-			'prompts'    => 'dashicons-lightbulb',
-			'brand-kits' => 'dashicons-art',
 			'widgets'    => 'dashicons-editor-code',
 			'mcp-log'    => 'dashicons-list-view',
 			'changelog'  => 'dashicons-backup',
@@ -156,8 +154,6 @@ class KarMCP_Admin {
 				self::PAGE_SLUG . '-connection' => __( 'Connection', 'karmcp' ),
 				self::PAGE_SLUG . '-context'    => __( 'Context', 'karmcp' ),
 				self::PAGE_SLUG . '-redirects'  => __( 'Redirects', 'karmcp' ),
-				self::PAGE_SLUG . '-prompts'    => __( 'Prompts', 'karmcp' ),
-				self::PAGE_SLUG . '-brand-kits' => __( 'Brand Kits', 'karmcp' ),
 				self::PAGE_SLUG . '-widgets'    => __( 'Sandbox', 'karmcp' ),
 				self::PAGE_SLUG . '-mcp-log'    => __( 'MCP Log', 'karmcp' ),
 				self::PAGE_SLUG . '-security'   => __( 'Security', 'karmcp' ),
@@ -169,12 +165,6 @@ class KarMCP_Admin {
 			if ( ! $this->module_tab_visible( 'redirects' ) ) {
 				unset( $this->submenus[ self::PAGE_SLUG . '-redirects' ] );
 			}
-			// Module-backed tabs: drop each when its module is off/unavailable.
-			foreach ( array( 'prompts', 'brand-kits' ) as $karmcp_mod_id ) {
-				if ( ! $this->module_tab_visible( $karmcp_mod_id ) ) {
-					unset( $this->submenus[ self::PAGE_SLUG . '-' . $karmcp_mod_id ] );
-				}
-			}
 		}
 		return $this->submenus;
 	}
@@ -182,7 +172,7 @@ class KarMCP_Admin {
 	/**
 	 * Determine which sub-screen is active from $_GET['page'].
 	 *
-	 * @return string One of 'tools', 'connection', 'prompts', 'changelog'.
+	 * @return string One of 'tools', 'connection', 'context', 'changelog'.
 	 */
 	private function get_active_tab(): string {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -209,10 +199,6 @@ class KarMCP_Admin {
 				return 'ai-chat';
 			case self::PAGE_SLUG . '-context':
 				return 'context';
-			case self::PAGE_SLUG . '-prompts':
-				return 'prompts';
-			case self::PAGE_SLUG . '-brand-kits':
-				return 'brand-kits';
 			case self::PAGE_SLUG . '-skills':
 				return 'skills';
 			case self::PAGE_SLUG . '-widgets':
@@ -242,8 +228,6 @@ class KarMCP_Admin {
 		add_action( 'wp_ajax_karmcp_scan_step', array( $this, 'ajax_scan_step' ) );
 		add_action( 'wp_ajax_karmcp_vuln_update', array( $this, 'ajax_vuln_update' ) );
 		add_action( 'wp_ajax_karmcp_db_clean', array( $this, 'ajax_db_clean' ) );
-		add_action( 'wp_ajax_karmcp_apply_brand_kit', array( $this, 'ajax_apply_brand_kit' ) );
-		add_action( 'wp_ajax_karmcp_restore_brand_kit', array( $this, 'ajax_restore_brand_kit' ) );
 		add_action( 'admin_init', array( $this, 'maybe_apply_default_disabled_tools' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_head', array( $this, 'print_menu_icon_style' ) );
@@ -258,7 +242,6 @@ class KarMCP_Admin {
 		add_action( 'wp_ajax_karmcp_toggle_php_snippet', array( $this, 'ajax_toggle_php_snippet' ) );
 		add_action( 'wp_ajax_karmcp_delete_php_snippet', array( $this, 'ajax_delete_php_snippet' ) );
 		add_action( 'admin_post_karmcp_download_mcpb', array( $this, 'handle_download_mcpb' ) );
-		add_action( 'admin_post_' . self::ACTION_DISMISS_PROMPTS_NOTICE, array( $this, 'handle_dismiss_prompts_notice' ) );
 		add_action( 'admin_post_' . self::ACTION_ROLLBACK_CHANGE, array( $this, 'handle_rollback_change' ) );
 		add_action( 'admin_post_' . self::ACTION_DELETE_CHANGE, array( $this, 'handle_delete_change' ) );
 		add_action( 'admin_post_' . self::ACTION_CLEAR_CHANGES, array( $this, 'handle_clear_changes' ) );
@@ -272,9 +255,6 @@ class KarMCP_Admin {
 
 	/** Nonce action for the .mcpb bundle download. */
 	const NONCE_DOWNLOAD_MCPB = 'karmcp_download_mcpb';
-
-	/** admin-post action that dismisses the "prompts rewritten" notice. */
-	const ACTION_DISMISS_PROMPTS_NOTICE = 'karmcp_dismiss_prompts_notice';
 
 	/** admin-post action that rolls back a change from the History tab. */
 	const ACTION_ROLLBACK_CHANGE = 'karmcp_rollback_change';
@@ -574,59 +554,6 @@ class KarMCP_Admin {
 		}
 
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-connection&oauth_revoked=1#karmcp-conn-main' ) );
-		exit;
-	}
-
-	/**
-	 * User meta flag recording that the current user has dismissed the notice
-	 * announcing the rewritten (v2) prompt library. Per-user, not per-site, so
-	 * one administrator dismissing it does not hide it from the others.
-	 *
-	 * Suffixed with the library generation: a future rewrite bumps the key and
-	 * the notice surfaces again rather than staying permanently dismissed.
-	 *
-	 * @since 3.2.0
-	 */
-	const META_PROMPTS_NOTICE_DISMISSED = 'karmcp_prompts_v2_notice_dismissed';
-
-	/**
-	 * Whether the current user has dismissed the rewritten-prompts notice.
-	 *
-	 * @since 3.2.0
-	 * @return bool
-	 */
-	public static function prompts_notice_dismissed(): bool {
-		return (bool) get_user_meta( get_current_user_id(), self::META_PROMPTS_NOTICE_DISMISSED, true );
-	}
-
-	/**
-	 * Nonce-protected URL that dismisses the rewritten-prompts notice.
-	 *
-	 * @since 3.2.0
-	 * @return string
-	 */
-	public static function prompts_notice_dismiss_url(): string {
-		return wp_nonce_url(
-			admin_url( 'admin-post.php?action=' . self::ACTION_DISMISS_PROMPTS_NOTICE ),
-			self::ACTION_DISMISS_PROMPTS_NOTICE
-		);
-	}
-
-	/**
-	 * Persist the dismissal, then bounce back to the Prompts screen.
-	 *
-	 * @since 3.2.0
-	 */
-	public function handle_dismiss_prompts_notice(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to do that.', 'karmcp' ), '', array( 'response' => 403 ) );
-		}
-
-		check_admin_referer( self::ACTION_DISMISS_PROMPTS_NOTICE );
-
-		update_user_meta( get_current_user_id(), self::META_PROMPTS_NOTICE_DISMISSED, '1' );
-
-		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '-prompts' ) );
 		exit;
 	}
 
@@ -1677,93 +1604,6 @@ class KarMCP_Admin {
 		);
 	}
 
-	/**
-	 * Apply a bundled brand kit to the active Elementor kit. AJAX.
-	 *
-	 * Snapshots the current globals first when the confirmation modal asked for
-	 * it, so Restore on the same screen can put them back. The writing itself
-	 * belongs to KarMCP_System_Kit_Writer; this only resolves the kit, orders
-	 * the two steps, and reports back.
-	 */
-	public function ajax_apply_brand_kit(): void {
-		check_ajax_referer( 'karmcp_apply_brand_kit', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
-		}
-		if ( ! class_exists( 'KarMCP_Free_Brand_Kits' ) || ! class_exists( 'KarMCP_System_Kit_Writer' ) ) {
-			wp_send_json_error( array( 'message' => __( 'The brand kit service is unavailable.', 'karmcp' ) ), 409 );
-		}
-
-		$kit_slug = isset( $_POST['kit_slug'] ) ? sanitize_key( wp_unslash( $_POST['kit_slug'] ) ) : '';
-		$cat_slug = isset( $_POST['category_slug'] ) ? sanitize_key( wp_unslash( $_POST['category_slug'] ) ) : '';
-		if ( '' === $kit_slug ) {
-			wp_send_json_error( array( 'message' => __( 'No brand kit specified.', 'karmcp' ) ), 400 );
-		}
-
-		$kit = KarMCP_Free_Brand_Kits::find_kit( $kit_slug, $cat_slug );
-		if ( null === $kit ) {
-			wp_send_json_error( array( 'message' => __( 'That brand kit no longer exists.', 'karmcp' ) ), 404 );
-		}
-
-		// Back up BEFORE writing: an apply that fails halfway still has to leave
-		// the admin a way back to the palette they had.
-		$wants_backup = isset( $_POST['backup'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['backup'] ) );
-		if ( $wants_backup && class_exists( 'KarMCP_Kit_Backup_Store' ) ) {
-			$label  = isset( $kit['title'] ) ? (string) $kit['title'] : $kit_slug;
-			$backup = KarMCP_Kit_Backup_Store::create( $label );
-			if ( is_wp_error( $backup ) ) {
-				wp_send_json_error( array( 'message' => $backup->get_error_message() ), 500 );
-			}
-		}
-
-		$res = KarMCP_System_Kit_Writer::apply_kit( $kit );
-		if ( is_wp_error( $res ) ) {
-			wp_send_json_error( array( 'message' => $res->get_error_message() ), 500 );
-		}
-
-		wp_send_json_success(
-			array(
-				'applied'  => $res,
-				'view_url' => home_url( '/' ),
-			)
-		);
-	}
-
-	/**
-	 * Restore global colors and typography from a brand-kit backup. AJAX.
-	 *
-	 * `full_clobber` also restores custom colors/typography, not just the four
-	 * system slots — see KarMCP_System_Kit_Writer::restore_snapshot().
-	 */
-	public function ajax_restore_brand_kit(): void {
-		check_ajax_referer( 'karmcp_restore_brand_kit', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Not allowed.', 'karmcp' ) ), 403 );
-		}
-		if ( ! class_exists( 'KarMCP_Kit_Backup_Store' ) ) {
-			wp_send_json_error( array( 'message' => __( 'The brand kit backup store is unavailable.', 'karmcp' ) ), 409 );
-		}
-
-		$backup_id = isset( $_POST['backup_id'] ) ? absint( wp_unslash( $_POST['backup_id'] ) ) : 0;
-		if ( ! $backup_id ) {
-			wp_send_json_error( array( 'message' => __( 'No backup selected.', 'karmcp' ) ), 400 );
-		}
-
-		$full_clobber = isset( $_POST['full_clobber'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['full_clobber'] ) );
-
-		$res = KarMCP_Kit_Backup_Store::restore( $backup_id, $full_clobber );
-		if ( is_wp_error( $res ) ) {
-			wp_send_json_error( array( 'message' => $res->get_error_message() ), 500 );
-		}
-
-		wp_send_json_success(
-			array(
-				'message'  => __( 'Global colors and typography restored.', 'karmcp' ),
-				'view_url' => home_url( '/' ),
-			)
-		);
-	}
-
 	public function handle_security_actions(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
@@ -2234,15 +2074,6 @@ class KarMCP_Admin {
 				'generating'    => __( 'Generating…', 'karmcp' ),
 				'pwCreated'     => __( 'Application password created, save it below, it is shown only once.', 'karmcp' ),
 				'syncing'       => __( 'Syncing…', 'karmcp' ),
-				// Brand Kits.
-				'applying'      => __( 'Applying…', 'karmcp' ),
-				'restoring'     => __( 'Restoring…', 'karmcp' ),
-				/* translators: %s: brand kit title */
-				'applyKitTitle' => __( 'Apply "%s" brand kit?', 'karmcp' ),
-				/* translators: %s: brand kit title */
-				'kitApplied'    => __( '%s applied.', 'karmcp' ),
-				'restoreConfirm'     => __( 'Restore global colors and typography from this backup?', 'karmcp' ),
-				'viewSite'           => __( 'View site →', 'karmcp' ),
 				// Connection-tab client picker + .mcpb bundle.
 				'connectionClients'  => self::connection_clients(),
 				'mcpbNonce'          => wp_create_nonce( self::NONCE_DOWNLOAD_MCPB ),
@@ -2860,11 +2691,8 @@ class KarMCP_Admin {
 	/**
 	 * Build the headline stat cards shown on the Dashboard.
 	 *
-	 * Always includes Total Tools, Active, and Pro Tools. Prompts, Brand Kits,
-	 * and Templates are appended only when their module is active (and, for the
-	 * Pro-gated counts, when a value is available) — mirroring the module-tab
-	 * visibility rules. Each entry is `key`/`value`/`label`; the view maps `key`
-	 * to an icon.
+	 * Total Tools, Active and Pro Tools, always. Each entry is
+	 * `key`/`value`/`label`; the view maps `key` to an icon.
 	 *
 	 * @since 3.1.0
 	 * @return array<int,array{key:string,value:int,label:string}>
@@ -2885,39 +2713,6 @@ class KarMCP_Admin {
 			}
 		}
 		$stats[] = array( 'key' => 'pro', 'value' => $pro_count, 'label' => __( 'Pro Tools', 'karmcp' ) );
-
-		// Count prompts. For Pro sites with a synced bundle, use the actual
-		// premium-library count (matches the Prompts tab). Otherwise count the
-		// bundled sample files in prompts/.
-		if ( $this->module_tab_visible( 'prompts' ) ) {
-			$prompt_count = 0;
-			if ( class_exists( 'KarMCP_Pro_Prompts' ) && KarMCP_Pro_Prompts::user_has_access() ) {
-				$prompt_count = KarMCP_Pro_Prompts::cached_count();
-			}
-			if ( 0 === $prompt_count ) {
-				$prompts_dir  = KARMCP_DIR . 'prompts/';
-				$prompt_files = is_dir( $prompts_dir ) ? glob( $prompts_dir . '*.md' ) : array();
-				$prompt_count = count( $prompt_files );
-			}
-			$stats[] = array( 'key' => 'prompts', 'value' => (int) $prompt_count, 'label' => __( 'Prompts', 'karmcp' ) );
-		}
-
-		// Brand kits: Pro shows the cached remote library count; everyone else
-		// shows the bundled free-kit count (applying is a free feature).
-		if ( $this->module_tab_visible( 'brand-kits' ) ) {
-			$brand_kit_count = 0;
-			$show_brand_kits = false;
-			if ( class_exists( 'KarMCP_Pro_Brand_Kits' ) && KarMCP_Pro_Brand_Kits::user_has_access() ) {
-				$brand_kit_count = KarMCP_Pro_Brand_Kits::count_cached_kits();
-				$show_brand_kits = true;
-			} elseif ( class_exists( 'KarMCP_Free_Brand_Kits' ) ) {
-				$brand_kit_count = KarMCP_Free_Brand_Kits::count_kits();
-				$show_brand_kits = $brand_kit_count > 0;
-			}
-			if ( $show_brand_kits ) {
-				$stats[] = array( 'key' => 'brand-kits', 'value' => (int) $brand_kit_count, 'label' => __( 'Brand Kits', 'karmcp' ) );
-			}
-		}
 
 		return $stats;
 	}
@@ -3009,17 +2804,6 @@ class KarMCP_Admin {
 							<span class="dashicons dashicons-backup" aria-hidden="true"></span>
 							<span class="karmcp-appbar-btn-label"><?php esc_html_e( 'Changelog', 'karmcp' ); ?></span>
 						</a>
-						<div class="karmcp-help-menu">
-							<button type="button" class="karmcp-help-toggle" aria-haspopup="true">
-								<span class="dashicons dashicons-info-outline" aria-hidden="true"></span>
-								<?php esc_html_e( 'Get Help', 'karmcp' ); ?>
-								<span class="dashicons dashicons-arrow-down-alt2 karmcp-help-caret" aria-hidden="true"></span>
-							</button>
-							<div class="karmcp-help-dropdown" role="menu">
-								<a role="menuitem" href="<?php echo esc_url( self::DOCS_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-book" aria-hidden="true"></span><?php esc_html_e( 'Documentation', 'karmcp' ); ?></a>
-								<a role="menuitem" href="<?php echo esc_url( self::SUPPORT_URL ); ?>" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-sos" aria-hidden="true"></span><?php esc_html_e( 'Support', 'karmcp' ); ?></a>
-							</div>
-						</div>
 					</div>
 
 					<button type="button"
@@ -3042,10 +2826,6 @@ class KarMCP_Admin {
 					include KARMCP_DIR . 'includes/admin/views/page-connection.php';
 				} elseif ( 'context' === $active_tab ) {
 					include KARMCP_DIR . 'includes/admin/views/page-context.php';
-				} elseif ( 'prompts' === $active_tab && $this->module_tab_visible( 'prompts' ) ) {
-					include KARMCP_DIR . 'includes/admin/views/page-prompts.php';
-				} elseif ( 'brand-kits' === $active_tab && $this->module_tab_visible( 'brand-kits' ) ) {
-					include KARMCP_DIR . 'includes/admin/views/page-brand-kits.php';
 				} elseif ( 'security' === $active_tab ) {
 					include KARMCP_DIR . 'includes/admin/views/page-security.php';
 				} elseif ( 'optimize' === $active_tab ) {

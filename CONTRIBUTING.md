@@ -1,6 +1,6 @@
 # Contributing to KarMCP
 
-Thanks for being here. Bug reports, docs fixes, prompts, and new tools are all genuinely useful, and you don't need to write PHP to help.
+Thanks for being here. Bug reports, docs fixes, and new tools are all genuinely useful, and you don't need to write PHP to help.
 
 - **Found a bug?** [Open a bug report](https://github.com/karcox/karmcp/issues/new?template=bug_report.yml)
 - **Want a tool that doesn't exist?** [Request a feature](https://github.com/karcox/karmcp/issues/new?template=feature_request.yml)
@@ -13,7 +13,6 @@ Thanks for being here. Bug reports, docs fixes, prompts, and new tools are all g
 |---|---|
 | **Report a bug** | The most valuable thing you can do. Include your MCP client, the tool you called, and what came back. |
 | **Improve the docs** | If something in this repo is wrong or stale, a PR fixing it is very welcome. |
-| **Contribute a prompt** | A landing-page blueprint in [`prompts/`](prompts/). No PHP needed, see [Contributing prompts](#contributing-prompts). |
 | **Add a tool** | A new MCP ability in an existing domain. See [Adding a tool](#adding-a-tool). |
 | **Add an integration** | Support for a plugin we don't cover yet. This is the highest-leverage code contribution, see [Adding an integration](#adding-an-integration). |
 
@@ -62,7 +61,6 @@ karmcp/
 │   ├── security/ · performance/    # Scanners
 │   ├── schemas/ · validators/      # Control-to-JSON-Schema, input validation
 │   └── admin/                      # Admin screens
-├── prompts/                        # Landing-page blueprints
 └── tests/                          # Test suite
 ```
 
@@ -125,12 +123,6 @@ Rules that matter:
 - **Never guess a field or control name.** Read it from the plugin. Many systems (Elementor and Spectra especially) accept any key you send without complaining, so a wrong name looks like it worked and silently does nothing.
 
 Please open an [integration request](https://github.com/karcox/karmcp/issues/new?template=integration_request.yml) before starting a large one, so we can agree the operation list first.
-
-## Contributing prompts
-
-A prompt is a complete landing-page blueprint in `prompts/`. Include a design system (colours, typography, spacing), the full page structure, image search keywords, and the execution order. Use one of the existing files as your template, and name it `INDUSTRY_NAME.md` in caps with underscores.
-
-Test it end to end against a real site before submitting: paste it into your AI client and confirm the page actually builds.
 
 ## Coding standards
 

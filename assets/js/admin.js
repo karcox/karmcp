@@ -529,7 +529,7 @@
 	}
 
 	/**
-	 * Copy-to-clipboard buttons (Connection tab + every prompt card).
+	 * Copy-to-clipboard buttons (Connection tab + every code block).
 	 *
 	 * Single delegated listener on document — avoids attaching 50+ listeners on the
 	 * Prompts page, which used to slow first paint and inflate memory.
@@ -573,7 +573,7 @@
 	 * @param {string} opts.cardSelector   Selector for cards within the grid.
 	 * @param {string} [opts.filterSelector] Selector for the filter-pill bar.
 	 * @param {number} [opts.pageSize]      Cards per page (default 12).
-	 * @param {string} [opts.label]         Noun for the status line (e.g. 'prompts').
+	 * @param {string} [opts.label]         Noun for the status line (e.g. 'releases').
 	 */
 	function initGridPagination( opts ) {
 		var grid = document.querySelector( opts.gridSelector );
@@ -717,201 +717,11 @@
 	}
 
 	/**
-	 * Brand Kits page — transient success toast with an optional "View site" link.
-	 *
-	 * @param {string} message The toast message.
-	 * @param {string} viewUrl Optional URL to surface as a "View site →" link.
-	 */
-	function showBrandKitToast( message, viewUrl ) {
-		var toast = document.createElement( 'div' );
-		toast.className = 'karmcp-bk-toast';
-		var span = document.createElement( 'span' );
-		span.textContent = message;
-		toast.appendChild( span );
-		if ( viewUrl ) {
-			var link = document.createElement( 'a' );
-			link.href = viewUrl;
-			link.target = '_blank';
-			link.rel = 'noopener noreferrer';
-			link.textContent = ( typeof karmcpToolsAdmin !== 'undefined' && karmcpToolsAdmin.viewSite ) ? karmcpToolsAdmin.viewSite : 'View site →';
-			toast.appendChild( link );
-		}
-		document.body.appendChild( toast );
-		// Force reflow then animate in.
-		window.requestAnimationFrame( function () {
-			toast.classList.add( 'is-visible' );
-		} );
-		setTimeout( function () {
-			toast.classList.remove( 'is-visible' );
-			setTimeout( function () { toast.remove(); }, 400 );
-		}, 7000 );
-	}
-
-	/**
-	 * Brand Kits page — category filters, apply-with-confirmation modal, and
-	 * restore-from-backup.
-	 */
-	function initBrandKits() {
-		var root = document.querySelector( '.karmcp-brand-kits' );
-		if ( ! root || typeof karmcpToolsAdmin === 'undefined' || ! karmcpToolsAdmin.ajaxUrl ) {
-			return;
-		}
-
-		var grid = root.querySelector( '.karmcp-brand-kit-grid' );
-
-		// Note: the category filter pills are handled by initGridPagination(),
-		// which owns both filtering and pagination so they stay in sync.
-
-		// Apply confirmation modal.
-		var modal = root.querySelector( '.karmcp-brand-kit-modal' );
-		var pending = null;
-
-		function closeModal() {
-			if ( modal ) {
-				modal.hidden = true;
-			}
-			pending = null;
-		}
-
-		if ( grid && modal ) {
-			grid.addEventListener( 'click', function ( e ) {
-				var btn = e.target.closest( '.karmcp-brand-kit-apply' );
-				if ( ! btn ) {
-					return;
-				}
-				pending = {
-					slug:  btn.getAttribute( 'data-kit-slug' ) || '',
-					cat:   btn.getAttribute( 'data-category-slug' ) || '',
-					title: btn.getAttribute( 'data-kit-title' ) || ''
-				};
-				var titleEl = modal.querySelector( '.karmcp-brand-kit-modal__title' );
-				if ( titleEl ) {
-					var tpl = ( karmcpToolsAdmin.applyKitTitle || 'Apply "%s" brand kit?' );
-					titleEl.textContent = tpl.replace( '%s', pending.title );
-				}
-				var bk = modal.querySelector( '.karmcp-brand-kit-modal__backup-input' );
-				if ( bk ) {
-					bk.checked = true;
-				}
-				modal.hidden = false;
-			} );
-
-			modal.addEventListener( 'click', function ( e ) {
-				if ( e.target.closest( '[data-modal-dismiss]' ) ) {
-					closeModal();
-					return;
-				}
-				var confirmBtn = e.target.closest( '.karmcp-brand-kit-modal__confirm' );
-				if ( ! confirmBtn || ! pending ) {
-					return;
-				}
-
-				var backup = modal.querySelector( '.karmcp-brand-kit-modal__backup-input' );
-				var doBackup = backup ? backup.checked : true;
-				var title = pending.title;
-				var orig = confirmBtn.textContent;
-				confirmBtn.disabled = true;
-				confirmBtn.textContent = karmcpToolsAdmin.applying || 'Applying…';
-
-				var body = new URLSearchParams();
-				body.append( 'action', 'karmcp_apply_brand_kit' );
-				body.append( 'nonce', grid.getAttribute( 'data-apply-nonce' ) || '' );
-				body.append( 'kit_slug', pending.slug );
-				body.append( 'category_slug', pending.cat );
-				body.append( 'backup', doBackup ? '1' : '0' );
-
-				fetch( karmcpToolsAdmin.ajaxUrl, {
-					method: 'POST',
-					credentials: 'same-origin',
-					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-					body: body.toString()
-				} )
-					.then( function ( r ) { return r.json(); } )
-					.then( function ( res ) {
-						confirmBtn.disabled = false;
-						confirmBtn.textContent = orig;
-						if ( res && res.success ) {
-							closeModal();
-							var applied = ( karmcpToolsAdmin.kitApplied || '%s applied.' ).replace( '%s', title );
-							showBrandKitToast( applied, res.data && res.data.view_url );
-						} else {
-							var msg = ( res && res.data && res.data.message ) ? res.data.message : 'Apply failed.';
-							window.alert( msg );
-						}
-					} )
-					.catch( function () {
-						confirmBtn.disabled = false;
-						confirmBtn.textContent = orig;
-						window.alert( 'Apply failed. Check your connection and try again.' );
-					} );
-			} );
-		}
-
-		// Restore from backup.
-		var restore = root.querySelector( '.karmcp-brand-kit-restore' );
-		if ( restore ) {
-			var restoreBtn = restore.querySelector( '.karmcp-brand-kit-restore-btn' );
-			if ( restoreBtn ) {
-				restoreBtn.addEventListener( 'click', function () {
-					var select = restore.querySelector( '.karmcp-brand-kit-backup-select' );
-					var clobber = restore.querySelector( '.karmcp-brand-kit-clobber-input' );
-					if ( ! select || ! select.value ) {
-						return;
-					}
-					if ( ! window.confirm( karmcpToolsAdmin.restoreConfirm || 'Restore global colors and typography from this backup?' ) ) {
-						return;
-					}
-					var orig = restoreBtn.textContent;
-					restoreBtn.disabled = true;
-					restoreBtn.textContent = karmcpToolsAdmin.restoring || 'Restoring…';
-
-					var body = new URLSearchParams();
-					body.append( 'action', 'karmcp_restore_brand_kit' );
-					body.append( 'nonce', restore.getAttribute( 'data-restore-nonce' ) || '' );
-					body.append( 'backup_id', select.value );
-					body.append( 'full_clobber', ( clobber && clobber.checked ) ? '1' : '0' );
-
-					fetch( karmcpToolsAdmin.ajaxUrl, {
-						method: 'POST',
-						credentials: 'same-origin',
-						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-						body: body.toString()
-					} )
-						.then( function ( r ) { return r.json(); } )
-						.then( function ( res ) {
-							restoreBtn.disabled = false;
-							restoreBtn.textContent = orig;
-							if ( res && res.success ) {
-								var msg = ( res.data && res.data.message ) ? res.data.message : 'Restored.';
-								showBrandKitToast( msg, res.data && res.data.view_url );
-							} else {
-								var emsg = ( res && res.data && res.data.message ) ? res.data.message : 'Restore failed.';
-								window.alert( emsg );
-							}
-						} )
-						.catch( function () {
-							restoreBtn.disabled = false;
-							restoreBtn.textContent = orig;
-							window.alert( 'Restore failed. Check your connection and try again.' );
-						} );
-				} );
-			}
-		}
-	}
-
-	/**
 	 * Wire pagination (and the category filter it owns) into each library grid.
-	 * Each call no-ops when its grid isn't on the current page, so it's safe to
-	 * run all three regardless of which tab rendered.
+	 * The call no-ops when its grid isn't on the current page, so it's safe to
+	 * run whichever tab rendered.
 	 */
 	function initPagers() {
-		initGridPagination( {
-			gridSelector: '.karmcp-brand-kit-grid',
-			cardSelector: '.karmcp-brand-kit-card',
-			filterSelector: '.karmcp-brand-kits .karmcp-pro-filters',
-			pageSize: 12,
-			label: 'brand kits'
-		} );
 		initGridPagination( {
 			gridSelector: '.karmcp-changelog-list',
 			cardSelector: '.karmcp-changelog-version',
@@ -1484,7 +1294,6 @@
 		initBase64Generator();
 		initCopyButtons();
 		initPagers();
-		initBrandKits();
 		initCodeOverlay();
 		initClickToCopy();
 		initContextPage();

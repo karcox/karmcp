@@ -163,7 +163,7 @@ Los bloques se renderizan en servidor: un único script de editor genérico (`as
 
 Features que el admin enciende y apaga desde la pestaña **Modules**. Base `KarMCP_Module` + `KarMCP_Modules_Registry` en `includes/modules/`. Los activos se guardan en la opción `karmcp_active_modules` y arrancan en `init` (prioridad 5).
 
-Módulos presentes: Themer, Redirects, Prompts, Brand Kits, Agent Skills, Image Optimization, SVG Support, Guardrails, Login Guard, Known Vulnerabilities.
+Módulos presentes: Themer, Redirects, Agent Skills, Image Optimization, SVG Support, Guardrails, Login Guard, Known Vulnerabilities.
 
 > **Patrón de gating a respetar:** las abilities se registran en `wp_abilities_api_init`, que corre **antes** de que el módulo arranque en `init:5`. Por eso el registrar consulta el estático `is_enabled()` del módulo, nunca su instancia.
 

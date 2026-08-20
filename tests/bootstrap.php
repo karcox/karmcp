@@ -20,6 +20,23 @@ if ( ! defined( 'KARMCP_DIR' ) ) {
 	define( 'KARMCP_DIR', dirname( __DIR__ ) . '/' );
 }
 
+// WordPress's time constants. Plugin code uses them in class constants, which
+// are evaluated the first time the class is touched — without these, requiring
+// such a file from a test is an "undefined constant" fatal.
+foreach ( array(
+	'MINUTE_IN_SECONDS' => 60,
+	'HOUR_IN_SECONDS'   => 3600,
+	'DAY_IN_SECONDS'    => 86400,
+	'WEEK_IN_SECONDS'   => 604800,
+	'MONTH_IN_SECONDS'  => 2592000,
+	'YEAR_IN_SECONDS'   => 31536000,
+) as $karmcp_const => $karmcp_value ) {
+	if ( ! defined( $karmcp_const ) ) {
+		define( $karmcp_const, $karmcp_value );
+	}
+}
+unset( $karmcp_const, $karmcp_value );
+
 /**
  * Resets the shared stub fixture. Call from setUp().
  */
@@ -521,7 +538,9 @@ if ( ! function_exists( 'trailingslashit' ) ) {
 }
 
 function home_url( $path = '' ): string {
-	return 'http://example.test' . ( '' === $path ? '' : '/' . ltrim( (string) $path, '/' ) );
+	// Fixture-driven so a test can put the site in a subdirectory; unchanged by default.
+	$base = (string) ( $GLOBALS['karmcp_test']['home_url'] ?? 'http://example.test' );
+	return rtrim( $base, '/' ) . ( '' === $path ? '' : '/' . ltrim( (string) $path, '/' ) );
 }
 
 function wp_parse_url( $url, $component = -1 ) {

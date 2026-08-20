@@ -2,6 +2,26 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.28.0]
+
+Five fixes: one that could take a site down, and four in the sign-in path that stopped AI apps connecting or left them with nothing to act on. Please update.
+
+### Fixed
+
+- **Saving an Elementor document could hang the site and fill the error log.** Opening or saving a document the builder had not converted yet, such as a Floating Buttons library item, sent the search indexer into a loop: indexing reads the document, reading it makes Elementor convert and save it, and that save fired the indexer again. It went round until PHP ran out of memory. Two requests were enough to produce a 22 MB error log and a 512 MB exhaustion. The indexer now refuses to re-enter itself, and releases the guard in a `finally` so an exception cannot leave indexing switched off for the rest of the request.
+
+- **A connected app whose tokens lapsed could never reconnect.** Housekeeping deleted any registered app that currently had no tokens and was more than a day old, on the theory that it was an abandoned registration. But an app whose tokens had simply expired (a refresh token lapsing after 30 days idle, or anything else that cleared them) also has no tokens, so its registration was thrown away while the app still had it saved. Every reconnect then failed with "Invalid client", permanently, and the app kept reopening the sign-in page on a loop. An app that has completed sign-in once is now stamped and kept, so its tokens lapsing just means signing in again. Only registrations that never completed sign-in are still cleaned up. Existing connections are protected automatically on update: the upgrade stamps every client that currently holds a token before the next sweep runs.
+
+- **Command-line AI apps could not finish signing in, failing with "Invalid client or redirect URI".** The app registered fine and reached the sign-in page, then the page refused it. The cause was the check on the return address the app comes back to. A command-line app listens on your own machine, and it can spell that machine three ways (`localhost`, `127.0.0.1`, `::1`) on a port it picks fresh each run. The check accepted a changing port but insisted the spelling match exactly, so an app that registered one spelling and signed in with another was turned away even though both point at the same place. All three spellings are now treated as the same machine, and a trailing slash on the return path no longer counts as a difference. Return addresses that leave your machine, including every `https` one, are still matched exactly.
+
+- **The sign-in error page now says which of the two things went wrong,** the app not being recognised or its return address not matching, and shows the requested and registered addresses side by side. The old page reported both cases with one message, which left nothing to act on. Neither value is a secret: the caller supplied one and registered the other.
+
+- **OAuth discovery returned 404 on a WordPress installed in a subdirectory.** On a site under a path such as `example.com/gpt-build/`, the discovery document clients need (`/.well-known/oauth-protected-resource`, RFC 9728) was advertised at the correct subfolder URL but not served there, because the request path was matched against the site-root path without accounting for the subdirectory. Connecting over OAuth from any standard MCP client dead-ended before it could get a token, and no tools appeared. The install's home-path prefix is now stripped before matching, which is what the authorize endpoint already did. Root installs are unchanged.
+
+### Changed
+
+- **The OAuth tables move to schema v3,** adding `authorized_at` to the clients table. The upgrade runs on the first request after the update and backfills every client that holds a token.
+
 ## [1.27.1]
 
 ### Fixed

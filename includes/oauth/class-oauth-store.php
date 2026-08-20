@@ -19,10 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class KarMCP_OAuth_Store {
 
-	const DB_VERSION = 2; // v2: BIGINT timestamps (2038-safe) + refresh_of index.
+	const DB_VERSION = 3; // v3: clients.authorized_at — never auto-purge a client that signed in.
 	// A freshly-registered client legitimately has no tokens until the user
 	// finishes authorizing, so orphan-client pruning only touches rows older
-	// than this grace window.
+	// than this grace window — and only rows that never completed an
+	// authorization at all (authorized_at = 0).
 	const ORPHAN_CLIENT_GRACE = DAY_IN_SECONDS;
 	// Throttle for gc_throttled(): the shortest gap between sweeps when gc is
 	// driven from a hot path (bearer validation on every MCP request).
@@ -63,10 +64,14 @@ class KarMCP_OAuth_Store {
 		// Autoloaded schema map, not an own option with autoload off: OAuth's
 		// on_init runs on init:20 of every request, whether or not the sign-in
 		// flow is enabled. See KarMCP_Schema_State.
-		if ( KarMCP_Schema_State::installed( KarMCP_Schema_State::KEY_OAUTH ) >= self::DB_VERSION ) {
+		$installed = KarMCP_Schema_State::installed( KarMCP_Schema_State::KEY_OAUTH );
+		if ( $installed >= self::DB_VERSION ) {
 			return;
 		}
 		self::install_tables();
+		if ( $installed < 3 ) {
+			self::backfill_authorized_clients();
+		}
 		KarMCP_Schema_State::mark( KarMCP_Schema_State::KEY_OAUTH, self::DB_VERSION );
 	}
 
@@ -96,6 +101,7 @@ class KarMCP_OAuth_Store {
 					redirect_uris TEXT NOT NULL,
 					created_by BIGINT UNSIGNED NOT NULL DEFAULT 0,
 					created_at BIGINT NOT NULL,
+					authorized_at BIGINT NOT NULL DEFAULT 0,
 					PRIMARY KEY (client_id)
 				) {$charset};"
 			);
@@ -292,6 +298,9 @@ class KarMCP_OAuth_Store {
 			}
 			return array( 'token' => '', 'id' => 0 );
 		}
+		// A token was issued for this client, so it completed an authorization.
+		// Stamp it, so gc() never prunes the registration once those tokens lapse.
+		self::mark_client_authorized( $client_id );
 		return array( 'token' => $token, 'id' => (int) $wpdb->insert_id );
 	}
 
@@ -437,16 +446,71 @@ class KarMCP_OAuth_Store {
 		$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE expires_at < %d', self::tokens_table(), $now ) );
 
 		// 2) Orphan clients — repeat DCR (or an abandoned registration retry)
-		// leaves token-less rows; drop those older than the grace window. A
-		// just-registered client is protected until it finishes authorizing.
+		// leaves token-less rows; drop those older than the grace window.
+		//
+		// Only rows that never completed an authorization (authorized_at = 0).
+		// "Has no tokens right now" is not the same as "abandoned": a real,
+		// connected client whose refresh token lapsed after 30 days idle also has
+		// zero tokens, and deleting its registration turned a recoverable "sign in
+		// again" into a permanent "Invalid client" — the app still has the
+		// client_id cached, so it reopened the authorize page on a loop and could
+		// never reconnect. A client that signed in once is kept; only the admin
+		// screen or the uninstaller removes it.
 		$wpdb->query(
 			$wpdb->prepare(
 				'DELETE c FROM %i c
 				 LEFT JOIN %i t ON t.client_id = c.client_id
-				 WHERE t.id IS NULL AND c.created_at < %d',
+				 WHERE t.id IS NULL AND c.authorized_at = 0 AND c.created_at < %d',
 				self::clients_table(),
 				self::tokens_table(),
 				$now - self::ORPHAN_CLIENT_GRACE
+			)
+		);
+	}
+
+	/**
+	 * Stamp a client as having completed an authorization, so gc() never prunes
+	 * it. Idempotent and cheap: the WHERE only matches the first time.
+	 *
+	 * @since 1.28.0
+	 * @param string $client_id Client id.
+	 */
+	public static function mark_client_authorized( string $client_id ): void {
+		if ( '' === $client_id ) {
+			return;
+		}
+		global $wpdb;
+		$wpdb->query(
+			$wpdb->prepare(
+				'UPDATE %i SET authorized_at = %d WHERE client_id = %s AND authorized_at = 0',
+				self::clients_table(),
+				time(),
+				$client_id
+			)
+		);
+	}
+
+	/**
+	 * Upgrade backfill (DB v3): a client that holds a token has demonstrably
+	 * completed an authorization, so stamp it before the next gc() runs.
+	 * Without this, an existing connection whose tokens lapse right after the
+	 * upgrade would still be purged once. Clients with no tokens keep
+	 * authorized_at = 0 and stay prunable, which is what genuinely abandoned
+	 * registrations should be.
+	 *
+	 * @since 1.28.0
+	 */
+	public static function backfill_authorized_clients(): void {
+		global $wpdb;
+		$wpdb->query(
+			$wpdb->prepare(
+				'UPDATE %i c
+				 SET c.authorized_at = %d
+				 WHERE c.authorized_at = 0
+				   AND EXISTS ( SELECT 1 FROM %i t WHERE t.client_id = c.client_id )',
+				self::clients_table(),
+				time(),
+				self::tokens_table()
 			)
 		);
 	}

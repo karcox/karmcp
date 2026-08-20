@@ -92,3 +92,6 @@ skills/*
 # se reinstalan con `composer --working-dir=tools update`.
 /tools/vendor/
 /tools/composer.lock
+
+# Release archives produced by `git archive` — build output, never source.
+/karmcp-*.zip

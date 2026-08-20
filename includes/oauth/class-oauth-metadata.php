@@ -144,8 +144,42 @@ class KarMCP_OAuth_Metadata {
 	private static function request_path(): string {
 		$uri  = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
+
+		// A site installed under a subdirectory receives the request as
+		// /gpt-build/.well-known/oauth-protected-resource, but the paths we match
+		// against are site-root-relative. Without stripping the prefix the
+		// discovery document we advertise in WWW-Authenticate 404s, and OAuth
+		// discovery dead-ends before any client can get a token — the same class
+		// of bug the authorize endpoint already handles. No-op at the root.
+		$path = self::strip_home_path( $path );
+
 		if ( '/' !== $path ) {
 			$path = untrailingslashit( $path );
+		}
+		return $path;
+	}
+
+	/**
+	 * Remove the WordPress home-URL path prefix — the subdirectory a site is
+	 * installed under — from a request path. `/blog/.well-known/x` becomes
+	 * `/.well-known/x`; a root install returns the path unchanged.
+	 *
+	 * @since 1.28.0
+	 * @param string      $path Request path.
+	 * @param string|null $home Home path to strip; read from home_url() when null.
+	 * @return string
+	 */
+	public static function strip_home_path( string $path, ?string $home = null ): string {
+		if ( null === $home ) {
+			$home = function_exists( 'home_url' ) ? (string) wp_parse_url( home_url(), PHP_URL_PATH ) : '';
+		}
+		$home = untrailingslashit( $home );
+		if ( '' === $home || '/' === $home ) {
+			return $path;
+		}
+		if ( $path === $home || 0 === strpos( $path, $home . '/' ) ) {
+			$stripped = substr( $path, strlen( $home ) );
+			return '' === $stripped ? '/' : $stripped;
 		}
 		return $path;
 	}

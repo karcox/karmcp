@@ -26,6 +26,19 @@ class KarMCP_Search_Index {
 	const OBJECT_TYPES = array( 'page', 'template', 'widget', 'global_color', 'global_font', 'global_class' );
 
 	/**
+	 * Re-entrancy guard for on_save_post(). Indexing a page reads the document
+	 * through KarMCP_Data, which calls Elementor's Document::get_elements_data().
+	 * On a document the builder has not converted yet — a Floating Buttons
+	 * library item, say — Elementor converts it there and saves the post, that
+	 * save fires save_post again, and on_save_post() re-enters and reads the
+	 * document once more. Without this guard it loops until PHP runs out of
+	 * memory: two requests were enough to produce a 22 MB error log.
+	 *
+	 * @var bool
+	 */
+	private static $reindexing = false;
+
+	/**
 	 * The index table name.
 	 *
 	 * @return string
@@ -326,6 +339,12 @@ class KarMCP_Search_Index {
 	 * @param WP_Post|null $post    Post object.
 	 */
 	public static function on_save_post( $post_id, $post = null ): void {
+		// Indexing can trigger a nested save_post (see the $reindexing note above):
+		// bail immediately on re-entry rather than recursing until PHP runs out of
+		// memory. The outer call indexes the post once the nested save returns.
+		if ( self::$reindexing ) {
+			return;
+		}
 		$post_id = (int) $post_id;
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			return;
@@ -343,17 +362,25 @@ class KarMCP_Search_Index {
 		if ( class_exists( 'KarMCP_Data' ) && ! KarMCP_Data::elementor_documents_ready() ) {
 			return;
 		}
-		// The active kit stores global colours + typography — re-index those when
-		// it is saved (a global-settings change), not the kit as a template.
-		if ( $post_id > 0 && $post_id === (int) get_option( 'elementor_active_kit', 0 ) ) {
-			self::index_globals();
-			return;
-		}
-		$ptype = $post && isset( $post->post_type ) ? $post->post_type : ( function_exists( 'get_post_type' ) ? get_post_type( $post_id ) : '' );
-		if ( 'elementor_library' === $ptype ) {
-			self::index_post_ids( array( $post_id ), 'template' );
-		} elseif ( in_array( $ptype, array( 'page', 'post' ), true ) && 'builder' === get_post_meta( $post_id, '_elementor_edit_mode', true ) ) {
-			self::index_post_ids( array( $post_id ), 'page' );
+		// Everything below reads the document, which can itself trigger a nested
+		// save_post — see the note on $reindexing. Released in a finally so an
+		// exception cannot leave indexing switched off for the rest of the request.
+		self::$reindexing = true;
+		try {
+			// The active kit stores global colours + typography — re-index those when
+			// it is saved (a global-settings change), not the kit as a template.
+			if ( $post_id > 0 && $post_id === (int) get_option( 'elementor_active_kit', 0 ) ) {
+				self::index_globals();
+				return;
+			}
+			$ptype = $post && isset( $post->post_type ) ? $post->post_type : ( function_exists( 'get_post_type' ) ? get_post_type( $post_id ) : '' );
+			if ( 'elementor_library' === $ptype ) {
+				self::index_post_ids( array( $post_id ), 'template' );
+			} elseif ( in_array( $ptype, array( 'page', 'post' ), true ) && 'builder' === get_post_meta( $post_id, '_elementor_edit_mode', true ) ) {
+				self::index_post_ids( array( $post_id ), 'page' );
+			}
+		} finally {
+			self::$reindexing = false;
 		}
 	}
 

@@ -130,9 +130,10 @@ class KarMCP_OAuth_Util {
 
 	/**
 	 * Whether two redirect URIs match. Exact string match, with the native-app
-	 * loopback exception (RFC 8252 §7.3): for http://127.0.0.1 / http://[::1] /
-	 * http://localhost the port may differ, since native clients bind an
-	 * ephemeral local port.
+	 * loopback exception (RFC 8252 §7.3): between http://127.0.0.1,
+	 * http://[::1] and http://localhost the host spelling, the port and a
+	 * trailing slash may all differ, because all three name the same machine and
+	 * a native client binds an ephemeral local port.
 	 *
 	 * @param string $registered A registered redirect URI.
 	 * @param string $given      The redirect URI presented in the request.
@@ -149,19 +150,57 @@ class KarMCP_OAuth_Util {
 			return false;
 		}
 
-		$loopback = array( '127.0.0.1', '::1', 'localhost' );
-		$r_host   = isset( $r['host'] ) ? strtolower( trim( $r['host'], '[]' ) ) : '';
-		$g_host   = isset( $g['host'] ) ? strtolower( trim( $g['host'], '[]' ) ) : '';
+		$r_host = isset( $r['host'] ) ? strtolower( trim( $r['host'], '[]' ) ) : '';
+		$g_host = isset( $g['host'] ) ? strtolower( trim( $g['host'], '[]' ) ) : '';
 
+		// Only a loopback redirect gets the relaxed comparison below. Everything
+		// else, https callbacks above all, stays an exact string match: that is
+		// where a loose comparison turns into an open redirect. A loopback URI can
+		// only ever hand the code to a listener on the user's own machine.
 		if (
-			'http' === ( $r['scheme'] ?? '' ) && 'http' === ( $g['scheme'] ?? '' )
-			&& in_array( $r_host, $loopback, true ) && $r_host === $g_host
-			&& ( $r['path'] ?? '/' ) === ( $g['path'] ?? '/' )
+			'http' !== ( $r['scheme'] ?? '' ) || 'http' !== ( $g['scheme'] ?? '' )
+			|| ! self::is_loopback_host( $r_host ) || ! self::is_loopback_host( $g_host )
 		) {
-			// Same loopback host + path; port is allowed to differ.
-			return true;
+			return false;
 		}
 
-		return false;
+		// `localhost`, `127.0.0.1` and `::1` all name the machine the user is
+		// sitting at, and a command-line client may register one spelling and
+		// authorize with another (or the OS resolves one into the other).
+		// Demanding they match byte for byte refused working connections for
+		// nothing: Codex reached the sign-in page and was told "Invalid client or
+		// redirect URI". The port is ignored too, as RFC 8252 §7.3 requires,
+		// because a native client binds an ephemeral port it cannot know when it
+		// registers.
+		$r_path = self::normalize_loopback_path( $r['path'] ?? '/' );
+		$g_path = self::normalize_loopback_path( $g['path'] ?? '/' );
+
+		return $r_path === $g_path;
+	}
+
+	/**
+	 * Whether a host is one of the names that mean "this machine".
+	 *
+	 * @since 1.28.0
+	 * @param string $host Lowercased host, brackets already stripped.
+	 * @return bool
+	 */
+	public static function is_loopback_host( string $host ): bool {
+		return in_array( $host, array( '127.0.0.1', '::1', 'localhost' ), true );
+	}
+
+	/**
+	 * Normalize a loopback callback path so a trailing slash is not a mismatch:
+	 * `/callback` and `/callback/` reach the same local listener and clients are
+	 * inconsistent about which one they send.
+	 *
+	 * @since 1.28.0
+	 * @param string $path Path component.
+	 * @return string
+	 */
+	private static function normalize_loopback_path( string $path ): string {
+		$path    = '' === $path ? '/' : $path;
+		$trimmed = rtrim( $path, '/' );
+		return '' === $trimmed ? '/' : $trimmed;
 	}
 }

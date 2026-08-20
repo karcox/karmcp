@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.27.1
+Stable tag: 1.28.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,14 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.28.0 =
+
+* Fixed: **saving an Elementor document could hang the site.** On a document Elementor had not converted yet, indexing it made Elementor save it, which fired the indexer again, round and round until PHP ran out of memory - two requests produced a 22 MB error log. The indexer no longer re-enters itself.
+* Fixed: **a connected AI app whose tokens expired could never reconnect.** Housekeeping deleted the registration of any app with no current tokens, which includes a real connection whose refresh token simply lapsed. The app then failed with "Invalid client" forever and kept reopening the sign-in page. Apps that have signed in once are now kept, and existing connections are protected automatically when you update.
+* Fixed: **command-line AI apps could not finish signing in.** They listen on your own machine, which can be spelled `localhost`, `127.0.0.1` or `::1`, and registering one spelling then signing in with another was refused even though both mean the same machine. All three are now treated as one, and a trailing slash is no longer a mismatch. Addresses that leave your machine are still matched exactly.
+* Fixed: the sign-in error page said only "Invalid client or redirect URI". It now says which of the two failed and shows the requested and registered addresses.
+* Fixed: **OAuth sign-in did not work on WordPress installed in a subfolder.** The discovery document clients need returned 404 there, so connecting dead-ended before any tools appeared.
 
 = 1.27.1 =
 

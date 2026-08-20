@@ -163,8 +163,20 @@ class KarMCP_OAuth_Authorize {
 		$client       = self::lookup_client( $client_id );
 
 		// Client + redirect must be valid before we trust redirect_uri as a target.
-		if ( '' === $client_id || null === $client || '' === $redirect_uri || ! self::redirect_registered( $client, $redirect_uri ) ) {
-			self::error_page( __( 'Invalid client or redirect URI for this connection request.', 'karmcp' ) );
+		// The two failures need different things from whoever is reading the page,
+		// so they are reported apart. Neither value is a secret: the caller sent
+		// one and registered the other.
+		if ( '' === $client_id || null === $client ) {
+			self::error_page(
+				__( 'This site does not recognise the app making this connection request.', 'karmcp' ),
+				self::stale_client_hint()
+			);
+		}
+		if ( '' === $redirect_uri || ! self::redirect_registered( $client, $redirect_uri ) ) {
+			self::error_page(
+				__( 'The return address this app asked for does not match the one it registered.', 'karmcp' ),
+				self::redirect_mismatch_hint( $client, $redirect_uri )
+			);
 		}
 
 		$state = (string) ( $params['state'] ?? '' );
@@ -205,8 +217,17 @@ class KarMCP_OAuth_Authorize {
 		$client_id    = (string) ( $p['client_id'] ?? '' );
 		$redirect_uri = (string) ( $p['redirect_uri'] ?? '' );
 		$client       = self::lookup_client( $client_id );
-		if ( null === $client || ! self::redirect_registered( $client, $redirect_uri ) ) {
-			self::error_page( __( 'Invalid client or redirect URI for this connection request.', 'karmcp' ) );
+		if ( null === $client ) {
+			self::error_page(
+				__( 'This site does not recognise the app making this connection request.', 'karmcp' ),
+				self::stale_client_hint()
+			);
+		}
+		if ( ! self::redirect_registered( $client, $redirect_uri ) ) {
+			self::error_page(
+				__( 'The return address this app asked for does not match the one it registered.', 'karmcp' ),
+				self::redirect_mismatch_hint( $client, $redirect_uri )
+			);
 		}
 
 		$state = (string) ( $p['state'] ?? '' );
@@ -435,7 +456,7 @@ class KarMCP_OAuth_Authorize {
 	 *
 	 * @param string $message Message.
 	 */
-	private static function error_page( string $message ): void {
+	private static function error_page( string $message, string $hint = '' ): never {
 		if ( ! headers_sent() ) {
 			status_header( 400 );
 			header( 'Content-Type: text/html; charset=utf-8' );
@@ -443,8 +464,48 @@ class KarMCP_OAuth_Authorize {
 		echo '<!doctype html><meta charset="utf-8" /><title>' . esc_html__( 'Connection error', 'karmcp' ) . '</title>'
 			. '<div style="max-width:460px;margin:12vh auto;font-family:sans-serif;text-align:center;color:#0a0a14">'
 			. '<h1 style="font-size:20px">' . esc_html__( 'Connection error', 'karmcp' ) . '</h1>'
-			. '<p style="color:#3a3b52">' . esc_html( $message ) . '</p></div>';
+			. '<p style="color:#3a3b52">' . esc_html( $message ) . '</p>';
+		if ( '' !== $hint ) {
+			echo '<p style="color:#6a6b82;font-size:13px;word-break:break-all">' . esc_html( $hint ) . '</p>';
+		}
+		echo '</div>';
 		exit;
+	}
+
+	/**
+	 * What to tell someone whose app is not recognised: almost always a client
+	 * that registered once and is reconnecting against a registration this site
+	 * no longer holds.
+	 *
+	 * @since 1.28.0
+	 * @return string
+	 */
+	private static function stale_client_hint(): string {
+		return __( 'This usually means the app is reconnecting with a registration this site no longer recognises. In your AI app, remove this MCP connector and add it again to start a fresh connection.', 'karmcp' );
+	}
+
+	/**
+	 * What to tell someone whose return address does not match. Both addresses
+	 * are shown, because comparing them is the only way to act on this, and
+	 * neither is a secret: the caller supplied one and registered the other.
+	 *
+	 * @since 1.28.0
+	 * @param array  $client       Client with a `redirect_uris` array.
+	 * @param string $redirect_uri The address the app asked for.
+	 * @return string
+	 */
+	private static function redirect_mismatch_hint( array $client, string $redirect_uri ): string {
+		$registered = array_values( array_filter( (array) ( $client['redirect_uris'] ?? array() ), 'is_string' ) );
+		$hint       = __( 'The app registered a different return address than the one it is now asking for. Removing this MCP connector in the app and adding it again usually clears it.', 'karmcp' );
+		if ( ! $registered ) {
+			return $hint;
+		}
+		return $hint . ' ' . sprintf(
+			/* translators: 1: the return address requested, 2: comma-separated list of registered addresses. */
+			__( 'Requested: %1$s. Registered: %2$s.', 'karmcp' ),
+			'' !== $redirect_uri ? $redirect_uri : __( '(none)', 'karmcp' ),
+			implode( ', ', $registered )
+		);
 	}
 
 	/**

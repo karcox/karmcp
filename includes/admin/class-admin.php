@@ -1836,9 +1836,11 @@ class KarMCP_Admin {
 				$karmcp_cfg['protected']  = KarMCP_Fatal_Handler_Template::ALWAYS_PROTECTED;
 				update_option( KarMCP_Fatal_Handler_Template::OPTION_CONFIG, $karmcp_cfg, false );
 
+				// 'save' only persists the settings above: the drop-in is left
+				// exactly as it is so the checkbox can be changed on its own.
 				if ( 'uninstall' === $karmcp_action ) {
 					KarMCP_Fatal_Handler_Template::uninstall();
-				} else {
+				} elseif ( 'install' === $karmcp_action ) {
 					KarMCP_Fatal_Handler_Template::install();
 				}
 			}

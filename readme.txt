@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.27.0
+Stable tag: 1.27.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.27.1 =
+
+* Fixed: **the "Recovery from fatal errors" setting on the Security tab had no save button.** You could tick "Deactivate a plugin after it fatals 3 times in 10 minutes", but the only buttons there installed, reinstalled or removed the handler, and the tick was stored only as a side effect of those - so it silently reverted on the next page load. There is a **Save changes** button now, and it saves the setting without touching the installed handler.
 
 = 1.27.0 =
 

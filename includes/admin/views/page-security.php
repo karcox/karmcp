@@ -633,6 +633,9 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 			<span class="description"><?php esc_html_e( 'Repeated, never on the first crash: one transient fatal must not be able to take the site offline in a different way. KarMCP can never deactivate itself.', 'karmcp' ); ?></span>
 		</p>
 		<p>
+			<button type="submit" name="karmcp_dropin_action" value="save" class="button button-primary">
+				<?php esc_html_e( 'Save changes', 'karmcp' ); ?>
+			</button>
 			<button type="submit" name="karmcp_dropin_action" value="install" class="button">
 				<?php echo 'ours' === $karmcp_dropin ? esc_html__( 'Reinstall handler', 'karmcp' ) : esc_html__( 'Install handler', 'karmcp' ); ?>
 			</button>

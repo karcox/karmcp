@@ -3,7 +3,7 @@
  * Plugin Name:       KarMCP
  * Plugin URI:        https://github.com/karcox/karmcp
  * Description:       Extends the WordPress MCP Adapter to expose Elementor data, widgets, and page design tools as MCP tools for AI agents.
- * Version:           1.27.0
+ * Version:           1.27.1
  * Requires at least: 6.9
  * Tested up to:      7.0
  * Requires PHP:      8.1
@@ -86,7 +86,7 @@ if ( KarMCP_Migration::is_legacy_plugin_active() ) {
 }
 
 // Plugin constants.
-define( 'KARMCP_VERSION', '1.27.0' );
+define( 'KARMCP_VERSION', '1.27.1' );
 define( 'KARMCP_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KARMCP_URL', plugin_dir_url( __FILE__ ) );
 define( 'KARMCP_BASENAME', plugin_basename( __FILE__ ) );

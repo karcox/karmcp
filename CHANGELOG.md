@@ -2,6 +2,12 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.27.1]
+
+### Fixed
+
+- **The auto-deactivation setting on the Security tab could be ticked but never saved on its own.** "Recovery from fatal errors" offers one choice — deactivate a plugin after it fatals three times in ten minutes — and the only buttons under it were *Install handler* / *Reinstall handler* / *Remove handler*. The checkbox was written to the option purely as a side effect of those three actions, so changing it meant reinstalling the drop-in, and anyone who ticked it and looked for a save button found none: the setting reverted on the next page load. There is now a **Save changes** button that persists the setting and leaves `wp-content/fatal-error-handler.php` exactly as it is. The handler action also stopped treating any unrecognised value as "install": only `install` installs, only `uninstall` uninstalls.
+
 ## [1.27.0]
 
 ### Added

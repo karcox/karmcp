@@ -57,6 +57,16 @@ class KarMCP_Plugin {
 	 */
 	private $registrar = null;
 
+	/**
+	 * REST namespace every MCP server on this site is mounted under — ours and
+	 * the adapter's own default one. The route gate tests the namespace, not our
+	 * server, so declining a request never 404s somebody else's server.
+	 */
+	const MCP_ROUTE_NAMESPACE = 'mcp';
+
+	/** Our server's route within that namespace, and its server id. */
+	const MCP_SERVER_ROUTE = 'karmcp-server';
+
 	/** @var float|null MCP request start time (for the request log). */
 	private $mcp_req_start = null;
 
@@ -133,6 +143,15 @@ class KarMCP_Plugin {
 		// the Abilities API is initialized and our abilities are registered by then.
 		add_action( 'mcp_adapter_init', array( $this, 'register_mcp_server' ), 20 );
 
+		// Declining our own server is not enough to stay out of a foreign REST
+		// request. The adapter builds ITS default server on the same action at
+		// priority 10 — before us — and building it calls wp_get_abilities()
+		// twice for resource/prompt discovery. That forces the lazy Abilities
+		// API, which fires register_abilities() below, which loads all 76 tool
+		// classes and registers ~200 abilities. So the request paid in full
+		// before our hook was ever reached. This is the filter that stops it.
+		add_filter( 'mcp_adapter_create_default_server', array( __CLASS__, 'filter_default_server' ) );
+
 		// Apply the disabled-tools option from the admin settings page on every
 		// request. The admin class is only loaded in is_admin() context, so the
 		// MCP REST endpoint would otherwise never see this filter and would
@@ -140,14 +159,16 @@ class KarMCP_Plugin {
 		add_filter( 'karmcp_ability_names', array( $this, 'filter_disabled_tools' ) );
 
 		// Refuse MCP requests whose Host header no longer matches this site's
-		// home host (connector left pointed at an old/temporary domain).
-		require_once KARMCP_DIR . 'includes/class-mcp-host-guard.php';
+		// home host (connector left pointed at an old/temporary domain). Named,
+		// not required: the autoloader resolves the class when the filter fires,
+		// which on a page view is never.
 		add_filter( 'rest_pre_dispatch', array( 'KarMCP_MCP_Host_Guard', 'guard' ), 5, 3 );
 		// Never cache/buffer MCP responses (LiteSpeed/QUIC drop-suspect, Issue 1).
 		add_filter( 'rest_pre_serve_request', array( 'KarMCP_MCP_Host_Guard', 'no_store_headers' ), 10, 4 );
 
 		// Record every MCP request (tool, status, duration) for the MCP Log tab.
-		require_once KARMCP_DIR . 'includes/class-mcp-request-log.php';
+		// The store is named inside the callbacks, so it loads on the first MCP
+		// request rather than on every page view.
 		add_filter( 'rest_pre_dispatch', array( $this, 'mcp_log_pre_dispatch' ), 6, 3 );
 		add_filter( 'rest_post_dispatch', array( $this, 'mcp_log_post_dispatch' ), 10, 3 );
 	}
@@ -322,6 +343,95 @@ class KarMCP_Plugin {
 	}
 
 	/**
+	 * Lets the adapter build its default server only when the request could
+	 * reach an MCP endpoint.
+	 *
+	 * Composed, not overridden: a site that already switched the default server
+	 * off keeps it off.
+	 *
+	 * @since 1.30.0
+	 *
+	 * @param mixed $create Whether the adapter intends to create it.
+	 * @return bool
+	 */
+	public static function filter_default_server( $create ): bool {
+		return (bool) $create && self::request_needs_mcp_server();
+	}
+
+	/**
+	 * Whether this request can actually reach an MCP endpoint.
+	 *
+	 * The adapter hooks its `init()` to `rest_api_init` (or to `init` under
+	 * WP-CLI), and `rest_api_init` fires on EVERY REST request, not only the
+	 * ones under our route. Building the server is not cheap: `create_server()`
+	 * calls `wp_get_ability()` for each name, which triggers the lazy Abilities
+	 * API, which loads the 76 tool classes (~1.2 MB) and registers ~200
+	 * abilities with their JSON schemas. Every `/wp-json/wp/v2/…` call paid that
+	 * — opening the block editor, each autosave, and any REST call made by any
+	 * other plugin on the site. In an editing session that is dozens of times.
+	 *
+	 * Passing only the names and letting the callbacks resolve later is not an
+	 * option, whatever the audit assumed: `McpComponentRegistry::register_ability_tool()`
+	 * resolves each ability at construction, so a server built from unregistered
+	 * names would expose zero tools and log one line per name.
+	 *
+	 * So the test is the route, and it is deliberately written to skip only what
+	 * it can positively identify as somebody else's:
+	 *
+	 * - anything under the `mcp/` namespace. Not just our own route: the
+	 *   adapter's default server shares the namespace, and gating on our route
+	 *   alone would 404 it for anyone who uses it;
+	 * - `/` — the `/wp-json/` discovery index, which lists our route and is how
+	 *   some clients find it. It is one rare request; paying full price for it
+	 *   costs nothing and keeps discovery working, which is what made route
+	 *   filtering look unattractive in the first place;
+	 * - an empty route — `rest_get_server()` called outside a served REST
+	 *   request (an internal `rest_do_request()`, a plugin preloading in
+	 *   wp-admin). We cannot tell what it wants, so we build, exactly as before.
+	 *
+	 * @since 1.30.0
+	 *
+	 * @return bool
+	 */
+	public static function request_needs_mcp_server(): bool {
+		$needed = true;
+
+		if ( defined( 'WP_CLI' ) && constant( 'WP_CLI' ) ) {
+			// Under WP-CLI the adapter runs on `init` and any command may want it.
+			$needed = true;
+		} elseif ( isset( $GLOBALS['wp']->query_vars['rest_route'] ) ) {
+			// Set by WordPress before `rest_api_init` fires, and it covers both
+			// pretty permalinks and the `?rest_route=` fallback — which is why it
+			// is read here instead of REQUEST_URI.
+			$route = '/' . ltrim( (string) $GLOBALS['wp']->query_vars['rest_route'], '/' );
+			if ( '/' !== $route ) {
+				$needed = 0 === strpos( $route, '/' . self::MCP_ROUTE_NAMESPACE . '/' );
+			}
+		}
+
+		/**
+		 * Filters whether the MCP server is built for this request.
+		 *
+		 * The escape hatch for a client that reaches the endpoint by some route
+		 * this does not recognise. Returning true costs the full tool load.
+		 *
+		 * @since 1.30.0
+		 *
+		 * @param bool $needed Whether to build the server.
+		 */
+		$needed = (bool) apply_filters( 'karmcp_needs_mcp_server', $needed );
+
+		if ( ! $needed && defined( 'KARMCP_PROFILE_REGISTRATION' ) && KARMCP_PROFILE_REGISTRATION ) {
+			$route = isset( $GLOBALS['wp']->query_vars['rest_route'] )
+				? (string) $GLOBALS['wp']->query_vars['rest_route']
+				: '(none)';
+			error_log( 'KarMCP: skipped MCP server build for REST route ' . $route . '.' ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- opt-in profiling, behind a constant nobody defines in production.
+		}
+
+		return $needed;
+	}
+
+	/**
 	 * Registers the MCP server with the MCP Adapter.
 	 *
 	 * Called during `mcp_adapter_init`.
@@ -335,6 +445,12 @@ class KarMCP_Plugin {
 		// when switched off, the abilities stay registered in core but no MCP
 		// server endpoint is created — nothing is exposed to AI agents.
 		if ( ! self::is_server_enabled() ) {
+			return;
+		}
+
+		// Not a request that can reach the MCP endpoint: building the server here
+		// would load every tool class and register ~200 abilities for nothing.
+		if ( ! self::request_needs_mcp_server() ) {
 			return;
 		}
 
@@ -361,9 +477,9 @@ class KarMCP_Plugin {
 		}
 
 		$mcp_adapter->create_server(
-			'karmcp-server',                                   // server_id
-			'mcp',                                                    // route_namespace
-			'karmcp-server',                                   // route
+			self::MCP_SERVER_ROUTE,                                   // server_id
+			self::MCP_ROUTE_NAMESPACE,                                // route_namespace
+			self::MCP_SERVER_ROUTE,                                   // route
 			__( 'KarMCP Server', 'karmcp' ),            // server_name
 			KarMCP_Site_Context::compose_instructions( KarMCP_Site_Context::default_base() . "\n\n" . KarMCP_Site_Context::environment_summary() ), // description (base + env + site context)
 			'v' . KARMCP_VERSION,                              // version

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.29.0
+Stable tag: 1.30.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.30.0 =
+Performance: a page view loads a quarter of the PHP it used to, and a REST request that is not an MCP request an eighth. The runtime is resolved by a generated class map instead of a 153-file require list, and the MCP server is no longer built for REST requests that cannot reach it - opening the block editor no longer registers 200 tools. No behaviour changes.
 
 = 1.29.0 =
 

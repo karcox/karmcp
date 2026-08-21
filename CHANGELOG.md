@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.30.0]
+
+A front-end page view loads a quarter of the PHP it used to, and a REST request that is not an MCP request loads an eighth. Nothing about the plugin's behaviour changes.
+
+### Changed
+
+- **A REST request that cannot reach the MCP endpoint no longer builds the MCP server.** `rest_api_init` fires on every REST request, not only on ours, and building the server is not cheap: the adapter resolves each ability name at construction, which forces the lazy Abilities API, which loads the 76 tool classes and registers ~200 abilities with their JSON schemas. Opening the block editor, every autosave, and every REST call made by any other plugin on the site paid that in full — dozens of times in an editing session. It is now built only for requests under the `mcp/` namespace, for the `/wp-json/` discovery index (so clients that find the endpoint there still do), and for WP-CLI. Measured on `/wp-json/wp/v2/posts`: **3,020 KB across 238 files becomes 402 KB across 43.** The `karmcp_needs_mcp_server` filter forces it on for a client that arrives by some other route.
+
+- **The adapter's own default server is declined on those same requests,** which is what actually saves the work. It is created on `mcp_adapter_init` at priority 10 — before our own hook can decline anything — and creating it calls `wp_get_abilities()` twice for resource and prompt discovery. Skipping only our server would have saved nothing at all. A request that does reach the `mcp/` namespace still gets both servers, so the adapter's default endpoint keeps working.
+
+- **The plugin loads what a request uses, instead of everything.** `KarMCP_Bootstrap::load_classes()` ran 153 `require_once` calls on every request, front-end page views included — 1,548 KB of PHP parsed to declare the malware scanner, the SEO audit, the stock-image clients, the OAuth server, the sandbox generators and the WP-CLI runner, none of which an anonymous visitor can reach. A hand-kept list cannot know what a given request needs; only use can. A generated class map (`includes/classmap.php`) plus `KarMCP_Autoloader` now resolves each class the first time something names it. Measured on the same page view: **1,548 KB across 157 files becomes 402 KB across 43** — the modules registry, the stores whose post types register on `init`, the loaders, and the two files that declare a global function. Sites with more modules switched on load their classes too, which is the point: you pay for what is on.
+
+- **The load-order rules in the bootstrap are gone, because the autoloader keeps them.** The dispatch trait before the integrations that use it, each abstract base before its subclasses, the store and loader pairs that had to arrive together — all of that was maintained by hand in the order of the require list, and a wrong line was an immediate fatal. PHP resolves a parent when it declares the child, so the autoloader gets it right by construction.
+
+- **The class map is generated and committed, not built at runtime.** `php bin/generate-classmap.php` rewrites it; `--check` fails if it is stale, and `bin/check.ps1` runs that. Building it per request would mean stat-ing the whole tree, which is the cost this removes. `ClassmapTest` pins the three properties the change rests on: the map matches the tree, no class file does work when it is included, and only the two known files declare a global function next to their class.
+
 ## [1.29.0]
 
 Two admin tabs come out, the Get Help menu goes with them, and the section rail stops spilling its labels across the page when you collapse it.

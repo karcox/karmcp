@@ -27,6 +27,10 @@ El conjunto de archivos por ruta se extrajo de las tres listas de `require_once`
 
 ## El coste por petición
 
+> Las tres filas son de la 1.25.3, **antes** del autoloader. La primera ya no es cierta: desde
+> la 1.30.0 una visita anónima carga 402 KB en 43 archivos. Las otras dos siguen vigentes,
+> porque el Hallazgo 2 sigue abierto.
+
 | Ruta | Archivos | PHP compilado | Compilación en frío | opcache |
 |---|---:|---:|---:|---:|
 | Página pública anónima | 155 | **1.500 KB** (45.439 líneas) | ~450–590 ms | 12,9 MB |
@@ -38,7 +42,14 @@ cada petición REST del sitio**, la sesión del editor de bloques incluida.
 
 ---
 
-## Hallazgo 1 — 1,5 MB de PHP en cada visita anónima
+## Hallazgo 1 — 1,5 MB de PHP en cada visita anónima  ✅ RESUELTO EN 1.30.0
+
+> **Cerrado.** El classmap y `KarMCP_Autoloader` sustituyeron la lista. Medido con el mismo
+> método sobre la misma ruta: **1.548 KB en 157 archivos → 402 KB en 43**, un 74% menos. Lo que
+> queda es lo que `wire_hooks()` toca de verdad, más los dos archivos que declaran una función
+> global y no pueden autocargarse. `ClassmapTest` fija las propiedades que lo sostienen y
+> `bin/check.ps1` falla si el mapa se desfasa. Lo de abajo se conserva como el análisis que
+> justificó el cambio.
 
 `KarMCP_Bootstrap::load_classes()` hace 155 `require_once` en `plugins_loaded:20`, incondicionalmente.
 Ahí dentro va, entre otras cosas, el escáner de malware, el auditor de rendimiento, las auditorías de
@@ -101,7 +112,28 @@ esos `class_exists()` seguirían funcionando igual — solo que ahora dispararí
 
 ---
 
-## Hallazgo 2 — Cada petición REST paga el registro MCP completo
+## Hallazgo 2 — Cada petición REST paga el registro MCP completo  ✅ RESUELTO EN 1.30.0
+
+> **Cerrado, y con una corrección al diagnóstico.** Medido con el mismo método sobre
+> `/wp-json/wp/v2/posts`: **3.020 KB en 238 archivos → 402 KB en 43**, un 87% menos, más los ~208
+> registros de ability que ya no se construyen.
+>
+> **La cadena que se describe abajo no era la que disparaba el gasto.** El culpable es anterior:
+> el adapter monta **su** servidor por defecto en `mcp_adapter_init` con prioridad **10**, antes
+> que `register_mcp_server()` (que va en la 20), y `DefaultServerFactory::create()` llama dos veces
+> a `wp_get_abilities()` para descubrir recursos y prompts *antes* incluso de llegar a
+> `create_server()`. Eso ya fuerza la API perezosa y con ella toda nuestra registración. Declinar
+> solo nuestro servidor no habría ahorrado nada: hace falta el filtro sobre
+> `mcp_adapter_create_default_server`, y es lo que se implementó.
+>
+> **Y la salida 2 que se recomienda abajo no existe.** `McpComponentRegistry::register_ability_tool()`
+> resuelve cada ability con `wp_get_ability()` al construir el servidor, así que "cachear la lista de
+> nombres" produce un servidor con cero herramientas. Se implementó la salida 1, la del filtro por
+> ruta — pero sin su pega: la puerta deja pasar el índice `/wp-json/`, así que la descubrición
+> sigue funcionando, y prueba el **namespace** `mcp/` en vez de nuestra ruta, para no dejar en 404
+> el servidor por defecto del adapter.
+>
+> Lo de abajo se conserva como el análisis que motivó el cambio.
 
 Este es el mayor, y es el que no se ve leyendo `class-bootstrap.php`.
 
@@ -331,16 +363,25 @@ Vale la pena dejarlo escrito, porque son los sospechosos obvios y no lo son:
 
 | # | Qué | Gana | Esfuerzo |
 |---|---|---|---|
-| 1 | Confirmar el Hallazgo 2 con `KARMCP_PROFILE_REGISTRATION` en un sitio real | El dato que decide todo lo demás | 30 min |
-| 2 | Marca de versión única y autocargada para los cuatro `maybe_install()` (H3) | 3–4 consultas por visita | 1 h |
-| 3 | Memoizar `allowed()` y el hermano `.webp` (H5) | Hasta ~100 `stat()` por página | 15 min |
-| 4 | Autoloader por classmap generado, sustituyendo las dos listas (H1) | 1,5 MB → lo que se use | 1 día |
-| 5 | Cortar la carga de herramientas en peticiones REST ajenas (H2) | 1,2 MB × cada petición REST | 1 día |
+| 1 | Confirmar el Hallazgo 2 con `KARMCP_PROFILE_REGISTRATION` en un sitio real | Ahora confirma que la puerta cierra: el log dice qué ruta se saltó | 30 min |
+| 2 | ~~Marca de versión única y autocargada (H3)~~ **hecho en 1.26.0** (`KarMCP_Schema_State`) | 3–4 consultas por visita | 1 h |
+| 3 | ~~Memoizar `allowed()` y el hermano `.webp` (H5)~~ **hecho** | Hasta ~100 `stat()` por página | 15 min |
+| 4 | ~~Autoloader por classmap generado (H1)~~ **hecho en 1.30.0** | 1,5 MB → 402 KB medidos | 1 día |
+| 5 | ~~Cortar la carga de herramientas en peticiones REST ajenas (H2)~~ **hecho en 1.30.0** | 2,6 MB medidos por petición REST | 1 día |
 | 6 | Índice autocargado de redirecciones, al estilo Themer (H4) | 1 consulta por visita | ½ día |
-| 7 | Acotar `load_admin()` a peticiones nuestras (H6) | 2,9 MB en cada tic de heartbeat | ½ día |
+| 7 | ~~Acotar `load_admin()` a peticiones nuestras (H6)~~ **hecho en 1.26.0** | 2,9 MB en cada tic de heartbeat | ½ día |
 
 Los tres primeros caben en una mañana y no tocan arquitectura. El 4 es el que cambia la forma del
 plugin, y a partir de ahí el 1 y el 6 son mucho menos urgentes porque ya no se carga lo que no se usa.
+
+> **Al día de hoy solo queda abierto el 6** (Hallazgo 4, el índice de redirecciones), más el
+> Hallazgo 7, que se anotó para no priorizarlo. El 1 pasó de "confirmar el hallazgo" a
+> "verificar en producción que la puerta cierra", que es media hora bien empleada.
+>
+> Y una corrección al párrafo de arriba, que se escribió antes de implementar nada: **el autoloader
+> no rebajó el Hallazgo 2**. `KarMCP_Ability_Registrar::register_all()` nombra las 64 clases de
+> herramientas al registrarlas, así que en una petición REST el autoloader las habría cargado
+> igual. Lo que sí hizo fue dejar el arreglo al alcance.
 
 ## Cómo reproducir las medidas
 

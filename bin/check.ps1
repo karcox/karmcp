@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-    Runs the checks a change has to pass: PHPUnit, the POT freshness check,
-    PHPStan and PHPCS.
+    Runs the checks a change has to pass: PHPUnit, the class map and POT
+    freshness checks, PHPStan and PHPCS.
 
 .DESCRIPTION
     One command, because the alternative is what actually happened for months —
@@ -64,6 +64,14 @@ try {
         $failed += 'PHPUnit (not found)'
     }
     if ($LASTEXITCODE -ne 0) { $failed += 'PHPUnit' }
+
+    # --- Class map freshness (blocking) -----------------------------------
+    # ClassmapTest already compares the parsed map against the tree; this also
+    # compares the rendered bytes, so a hand-edit of the generated file is
+    # caught too, and it names the command that fixes either.
+    Section 'Classmap'
+    php bin\generate-classmap.php --check
+    if ($LASTEXITCODE -ne 0) { $failed += 'Classmap' }
 
     # --- POT freshness (blocking) -----------------------------------------
     # The suite checks that the PO and MO agree with the POT, but nothing in it

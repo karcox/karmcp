@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.27.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.30.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -83,15 +83,49 @@ Tres hooks, en este orden:
 
 > **Trampa cara:** si omites `'category' => 'karmcp'` al registrar, `wp_register_ability()` **descarta la ability en silencio**. Sin error, sin aviso: la herramienta simplemente no existe.
 
+### Cada petición carga lo que usa (1.30.0)
+
+**No hay lista de `require_once`.** `KarMCP_Autoloader` (`includes/class-autoloader.php`) resuelve cada clase `KarMCP_*` la primera vez que alguien la nombra, contra el mapa generado `includes/classmap.php`. Añadir un archivo de clase **no requiere tocar el bootstrap**: se regenera el mapa y ya está.
+
+```bash
+php bin/generate-classmap.php          # reescribe includes/classmap.php
+php bin/generate-classmap.php --check  # falla si está desfasado (lo corre bin/check.ps1)
+```
+
+Medido sobre una visita anónima: **1.548 KB en 157 archivos pasaron a 402 KB en 43**. Lo que queda es lo que `wire_hooks()` toca de verdad — el registro de módulos, los stores cuyos CPT se registran en `init`, los loaders, el runtime de hardening y la barra de admin.
+
+**El orden de carga ya no es un problema.** El trait antes de las integraciones, cada base abstracta antes de sus subclases, el store y su loader juntos: PHP resuelve el padre al declarar el hijo, así que el autoloader lo acierta por construcción. Esas reglas se mantenían a mano en el orden de la lista y una línea mal puesta era un fatal inmediato.
+
+**Lo que el autoloader no alcanza son las funciones globales.** PHP autocarga clases, nunca funciones, así que los dos archivos que declaran una junto a su clase siguen con `require_once` en `load_classes()`:
+
+| Archivo | Función | Por qué no puede esperar |
+|---|---|---|
+| `includes/class-schema-compat.php` | `karmcp_register_ability()` | La llama cada grupo de abilities al registrarse. |
+| `includes/themer/class-themer-render-controller.php` | `karmcp_themer_location()` | Un tema sin soporte la llama desde su `header.php`, antes de que nada nombre la clase. |
+
+**Si escribes un tercero, `ClassmapTest` falla y te lo dice.** Ese test fija las tres propiedades sobre las que se sostiene todo esto: el mapa cuadra con el árbol, **ningún archivo de clase hace trabajo al incluirse**, y solo esos dos declaran función global. La segunda es la de verdad importante — los hooks se enganchan por nombre en `wire_hooks()`, y un `add_action()` en el nivel superior de un archivo dejaría de ejecutarse en cuanto nada más nombrara esa clase, sin error en ninguna parte.
+
 ### Las clases de herramientas se cargan bajo demanda (1.16.2)
 
-`load_classes()` carga el runtime. Los **76 archivos de `includes/abilities/`** los carga `KarMCP_Bootstrap::load_ability_classes()` — idempotente, pública— y solo cuando alguien pide una herramienta: `wp_abilities_api_init` (que es **perezoso**: dispara en la primera llamada a `wp_get_ability()`), `mcp_adapter_init`, y wp-admin. Una visita al front que no toca ninguna herramienta no parsea 1,2 MB de PHP.
+Por encima del autoloader hay un segundo diferido, anterior y todavía vigente. Los **76 archivos de `includes/abilities/`** los carga `KarMCP_Bootstrap::load_ability_classes()` — idempotente, pública— y solo cuando alguien pide una herramienta: `wp_abilities_api_init` (que es **perezoso**: dispara en la primera llamada a `wp_get_ability()`), `mcp_adapter_init`, y wp-admin. Una visita al front que no toca ninguna herramienta no parsea 1,2 MB de PHP.
 
-**Si añades un archivo de abilities, va en `load_ability_classes()`, no en `load_classes()`.** Y el orden importa: el trait de dispatch antes de las integraciones, cada base abstracta antes de sus subclases.
+**Si añades un archivo de abilities, va en `load_ability_classes()`.** Esa lista sigue siendo explícita a propósito: no está ahí para poder cargar las clases, sino para cargarlas **todas de golpe** en el momento en que alguien pide una herramienta. El orden dentro de ella ya no importa — lo arregla el autoloader —, pero la lista sí, porque es lo que mantiene medible el coste del registro MCP.
 
 > **`is_admin()` también es cierto en `admin-ajax.php`**, así que el diferido se caía por ahí: el latido del editor y cualquier llamada AJAX de otro plugin cargaban las pantallas de admin y toda la capa de herramientas. Desde la 1.26.0 `boot()` pasa por `admin_context_needs_tools()`, que en una petición AJAX solo deja pasar las acciones `karmcp_`. **Si registras un handler de admin-ajax, tiene que llevar ese prefijo** o no se cargará la clase que lo atiende. `admin-post.php` no es AJAX y no está afectado.
 
-> **Lo que se carga en cada petición está medido**, no estimado: [docs/AUDIT-RENDIMIENTO-PLUGIN.md](docs/AUDIT-RENDIMIENTO-PLUGIN.md) tiene las cifras por ruta, el método para reproducirlas, y los dos cambios estructurales que quedan pendientes (autoloader por classmap, y no montar el servidor MCP en peticiones REST que no son MCP).
+> **Lo que se carga en cada petición está medido**, no estimado: [docs/AUDIT-RENDIMIENTO-PLUGIN.md](docs/AUDIT-RENDIMIENTO-PLUGIN.md) tiene las cifras por ruta y el método para reproducirlas. Los dos cambios estructurales que pedía se hicieron en la 1.30.0: el autoloader por classmap (Hallazgo 1) y la puerta de ruta del servidor MCP (Hallazgo 2). Quedan abiertos el índice autocargado de redirecciones (Hallazgo 4) y el log MCP (Hallazgo 7).
+
+### La puerta de ruta del servidor MCP (1.30.0)
+
+`rest_api_init` dispara en **toda** petición REST, no solo en la nuestra, y montar el servidor cuesta la capa de herramientas entera. `KarMCP_Plugin::request_needs_mcp_server()` lo corta: solo se monta bajo el namespace `mcp/`, en el índice `/wp-json/` y en WP-CLI. Medido sobre `/wp-json/wp/v2/posts`: **3.020 KB en 238 archivos → 402 KB en 43**.
+
+> **Declinar nuestro servidor no basta, y esto es lo que la auditoría había diagnosticado mal.** El adapter monta **su** servidor por defecto en `mcp_adapter_init` con prioridad 10 —antes que el nuestro, que va en la 20— y al hacerlo llama dos veces a `wp_get_abilities()` para descubrir recursos y prompts. Eso fuerza la API de abilities perezosa, que dispara nuestro `register_abilities()`, que carga las 76 clases y registra ~200 abilities. La petición ya había pagado entera antes de llegar a nuestro hook. Por eso hay un filtro sobre `mcp_adapter_create_default_server`, y sin él el cambio no ahorra nada.
+
+> **La puerta prueba el namespace, no nuestra ruta.** El servidor por defecto del adapter vive en `/mcp/mcp-adapter-default-server`, al lado del nuestro. Afinar la comprobación a `/mcp/karmcp-server` lo convertiría en un 404 para quien lo use.
+
+> **Tampoco se puede montar el servidor solo con los nombres**, que era la salida que proponía la auditoría: `McpComponentRegistry::register_ability_tool()` resuelve cada ability con `wp_get_ability()` al construir. Un servidor hecho con nombres sin registrar expone cero herramientas y escribe una línea de log por cada uno.
+
+El escape es el filtro `karmcp_needs_mcp_server`, para un cliente que llegue por una ruta que esto no reconozca.
 
 > **La regla que lo sostiene:** ningún archivo fuera de `includes/abilities/` puede depender de una clase de ahí en tiempo de carga. Hay seis referencias permitidas, cada una con su motivo, y `DeferredAbilityLoadTest` las fija. Si añades una séptima el test te dice qué hacer: quitarla, llamar a `load_ability_classes()` antes, o justificarla en `ALLOWED`. Sin ese test, romperlo es un fatal en producción que la suite no ve.
 

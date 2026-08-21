@@ -32,6 +32,7 @@
 /phpstan-baseline.neon export-ignore
 /tools                 export-ignore
 /bin/check.ps1         export-ignore
+/bin/generate-classmap.php export-ignore
 
 # Contributor docs, not user docs
 /CLAUDE.md       export-ignore

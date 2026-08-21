@@ -2,6 +2,14 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.30.1]
+
+One fix: the recovery screen and its tool reported plugins as paused after they had been switched back on.
+
+### Fixed
+
+- **A plugin reactivated by hand kept being reported as paused.** When the fatal-error handler deactivates a plugin it takes it out of `active_plugins` and writes a record in `karmcp_fatal_paused`. Only the `resume-plugin` tool cleared that record, so reactivating the plugin any other way — the Plugins screen, WP-CLI, another plugin — left it behind, and from then on two of KarMCP's own tools disagreed: `list-plugins` reported the plugin active while `list-paused-plugins` reported it paused. Nothing broke, which is why it went unnoticed; the only symptom was an AI agent being handed a fact about the site that was no longer true. Both tools and the Security tab now answer from what is actually active, so a plugin that is running is never described as paused. The stale record itself is cleared when a plugin is activated.
+
 ## [1.30.0]
 
 A front-end page view loads a quarter of the PHP it used to, and a REST request that is not an MCP request loads an eighth. Nothing about the plugin's behaviour changes.

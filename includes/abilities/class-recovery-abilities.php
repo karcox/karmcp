@@ -166,8 +166,9 @@ class KarMCP_Recovery_Abilities {
 	 */
 	public function execute_list_paused( $input ) {
 		unset( $input );
-		$paused = get_option( KarMCP_Fatal_Handler_Template::OPTION_PAUSED, array() );
-		$paused = is_array( $paused ) ? $paused : array();
+		// Reconciled, not raw: a plugin someone reactivated by hand is not paused
+		// any more, whatever the option still remembers.
+		$paused = KarMCP_Fatal_Handler_Template::paused();
 
 		$out = array();
 		foreach ( $paused as $file => $meta ) {
@@ -232,8 +233,7 @@ class KarMCP_Recovery_Abilities {
 		}
 
 		$plugin = (string) ( $input['plugin'] ?? '' );
-		$paused = get_option( KarMCP_Fatal_Handler_Template::OPTION_PAUSED, array() );
-		$paused = is_array( $paused ) ? $paused : array();
+		$paused = KarMCP_Fatal_Handler_Template::paused();
 
 		if ( '' === $plugin || ! isset( $paused[ $plugin ] ) ) {
 			return new \WP_Error(

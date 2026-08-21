@@ -604,7 +604,7 @@ $karmcp_applied = KarMCP_Security_Hardening_Fixer::applied();
 	$karmcp_dropin = KarMCP_Fatal_Handler_Template::status();
 	$karmcp_fcfg   = (array) get_option( KarMCP_Fatal_Handler_Template::OPTION_CONFIG, array() );
 	$karmcp_fatals = (array) get_option( KarMCP_Fatal_Handler_Template::OPTION_LOG, array() );
-	$karmcp_pausd  = (array) get_option( KarMCP_Fatal_Handler_Template::OPTION_PAUSED, array() );
+	$karmcp_pausd  = KarMCP_Fatal_Handler_Template::paused();
 	?>
 	<p class="description">
 		<?php esc_html_e( 'When PHP fatals, the REST API dies and MCP with it — so the agent cannot help at exactly the moment you need it. The Recovery Mode built into WordPress does not fix this: it emails a link and pauses the plugin for that recovery session, while visitors keep seeing the error. This handler records what broke and, optionally, deactivates the plugin responsible so the next request succeeds.', 'karmcp' ); ?>

@@ -332,6 +332,10 @@ class KarMCP_Bootstrap {
 		// monitor's cron has to exist even on a site nobody visits in wp-admin.
 		KarMCP_Security_Hardening_Runtime::init();
 		KarMCP_Security_Monitor::init();
+		// Reactivating a plugin the fatal handler paused clears its pause record.
+		// Named, not instantiated: the class loads when a plugin is activated,
+		// which is rare and never on a page view.
+		add_action( 'activated_plugin', array( 'KarMCP_Fatal_Handler_Template', 'forget' ) );
 
 		( new KarMCP_Admin_Bar() )->init();
 	}

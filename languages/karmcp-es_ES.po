@@ -3,9 +3,9 @@
 # This file is distributed under the GPL-2.0-or-later licence.
 msgid ""
 msgstr ""
-"Project-Id-Version: KarMCP 1.30.0\n"
+"Project-Id-Version: KarMCP 1.30.1\n"
 "Report-Msgid-Bugs-To: https://github.com/karcox/karmcp/issues\n"
-"POT-Creation-Date: 2026-08-21 13:54:00+0000\n"
+"POT-Creation-Date: 2026-08-21 19:20:00+0000\n"
 "PO-Revision-Date: 2026-08-19 19:00+0200\n"
 "Last-Translator: karcox <https://github.com/karcox>\n"
 "Language-Team: Español <https://github.com/karcox/karmcp>\n"
@@ -1668,7 +1668,7 @@ msgstr "Analizar el rendimiento"
 msgid "Analyze the permalink of this post/page. Ignored when url is set."
 msgstr ""
 
-#: includes/security/class-fatal-handler-template.php:125
+#: includes/security/class-fatal-handler-template.php:214
 msgid "Another plugin already installs wp-content/fatal-error-handler.php. Replacing it may break that plugin, so it is not done automatically — pass force:true to replace it (the existing file is backed up alongside it first)."
 msgstr "Otro plugin ya instala wp-content/fatal-error-handler.php. Sustituirlo puede romper ese plugin, así que no se hace automáticamente: pasa force:true para sustituirlo (antes se hace una copia de seguridad del archivo existente, al lado)."
 
@@ -3128,7 +3128,7 @@ msgstr ""
 msgid "Copy taxonomy terms. Default true."
 msgstr ""
 
-#: includes/security/class-fatal-handler-template.php:134
+#: includes/security/class-fatal-handler-template.php:223
 msgid "Could not back up the existing fatal-error handler, so it was left untouched."
 msgstr "No se ha podido hacer copia de seguridad del gestor de errores fatales existente, así que se ha dejado intacto."
 
@@ -3260,7 +3260,7 @@ msgstr "No se han podido leer las columnas de la tabla."
 msgid "Could not restore the file."
 msgstr "No se ha podido restaurar el archivo."
 
-#: includes/security/class-fatal-handler-template.php:170
+#: includes/security/class-fatal-handler-template.php:259
 msgid "Could not restore the previous fatal-error handler."
 msgstr "No se ha podido restaurar el gestor de errores fatales anterior."
 
@@ -3281,7 +3281,7 @@ msgid "Could not start the wp process."
 msgstr "No se ha podido iniciar el proceso wp."
 
 #. translators: %s: path.
-#: includes/security/class-fatal-handler-template.php:145
+#: includes/security/class-fatal-handler-template.php:234
 msgid "Could not write %s. Check that wp-content is writable."
 msgstr "No se ha podido escribir %s. Comprueba que wp-content sea escribible."
 
@@ -6442,12 +6442,12 @@ msgid "KarMCP is active. Install and activate Elementor to enable the Elementor 
 msgstr "KarMCP está activo. Instala y activa Elementor para habilitar las herramientas de construcción de páginas de Elementor (widgets, maquetación, plantillas, kits de marca). Todas las demás herramientas —contenido de WordPress, plugins y temas, usuarios, medios, rendimiento, seguridad, sistema de archivos y base de datos— funcionan sin él."
 
 #. translators: %s: current PHP version
-#: includes/class-bootstrap.php:423
+#: includes/class-bootstrap.php:427
 msgid "KarMCP requires PHP 8.1 or higher. Your server is running PHP %s, please upgrade PHP to avoid silent Elementor write failures."
 msgstr "KarMCP requiere PHP 8.1 o superior. Tu servidor ejecuta PHP %s; actualiza PHP para evitar fallos silenciosos al escribir en Elementor."
 
 #. translators: %s: comma-separated list of missing dependencies
-#: includes/class-bootstrap.php:456
+#: includes/class-bootstrap.php:460
 msgid "KarMCP requires the following to be installed and active: %s"
 msgstr "KarMCP necesita que lo siguiente esté instalado y activo: %s"
 
@@ -7633,7 +7633,7 @@ msgid "Must be true. Acknowledges that a failed core update can take the site of
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-recovery-abilities.php:205
+#: includes/abilities/class-recovery-abilities.php:206
 msgid "Must be true. Acknowledges that an unfixed plugin will crash the site again."
 msgstr ""
 
@@ -8874,7 +8874,7 @@ msgid "Plugin file or folder slug."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-recovery-abilities.php:204
+#: includes/abilities/class-recovery-abilities.php:205
 msgid "Plugin file, e.g. \"my-plugin/my-plugin.php\", exactly as list-paused-plugins reports it."
 msgstr ""
 
@@ -9288,7 +9288,7 @@ msgid "Re-encode generated image sizes to shrink their file size."
 msgstr "Recodificar los tamaños de imagen generados para reducir su peso."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-recovery-abilities.php:197
+#: includes/abilities/class-recovery-abilities.php:198
 msgid "Reactivates a plugin the fatal-error handler deactivated, and clears its pause record. Only do this after the cause is fixed: reactivating an unfixed plugin will crash the site again, and the handler will deactivate it again. Requires confirm:true."
 msgstr ""
 
@@ -9297,7 +9297,7 @@ msgid "Reactivates a plugin the fatal-error handler deactivated. Requires confir
 msgstr "Vuelve a activar un plugin que el gestor de errores fatales había desactivado. Requiere confirmación."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-recovery-abilities.php:231
+#: includes/abilities/class-recovery-abilities.php:232
 msgid "Reactivating a plugin that still crashes will take the site down again. Pass confirm:true once the cause is fixed."
 msgstr ""
 
@@ -9998,7 +9998,7 @@ msgstr ""
 msgid "Results per page. Default: 5."
 msgstr ""
 
-#: includes/abilities/class-recovery-abilities.php:196
+#: includes/abilities/class-recovery-abilities.php:197
 #: includes/admin/class-admin.php:3994
 msgid "Resume Paused Plugin"
 msgstr "Reanudar plugin en pausa"
@@ -12323,7 +12323,7 @@ msgstr "El elemento html no declara ningún atributo lang, así que un lector de
 msgid "The html element declares no lang attribute, so neither a crawler nor a screen reader knows what language this is."
 msgstr "El elemento html no declara ningún atributo lang, así que ni un rastreador ni un lector de pantalla saben en qué idioma está esto."
 
-#: includes/security/class-fatal-handler-template.php:162
+#: includes/security/class-fatal-handler-template.php:251
 msgid "The installed fatal-error handler is not KarMCP's, so it was left alone."
 msgstr "El gestor de errores fatales instalado no es el de KarMCP, así que se ha dejado como estaba."
 

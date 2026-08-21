@@ -53,6 +53,95 @@ class KarMCP_Fatal_Handler_Template {
 	}
 
 	/**
+	 * The pause records that are still true, reconciled against what is active.
+	 *
+	 * The drop-in pauses a plugin by removing it from `active_plugins` and
+	 * writing a row here. Only `resume-plugin` used to clear that row, so the
+	 * moment someone reactivated the plugin any other way — the Plugins screen,
+	 * WP-CLI, another plugin — the record outlived the pause, and two of our own
+	 * tools started contradicting each other: `list-plugins` reported it active
+	 * while `list-paused-plugins` reported it paused. Nothing breaks, which is
+	 * exactly the problem: an agent reading the site's state is handed a fact
+	 * that is no longer true, and a wrong fact is worse than a missing one.
+	 *
+	 * So the question is answered from the thing that actually decides it. A
+	 * plugin that is active is not paused, whatever this option remembers.
+	 *
+	 * Read-only on purpose: `list-paused-plugins` is annotated `readonly`, and a
+	 * reader that writes would make that annotation a lie. The stale row is
+	 * dropped for real by forget(), on `activated_plugin`.
+	 *
+	 * @since 1.30.1
+	 *
+	 * @return array<string,array> Plugin file => pause record.
+	 */
+	public static function paused(): array {
+		$paused = get_option( self::OPTION_PAUSED, array() );
+		$paused = is_array( $paused ) ? $paused : array();
+		if ( ! $paused ) {
+			return array();
+		}
+
+		$active = self::active_plugin_files();
+		foreach ( array_keys( $paused ) as $file ) {
+			if ( in_array( (string) $file, $active, true ) ) {
+				unset( $paused[ $file ] );
+			}
+		}
+
+		return $paused;
+	}
+
+	/**
+	 * Drops a plugin's pause record. Hooked to `activated_plugin`.
+	 *
+	 * This is the write half of the reconciliation, and it is wired by name so
+	 * the class only loads when a plugin is actually activated — which is rare,
+	 * and never on a page view.
+	 *
+	 * @since 1.30.1
+	 *
+	 * @param string $plugin Plugin file, relative to the plugins directory.
+	 */
+	public static function forget( $plugin ): void {
+		$plugin = (string) $plugin;
+		$paused = get_option( self::OPTION_PAUSED, array() );
+		if ( ! is_array( $paused ) || ! isset( $paused[ $plugin ] ) ) {
+			return;
+		}
+
+		unset( $paused[ $plugin ] );
+		update_option( self::OPTION_PAUSED, $paused, false );
+	}
+
+	/**
+	 * Every plugin file WordPress currently considers active.
+	 *
+	 * Reads the options rather than calling `is_plugin_active()`, which lives in
+	 * wp-admin/includes/plugin.php and is not loaded on the front end — where
+	 * the drop-in and its readers can perfectly well run.
+	 *
+	 * @since 1.30.1
+	 *
+	 * @return string[]
+	 */
+	private static function active_plugin_files(): array {
+		$active = get_option( 'active_plugins', array() );
+		$active = is_array( $active ) ? array_values( $active ) : array();
+
+		// Network-activated plugins are absent from active_plugins and are just
+		// as active; their file is the KEY of this map, not the value.
+		if ( function_exists( 'is_multisite' ) && is_multisite() && function_exists( 'get_site_option' ) ) {
+			$network = get_site_option( 'active_sitewide_plugins', array() );
+			if ( is_array( $network ) ) {
+				$active = array_merge( $active, array_keys( $network ) );
+			}
+		}
+
+		return array_map( 'strval', $active );
+	}
+
+	/**
 	 * Whether the installed drop-in is ours.
 	 *
 	 * @since 1.6.0

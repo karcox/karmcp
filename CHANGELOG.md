@@ -2,6 +2,20 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.30.3]
+
+One fix: writing a colour on an element still bound to a global saved, read back correctly, and rendered the global.
+
+### Fixed
+
+- **A literal value written over a global binding is now reported, and can be made to win.** Elementor stores a control's value and, beside it, an optional `__globals__` binding to a kit colour or typography. The binding is what it resolves; the literal next to it is never read. So `update-element`, `update-container`, `update-widget` and `batch-update` all accepted a colour, returned `success: true`, stored it, read it back byte for byte on the next call — and the element went on painting the kit's colour. The only way to find out was to open the page and look, which is the expensive half of building anything: the write says it worked, so the search starts somewhere else. Real symptom, from a course build: a hero that had to be blue kept arriving black, because the container's `background_color` was bound to the kit's BLACK.
+
+  The four tools now return `shadowed_globals` — the written keys whose binding overrides them, with the binding — whenever it happens. A new `clear_globals: true` drops those bindings so the literal applies, in the same call.
+
+> **Reporting is the default and clearing is opt-in, on purpose.** A white-label course works by binding every colour to a global and swapping the kit once, so an element quietly unbound behind the caller's back would break the mechanism the rebrand depends on — and it would break it the same silent way this fix exists to end. The caller who means the literal to win says so. Sending `__globals__` blanked for those keys still works exactly as before, and a caller doing that is not reported.
+
+> The check runs on the stored key name, after the CSS-class and flex rewrites, so a binding is still matched when the caller spells the key the other way (`_css_classes` on a container). Deleting a key with `null` is not a shadowed write and is not reported.
+
 ## [1.30.2]
 
 One fix: the MCP Log tab was half full of rejected client probes.

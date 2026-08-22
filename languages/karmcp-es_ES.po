@@ -3,9 +3,9 @@
 # This file is distributed under the GPL-2.0-or-later licence.
 msgid ""
 msgstr ""
-"Project-Id-Version: KarMCP 1.30.2\n"
+"Project-Id-Version: KarMCP 1.30.3\n"
 "Report-Msgid-Bugs-To: https://github.com/karcox/karmcp/issues\n"
-"POT-Creation-Date: 2026-08-22 04:34:55+0000\n"
+"POT-Creation-Date: 2026-08-22 15:19:40+0000\n"
 "PO-Revision-Date: 2026-08-19 19:00+0200\n"
 "Last-Translator: karcox <https://github.com/karcox>\n"
 "Language-Team: Español <https://github.com/karcox/karmcp>\n"
@@ -1228,7 +1228,7 @@ msgstr "Añadir fragmento de código"
 msgid "Add Contact Form"
 msgstr "Añadir formulario de contacto"
 
-#: includes/abilities/class-layout-abilities.php:184
+#: includes/abilities/class-layout-abilities.php:218
 #: includes/admin/class-admin.php:4991
 msgid "Add Container"
 msgstr "Añadir contenedor"
@@ -1328,7 +1328,7 @@ msgid "Adds a JavaScript snippet to a page via an HTML widget."
 msgstr "Añade un fragmento de JavaScript a una página mediante un widget HTML."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:185
+#: includes/abilities/class-layout-abilities.php:219
 msgid "Adds a container to a page. Supports both flex (default) and grid layouts via container_type. Omit parent_id for top-level, or provide a parent container ID for nesting. Flex tips: Use flex_direction=row for side-by-side children, flex_wrap=wrap for wrapping, flex_justify_content for main-axis alignment (e.g. space-between, center), flex_align_items for cross-axis alignment. (The shorthand justify_content / align_items are also accepted and remapped to flex_justify_content / flex_align_items.) Grid tips: Set container_type=grid with grid_columns_grid, grid_rows_grid, grid_gaps. Background: set background_background=classic and background_color=#hex. Border: set border_border=solid, border_width, border_color. Also supports min_height, overflow, html_tag, padding, margin, position, z_index, animation."
 msgstr ""
 
@@ -1820,7 +1820,7 @@ msgid "Array of typography definitions."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:563
+#: includes/abilities/class-layout-abilities.php:625
 msgid "Array of update operations."
 msgstr ""
 
@@ -2110,7 +2110,7 @@ msgid "Batch Update"
 msgstr "Actualización por lotes"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:549
+#: includes/abilities/class-layout-abilities.php:611
 msgid "Batch Update Elements"
 msgstr ""
 
@@ -2980,12 +2980,12 @@ msgid "Container element type not available."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:859
+#: includes/abilities/class-layout-abilities.php:938
 msgid "Container not found."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:206
+#: includes/abilities/class-layout-abilities.php:240
 msgid "Container settings: flex_direction, flex_wrap, flex_justify_content, flex_align_items, gap, content_width, padding, margin, background, border, etc. (Unprefixed justify_content / align_items / align_content are accepted and remapped to the flex_-prefixed keys.)"
 msgstr ""
 
@@ -4197,6 +4197,11 @@ msgid "Downscale large uploads to this width/height. 0 = off."
 msgstr "Reducir las subidas grandes a este ancho o alto. 0 = desactivado."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
+#: includes/abilities/class-layout-abilities.php:132
+msgid "Drop any global binding on the keys being written, so the literal value applies. Default false, which leaves bindings intact and only reports them under shadowed_globals. Set it when you mean the literal to win — writing a colour on an element that is still bound to a kit global otherwise saves, reads back correctly and renders the kit colour."
+msgstr ""
+
+#. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #: includes/abilities/class-template-abilities.php:327
 msgid "Drop every setting the template carries that is already the control default. Safe by construction: an element resolves an absent setting to that same default, so the result renders identically — it only stops the value being stored and shipped. This is where the weight is, and it is mostly on containers rather than widgets: third parties register pre-filled sliders there, so measured on one site a navigation block of 5 elements is 28,499 characters, of which 87% is sample photographs nobody sees, riding into every module and into the SCORM export. Elements whose controls cannot be read — a widget the site does not have, or Elementor absent — are left verbatim; an unknown default never authorises a deletion. Off by default."
 msgstr ""
@@ -4206,7 +4211,7 @@ msgstr ""
 msgid "Duplicate Block"
 msgstr "Duplicar bloque"
 
-#: includes/abilities/class-layout-abilities.php:1135
+#: includes/abilities/class-layout-abilities.php:1214
 #: includes/admin/class-admin.php:5006
 msgid "Duplicate Element"
 msgstr "Duplicar elemento"
@@ -4233,7 +4238,7 @@ msgid "Duplicate field name \"%s\". Elementor keys submitted values by it, so tw
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:1136
+#: includes/abilities/class-layout-abilities.php:1215
 msgid "Duplicates an element (including all children) with fresh IDs. The duplicate is placed immediately after the original."
 msgstr ""
 
@@ -4339,7 +4344,7 @@ msgstr "O escribes la página en condiciones o la dejas fuera del índice. Una p
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #. translators: %s: the element id.
-#: includes/abilities/class-layout-abilities.php:880
+#: includes/abilities/class-layout-abilities.php:959
 msgid "Element \"%s\" is not a direct child of the container."
 msgstr ""
 
@@ -4354,7 +4359,7 @@ msgid "Element Extensions"
 msgstr "Extensiones de elemento"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:567
+#: includes/abilities/class-layout-abilities.php:629
 msgid "Element ID to update."
 msgstr ""
 
@@ -4378,26 +4383,26 @@ msgid "Element is missing elType."
 msgstr "Al elemento le falta elType."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:863
+#: includes/abilities/class-layout-abilities.php:942
 msgid "Element is not a container."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:411
+#: includes/abilities/class-layout-abilities.php:447
 msgid "Element is not a container. Use update-widget for widgets."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #: includes/abilities/class-custom-code-abilities.php:254
-#: includes/abilities/class-layout-abilities.php:407
-#: includes/abilities/class-layout-abilities.php:512
-#: includes/abilities/class-layout-abilities.php:763
-#: includes/abilities/class-layout-abilities.php:1019
-#: includes/abilities/class-layout-abilities.php:1115
-#: includes/abilities/class-layout-abilities.php:1197
+#: includes/abilities/class-layout-abilities.php:443
+#: includes/abilities/class-layout-abilities.php:563
+#: includes/abilities/class-layout-abilities.php:842
+#: includes/abilities/class-layout-abilities.php:1098
+#: includes/abilities/class-layout-abilities.php:1194
+#: includes/abilities/class-layout-abilities.php:1276
 #: includes/abilities/class-template-abilities.php:252
 #: includes/abilities/class-template-abilities.php:809
-#: includes/abilities/class-widget-abilities.php:531
+#: includes/abilities/class-widget-abilities.php:533
 msgid "Element not found."
 msgstr ""
 
@@ -4749,12 +4754,12 @@ msgid "Failed to encode element data as JSON."
 msgstr "No se han podido codificar los datos del elemento como JSON."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:1207
+#: includes/abilities/class-layout-abilities.php:1286
 msgid "Failed to insert duplicate."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:1033
+#: includes/abilities/class-layout-abilities.php:1112
 msgid "Failed to insert element at target position."
 msgstr ""
 
@@ -4771,17 +4776,17 @@ msgid "Failed to parse the Unsplash API response."
 msgstr "No se ha podido analizar la respuesta de la API de Unsplash."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:1026
+#: includes/abilities/class-layout-abilities.php:1105
 msgid "Failed to remove element from current position."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:901
+#: includes/abilities/class-layout-abilities.php:980
 msgid "Failed to reorder elements."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:775
+#: includes/abilities/class-layout-abilities.php:854
 msgid "Failed to set element label."
 msgstr ""
 
@@ -4792,19 +4797,19 @@ msgid "Failed to sideload SVG: %s"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:417
+#: includes/abilities/class-layout-abilities.php:460
 msgid "Failed to update container settings."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #: includes/abilities/class-custom-code-abilities.php:267
-#: includes/abilities/class-layout-abilities.php:518
+#: includes/abilities/class-layout-abilities.php:576
 #: includes/abilities/class-template-abilities.php:823
 msgid "Failed to update element settings."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-widget-abilities.php:541
+#: includes/abilities/class-widget-abilities.php:550
 msgid "Failed to update widget settings."
 msgstr ""
 
@@ -5999,7 +6004,7 @@ msgid "Insert position within parent. -1 = append (default)."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:202
+#: includes/abilities/class-layout-abilities.php:236
 msgid "Insert position. -1 = append (default)."
 msgstr ""
 
@@ -7577,7 +7582,7 @@ msgstr "Más usadas"
 msgid "Move Block"
 msgstr "Mover bloque"
 
-#: includes/abilities/class-layout-abilities.php:946
+#: includes/abilities/class-layout-abilities.php:1025
 #: includes/admin/class-admin.php:4996
 msgid "Move Element"
 msgstr "Mover elemento"
@@ -7587,7 +7592,7 @@ msgid "Moves a block to a new position."
 msgstr "Mueve un bloque a una posición nueva."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:947
+#: includes/abilities/class-layout-abilities.php:1026
 msgid "Moves an element to a new parent container and/or position within the page tree."
 msgstr ""
 
@@ -8445,7 +8450,7 @@ msgid "Options your AI agent added to Elementor's own elements: a control in the
 msgstr "Opciones que tu agente de IA añadió a los propios elementos de Elementor: un control en el panel de cualquier contenedor que enciende un efecto."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:818
+#: includes/abilities/class-layout-abilities.php:897
 msgid "Ordered array of child element IDs in the desired order."
 msgstr ""
 
@@ -8598,7 +8603,7 @@ msgid "Parent ID (hierarchical types)."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:198
+#: includes/abilities/class-layout-abilities.php:232
 msgid "Parent container ID for nesting. Omit for top-level."
 msgstr ""
 
@@ -8630,7 +8635,7 @@ msgstr ""
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #. translators: %s: parent element ID
 #: includes/abilities/class-custom-code-abilities.php:418
-#: includes/abilities/class-layout-abilities.php:293
+#: includes/abilities/class-layout-abilities.php:327
 #: includes/abilities/class-template-abilities.php:438
 msgid "Parent element \"%s\" not found."
 msgstr ""
@@ -8652,12 +8657,12 @@ msgid "Partial settings to merge ($$type-wrapped values)."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:358
+#: includes/abilities/class-layout-abilities.php:392
 msgid "Partial settings to merge into the container."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:455
+#: includes/abilities/class-layout-abilities.php:504
 msgid "Partial settings to merge into the element."
 msgstr ""
 
@@ -8724,7 +8729,12 @@ msgid "Pattern produced no blocks."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:588
+#: includes/abilities/class-layout-abilities.php:656
+msgid "Per element id, the written keys that still carry a global binding overriding them. The values saved, but those elements render the global. Re-send with clear_globals:true to make the literals apply."
+msgstr ""
+
+#. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
+#: includes/abilities/class-layout-abilities.php:651
 msgid "Per element, any setting that matched no known control. The writes still happened. Advisory only."
 msgstr ""
 
@@ -8960,7 +8970,7 @@ msgid "Popup title."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:968
+#: includes/abilities/class-layout-abilities.php:1047
 msgid "Position within target parent. -1 = append."
 msgstr ""
 
@@ -9075,7 +9085,12 @@ msgid "Premium Addons for Elementor"
 msgstr "Premium Addons for Elementor"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:468
+#: includes/abilities/class-layout-abilities.php:146
+msgid "Present only when a written key still carries a global binding that overrides it. The value saved, but the element renders the global. Re-send with clear_globals:true, or with __globals__ blanked for those keys, to make the literal apply."
+msgstr ""
+
+#. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
+#: includes/abilities/class-layout-abilities.php:519
 msgid "Present only when some setting matched no known control. The write still happened: the keys are stored, they simply will not render. Advisory — dynamic tags and addons legitimately produce names we cannot see."
 msgstr ""
 
@@ -9648,7 +9663,7 @@ msgstr "Quitar"
 msgid "Remove Block"
 msgstr "Quitar bloque"
 
-#: includes/abilities/class-layout-abilities.php:1053
+#: includes/abilities/class-layout-abilities.php:1132
 #: includes/admin/class-admin.php:5001
 msgid "Remove Element"
 msgstr "Quitar elemento"
@@ -9681,7 +9696,7 @@ msgid "Removes all Elementor content from a page."
 msgstr "Elimina todo el contenido de Elementor de una página."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:1054
+#: includes/abilities/class-layout-abilities.php:1133
 msgid "Removes an element and all its children from a page."
 msgstr ""
 
@@ -9760,7 +9775,7 @@ msgstr "Renderiza dinámicamente el contenido de la entrada actual."
 msgid "Reorder / re-parent items in one call; other fields preserved. arguments: { menu, items: [ { id, parent?, position } ] }."
 msgstr ""
 
-#: includes/abilities/class-layout-abilities.php:799
+#: includes/abilities/class-layout-abilities.php:878
 #: includes/admin/class-admin.php:5041
 msgid "Reorder Elements"
 msgstr "Reordenar elementos"
@@ -9775,7 +9790,7 @@ msgid "Reorders child elements within a container."
 msgstr "Reordena los elementos hijos dentro de un contenedor."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:800
+#: includes/abilities/class-layout-abilities.php:879
 msgid "Reorders the children of a container by providing an ordered array of element IDs. All IDs must be direct children of the specified container."
 msgstr ""
 
@@ -10867,7 +10882,7 @@ msgstr "Cambiar el estado del bloque"
 msgid "Set Dynamic Tag"
 msgstr "Asignar etiqueta dinámica"
 
-#: includes/abilities/class-layout-abilities.php:704
+#: includes/abilities/class-layout-abilities.php:783
 #: includes/admin/class-admin.php:5036
 msgid "Set Element Label"
 msgstr "Poner etiqueta al elemento"
@@ -10980,7 +10995,7 @@ msgid "Sets an element's Navigator label (editor_settings.title)."
 msgstr "Pone la etiqueta de un elemento en el Navegador (editor_settings.title)."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:705
+#: includes/abilities/class-layout-abilities.php:784
 msgid "Sets an element's Navigator label (stored in editor_settings.title). Works for any element; especially useful on v4 atomic elements to keep the layout readable. A convenience wrapper, the same result can be had via update-element with editor_settings."
 msgstr ""
 
@@ -11015,7 +11030,7 @@ msgid "Settings saved."
 msgstr "Ajustes guardados."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:568
+#: includes/abilities/class-layout-abilities.php:630
 msgid "Settings to merge."
 msgstr ""
 
@@ -11478,7 +11493,7 @@ msgid "Target URL"
 msgstr "URL de destino"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-widget-abilities.php:535
+#: includes/abilities/class-widget-abilities.php:537
 msgid "Target element is not a widget."
 msgstr ""
 
@@ -11488,7 +11503,7 @@ msgid "Target height in px. Omit to scale by width only."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:964
+#: includes/abilities/class-layout-abilities.php:1043
 msgid "Target parent container ID. Empty string for top-level."
 msgstr ""
 
@@ -11858,7 +11873,7 @@ msgid "The Kadence theme and its Kadence Blocks companion, grouped as one pack. 
 msgstr "El tema Kadence y su acompañante Kadence Blocks, agrupados como un solo paquete. Las herramientas de Kadence gestionan los ajustes del tema (se habilitan solo si Kadence es el tema activo); las de Kadence Blocks dan el catálogo de bloques y su inserción (se habilitan solo si el plugin Kadence Blocks está activo). Los interruptores de un componente inactivo están deshabilitados hasta que lo instales y lo actives."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:722
+#: includes/abilities/class-layout-abilities.php:801
 msgid "The Navigator label to set."
 msgstr ""
 
@@ -12041,7 +12056,7 @@ msgid "The container element ID that will hold the form."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:354
+#: includes/abilities/class-layout-abilities.php:388
 msgid "The container element ID."
 msgstr ""
 
@@ -12133,17 +12148,17 @@ msgid "The editable fields a person sees when the widget is selected."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:451
+#: includes/abilities/class-layout-abilities.php:500
 msgid "The element ID (container or widget)."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:1149
+#: includes/abilities/class-layout-abilities.php:1228
 msgid "The element ID to duplicate."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:718
+#: includes/abilities/class-layout-abilities.php:797
 msgid "The element ID to label."
 msgstr ""
 
@@ -12153,12 +12168,12 @@ msgid "The element ID to modify."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:960
+#: includes/abilities/class-layout-abilities.php:1039
 msgid "The element ID to move."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:1067
+#: includes/abilities/class-layout-abilities.php:1146
 msgid "The element ID to remove."
 msgstr ""
 
@@ -12539,7 +12554,7 @@ msgid "The pages to create, in menu order."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:813
+#: includes/abilities/class-layout-abilities.php:892
 msgid "The parent container element ID."
 msgstr ""
 
@@ -12602,15 +12617,15 @@ msgstr ""
 #: includes/abilities/class-atomic-widget-abilities.php:256
 #: includes/abilities/class-custom-code-abilities.php:170
 #: includes/abilities/class-custom-code-abilities.php:334
-#: includes/abilities/class-layout-abilities.php:194
-#: includes/abilities/class-layout-abilities.php:350
-#: includes/abilities/class-layout-abilities.php:447
-#: includes/abilities/class-layout-abilities.php:559
-#: includes/abilities/class-layout-abilities.php:714
-#: includes/abilities/class-layout-abilities.php:809
-#: includes/abilities/class-layout-abilities.php:956
-#: includes/abilities/class-layout-abilities.php:1063
-#: includes/abilities/class-layout-abilities.php:1145
+#: includes/abilities/class-layout-abilities.php:228
+#: includes/abilities/class-layout-abilities.php:384
+#: includes/abilities/class-layout-abilities.php:496
+#: includes/abilities/class-layout-abilities.php:621
+#: includes/abilities/class-layout-abilities.php:793
+#: includes/abilities/class-layout-abilities.php:888
+#: includes/abilities/class-layout-abilities.php:1035
+#: includes/abilities/class-layout-abilities.php:1142
+#: includes/abilities/class-layout-abilities.php:1224
 #: includes/abilities/class-page-abilities.php:277
 #: includes/abilities/class-page-abilities.php:343
 #: includes/abilities/class-page-abilities.php:400
@@ -12624,7 +12639,7 @@ msgid "The post/page ID."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:258
+#: includes/abilities/class-layout-abilities.php:292
 #: includes/abilities/class-page-abilities.php:310
 #: includes/abilities/class-page-abilities.php:370
 #: includes/abilities/class-page-abilities.php:441
@@ -13269,7 +13284,7 @@ msgid "This site does not recognise the app making this connection request."
 msgstr "Este sitio no reconoce la aplicación que hace esta petición de conexión."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:270
+#: includes/abilities/class-layout-abilities.php:304
 msgid "This site has Elementor's Flexbox Container experiment disabled, so a container element would be stored but render empty. Enable Elementor → Settings → Features → \"Flexbox Container\" (or Atomic Elements and use the add-flexbox / atomic tools) before building pages via MCP. Editing existing pages is unaffected."
 msgstr ""
 
@@ -13806,7 +13821,7 @@ msgstr "Actualizar widget atómico"
 msgid "Update Block"
 msgstr "Actualizar bloque"
 
-#: includes/abilities/class-layout-abilities.php:340
+#: includes/abilities/class-layout-abilities.php:374
 #: includes/admin/class-admin.php:5011
 msgid "Update Container"
 msgstr "Actualizar contenedor"
@@ -13821,7 +13836,7 @@ msgstr "Actualizar bloque personalizado"
 msgid "Update Custom Widget"
 msgstr "Actualizar widget personalizado"
 
-#: includes/abilities/class-layout-abilities.php:437
+#: includes/abilities/class-layout-abilities.php:486
 #: includes/admin/class-admin.php:5026
 msgid "Update Element"
 msgstr "Actualizar elemento"
@@ -14082,7 +14097,7 @@ msgid "Updates curated site settings; auto-flushes rewrite rules on permalink ch
 msgstr "Actualiza los ajustes curados del sitio; si cambian los enlaces permanentes, regenera las reglas de reescritura automáticamente."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:550
+#: includes/abilities/class-layout-abilities.php:612
 msgid "Updates multiple elements in a single save operation. Each operation specifies an element_id and settings to merge. Much more efficient than calling update-element multiple times. As with update-element, a per-operation settings object may include a `styles` map and/or `editor_settings` for v4 atomic elements, these are routed to the element root automatically."
 msgstr ""
 
@@ -14101,7 +14116,7 @@ msgid "Updates settings on an existing container element."
 msgstr "Actualiza los ajustes de un contenedor existente."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:341
+#: includes/abilities/class-layout-abilities.php:375
 msgid "Updates settings on an existing container. Settings are merged (partial update). Supports all container controls: flex_direction, flex_justify_content, flex_align_items, flex_wrap, flex_align_content, gap, content_width, min_height, overflow, html_tag, container_type, grid controls, background (set background_background=classic first), border (set border_border=solid first), border_radius, box_shadow, padding, margin, position, z_index, animation, shape dividers, etc. (The unprefixed justify_content / align_items / align_content are accepted and remapped to the flex_-prefixed keys.)"
 msgstr ""
 
@@ -14115,7 +14130,7 @@ msgid "Updates settings on an existing widget. Settings are merged (partial upda
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:438
+#: includes/abilities/class-layout-abilities.php:487
 msgid "Updates settings on any element (container or widget). Settings are merged (partial update). Works for all element types, no need to know if the target is a container or widget. For v4 atomic elements you may also include a `styles` map (the element's local CSS classes) and/or `editor_settings` (e.g. `{ \"title\": \"Hero\" }` for the Navigator label) in the settings object, these are routed to the element root automatically. Use set-element-label for just the Navigator name."
 msgstr ""
 
@@ -14433,7 +14448,7 @@ msgid "When enabled, connected AI agents can create, edit, and delete Elementor 
 msgstr "Cuando está activado, los agentes de IA conectados pueden crear, editar y eliminar páginas y contenido de Elementor en este sitio a través del servidor MCP. Usa un modelo de IA capaz y configura tu cliente para que pida confirmación antes de cada acción: lee lo que el agente va a hacer antes de aprobarlo."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:210
+#: includes/abilities/class-layout-abilities.php:244
 msgid "When true, seed an edge-to-edge full-bleed container (full content width, 100% width, zero padding, zero flex/gap, column + stretch). Use for the top-level container on Canvas-template pages so headers/footers and full-width sections have no white strips. Any explicit `settings` you pass still override the preset."
 msgstr ""
 
@@ -14467,7 +14482,7 @@ msgid "Where to search, relative to the WP root: a directory to search its whole
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:584
+#: includes/abilities/class-layout-abilities.php:647
 msgid "Whether the document was written. False when no operation matched, in which case the page is left exactly as it was."
 msgstr ""
 
@@ -15420,14 +15435,14 @@ msgid "post_id and css are required."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:1006
-#: includes/abilities/class-layout-abilities.php:1103
-#: includes/abilities/class-layout-abilities.php:1185
+#: includes/abilities/class-layout-abilities.php:1085
+#: includes/abilities/class-layout-abilities.php:1182
+#: includes/abilities/class-layout-abilities.php:1264
 msgid "post_id and element_id are required."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:610
+#: includes/abilities/class-layout-abilities.php:678
 msgid "post_id and operations are required."
 msgstr ""
 
@@ -15460,19 +15475,19 @@ msgid "post_id is required."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:847
+#: includes/abilities/class-layout-abilities.php:926
 msgid "post_id, container_id, and element_ids are required."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:395
-#: includes/abilities/class-layout-abilities.php:500
-#: includes/abilities/class-widget-abilities.php:518
+#: includes/abilities/class-layout-abilities.php:431
+#: includes/abilities/class-layout-abilities.php:551
+#: includes/abilities/class-widget-abilities.php:520
 msgid "post_id, element_id, and settings are required."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-layout-abilities.php:753
+#: includes/abilities/class-layout-abilities.php:832
 msgid "post_id, element_id, and title are required."
 msgstr ""
 

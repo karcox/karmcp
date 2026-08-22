@@ -177,6 +177,138 @@ class ElementSettingsWriteTest extends \PHPUnit\Framework\TestCase {
 		$this->assertSame( 'classic', $settings['background_background'] );
 	}
 
+	// -- globals shadowing a literal write ---------------------------------
+
+	/**
+	 * Builds a container whose background colour is bound to a kit global.
+	 *
+	 * @return array
+	 */
+	private function bound_container(): array {
+		return $this->tree(
+			'container',
+			array(
+				'background_background' => 'classic',
+				'background_color'      => '#000000',
+				'__globals__'           => array( 'background_color' => 'globals/colors?id=primary' ),
+			)
+		);
+	}
+
+	private function update_reporting( array $data, array $settings, bool $clear = false ): array {
+		$shadowed = array();
+		$this->assertTrue( $this->data->update_element_settings( $data, 'abc1234', $settings, $shadowed, $clear ) );
+
+		return array( $data[0]['settings'], $shadowed );
+	}
+
+	public function test_a_literal_over_a_binding_is_reported() {
+		list( $settings, $shadowed ) = $this->update_reporting(
+			$this->bound_container(),
+			array( 'background_color' => '#0025FF' )
+		);
+
+		$this->assertSame( array( 'background_color' => 'globals/colors?id=primary' ), $shadowed );
+
+		// Reported, not repaired: the binding is still there and still wins.
+		$this->assertSame( 'globals/colors?id=primary', $settings['__globals__']['background_color'] );
+		$this->assertSame( '#0025FF', $settings['background_color'] );
+	}
+
+	public function test_clear_globals_drops_the_binding_so_the_literal_applies() {
+		list( $settings, $shadowed ) = $this->update_reporting(
+			$this->bound_container(),
+			array( 'background_color' => '#0025FF' ),
+			true
+		);
+
+		$this->assertSame( array( 'background_color' => 'globals/colors?id=primary' ), $shadowed );
+		$this->assertArrayNotHasKey( 'background_color', $settings['__globals__'] );
+		$this->assertSame( '#0025FF', $settings['background_color'] );
+	}
+
+	public function test_a_caller_clearing_the_binding_itself_is_not_reported() {
+		list( $settings, $shadowed ) = $this->update_reporting(
+			$this->bound_container(),
+			array(
+				'background_color' => '#0025FF',
+				'__globals__'      => array( 'background_color' => '' ),
+			)
+		);
+
+		$this->assertSame( array(), $shadowed );
+		$this->assertSame( '', $settings['__globals__']['background_color'] );
+	}
+
+	public function test_an_unbound_key_is_not_reported() {
+		list( , $shadowed ) = $this->update_reporting(
+			$this->bound_container(),
+			array( 'padding' => array( 'size' => 20 ) )
+		);
+
+		$this->assertSame( array(), $shadowed );
+	}
+
+	/**
+	 * `__globals__` is keyed by the name Elementor stores, so the check has to
+	 * run on the rewritten key. A container's class key arrives as
+	 * `_css_classes` and is stored as `css_classes`.
+	 */
+	public function test_the_binding_is_matched_on_the_rewritten_key() {
+		$data = $this->tree(
+			'container',
+			array(
+				'css_classes' => 'de-la-casa',
+				'__globals__' => array( 'css_classes' => 'globals/whatever?id=x' ),
+			)
+		);
+
+		list( , $shadowed ) = $this->update_reporting( $data, array( '_css_classes' => 'del-cliente' ) );
+
+		$this->assertSame( array( 'css_classes' => 'globals/whatever?id=x' ), $shadowed );
+	}
+
+	public function test_deleting_a_key_is_not_a_shadowed_write() {
+		list( , $shadowed ) = $this->update_reporting(
+			$this->bound_container(),
+			array( 'background_color' => null )
+		);
+
+		$this->assertSame( array(), $shadowed );
+	}
+
+	public function test_an_empty_binding_does_not_shadow_anything() {
+		$data = $this->tree(
+			'container',
+			array(
+				'background_color' => '#000000',
+				'__globals__'      => array( 'background_color' => '' ),
+			)
+		);
+
+		list( , $shadowed ) = $this->update_reporting( $data, array( 'background_color' => '#0025FF' ) );
+
+		$this->assertSame( array(), $shadowed );
+	}
+
+	public function test_a_nested_element_reports_through_the_recursion() {
+		$data = array(
+			array(
+				'id'       => 'parent1',
+				'elType'   => 'container',
+				'settings' => array(),
+				'elements' => $this->bound_container(),
+			),
+		);
+
+		$shadowed = array();
+		$this->assertTrue(
+			$this->data->update_element_settings( $data, 'abc1234', array( 'background_color' => '#0025FF' ), $shadowed )
+		);
+
+		$this->assertSame( array( 'background_color' => 'globals/colors?id=primary' ), $shadowed );
+	}
+
 	// -- built-with-elementor flag ----------------------------------------
 
 	public function test_mark_built_with_elementor_sets_the_flag() {

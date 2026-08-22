@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.30.2
+Stable tag: 1.30.3
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.30.3 =
+Fixed: setting a colour on an element still bound to a global saved fine, read back fine and rendered the kit's colour instead, with nothing to show anything had gone wrong. The four element-update tools now report those keys as shadowed_globals, and clear_globals:true makes the literal value win in the same call.
 
 = 1.30.2 =
 Fixed: the MCP Log tab filled up with rejected probes some AI clients send before each call, pushing real requests out of the 100-entry history. Only methods the server implements are logged now.

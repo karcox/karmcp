@@ -857,19 +857,76 @@ class KarMCP_Data {
 	}
 
 	/**
+	 * Finds the keys a caller is writing as a literal while a global binding for
+	 * the same key is already stored on the element.
+	 *
+	 * Elementor resolves `__globals__` and never looks at the literal beside it,
+	 * so the write is a silent no-op of the worst kind: the value saves, reads
+	 * back exactly as it was sent, and the element keeps painting the kit's
+	 * colour. It is the same failure family as the null deletion and the CSS
+	 * class key above — the cost is a trip to the browser to discover nothing
+	 * happened, which is why this is detected rather than left to be noticed.
+	 *
+	 * A caller that sends its own `__globals__` entry for the key is already
+	 * dealing with the binding and is left alone, whatever value it sends.
+	 *
+	 * @since 1.30.3
+	 *
+	 * @param array $existing The element's current settings.
+	 * @param array $incoming The settings the caller sent, post-rewrite.
+	 * @return array Map of setting key => the global binding that shadows it.
+	 */
+	private static function detect_shadowed_globals( array $existing, array $incoming ): array {
+		$bindings = ( isset( $existing['__globals__'] ) && is_array( $existing['__globals__'] ) )
+			? $existing['__globals__']
+			: array();
+
+		if ( empty( $bindings ) ) {
+			return array();
+		}
+
+		$handled = ( isset( $incoming['__globals__'] ) && is_array( $incoming['__globals__'] ) )
+			? $incoming['__globals__']
+			: array();
+
+		$found = array();
+
+		foreach ( $incoming as $key => $value ) {
+			if ( '__globals__' === $key || array_key_exists( $key, $handled ) ) {
+				continue;
+			}
+
+			if ( isset( $bindings[ $key ] ) && '' !== $bindings[ $key ] ) {
+				$found[ $key ] = (string) $bindings[ $key ];
+			}
+		}
+
+		return $found;
+	}
+
+	/**
 	 * Updates settings for a specific element in the tree.
 	 *
 	 * Modifies `$data` by reference. Returns true if element was found
 	 * and updated, false if the element ID was not found.
 	 *
+	 * `$shadowed` reports the keys whose global binding beat the literal value
+	 * just written (see detect_shadowed_globals()). Reporting is the default and
+	 * `$clear_globals` is opt-in on purpose: a client rebrand works by binding
+	 * every colour to a global and swapping the kit, so unbinding an element
+	 * behind the caller's back would break the very mechanism it relies on.
+	 * The caller who means the literal to win says so.
+	 *
 	 * @since 1.0.0
 	 *
-	 * @param array  $data       The element tree (passed by reference).
-	 * @param string $element_id The element ID to update.
-	 * @param array  $settings   The settings to merge.
+	 * @param array  $data          The element tree (passed by reference).
+	 * @param string $element_id    The element ID to update.
+	 * @param array  $settings      The settings to merge.
+	 * @param array  $shadowed      Receives key => binding for each shadowed write.
+	 * @param bool   $clear_globals Whether to drop those bindings so the literal applies.
 	 * @return bool True if updated, false if not found.
 	 */
-	public function update_element_settings( array &$data, string $element_id, array $settings ): bool {
+	public function update_element_settings( array &$data, string $element_id, array $settings, array &$shadowed = array(), bool $clear_globals = false ): bool {
 		foreach ( $data as &$item ) {
 			if ( isset( $item['id'] ) && $item['id'] === $element_id ) {
 				if ( ! isset( $item['settings'] ) ) {
@@ -942,6 +999,18 @@ class KarMCP_Data {
 				// (`justify_content`, `_css_classes`) removes the key actually stored.
 				$settings = self::strip_null_deletions( $item['settings'], $settings );
 
+				// Runs here, after the key rewrites and after the null deletions:
+				// `__globals__` is keyed by the name Elementor actually stores, so
+				// checking the caller's spelling would miss the binding on every
+				// remapped key, and a deleted key is not a shadowed write.
+				foreach ( self::detect_shadowed_globals( $item['settings'], $settings ) as $key => $binding ) {
+					$shadowed[ $key ] = $binding;
+
+					if ( $clear_globals ) {
+						unset( $item['settings']['__globals__'][ $key ] );
+					}
+				}
+
 				$item['settings'] = array_merge( $item['settings'], $settings );
 
 				if ( ! $is_atomic ) {
@@ -981,7 +1050,7 @@ class KarMCP_Data {
 			}
 
 			if ( ! empty( $item['elements'] ) && is_array( $item['elements'] ) ) {
-				if ( $this->update_element_settings( $item['elements'], $element_id, $settings ) ) {
+				if ( $this->update_element_settings( $item['elements'], $element_id, $settings, $shadowed, $clear_globals ) ) {
 					return true;
 				}
 			}

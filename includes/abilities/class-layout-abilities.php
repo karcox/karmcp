@@ -115,6 +115,40 @@ class KarMCP_Layout_Abilities {
 	}
 
 	/**
+	 * The `clear_globals` input property, shared by every tool that merges
+	 * settings into an existing classic element.
+	 *
+	 * Public because update-widget registers the same pair from its own class;
+	 * both live under includes/abilities/ and are loaded together, so this is a
+	 * registration-time call, not a load-time dependency.
+	 *
+	 * @since 1.30.3
+	 *
+	 * @return array
+	 */
+	public static function clear_globals_schema(): array {
+		return array(
+			'type'        => 'boolean',
+			'description' => __( 'Drop any global binding on the keys being written, so the literal value applies. Default false, which leaves bindings intact and only reports them under shadowed_globals. Set it when you mean the literal to win — writing a colour on an element that is still bound to a kit global otherwise saves, reads back correctly and renders the kit colour.', 'karmcp' ),
+		);
+	}
+
+	/**
+	 * The `shadowed_globals` output property. See clear_globals_schema().
+	 *
+	 * @since 1.30.3
+	 *
+	 * @return array
+	 */
+	public static function shadowed_globals_schema(): array {
+		return array(
+			'type'                 => 'object',
+			'description'          => __( 'Present only when a written key still carries a global binding that overrides it. The value saved, but the element renders the global. Re-send with clear_globals:true, or with __globals__ blanked for those keys, to make the literal apply.', 'karmcp' ),
+			'additionalProperties' => array( 'type' => 'string' ),
+		);
+	}
+
+	/**
 	 * Returns the ability names registered by this class.
 	 *
 	 * @since 1.0.0
@@ -353,17 +387,19 @@ class KarMCP_Layout_Abilities {
 							'type'        => 'string',
 							'description' => __( 'The container element ID.', 'karmcp' ),
 						),
-						'settings'   => array(
+						'settings'      => array(
 							'type'        => 'object',
 							'description' => __( 'Partial settings to merge into the container.', 'karmcp' ),
 						),
+						'clear_globals' => self::clear_globals_schema(),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
 				),
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'success' => array( 'type' => 'boolean' ),
+						'success'          => array( 'type' => 'boolean' ),
+						'shadowed_globals' => self::shadowed_globals_schema(),
 					),
 				),
 				'meta'                => array(
@@ -411,7 +447,14 @@ class KarMCP_Layout_Abilities {
 			return new \WP_Error( 'not_container', __( 'Element is not a container. Use update-widget for widgets.', 'karmcp' ) );
 		}
 
-		$updated = $this->data->update_element_settings( $page_data, $element_id, $settings );
+		$shadowed = array();
+		$updated  = $this->data->update_element_settings(
+			$page_data,
+			$element_id,
+			$settings,
+			$shadowed,
+			! empty( $input['clear_globals'] )
+		);
 
 		if ( ! $updated ) {
 			return new \WP_Error( 'update_failed', __( 'Failed to update container settings.', 'karmcp' ) );
@@ -423,7 +466,13 @@ class KarMCP_Layout_Abilities {
 			return $result;
 		}
 
-		return array( 'success' => true );
+		$out = array( 'success' => true );
+
+		if ( $shadowed ) {
+			$out['shadowed_globals'] = $shadowed;
+		}
+
+		return $out;
 	}
 
 	// -------------------------------------------------------------------------
@@ -450,10 +499,11 @@ class KarMCP_Layout_Abilities {
 							'type'        => 'string',
 							'description' => __( 'The element ID (container or widget).', 'karmcp' ),
 						),
-						'settings'   => array(
+						'settings'      => array(
 							'type'        => 'object',
 							'description' => __( 'Partial settings to merge into the element.', 'karmcp' ),
 						),
+						'clear_globals' => self::clear_globals_schema(),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
 				),
@@ -463,6 +513,7 @@ class KarMCP_Layout_Abilities {
 						'success'     => array( 'type' => 'boolean' ),
 						'element_id'  => array( 'type' => 'string' ),
 						'element_type' => array( 'type' => 'string' ),
+						'shadowed_globals' => self::shadowed_globals_schema(),
 						'unknown_keys' => array(
 							'type'        => 'array',
 							'description' => __( 'Present only when some setting matched no known control. The write still happened: the keys are stored, they simply will not render. Advisory — dynamic tags and addons legitimately produce names we cannot see.', 'karmcp' ),
@@ -512,7 +563,14 @@ class KarMCP_Layout_Abilities {
 			return new \WP_Error( 'element_not_found', __( 'Element not found.', 'karmcp' ) );
 		}
 
-		$updated = $this->data->update_element_settings( $page_data, $element_id, $settings );
+		$shadowed = array();
+		$updated  = $this->data->update_element_settings(
+			$page_data,
+			$element_id,
+			$settings,
+			$shadowed,
+			! empty( $input['clear_globals'] )
+		);
 
 		if ( ! $updated ) {
 			return new \WP_Error( 'update_failed', __( 'Failed to update element settings.', 'karmcp' ) );
@@ -529,6 +587,10 @@ class KarMCP_Layout_Abilities {
 			'element_id'   => $element_id,
 			'element_type' => $element['elType'] ?? 'unknown',
 		);
+
+		if ( $shadowed ) {
+			$out['shadowed_globals'] = $shadowed;
+		}
 
 		$unknown = $this->unknown_key_report( $element, $settings );
 		if ( $unknown ) {
@@ -570,6 +632,7 @@ class KarMCP_Layout_Abilities {
 								'required'   => array( 'element_id', 'settings' ),
 							),
 						),
+						'clear_globals' => self::clear_globals_schema(),
 					),
 					'required'   => array( 'post_id', 'operations' ),
 				),
@@ -587,6 +650,11 @@ class KarMCP_Layout_Abilities {
 							'type'        => 'array',
 							'description' => __( 'Per element, any setting that matched no known control. The writes still happened. Advisory only.', 'karmcp' ),
 							'items'       => array( 'type' => 'object' ),
+						),
+						'shadowed_globals' => array(
+							'type'                 => 'object',
+							'description'          => __( 'Per element id, the written keys that still carry a global binding overriding them. The values saved, but those elements render the global. Re-send with clear_globals:true to make the literals apply.', 'karmcp' ),
+							'additionalProperties' => array( 'type' => 'object' ),
 						),
 					),
 				),
@@ -619,6 +687,8 @@ class KarMCP_Layout_Abilities {
 		$updated_count = 0;
 		$failed        = array();
 		$unknown       = array();
+		$shadowed      = array();
+		$clear_globals = ! empty( $input['clear_globals'] );
 
 		foreach ( $operations as $op ) {
 			$eid      = sanitize_text_field( $op['element_id'] ?? '' );
@@ -636,10 +706,15 @@ class KarMCP_Layout_Abilities {
 				continue;
 			}
 
-			$ok = $this->data->update_element_settings( $page_data, $eid, $settings );
+			$shadowed_here = array();
+			$ok            = $this->data->update_element_settings( $page_data, $eid, $settings, $shadowed_here, $clear_globals );
 
 			if ( $ok ) {
 				$updated_count++;
+
+				if ( $shadowed_here ) {
+					$shadowed[ $eid ] = $shadowed_here;
+				}
 
 				// Reported per element: a batch is exactly where an unknown key
 				// disappears, since one summary count of successes says nothing
@@ -688,6 +763,10 @@ class KarMCP_Layout_Abilities {
 
 		if ( $unknown ) {
 			$out['unknown_keys'] = $unknown;
+		}
+
+		if ( $shadowed ) {
+			$out['shadowed_globals'] = $shadowed;
 		}
 
 		return $out;

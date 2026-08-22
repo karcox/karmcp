@@ -475,18 +475,20 @@ class KarMCP_Widget_Abilities {
 							'type'        => 'string',
 							'description' => __( 'The widget element ID.', 'karmcp' ),
 						),
-						'settings'   => array(
+						'settings'      => array(
 							'type'        => 'object',
 							'description' => __( 'Partial settings to merge.', 'karmcp' ),
 						),
+						'clear_globals' => KarMCP_Layout_Abilities::clear_globals_schema(),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
 				),
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'success'    => array( 'type' => 'boolean' ),
-						'element_id' => array( 'type' => 'string' ),
+						'success'          => array( 'type' => 'boolean' ),
+						'element_id'       => array( 'type' => 'string' ),
+						'shadowed_globals' => KarMCP_Layout_Abilities::shadowed_globals_schema(),
 					),
 				),
 				'meta'                => array(
@@ -535,7 +537,14 @@ class KarMCP_Widget_Abilities {
 			return new \WP_Error( 'not_a_widget', __( 'Target element is not a widget.', 'karmcp' ) );
 		}
 
-		$updated = $this->data->update_element_settings( $page_data, $element_id, $settings );
+		$shadowed = array();
+		$updated  = $this->data->update_element_settings(
+			$page_data,
+			$element_id,
+			$settings,
+			$shadowed,
+			! empty( $input['clear_globals'] )
+		);
 
 		if ( ! $updated ) {
 			return new \WP_Error( 'update_failed', __( 'Failed to update widget settings.', 'karmcp' ) );
@@ -547,10 +556,16 @@ class KarMCP_Widget_Abilities {
 			return $result;
 		}
 
-		return array(
+		$out = array(
 			'success'    => true,
 			'element_id' => $element_id,
 		);
+
+		if ( $shadowed ) {
+			$out['shadowed_globals'] = $shadowed;
+		}
+
+		return $out;
 	}
 
 }

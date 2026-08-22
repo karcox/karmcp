@@ -2,6 +2,16 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.30.2]
+
+One fix: the MCP Log tab was half full of rejected client probes.
+
+### Fixed
+
+- **Requests for methods this server does not implement no longer take a row in the MCP Log.** Connectors probe: Claude's sends `server/discover` — a method in no MCP specification, in no adapter handler and in nothing KarMCP ships — before the handshake and again before individual calls. The server rejects each one, correctly, with a 400. But every rejection was recorded, and the log keeps only the last 100 entries, so half the visible history was noise and the real calls scrolled out of it twice as fast. Each row is also a read plus a rewrite of an option holding up to 100 serialized records, so the probes doubled that work as well. The log now records the methods the server can actually act on, plus notifications; anything it cannot positively identify as unroutable — a batch, an unparseable body — is still recorded exactly as before.
+
+> The 400 itself is not a fault and is unchanged. It reads oddly because the adapter validates the session before it routes, so a method it has no handler for is reported as a missing `Mcp-Session-Id` header rather than as method-not-found.
+
 ## [1.30.1]
 
 One fix: the recovery screen and its tool reported plugins as paused after they had been switched back on.

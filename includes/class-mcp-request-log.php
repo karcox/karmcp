@@ -20,6 +20,64 @@ class KarMCP_MCP_Request_Log {
 	const OPTION    = 'karmcp_mcp_request_log';
 	const MAX_COUNT = 100;
 
+	/**
+	 * The JSON-RPC methods the MCP server can actually act on.
+	 *
+	 * Mirrors the handler map in the adapter's `RequestRouter::route_request()`,
+	 * which builds it as a local variable and so cannot be read at runtime.
+	 * `McpRequestLogTest` parses that file and fails if the two drift, which is
+	 * the only reason a hand-copied list is acceptable here.
+	 *
+	 * @since 1.30.2
+	 */
+	const ROUTABLE = array(
+		'initialize',
+		'ping',
+		'tools/list',
+		'tools/list/all',
+		'tools/call',
+		'resources/list',
+		'resources/read',
+		'prompts/list',
+		'prompts/get',
+	);
+
+	/**
+	 * Whether a request body earns a slot in the log.
+	 *
+	 * Clients probe. Claude's connector sends `server/discover` — a method that
+	 * is in no MCP specification, in no adapter handler, and in nothing we
+	 * ship — before the handshake and again before individual calls. The server
+	 * rejects each one with a 400 (the session check runs before routing, so an
+	 * unknown method is reported as a missing `Mcp-Session-Id` header rather
+	 * than as method-not-found), and every rejection used to take a row.
+	 *
+	 * That costs twice. The log keeps the last 100 entries, so half the visible
+	 * history was probes; and each row is a read plus a rewrite of an option
+	 * holding up to 100 serialized records, so the noise doubled that churn too.
+	 *
+	 * Skips only what it can positively identify as unroutable. A batch, a body
+	 * with no scalar method, anything unparseable: logged, exactly as before.
+	 * Notifications are real protocol traffic and stay.
+	 *
+	 * @since 1.30.2
+	 *
+	 * @param mixed $body The decoded JSON-RPC request body.
+	 * @return bool
+	 */
+	public static function should_record( $body ): bool {
+		if ( ! is_array( $body ) || ! isset( $body['method'] ) || ! is_string( $body['method'] ) ) {
+			return true;
+		}
+
+		$method = $body['method'];
+		if ( 0 === strpos( $method, 'notifications/' ) ) {
+			return true;
+		}
+
+		return in_array( $method, self::ROUTABLE, true );
+	}
+
 	/** Test seam: when non-null, overrides the WP_DEBUG check. */
 	public static $debug_override = null;
 

@@ -183,8 +183,15 @@ class KarMCP_Plugin {
 	 */
 	public function mcp_log_pre_dispatch( $result, $server, $request ) {
 		if ( is_object( $request ) && method_exists( $request, 'get_route' ) && 0 === strpos( (string) $request->get_route(), '/mcp/karmcp-server' ) ) {
+			$body = json_decode( (string) $request->get_body(), true );
+
+			// Client probes for methods this server does not implement do not earn
+			// a row: leaving mcp_req_start null is what makes post_dispatch skip it.
+			if ( ! KarMCP_MCP_Request_Log::should_record( $body ) ) {
+				return $result;
+			}
+
 			$this->mcp_req_start = microtime( true );
-			$body                = json_decode( (string) $request->get_body(), true );
 			$this->mcp_req_tool  = is_array( $body ) ? (string) ( $body['params']['name'] ?? ( $body['method'] ?? '' ) ) : '';
 			$this->mcp_req_id    = (string) ( $request->get_header( 'x-request-id' ) ? $request->get_header( 'x-request-id' ) : '' );
 		}

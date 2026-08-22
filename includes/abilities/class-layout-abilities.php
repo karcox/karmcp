@@ -179,6 +179,38 @@ class KarMCP_Layout_Abilities {
 	}
 
 	/**
+	 * The `reset_typography` input property.
+	 *
+	 * Named apart from the two `clear_*` flags because it does something else:
+	 * those drop what beats the write, this drops what outlives it.
+	 *
+	 * @since 1.32.0
+	 *
+	 * @return array
+	 */
+	public static function reset_typography_schema(): array {
+		return array(
+			'type'        => 'boolean',
+			'description' => __( 'When declaring a typography group (sending a key that ends in _typography), drop the parts of that group you did not send, so your declaration is the whole declaration. Default false, which keeps them and only reports them under inherited_typography. Set it when restyling an element copied from another design — otherwise a font family you never named survives from the source, and one stray heading keeps wearing it.', 'karmcp' ),
+		);
+	}
+
+	/**
+	 * The `inherited_typography` output property. See reset_typography_schema().
+	 *
+	 * @since 1.32.0
+	 *
+	 * @return array
+	 */
+	public static function inherited_typography_schema(): array {
+		return array(
+			'type'                 => 'object',
+			'description'          => __( 'Present only when a declared typography group kept parts that were already stored. Maps the group prefix to the surviving keys and their values, so a font family inherited from a copied design is visible instead of merely in effect. Re-send with reset_typography:true, or name those keys yourself.', 'karmcp' ),
+			'additionalProperties' => array( 'type' => 'object' ),
+		);
+	}
+
+	/**
 	 * Reads the caller's clear flags into the shape update_element_settings()
 	 * takes. One place, so a new member of this family is one line here and not
 	 * four scattered `! empty()` calls.
@@ -192,6 +224,7 @@ class KarMCP_Layout_Abilities {
 		return array(
 			'globals'    => ! empty( $input['clear_globals'] ),
 			'responsive' => ! empty( $input['clear_responsive'] ),
+			'typography' => ! empty( $input['reset_typography'] ),
 		);
 	}
 
@@ -212,6 +245,10 @@ class KarMCP_Layout_Abilities {
 
 		if ( ! empty( $report['responsive'] ) ) {
 			$out['shadowed_responsive'] = $report['responsive'];
+		}
+
+		if ( ! empty( $report['typography'] ) ) {
+			$out['inherited_typography'] = $report['typography'];
 		}
 
 		return $out;
@@ -462,6 +499,7 @@ class KarMCP_Layout_Abilities {
 						),
 						'clear_globals' => self::clear_globals_schema(),
 						'clear_responsive' => self::clear_responsive_schema(),
+						'reset_typography' => self::reset_typography_schema(),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
 				),
@@ -471,6 +509,7 @@ class KarMCP_Layout_Abilities {
 						'success'          => array( 'type' => 'boolean' ),
 						'shadowed_globals' => self::shadowed_globals_schema(),
 						'shadowed_responsive' => self::shadowed_responsive_schema(),
+						'inherited_typography' => self::inherited_typography_schema(),
 					),
 				),
 				'meta'                => array(
@@ -570,6 +609,7 @@ class KarMCP_Layout_Abilities {
 						),
 						'clear_globals' => self::clear_globals_schema(),
 						'clear_responsive' => self::clear_responsive_schema(),
+						'reset_typography' => self::reset_typography_schema(),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
 				),
@@ -581,6 +621,7 @@ class KarMCP_Layout_Abilities {
 						'element_type' => array( 'type' => 'string' ),
 						'shadowed_globals' => self::shadowed_globals_schema(),
 						'shadowed_responsive' => self::shadowed_responsive_schema(),
+						'inherited_typography' => self::inherited_typography_schema(),
 						'unknown_keys' => array(
 							'type'        => 'array',
 							'description' => __( 'Present only when some setting matched no known control. The write still happened: the keys are stored, they simply will not render. Advisory — dynamic tags and addons legitimately produce names we cannot see.', 'karmcp' ),
@@ -700,6 +741,7 @@ class KarMCP_Layout_Abilities {
 						),
 						'clear_globals' => self::clear_globals_schema(),
 						'clear_responsive' => self::clear_responsive_schema(),
+						'reset_typography' => self::reset_typography_schema(),
 					),
 					'required'   => array( 'post_id', 'operations' ),
 				),
@@ -726,6 +768,11 @@ class KarMCP_Layout_Abilities {
 						'shadowed_responsive' => array(
 							'type'                 => 'object',
 							'description'          => __( 'Per element id, the written keys that a breakpoint override beats. The values saved and apply where nothing overrides them. Re-send with clear_responsive:true to apply them at every width.', 'karmcp' ),
+							'additionalProperties' => array( 'type' => 'object' ),
+						),
+						'inherited_typography' => array(
+							'type'                 => 'object',
+							'description'          => __( 'Per element id, the parts of a declared typography group that survived from what was already stored — a font family inherited from a copied design, typically. Re-send with reset_typography:true to make each declaration complete.', 'karmcp' ),
 							'additionalProperties' => array( 'type' => 'object' ),
 						),
 					),
@@ -761,6 +808,7 @@ class KarMCP_Layout_Abilities {
 		$unknown       = array();
 		$shadowed      = array();
 		$responsive    = array();
+		$typography    = array();
 		$clear         = self::clear_flags_from( $input );
 
 		foreach ( $operations as $op ) {
@@ -791,6 +839,10 @@ class KarMCP_Layout_Abilities {
 
 				if ( ! empty( $report['responsive'] ) ) {
 					$responsive[ $eid ] = $report['responsive'];
+				}
+
+				if ( ! empty( $report['typography'] ) ) {
+					$typography[ $eid ] = $report['typography'];
 				}
 
 				// Reported per element: a batch is exactly where an unknown key
@@ -848,6 +900,10 @@ class KarMCP_Layout_Abilities {
 
 		if ( $responsive ) {
 			$out['shadowed_responsive'] = $responsive;
+		}
+
+		if ( $typography ) {
+			$out['inherited_typography'] = $typography;
 		}
 
 		return $out;

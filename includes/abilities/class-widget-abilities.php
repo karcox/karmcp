@@ -481,6 +481,7 @@ class KarMCP_Widget_Abilities {
 						),
 						'clear_globals' => KarMCP_Layout_Abilities::clear_globals_schema(),
 						'clear_responsive' => KarMCP_Layout_Abilities::clear_responsive_schema(),
+						'reset_typography' => KarMCP_Layout_Abilities::reset_typography_schema(),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
 				),
@@ -491,6 +492,7 @@ class KarMCP_Widget_Abilities {
 						'element_id'       => array( 'type' => 'string' ),
 						'shadowed_globals' => KarMCP_Layout_Abilities::shadowed_globals_schema(),
 						'shadowed_responsive' => KarMCP_Layout_Abilities::shadowed_responsive_schema(),
+						'inherited_typography' => KarMCP_Layout_Abilities::inherited_typography_schema(),
 					),
 				),
 				'meta'                => array(

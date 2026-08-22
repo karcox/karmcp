@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.31.0
+Stable tag: 1.32.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.32.0 =
+Added: setting a typography without naming its font family kept the family of whatever was there before, so a restyled element went on wearing a font nobody chose. The element-update tools now report inherited_typography with the surviving keys and their values, and reset_typography:true drops the parts you did not name.
 
 = 1.31.0 =
 Added: the element-update tools now report shadowed_responsive when a value you wrote is overridden at some breakpoint - it saves, reads back correctly, and the phone layout does not move, which until now there was no way to notice except by looking. clear_responsive:true drops those overrides so the value applies at every width.

@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.32.0]
+
+The third and last of the family: a typography you declare without naming its font family keeps the family of whatever was there before, and now says so.
+
+### Added
+
+- **`inherited_typography`: the parts of a typography group that survive a declaration are now reported.** Elementor stores a group control as a flat set of prefixed keys, and a merge can only add or overwrite — so turning typography on and sending a size, without naming the family, leaves `..._font_family` exactly as the previous design left it. The write reports success, reads back correctly, and one stray heading goes on wearing a font nobody chose. It is the failure that survives a rebrand and is found by the client rather than by you.
+
+  `update-element`, `update-container`, `update-widget` and `batch-update` return `inherited_typography`, mapping the group prefix to the surviving keys **and their values**, so an inherited `Archivo` is visible rather than merely in effect. A new `reset_typography: true` drops the parts you did not name, making your declaration the whole declaration.
+
+> **The trigger is the activator, not any typography key.** A caller sending only `..._font_size` is tweaking one thing on purpose and keeping the rest — legitimate, common, and silent. A caller sending `..._typography` is declaring the group, and a declaration that inherits half of itself is worth saying out loud. Switching the group off is silent too: the element goes back to the kit and inherits nothing.
+
+> **This one is not an override, and its name says so.** `shadowed_globals` and `shadowed_responsive` report something that *beats* the write; this reports something that *outlives* it. Hence `inherited_` rather than `shadowed_`, and `reset_typography` rather than a third `clear_*` — it drops what you did not send, not what defeats you.
+
+  Group prefixes are resolved per group, so a widget with several text parts (`title_typography_*`, `text_typography_*`) reports only the one being declared. Responsive members of the group (`..._font_size_mobile`) count as survivors, because they are.
+
 ## [1.31.0]
 
 The write tools now say when a value saved but will not render because a breakpoint overrides it — the same report 1.30.3 added for global bindings, on the axis that decides how a page looks on a phone.

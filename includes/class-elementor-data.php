@@ -743,6 +743,18 @@ class KarMCP_Data {
 	);
 
 	/**
+	 * The activator of Elementor's typography group control. A group is stored
+	 * as a flat set of prefixed keys, and the activator is the one that says the
+	 * group is on: `typography_typography` for a plain widget,
+	 * `title_typography_typography` for a widget with more than one text part.
+	 *
+	 * @since 1.32.0
+	 *
+	 * @var string
+	 */
+	private const TYPOGRAPHY_ACTIVATOR = '_typography';
+
+	/**
 	 * Recursively removes the media settings above from an element tree.
 	 *
 	 * Removes rather than blanks: a blanked control is still a set control, and
@@ -1067,18 +1079,85 @@ class KarMCP_Data {
 	}
 
 	/**
+	 * Finds the parts of a typography group that survive a caller declaring it.
+	 *
+	 * The third of this family, and the one that is not an override: nothing
+	 * beats the write here, something outlives it. A group control is stored as
+	 * a flat set of prefixed keys, and a merge can only add or overwrite — so
+	 * turning typography on and sending a size, without naming the family,
+	 * leaves `..._font_family` exactly as the previous design left it. The
+	 * symptom is a rebranded element still wearing somebody else's font in one
+	 * stray heading, which nobody sees until the client asks why.
+	 *
+	 * The trigger is the **activator**, not any typography key. A caller sending
+	 * only `..._font_size` is tweaking one thing on purpose and keeping the
+	 * rest, which is legitimate and must stay silent; a caller sending
+	 * `..._typography` is declaring the group, and a declaration that inherits
+	 * half of itself from whatever was here before is worth saying out loud.
+	 * A caller switching the group OFF inherits nothing — the element goes back
+	 * to the kit — so that is silent too.
+	 *
+	 * @since 1.32.0
+	 *
+	 * @param array $existing The element's current settings.
+	 * @param array $incoming The settings the caller sent, post-rewrite.
+	 * @return array Map of group prefix => surviving key => its stored value.
+	 */
+	private static function detect_inherited_typography( array $existing, array $incoming ): array {
+		$found = array();
+
+		foreach ( $incoming as $key => $value ) {
+			if ( ! is_string( $key ) || ! str_ends_with( $key, self::TYPOGRAPHY_ACTIVATOR ) ) {
+				continue;
+			}
+
+			$prefix = substr( $key, 0, -strlen( self::TYPOGRAPHY_ACTIVATOR ) );
+
+			if ( '' === $prefix || self::is_blank_setting( $value ) ) {
+				continue;
+			}
+
+			$survivors = array();
+
+			foreach ( $existing as $stored_key => $stored_value ) {
+				if ( ! is_string( $stored_key ) || $stored_key === $key ) {
+					continue;
+				}
+
+				if ( 0 !== strpos( $stored_key, $prefix . '_' ) ) {
+					continue;
+				}
+
+				if ( array_key_exists( $stored_key, $incoming ) || self::is_blank_setting( $stored_value ) ) {
+					continue;
+				}
+
+				$survivors[ $stored_key ] = $stored_value;
+			}
+
+			if ( $survivors ) {
+				$found[ $prefix ] = $survivors;
+			}
+		}
+
+		return $found;
+	}
+
+	/**
 	 * Updates settings for a specific element in the tree.
 	 *
 	 * Modifies `$data` by reference. Returns true if element was found
 	 * and updated, false if the element ID was not found.
 	 *
-	 * `$report` collects the writes that saved but will not render, under
-	 * `globals` (a kit binding beats the literal) and `responsive` (a breakpoint
-	 * override beats the desktop value). Reporting is the default and `$clear`
-	 * is opt-in on purpose: a client rebrand works by binding every colour to a
-	 * global and swapping the kit, and a page's phone layout is deliberate work
-	 * — wiping either behind the caller's back would destroy the thing it
-	 * relies on. The caller who means the new value to win says so.
+	 * `$report` collects the writes that saved but will not render as the caller
+	 * meant: `globals` (a kit binding beats the literal), `responsive` (a
+	 * breakpoint override beats the desktop value) and `typography` (part of a
+	 * declared group survives from whatever was here before). Reporting is the
+	 * default and `$clear` is opt-in on purpose: a client rebrand works by
+	 * binding every colour to a global and swapping the kit, a page's phone
+	 * layout is deliberate work, and a partial typography edit is a normal
+	 * thing to want — wiping any of them behind the caller's back would destroy
+	 * the thing it relies on. The caller who means otherwise says so.
 	 *
 	 * @since 1.0.0
 	 *
@@ -1181,6 +1260,16 @@ class KarMCP_Data {
 					if ( ! empty( $clear['responsive'] ) ) {
 						foreach ( $overrides as $override ) {
 							unset( $item['settings'][ $override ] );
+						}
+					}
+				}
+
+				foreach ( self::detect_inherited_typography( $item['settings'], $settings ) as $prefix => $survivors ) {
+					$report['typography'][ $prefix ] = $survivors;
+
+					if ( ! empty( $clear['typography'] ) ) {
+						foreach ( array_keys( $survivors ) as $survivor ) {
+							unset( $item['settings'][ $survivor ] );
 						}
 					}
 				}

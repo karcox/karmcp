@@ -536,6 +536,201 @@ class ElementSettingsWriteTest extends \PHPUnit\Framework\TestCase {
 		$this->assertSame( array( 'padding' => array( 'padding_mobile' ) ), $report['responsive'] );
 	}
 
+	// -- typography surviving a declaration --------------------------------
+
+	/**
+	 * A heading carrying the house typography, as a block copied from another
+	 * design arrives.
+	 *
+	 * @param array $extra Extra settings to merge in.
+	 * @return array
+	 */
+	private function typed_heading( array $extra = array() ): array {
+		return $this->tree(
+			'widget',
+			array_merge(
+				array(
+					'typography_typography'  => 'custom',
+					'typography_font_family' => 'Archivo',
+					'typography_font_weight' => '700',
+				),
+				$extra
+			),
+			array( 'widgetType' => 'heading' )
+		);
+	}
+
+	/**
+	 * @param array $data     One-element tree.
+	 * @param array $settings Settings to merge.
+	 * @param bool  $reset    Whether to drop what the declaration did not name.
+	 * @return array [ settings, typography report ]
+	 */
+	private function update_typography( array $data, array $settings, bool $reset = false ): array {
+		$report = array();
+		$this->assertTrue(
+			$this->data->update_element_settings( $data, 'abc1234', $settings, $report, array( 'typography' => $reset ) )
+		);
+
+		return array( $data[0]['settings'], $report['typography'] ?? array() );
+	}
+
+	public function test_a_declaration_that_does_not_name_the_family_is_reported() {
+		list( $settings, $inherited ) = $this->update_typography(
+			$this->typed_heading(),
+			array(
+				'typography_typography' => 'custom',
+				'typography_font_size'  => array( 'unit' => 'px', 'size' => 32 ),
+			)
+		);
+
+		$this->assertSame(
+			array( 'typography_font_family' => 'Archivo', 'typography_font_weight' => '700' ),
+			$inherited['typography']
+		);
+
+		// Reported, not repaired.
+		$this->assertSame( 'Archivo', $settings['typography_font_family'] );
+	}
+
+	public function test_reset_typography_drops_what_the_declaration_did_not_name() {
+		list( $settings, $inherited ) = $this->update_typography(
+			$this->typed_heading(),
+			array(
+				'typography_typography' => 'custom',
+				'typography_font_size'  => array( 'unit' => 'px', 'size' => 32 ),
+			),
+			true
+		);
+
+		$this->assertArrayHasKey( 'typography', $inherited );
+		$this->assertArrayNotHasKey( 'typography_font_family', $settings );
+		$this->assertArrayNotHasKey( 'typography_font_weight', $settings );
+		$this->assertSame( 32, $settings['typography_font_size']['size'] );
+	}
+
+	public function test_naming_the_family_reports_nothing_about_it() {
+		list( , $inherited ) = $this->update_typography(
+			$this->typed_heading(),
+			array(
+				'typography_typography'  => 'custom',
+				'typography_font_family' => 'Nunito',
+				'typography_font_weight' => '400',
+			)
+		);
+
+		$this->assertSame( array(), $inherited );
+	}
+
+	/**
+	 * The trigger is the activator. Tweaking one key on purpose and keeping the
+	 * rest is a normal thing to want, and warning about it every time is how a
+	 * warning stops being read.
+	 */
+	public function test_a_partial_tweak_without_the_activator_is_silent() {
+		list( , $inherited ) = $this->update_typography(
+			$this->typed_heading(),
+			array( 'typography_font_size' => array( 'unit' => 'px', 'size' => 32 ) )
+		);
+
+		$this->assertSame( array(), $inherited );
+	}
+
+	public function test_switching_the_group_off_inherits_nothing() {
+		list( , $inherited ) = $this->update_typography(
+			$this->typed_heading(),
+			array( 'typography_typography' => '' )
+		);
+
+		$this->assertSame( array(), $inherited );
+	}
+
+	/**
+	 * A widget with more than one text part prefixes each group, and the family
+	 * key has to be found under the right one.
+	 */
+	public function test_a_prefixed_group_is_resolved_on_its_own_prefix() {
+		$data = $this->tree(
+			'widget',
+			array(
+				'title_typography_typography'  => 'custom',
+				'title_typography_font_family' => 'Archivo',
+				'text_typography_font_family'  => 'Roboto',
+			),
+			array( 'widgetType' => 'call-to-action' )
+		);
+
+		list( , $inherited ) = $this->update_typography(
+			$data,
+			array( 'title_typography_typography' => 'custom' )
+		);
+
+		$this->assertSame(
+			array( 'title_typography_font_family' => 'Archivo' ),
+			$inherited['title_typography']
+		);
+		$this->assertArrayNotHasKey( 'text_typography', $inherited );
+	}
+
+	public function test_responsive_parts_of_the_group_count_as_survivors() {
+		$data = $this->typed_heading( array( 'typography_font_size_mobile' => array( 'unit' => 'px', 'size' => 18 ) ) );
+
+		list( , $inherited ) = $this->update_typography(
+			$data,
+			array( 'typography_typography' => 'custom', 'typography_font_family' => 'Nunito' )
+		);
+
+		$this->assertArrayHasKey( 'typography_font_size_mobile', $inherited['typography'] );
+	}
+
+	public function test_a_blank_stored_part_is_not_a_survivor() {
+		$data = $this->tree(
+			'widget',
+			array(
+				'typography_typography'  => 'custom',
+				'typography_font_family' => '',
+			),
+			array( 'widgetType' => 'heading' )
+		);
+
+		list( , $inherited ) = $this->update_typography( $data, array( 'typography_typography' => 'custom' ) );
+
+		$this->assertSame( array(), $inherited );
+	}
+
+	public function test_the_three_axes_report_together() {
+		$data = $this->tree(
+			'widget',
+			array(
+				'background_color'       => '#000000',
+				'padding'                => array( 'unit' => 'px', 'top' => '80' ),
+				'padding_mobile'         => array( 'unit' => 'px', 'top' => '20' ),
+				'typography_typography'  => 'custom',
+				'typography_font_family' => 'Archivo',
+				'__globals__'            => array( 'background_color' => 'globals/colors?id=primary' ),
+			),
+			array( 'widgetType' => 'heading' )
+		);
+
+		$report = array();
+		$this->assertTrue(
+			$this->data->update_element_settings(
+				$data,
+				'abc1234',
+				array(
+					'background_color'      => '#0025FF',
+					'padding'               => array( 'unit' => 'px', 'top' => '120' ),
+					'typography_typography' => 'custom',
+				),
+				$report
+			)
+		);
+
+		$this->assertSame( array( 'background_color' => 'globals/colors?id=primary' ), $report['globals'] );
+		$this->assertSame( array( 'padding' => array( 'padding_mobile' ) ), $report['responsive'] );
+		$this->assertSame( array( 'typography_font_family' => 'Archivo' ), $report['typography']['typography'] );
+	}
+
 	// -- built-with-elementor flag ----------------------------------------
 
 	public function test_mark_built_with_elementor_sets_the_flag() {

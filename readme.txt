@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.30.3
+Stable tag: 1.31.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.31.0 =
+Added: the element-update tools now report shadowed_responsive when a value you wrote is overridden at some breakpoint - it saves, reads back correctly, and the phone layout does not move, which until now there was no way to notice except by looking. clear_responsive:true drops those overrides so the value applies at every width.
 
 = 1.30.3 =
 Fixed: setting a colour on an element still bound to a global saved fine, read back fine and rendered the kit's colour instead, with nothing to show anything had gone wrong. The four element-update tools now report those keys as shadowed_globals, and clear_globals:true makes the literal value win in the same call.

@@ -196,10 +196,29 @@ class ElementSettingsWriteTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	private function update_reporting( array $data, array $settings, bool $clear = false ): array {
-		$shadowed = array();
-		$this->assertTrue( $this->data->update_element_settings( $data, 'abc1234', $settings, $shadowed, $clear ) );
+		$report = array();
+		$this->assertTrue(
+			$this->data->update_element_settings( $data, 'abc1234', $settings, $report, array( 'globals' => $clear ) )
+		);
 
-		return array( $data[0]['settings'], $shadowed );
+		return array( $data[0]['settings'], $report['globals'] ?? array() );
+	}
+
+	/**
+	 * Same, for the responsive axis.
+	 *
+	 * @param array $data     One-element tree.
+	 * @param array $settings Settings to merge.
+	 * @param bool  $clear    Whether to drop the breakpoint overrides.
+	 * @return array [ settings, responsive report ]
+	 */
+	private function update_responsive( array $data, array $settings, bool $clear = false ): array {
+		$report = array();
+		$this->assertTrue(
+			$this->data->update_element_settings( $data, 'abc1234', $settings, $report, array( 'responsive' => $clear ) )
+		);
+
+		return array( $data[0]['settings'], $report['responsive'] ?? array() );
 	}
 
 	public function test_a_literal_over_a_binding_is_reported() {
@@ -301,12 +320,220 @@ class ElementSettingsWriteTest extends \PHPUnit\Framework\TestCase {
 			),
 		);
 
-		$shadowed = array();
+		$report = array();
 		$this->assertTrue(
-			$this->data->update_element_settings( $data, 'abc1234', array( 'background_color' => '#0025FF' ), $shadowed )
+			$this->data->update_element_settings( $data, 'abc1234', array( 'background_color' => '#0025FF' ), $report )
 		);
 
-		$this->assertSame( array( 'background_color' => 'globals/colors?id=primary' ), $shadowed );
+		$this->assertSame( array( 'background_color' => 'globals/colors?id=primary' ), $report['globals'] );
+	}
+
+	// -- breakpoints shadowing a desktop write -----------------------------
+
+	/**
+	 * A container with a mobile padding override, as a block copied from a
+	 * design that had been made responsive arrives.
+	 *
+	 * @param array $extra Extra settings to merge in.
+	 * @return array
+	 */
+	private function responsive_container( array $extra = array() ): array {
+		return $this->tree(
+			'container',
+			array_merge(
+				array(
+					'padding'        => array( 'unit' => 'px', 'top' => '80', 'bottom' => '80' ),
+					'padding_mobile' => array( 'unit' => 'px', 'top' => '20', 'bottom' => '20' ),
+				),
+				$extra
+			)
+		);
+	}
+
+	public function test_a_desktop_write_is_reported_when_a_breakpoint_overrides_it() {
+		list( $settings, $shadowed ) = $this->update_responsive(
+			$this->responsive_container(),
+			array( 'padding' => array( 'unit' => 'px', 'top' => '120', 'bottom' => '120' ) )
+		);
+
+		$this->assertSame( array( 'padding' => array( 'padding_mobile' ) ), $shadowed );
+
+		// Reported, not repaired: the phone keeps the layout someone chose.
+		$this->assertSame( '20', $settings['padding_mobile']['top'] );
+		$this->assertSame( '120', $settings['padding']['top'] );
+	}
+
+	public function test_clear_responsive_drops_the_override() {
+		list( $settings, $shadowed ) = $this->update_responsive(
+			$this->responsive_container(),
+			array( 'padding' => array( 'unit' => 'px', 'top' => '120', 'bottom' => '120' ) ),
+			true
+		);
+
+		$this->assertSame( array( 'padding' => array( 'padding_mobile' ) ), $shadowed );
+		$this->assertArrayNotHasKey( 'padding_mobile', $settings );
+		$this->assertSame( '120', $settings['padding']['top'] );
+	}
+
+	public function test_setting_the_breakpoint_in_the_same_call_is_not_reported() {
+		list( , $shadowed ) = $this->update_responsive(
+			$this->responsive_container(),
+			array(
+				'padding'        => array( 'unit' => 'px', 'top' => '120' ),
+				'padding_mobile' => array( 'unit' => 'px', 'top' => '40' ),
+			)
+		);
+
+		$this->assertSame( array(), $shadowed );
+	}
+
+	public function test_a_key_with_no_overrides_is_not_reported() {
+		list( , $shadowed ) = $this->update_responsive(
+			$this->responsive_container(),
+			array( 'min_height' => array( 'unit' => 'px', 'size' => 400 ) )
+		);
+
+		$this->assertSame( array(), $shadowed );
+	}
+
+	/**
+	 * A control that was touched and cleared keeps its unit and nothing else.
+	 * It paints nothing, so it overrides nothing — reporting it would be the
+	 * false positive that teaches people to ignore the warning.
+	 */
+	public function test_an_emptied_override_does_not_shadow() {
+		$data = $this->tree(
+			'container',
+			array(
+				'padding'        => array( 'unit' => 'px', 'top' => '80' ),
+				'padding_mobile' => array( 'unit' => 'px', 'size' => '', 'sizes' => array() ),
+			)
+		);
+
+		list( , $shadowed ) = $this->update_responsive( $data, array( 'padding' => array( 'unit' => 'px', 'top' => '120' ) ) );
+
+		$this->assertSame( array(), $shadowed );
+	}
+
+	public function test_a_zero_override_does_shadow() {
+		$data = $this->tree(
+			'container',
+			array(
+				'padding'        => array( 'unit' => 'px', 'top' => '80' ),
+				'padding_mobile' => array( 'unit' => 'px', 'top' => '0' ),
+			)
+		);
+
+		list( , $shadowed ) = $this->update_responsive( $data, array( 'padding' => array( 'unit' => 'px', 'top' => '120' ) ) );
+
+		$this->assertSame( array( 'padding' => array( 'padding_mobile' ) ), $shadowed );
+	}
+
+	public function test_every_breakpoint_that_declares_a_value_is_listed() {
+		$data = $this->tree(
+			'container',
+			array(
+				'padding'            => array( 'unit' => 'px', 'top' => '80' ),
+				'padding_widescreen' => array( 'unit' => 'px', 'top' => '100' ),
+				'padding_tablet'     => array( 'unit' => 'px', 'top' => '40' ),
+				'padding_mobile'     => array( 'unit' => 'px', 'top' => '20' ),
+			)
+		);
+
+		list( , $shadowed ) = $this->update_responsive( $data, array( 'padding' => array( 'unit' => 'px', 'top' => '120' ) ) );
+
+		$this->assertSame(
+			array( 'padding_widescreen', 'padding_tablet', 'padding_mobile' ),
+			$shadowed['padding']
+		);
+	}
+
+	/**
+	 * Writing a breakpoint value is only shadowed by NARROWER ones: a tablet
+	 * value is beaten on a phone, never by the desktop value above it.
+	 */
+	public function test_a_breakpoint_write_is_shadowed_only_by_narrower_ones() {
+		$data = $this->tree(
+			'container',
+			array(
+				'padding'        => array( 'unit' => 'px', 'top' => '80' ),
+				'padding_tablet' => array( 'unit' => 'px', 'top' => '40' ),
+				'padding_mobile' => array( 'unit' => 'px', 'top' => '20' ),
+			)
+		);
+
+		list( , $shadowed ) = $this->update_responsive( $data, array( 'padding_tablet' => array( 'unit' => 'px', 'top' => '50' ) ) );
+
+		$this->assertSame( array( 'padding_tablet' => array( 'padding_mobile' ) ), $shadowed );
+	}
+
+	public function test_the_narrowest_breakpoint_is_never_shadowed() {
+		$data = $this->tree(
+			'container',
+			array(
+				'padding'        => array( 'unit' => 'px', 'top' => '80' ),
+				'padding_mobile' => array( 'unit' => 'px', 'top' => '20' ),
+			)
+		);
+
+		list( , $shadowed ) = $this->update_responsive( $data, array( 'padding_mobile' => array( 'unit' => 'px', 'top' => '30' ) ) );
+
+		$this->assertSame( array(), $shadowed );
+	}
+
+	/**
+	 * `_tablet_extra` must be cut at the longer suffix, not at `_tablet`, or the
+	 * base key comes out as `padding_` and nothing matches.
+	 */
+	public function test_the_longer_suffix_wins_when_splitting_the_key() {
+		$data = $this->tree(
+			'container',
+			array(
+				'padding_tablet_extra' => array( 'unit' => 'px', 'top' => '60' ),
+				'padding_mobile'       => array( 'unit' => 'px', 'top' => '20' ),
+			)
+		);
+
+		list( , $shadowed ) = $this->update_responsive(
+			$data,
+			array( 'padding_tablet_extra' => array( 'unit' => 'px', 'top' => '70' ) )
+		);
+
+		$this->assertSame( array( 'padding_tablet_extra' => array( 'padding_mobile' ) ), $shadowed );
+	}
+
+	public function test_deleting_a_key_is_not_a_shadowed_responsive_write() {
+		list( , $shadowed ) = $this->update_responsive( $this->responsive_container(), array( 'padding' => null ) );
+
+		$this->assertSame( array(), $shadowed );
+	}
+
+	public function test_both_axes_report_side_by_side() {
+		$data = $this->tree(
+			'container',
+			array(
+				'background_color' => '#000000',
+				'padding'          => array( 'unit' => 'px', 'top' => '80' ),
+				'padding_mobile'   => array( 'unit' => 'px', 'top' => '20' ),
+				'__globals__'      => array( 'background_color' => 'globals/colors?id=primary' ),
+			)
+		);
+
+		$report = array();
+		$this->assertTrue(
+			$this->data->update_element_settings(
+				$data,
+				'abc1234',
+				array(
+					'background_color' => '#0025FF',
+					'padding'          => array( 'unit' => 'px', 'top' => '120' ),
+				),
+				$report
+			)
+		);
+
+		$this->assertSame( array( 'background_color' => 'globals/colors?id=primary' ), $report['globals'] );
+		$this->assertSame( array( 'padding' => array( 'padding_mobile' ) ), $report['responsive'] );
 	}
 
 	// -- built-with-elementor flag ----------------------------------------

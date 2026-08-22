@@ -149,6 +149,75 @@ class KarMCP_Layout_Abilities {
 	}
 
 	/**
+	 * The `clear_responsive` input property. Same shape as clear_globals, one
+	 * axis over: what shadows here is a per-breakpoint value, not a kit binding.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @return array
+	 */
+	public static function clear_responsive_schema(): array {
+		return array(
+			'type'        => 'boolean',
+			'description' => __( 'Drop the per-breakpoint overrides on the keys being written, so the new value applies at every width. Default false, which keeps them and only reports them under shadowed_responsive. Writing a desktop value on an element that carries a tablet or mobile override otherwise saves, reads back correctly, and leaves the phone layout exactly as it was — the usual cause is a block copied from a design that had been made responsive.', 'karmcp' ),
+		);
+	}
+
+	/**
+	 * The `shadowed_responsive` output property. See clear_responsive_schema().
+	 *
+	 * @since 1.31.0
+	 *
+	 * @return array
+	 */
+	public static function shadowed_responsive_schema(): array {
+		return array(
+			'type'                 => 'object',
+			'description'          => __( 'Present only when a written key is overridden at some breakpoint. Maps the key to the sibling keys that beat it (e.g. padding -> ["padding_mobile"]). The value saved and applies where nothing overrides it. Re-send with clear_responsive:true to apply it everywhere, or set each breakpoint yourself.', 'karmcp' ),
+			'additionalProperties' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ),
+		);
+	}
+
+	/**
+	 * Reads the caller's clear flags into the shape update_element_settings()
+	 * takes. One place, so a new member of this family is one line here and not
+	 * four scattered `! empty()` calls.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param array $input The ability input.
+	 * @return array
+	 */
+	public static function clear_flags_from( array $input ): array {
+		return array(
+			'globals'    => ! empty( $input['clear_globals'] ),
+			'responsive' => ! empty( $input['clear_responsive'] ),
+		);
+	}
+
+	/**
+	 * Folds a shadow report into an ability response, omitting what is empty so
+	 * the common case — nothing shadowed — stays a clean result.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param array $out    The response so far.
+	 * @param array $report The report from update_element_settings().
+	 * @return array
+	 */
+	public static function with_shadow_report( array $out, array $report ): array {
+		if ( ! empty( $report['globals'] ) ) {
+			$out['shadowed_globals'] = $report['globals'];
+		}
+
+		if ( ! empty( $report['responsive'] ) ) {
+			$out['shadowed_responsive'] = $report['responsive'];
+		}
+
+		return $out;
+	}
+
+	/**
 	 * Returns the ability names registered by this class.
 	 *
 	 * @since 1.0.0
@@ -392,6 +461,7 @@ class KarMCP_Layout_Abilities {
 							'description' => __( 'Partial settings to merge into the container.', 'karmcp' ),
 						),
 						'clear_globals' => self::clear_globals_schema(),
+						'clear_responsive' => self::clear_responsive_schema(),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
 				),
@@ -400,6 +470,7 @@ class KarMCP_Layout_Abilities {
 					'properties' => array(
 						'success'          => array( 'type' => 'boolean' ),
 						'shadowed_globals' => self::shadowed_globals_schema(),
+						'shadowed_responsive' => self::shadowed_responsive_schema(),
 					),
 				),
 				'meta'                => array(
@@ -447,13 +518,13 @@ class KarMCP_Layout_Abilities {
 			return new \WP_Error( 'not_container', __( 'Element is not a container. Use update-widget for widgets.', 'karmcp' ) );
 		}
 
-		$shadowed = array();
-		$updated  = $this->data->update_element_settings(
+		$report  = array();
+		$updated = $this->data->update_element_settings(
 			$page_data,
 			$element_id,
 			$settings,
-			$shadowed,
-			! empty( $input['clear_globals'] )
+			$report,
+			self::clear_flags_from( $input )
 		);
 
 		if ( ! $updated ) {
@@ -466,13 +537,7 @@ class KarMCP_Layout_Abilities {
 			return $result;
 		}
 
-		$out = array( 'success' => true );
-
-		if ( $shadowed ) {
-			$out['shadowed_globals'] = $shadowed;
-		}
-
-		return $out;
+		return self::with_shadow_report( array( 'success' => true ), $report );
 	}
 
 	// -------------------------------------------------------------------------
@@ -504,6 +569,7 @@ class KarMCP_Layout_Abilities {
 							'description' => __( 'Partial settings to merge into the element.', 'karmcp' ),
 						),
 						'clear_globals' => self::clear_globals_schema(),
+						'clear_responsive' => self::clear_responsive_schema(),
 					),
 					'required'   => array( 'post_id', 'element_id', 'settings' ),
 				),
@@ -514,6 +580,7 @@ class KarMCP_Layout_Abilities {
 						'element_id'  => array( 'type' => 'string' ),
 						'element_type' => array( 'type' => 'string' ),
 						'shadowed_globals' => self::shadowed_globals_schema(),
+						'shadowed_responsive' => self::shadowed_responsive_schema(),
 						'unknown_keys' => array(
 							'type'        => 'array',
 							'description' => __( 'Present only when some setting matched no known control. The write still happened: the keys are stored, they simply will not render. Advisory — dynamic tags and addons legitimately produce names we cannot see.', 'karmcp' ),
@@ -563,13 +630,13 @@ class KarMCP_Layout_Abilities {
 			return new \WP_Error( 'element_not_found', __( 'Element not found.', 'karmcp' ) );
 		}
 
-		$shadowed = array();
-		$updated  = $this->data->update_element_settings(
+		$report  = array();
+		$updated = $this->data->update_element_settings(
 			$page_data,
 			$element_id,
 			$settings,
-			$shadowed,
-			! empty( $input['clear_globals'] )
+			$report,
+			self::clear_flags_from( $input )
 		);
 
 		if ( ! $updated ) {
@@ -582,15 +649,14 @@ class KarMCP_Layout_Abilities {
 			return $result;
 		}
 
-		$out = array(
-			'success'      => true,
-			'element_id'   => $element_id,
-			'element_type' => $element['elType'] ?? 'unknown',
+		$out = self::with_shadow_report(
+			array(
+				'success'      => true,
+				'element_id'   => $element_id,
+				'element_type' => $element['elType'] ?? 'unknown',
+			),
+			$report
 		);
-
-		if ( $shadowed ) {
-			$out['shadowed_globals'] = $shadowed;
-		}
 
 		$unknown = $this->unknown_key_report( $element, $settings );
 		if ( $unknown ) {
@@ -633,6 +699,7 @@ class KarMCP_Layout_Abilities {
 							),
 						),
 						'clear_globals' => self::clear_globals_schema(),
+						'clear_responsive' => self::clear_responsive_schema(),
 					),
 					'required'   => array( 'post_id', 'operations' ),
 				),
@@ -654,6 +721,11 @@ class KarMCP_Layout_Abilities {
 						'shadowed_globals' => array(
 							'type'                 => 'object',
 							'description'          => __( 'Per element id, the written keys that still carry a global binding overriding them. The values saved, but those elements render the global. Re-send with clear_globals:true to make the literals apply.', 'karmcp' ),
+							'additionalProperties' => array( 'type' => 'object' ),
+						),
+						'shadowed_responsive' => array(
+							'type'                 => 'object',
+							'description'          => __( 'Per element id, the written keys that a breakpoint override beats. The values saved and apply where nothing overrides them. Re-send with clear_responsive:true to apply them at every width.', 'karmcp' ),
 							'additionalProperties' => array( 'type' => 'object' ),
 						),
 					),
@@ -688,7 +760,8 @@ class KarMCP_Layout_Abilities {
 		$failed        = array();
 		$unknown       = array();
 		$shadowed      = array();
-		$clear_globals = ! empty( $input['clear_globals'] );
+		$responsive    = array();
+		$clear         = self::clear_flags_from( $input );
 
 		foreach ( $operations as $op ) {
 			$eid      = sanitize_text_field( $op['element_id'] ?? '' );
@@ -706,14 +779,18 @@ class KarMCP_Layout_Abilities {
 				continue;
 			}
 
-			$shadowed_here = array();
-			$ok            = $this->data->update_element_settings( $page_data, $eid, $settings, $shadowed_here, $clear_globals );
+			$report = array();
+			$ok     = $this->data->update_element_settings( $page_data, $eid, $settings, $report, $clear );
 
 			if ( $ok ) {
 				$updated_count++;
 
-				if ( $shadowed_here ) {
-					$shadowed[ $eid ] = $shadowed_here;
+				if ( ! empty( $report['globals'] ) ) {
+					$shadowed[ $eid ] = $report['globals'];
+				}
+
+				if ( ! empty( $report['responsive'] ) ) {
+					$responsive[ $eid ] = $report['responsive'];
 				}
 
 				// Reported per element: a batch is exactly where an unknown key
@@ -767,6 +844,10 @@ class KarMCP_Layout_Abilities {
 
 		if ( $shadowed ) {
 			$out['shadowed_globals'] = $shadowed;
+		}
+
+		if ( $responsive ) {
+			$out['shadowed_responsive'] = $responsive;
 		}
 
 		return $out;

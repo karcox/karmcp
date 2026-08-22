@@ -706,6 +706,43 @@ class KarMCP_Data {
 	);
 
 	/**
+	 * Elementor's responsive suffixes. A control set at a breakpoint is stored
+	 * as its own key, and at that breakpoint it is what renders — the desktop
+	 * value beside it is never read there.
+	 *
+	 * `_widescreen` and `_laptop` are min-width breakpoints above desktop; the
+	 * four below are max-width, listed widest first.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @var string[]
+	 */
+	private const RESPONSIVE_SUFFIXES = array(
+		'_widescreen',
+		'_laptop',
+		'_tablet_extra',
+		'_tablet',
+		'_mobile_extra',
+		'_mobile',
+	);
+
+	/**
+	 * The max-width chain, widest first. A value set here applies from its
+	 * breakpoint down until a narrower one overrides it, which is what makes
+	 * "narrower than this key" answerable without modelling the whole cascade.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @var string[]
+	 */
+	private const NARROWER_SUFFIXES = array(
+		'_tablet_extra',
+		'_tablet',
+		'_mobile_extra',
+		'_mobile',
+	);
+
+	/**
 	 * Recursively removes the media settings above from an element tree.
 	 *
 	 * Removes rather than blanks: a blanked control is still a set control, and
@@ -748,7 +785,7 @@ class KarMCP_Data {
 	 * @return array The settings without media keys.
 	 */
 	private static function strip_media_settings( array $settings, int &$removed ): array {
-		$suffixes = array( '', '_widescreen', '_laptop', '_tablet_extra', '_tablet', '_mobile_extra', '_mobile' );
+		$suffixes = array_merge( array( '' ), self::RESPONSIVE_SUFFIXES );
 
 		foreach ( self::MEDIA_SETTING_KEYS as $base ) {
 			foreach ( $suffixes as $suffix ) {
@@ -905,28 +942,154 @@ class KarMCP_Data {
 	}
 
 	/**
+	 * Whether a stored setting is empty enough that it renders nothing, and so
+	 * overrides nothing.
+	 *
+	 * `0`, `'0'` and `false` are real values — a zero padding is an override and
+	 * must count as one. What does not count is a control that was touched and
+	 * cleared: a dimension or slider keeps its `unit` and nothing else, and a
+	 * unit with no size paints nothing at all.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param mixed $value The stored value.
+	 * @return bool
+	 */
+	private static function is_blank_setting( $value ): bool {
+		if ( null === $value || '' === $value ) {
+			return true;
+		}
+
+		if ( is_array( $value ) ) {
+			unset( $value['unit'] );
+
+			foreach ( $value as $item ) {
+				if ( ! self::is_blank_setting( $item ) ) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * The keys that would beat `$key` at some breakpoint.
+	 *
+	 * For a desktop key that is every breakpoint, in both directions: each one
+	 * that declares its own value is what renders at its width, so the desktop
+	 * value is not what the visitor sees there.
+	 *
+	 * For a key that is itself a breakpoint value, only the max-width chain
+	 * below it is answered. `_widescreen` and `_laptop` are min-width and sit
+	 * above desktop, so "narrower than this" has no honest answer for them
+	 * without modelling the whole cascade — and a half-modelled cascade reports
+	 * overrides that are not overrides, which is worse than reporting none.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param string $key The setting key being written.
+	 * @return string[] Sibling keys that could shadow it.
+	 */
+	private static function shadowing_keys_for( string $key ): array {
+		foreach ( self::RESPONSIVE_SUFFIXES as $suffix ) {
+			if ( ! str_ends_with( $key, $suffix ) ) {
+				continue;
+			}
+
+			// The key is a breakpoint value of its own. `_tablet_extra` is
+			// tested before `_tablet` by the order of the constant, so the
+			// longer suffix wins and the base is cut correctly.
+			$base     = substr( $key, 0, -strlen( $suffix ) );
+			$position = array_search( $suffix, self::NARROWER_SUFFIXES, true );
+
+			if ( false === $position ) {
+				return array();
+			}
+
+			$narrower = array();
+
+			foreach ( array_slice( self::NARROWER_SUFFIXES, $position + 1 ) as $below ) {
+				$narrower[] = $base . $below;
+			}
+
+			return $narrower;
+		}
+
+		$all = array();
+
+		foreach ( self::RESPONSIVE_SUFFIXES as $suffix ) {
+			$all[] = $key . $suffix;
+		}
+
+		return $all;
+	}
+
+	/**
+	 * Finds the keys a caller is writing that a responsive override will beat.
+	 *
+	 * Same failure as a global binding, one axis over: the write saves, reads
+	 * back exactly as sent, and at that breakpoint the element does not move.
+	 * It is the more expensive of the two on an ordinary site, because a page is
+	 * judged on a phone and because every copied block arrives carrying the
+	 * breakpoints of whatever it was copied from.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param array $existing The element's current settings.
+	 * @param array $incoming The settings the caller sent, post-rewrite.
+	 * @return array Map of setting key => the sibling keys that override it.
+	 */
+	private static function detect_shadowed_responsive( array $existing, array $incoming ): array {
+		$found = array();
+
+		foreach ( $incoming as $key => $value ) {
+			if ( ! is_string( $key ) || '__globals__' === $key || '__dynamic__' === $key ) {
+				continue;
+			}
+
+			foreach ( self::shadowing_keys_for( $key ) as $candidate ) {
+				if ( array_key_exists( $candidate, $incoming ) ) {
+					// The caller is setting this breakpoint in the same call, so
+					// it is handling it and there is nothing to warn about.
+					continue;
+				}
+
+				if ( array_key_exists( $candidate, $existing ) && ! self::is_blank_setting( $existing[ $candidate ] ) ) {
+					$found[ $key ][] = $candidate;
+				}
+			}
+		}
+
+		return $found;
+	}
+
+	/**
 	 * Updates settings for a specific element in the tree.
 	 *
 	 * Modifies `$data` by reference. Returns true if element was found
 	 * and updated, false if the element ID was not found.
 	 *
-	 * `$shadowed` reports the keys whose global binding beat the literal value
-	 * just written (see detect_shadowed_globals()). Reporting is the default and
-	 * `$clear_globals` is opt-in on purpose: a client rebrand works by binding
-	 * every colour to a global and swapping the kit, so unbinding an element
-	 * behind the caller's back would break the very mechanism it relies on.
-	 * The caller who means the literal to win says so.
+	 * `$report` collects the writes that saved but will not render, under
+	 * `globals` (a kit binding beats the literal) and `responsive` (a breakpoint
+	 * override beats the desktop value). Reporting is the default and `$clear`
+	 * is opt-in on purpose: a client rebrand works by binding every colour to a
+	 * global and swapping the kit, and a page's phone layout is deliberate work
+	 * — wiping either behind the caller's back would destroy the thing it
+	 * relies on. The caller who means the new value to win says so.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array  $data          The element tree (passed by reference).
-	 * @param string $element_id    The element ID to update.
-	 * @param array  $settings      The settings to merge.
-	 * @param array  $shadowed      Receives key => binding for each shadowed write.
-	 * @param bool   $clear_globals Whether to drop those bindings so the literal applies.
+	 * @param array  $data       The element tree (passed by reference).
+	 * @param string $element_id The element ID to update.
+	 * @param array  $settings   The settings to merge.
+	 * @param array  $report     Receives `globals` and `responsive` maps of shadowed writes.
+	 * @param array  $clear      Flags: `globals` and/or `responsive` true to drop what shadows.
 	 * @return bool True if updated, false if not found.
 	 */
-	public function update_element_settings( array &$data, string $element_id, array $settings, array &$shadowed = array(), bool $clear_globals = false ): bool {
+	public function update_element_settings( array &$data, string $element_id, array $settings, array &$report = array(), array $clear = array() ): bool {
 		foreach ( $data as &$item ) {
 			if ( isset( $item['id'] ) && $item['id'] === $element_id ) {
 				if ( ! isset( $item['settings'] ) ) {
@@ -999,15 +1162,26 @@ class KarMCP_Data {
 				// (`justify_content`, `_css_classes`) removes the key actually stored.
 				$settings = self::strip_null_deletions( $item['settings'], $settings );
 
-				// Runs here, after the key rewrites and after the null deletions:
-				// `__globals__` is keyed by the name Elementor actually stores, so
-				// checking the caller's spelling would miss the binding on every
-				// remapped key, and a deleted key is not a shadowed write.
+				// Both run here, after the key rewrites and after the null
+				// deletions: `__globals__` and the responsive keys are both keyed
+				// by the name Elementor actually stores, so checking the caller's
+				// spelling would miss them on every remapped key, and a deleted
+				// key is not a shadowed write.
 				foreach ( self::detect_shadowed_globals( $item['settings'], $settings ) as $key => $binding ) {
-					$shadowed[ $key ] = $binding;
+					$report['globals'][ $key ] = $binding;
 
-					if ( $clear_globals ) {
+					if ( ! empty( $clear['globals'] ) ) {
 						unset( $item['settings']['__globals__'][ $key ] );
+					}
+				}
+
+				foreach ( self::detect_shadowed_responsive( $item['settings'], $settings ) as $key => $overrides ) {
+					$report['responsive'][ $key ] = $overrides;
+
+					if ( ! empty( $clear['responsive'] ) ) {
+						foreach ( $overrides as $override ) {
+							unset( $item['settings'][ $override ] );
+						}
 					}
 				}
 
@@ -1050,7 +1224,7 @@ class KarMCP_Data {
 			}
 
 			if ( ! empty( $item['elements'] ) && is_array( $item['elements'] ) ) {
-				if ( $this->update_element_settings( $item['elements'], $element_id, $settings, $shadowed, $clear_globals ) ) {
+				if ( $this->update_element_settings( $item['elements'], $element_id, $settings, $report, $clear ) ) {
 					return true;
 				}
 			}

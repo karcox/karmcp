@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.31.0]
+
+The write tools now say when a value saved but will not render because a breakpoint overrides it — the same report 1.30.3 added for global bindings, on the axis that decides how a page looks on a phone.
+
+### Added
+
+- **`shadowed_responsive`: a desktop write that a breakpoint override beats is now reported.** Elementor stores a control per breakpoint — `padding`, `padding_tablet`, `padding_mobile` — and at that width the override is what renders; the desktop value beside it is never read there. So setting a padding on an element that carries a mobile override saved, read back exactly as sent, and left the phone layout untouched, with nothing to say so. It is the same silent no-op as a global binding, one axis over, and on an ordinary website it is the more expensive of the two: a page is judged on a phone, and every block copied from a design that had been made responsive arrives carrying its breakpoints.
+
+  `update-element`, `update-container`, `update-widget` and `batch-update` return `shadowed_responsive` mapping each written key to the siblings that beat it — `{"padding": ["padding_mobile"]}`. A new `clear_responsive: true` drops those overrides so the value applies at every width.
+
+> **Which siblings count is a decision, not a scan.** For a desktop key, every breakpoint that declares its own value is reported: each one renders at its own width, above desktop or below. For a key that is itself a breakpoint value, only the max-width chain below it is answered — `_widescreen` and `_laptop` are min-width and sit above desktop, so "narrower than this" has no honest answer for them without modelling the whole cascade, and a half-modelled cascade reports overrides that are not overrides. A warning that cries wolf is one nobody reads.
+
+> **An emptied override is not an override.** A dimension or slider that was touched and cleared keeps its `unit` and nothing else, and a unit with no size paints nothing — reporting it would be the false positive that teaches people to ignore the field. A zero *is* a real value and is reported: `padding_mobile: 0` genuinely beats a desktop 80.
+
+### Changed
+
+- **`update_element_settings()` now takes a named report and a flags array** instead of one out-param and one boolean. Adding this second axis would have made it a seven-parameter method, and the third member of this family — a typography that survives being overwritten — would have made it nine. The MCP responses are unchanged: `shadowed_globals` looks exactly as it did in 1.30.3.
+
 ## [1.30.3]
 
 One fix: writing a colour on an element still bound to a global saved, read back correctly, and rendered the global.

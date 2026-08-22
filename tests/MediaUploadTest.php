@@ -25,6 +25,7 @@
 
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__ . '/../includes/class-filename-guard.php';
 require_once __DIR__ . '/../includes/abilities/class-media-library-abilities.php';
 
 class MediaUploadTest extends TestCase {
@@ -219,17 +220,13 @@ class MediaUploadTest extends TestCase {
 		$this->assertSame( 'mi.foto.bonita.jpg', $this->call( 'resolve_upload_filename', 'mi.foto.bonita.jpg' ) );
 	}
 
-	// -----------------------------------------------------------------
-	// executable_extension_in()
-	// -----------------------------------------------------------------
-
-	public function test_only_inner_segments_are_judged(): void {
-		// A final ".php" is wp_check_filetype()'s to refuse — with the better
-		// message — and a leading "php" is a base name, not an extension.
-		$this->assertSame( '', KarMCP_Media_Library_Abilities::executable_extension_in( 'payload.php' ) );
-		$this->assertSame( '', KarMCP_Media_Library_Abilities::executable_extension_in( 'php.jpg' ) );
-		$this->assertSame( 'php', KarMCP_Media_Library_Abilities::executable_extension_in( 'photo.php.jpg' ) );
-		$this->assertSame( 'phtml', KarMCP_Media_Library_Abilities::executable_extension_in( 'a.b.phtml.c.jpg' ) );
+	/**
+	 * The 1.33.0 list included 'pl', which refused legitimate names carrying
+	 * the Poland ccTLD as a segment. The segment-level rules live in
+	 * FilenameGuardTest; this pins the end-to-end outcome through the tool.
+	 */
+	public function test_a_country_code_segment_is_not_refused(): void {
+		$this->assertSame( 'krakow.pl.jpg', $this->call( 'resolve_upload_filename', 'krakow.pl.jpg' ) );
 	}
 
 	// -----------------------------------------------------------------
@@ -286,6 +283,32 @@ class MediaUploadTest extends TestCase {
 	 */
 	public function test_unpadded_base64_is_accepted(): void {
 		$this->assertSame( 'abcde', $this->decode_via_file( rtrim( base64_encode( 'abcde' ), '=' ) ) );
+	}
+
+	/**
+	 * Strict mode also accepted non-canonical-but-complete padding shapes;
+	 * they must keep round-tripping ("YWJ=" is remainder-3 data plus one pad).
+	 */
+	public function test_correctly_padded_quanta_round_trip(): void {
+		$this->assertSame( 'a', $this->decode_via_file( 'YQ==' ) );
+		$this->assertSame( 'ab', $this->decode_via_file( 'YWI=' ) );
+	}
+
+	/**
+	 * The 1.33.0 regression this pins: a stray "=" after a complete quantum
+	 * ("YWJj=") passed validation, the re-pad step inflated it to "YWJj====",
+	 * and the failure surfaced as temp_write_failed ("check the temp
+	 * directory is writable") plus a PHP warning from the stream filter — the
+	 * agent then debugs a nonexistent disk problem. Strict base64_decode()
+	 * refused all of these as invalid_base64, and so must the validator:
+	 * a payload that carries "=" must be a complete multiple of 4.
+	 */
+	public function test_a_stray_pad_after_a_complete_quantum_is_invalid_base64(): void {
+		foreach ( array( 'YWJj=', 'YWJj==', 'YWJ==', 'YQ=' ) as $payload ) {
+			$err = $this->call( 'normalize_upload_payload', $payload );
+			$this->assertInstanceOf( WP_Error::class, $err, $payload );
+			$this->assertSame( 'invalid_base64', $err->get_error_code(), $payload );
+		}
 	}
 
 	/**

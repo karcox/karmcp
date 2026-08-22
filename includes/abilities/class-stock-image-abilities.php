@@ -417,6 +417,32 @@ class KarMCP_Stock_Image_Abilities {
 			}
 		}
 
+		// The stored filename is derived from the URL alone, so the
+		// executable-extension refusal can run BEFORE the download: the refusal
+		// path is the attack/mistake path, exactly where a 30-second transfer
+		// into a temp file would be pure waste. Checked before
+		// sanitize_file_name() for the same reason as upload-media — core would
+		// defuse the inner extension by silently renaming it, and this names
+		// the problem instead.
+		$url_path = wp_parse_url( $url, PHP_URL_PATH );
+		$filename = $url_path ? basename( $url_path ) : 'image.jpg';
+		if ( ! preg_match( '/\.\w+$/', $filename ) ) {
+			$filename .= '.jpg';
+		}
+		$executable = KarMCP_Filename_Guard::executable_extension_in( $filename );
+		if ( '' !== $executable ) {
+			return new \WP_Error(
+				'executable_filename',
+				sprintf(
+					/* translators: 1: filename, 2: the offending extension. */
+					__( 'The downloaded file would be stored as "%1$s", which contains ".%2$s" — an extension a web server may execute. Use a source URL whose path does not carry that extension.', 'karmcp' ),
+					$filename,
+					$executable
+				),
+				array( 'filename' => $filename )
+			);
+		}
+
 		// Download the file to a temp location (SSRF-guarded: blocks private/
 		// reserved/loopback hosts and re-validates each redirect hop).
 		$tmp_file = KarMCP_Url_Guard::safe_download( $url, 30 );
@@ -440,35 +466,6 @@ class KarMCP_Stock_Image_Abilities {
 					__( 'Failed to download image: %s', 'karmcp' ),
 					$msg
 				) . $hint
-			);
-		}
-
-		// Determine filename from URL.
-		$url_path = wp_parse_url( $url, PHP_URL_PATH );
-		$filename = $url_path ? basename( $url_path ) : 'image.jpg';
-
-		// Ensure it has an extension.
-		if ( ! preg_match( '/\.\w+$/', $filename ) ) {
-			$filename .= '.jpg';
-		}
-
-		// Same rule as upload-media, and for the same reason it runs before
-		// sanitize_file_name(): a name like "shell.php.jpg" derived from the URL
-		// may execute on a host whose handler matches any extension in the name,
-		// and core's sanitizer would defuse it by silently renaming — this names
-		// the problem instead.
-		$executable = KarMCP_Media_Library_Abilities::executable_extension_in( $filename );
-		if ( '' !== $executable ) {
-			wp_delete_file( $tmp_file );
-			return new \WP_Error(
-				'executable_filename',
-				sprintf(
-					/* translators: 1: filename, 2: the offending extension. */
-					__( 'The downloaded file would be stored as "%1$s", which contains ".%2$s" — an extension a web server may execute. Use a source URL whose path does not carry that extension.', 'karmcp' ),
-					$filename,
-					$executable
-				),
-				array( 'filename' => $filename )
 			);
 		}
 

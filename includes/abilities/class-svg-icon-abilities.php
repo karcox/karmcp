@@ -270,6 +270,35 @@ class KarMCP_Svg_Icon_Abilities {
 	 * @return array|\WP_Error Array with attachment_id and url on success.
 	 */
 	private function upload_from_url( string $url, string $title ) {
+		// Determine the stored filename first: it derives from the URL (and
+		// title fallback) alone, so the executable-extension refusal can run
+		// before any bytes are transferred. The rule matters MOST on this
+		// path — this ability deliberately loosens upload_mimes and
+		// wp_check_filetype_and_ext for SVG, so without it the only defense
+		// on a name like "icon.php.svg" would be sanitize_file_name()'s
+		// silent rename. (The title fallback builds its name from
+		// sanitize_title(), which cannot carry an inner extension.)
+		$url_path = wp_parse_url( $url, PHP_URL_PATH );
+		$filename = $url_path ? basename( $url_path ) : 'icon.svg';
+
+		if ( ! preg_match( '/\.svg$/i', $filename ) ) {
+			$filename = ( ! empty( $title ) ? sanitize_title( $title ) : 'icon' ) . '.svg';
+		}
+
+		$executable = KarMCP_Filename_Guard::executable_extension_in( $filename );
+		if ( '' !== $executable ) {
+			return new \WP_Error(
+				'executable_filename',
+				sprintf(
+					/* translators: 1: filename, 2: the offending extension. */
+					__( 'The SVG would be stored as "%1$s", which contains ".%2$s" — an extension a web server may execute. Use a source URL whose path does not carry that extension, or pass a title to name the file from instead.', 'karmcp' ),
+					$filename,
+					$executable
+				),
+				array( 'filename' => $filename )
+			);
+		}
+
 		// SSRF-guarded download: blocks private/reserved/loopback hosts and
 		// re-validates each redirect hop.
 		$tmp_file = KarMCP_Url_Guard::safe_download( $url, 30 );
@@ -290,14 +319,6 @@ class KarMCP_Svg_Icon_Abilities {
 		if ( is_wp_error( $validation ) ) {
 			wp_delete_file( $tmp_file );
 			return $validation;
-		}
-
-		// Determine filename.
-		$url_path = wp_parse_url( $url, PHP_URL_PATH );
-		$filename = $url_path ? basename( $url_path ) : 'icon.svg';
-
-		if ( ! preg_match( '/\.svg$/i', $filename ) ) {
-			$filename = ( ! empty( $title ) ? sanitize_title( $title ) : 'icon' ) . '.svg';
 		}
 
 		return $this->do_sideload( $tmp_file, $filename );

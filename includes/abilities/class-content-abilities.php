@@ -491,26 +491,36 @@ class KarMCP_Content_Abilities {
 					// 169.254.169.254) and re-validates every redirect hop, which
 					// plain media_sideload_image()/download_url() do not.
 					$fi_url   = esc_url_raw( (string) $fi['url'] );
-					$tmp_file = $fi_url ? KarMCP_Url_Guard::safe_download( $fi_url, 30 ) : new \WP_Error( 'invalid_url', 'empty url' );
-					if ( is_wp_error( $tmp_file ) ) {
-						$warnings[] = 'featured_image: URL rejected or download failed (' . $tmp_file->get_error_message() . ').';
+					$url_path = wp_parse_url( $fi_url, PHP_URL_PATH );
+					$fi_name  = $url_path ? basename( $url_path ) : 'image.jpg';
+					if ( ! preg_match( '/\.\w+$/', $fi_name ) ) {
+						$fi_name .= '.jpg';
+					}
+					// Same executable-extension rule as upload-media and
+					// sideload-image, run on the raw name (core's sanitizer
+					// would defuse the inner extension by silently renaming
+					// it) and BEFORE the download, since the name derives from
+					// the URL alone.
+					$executable = KarMCP_Filename_Guard::executable_extension_in( $fi_name );
+					if ( '' !== $executable ) {
+						$warnings[] = 'featured_image: the URL filename "' . $fi_name . '" contains ".' . $executable . '", which a web server may execute — refused.';
 					} else {
-						$url_path  = wp_parse_url( $fi_url, PHP_URL_PATH );
-						$fi_name   = $url_path ? basename( $url_path ) : 'image.jpg';
-						if ( ! preg_match( '/\.\w+$/', $fi_name ) ) {
-							$fi_name .= '.jpg';
-						}
-						$att = media_handle_sideload(
-							array( 'name' => sanitize_file_name( $fi_name ), 'tmp_name' => $tmp_file ),
-							$post_id
-						);
-						if ( is_wp_error( $att ) ) {
-							if ( file_exists( $tmp_file ) ) {
-								wp_delete_file( $tmp_file );
-							}
-							$warnings[] = 'featured_image: ' . $att->get_error_message();
+						$tmp_file = $fi_url ? KarMCP_Url_Guard::safe_download( $fi_url, 30 ) : new \WP_Error( 'invalid_url', 'empty url' );
+						if ( is_wp_error( $tmp_file ) ) {
+							$warnings[] = 'featured_image: URL rejected or download failed (' . $tmp_file->get_error_message() . ').';
 						} else {
-							set_post_thumbnail( $post_id, (int) $att );
+							$att = media_handle_sideload(
+								array( 'name' => sanitize_file_name( $fi_name ), 'tmp_name' => $tmp_file ),
+								$post_id
+							);
+							if ( is_wp_error( $att ) ) {
+								if ( file_exists( $tmp_file ) ) {
+									wp_delete_file( $tmp_file );
+								}
+								$warnings[] = 'featured_image: ' . $att->get_error_message();
+							} else {
+								set_post_thumbnail( $post_id, (int) $att );
+							}
 						}
 					}
 				}

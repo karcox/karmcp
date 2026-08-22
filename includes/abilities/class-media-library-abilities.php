@@ -30,40 +30,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 class KarMCP_Media_Library_Abilities {
 
 	/**
-	 * Extensions a web server might hand to an interpreter instead of serving.
-	 *
-	 * Checked against EVERY dot-separated segment of a filename, not just the
-	 * last one: Apache's AddHandler matches any extension in the name, so
-	 * "photo.php.jpg" can execute as PHP on a host configured that way even
-	 * though WordPress judges it a JPEG by its final extension.
-	 *
-	 * @since 1.33.0
-	 *
-	 * @var string[]
-	 */
-	private const EXECUTABLE_EXTENSIONS = array(
-		'php',
-		'php3',
-		'php4',
-		'php5',
-		'php7',
-		'php8',
-		'phps',
-		'pht',
-		'phtm',
-		'phtml',
-		'phar',
-		'cgi',
-		'pl',
-		'asp',
-		'aspx',
-		'jsp',
-		'jspx',
-		'shtml',
-		'shtm',
-	);
-
-	/**
 	 * The data access layer.
 	 *
 	 * @var KarMCP_Data
@@ -770,7 +736,7 @@ class KarMCP_Media_Library_Abilities {
 		// Core's silent rename is the outcome this refusal replaces — an upload
 		// that succeeds under a name the caller did not send is worse than an
 		// error that says what was wrong with the one they did.
-		$executable = self::executable_extension_in( $basename );
+		$executable = KarMCP_Filename_Guard::executable_extension_in( $basename );
 		if ( '' !== $executable ) {
 			return new \WP_Error(
 				'executable_filename',
@@ -822,38 +788,6 @@ class KarMCP_Media_Library_Abilities {
 	}
 
 	/**
-	 * Returns the first executable extension hiding INSIDE a filename, or ''.
-	 *
-	 * Only the inner segments are judged — "photo.php.jpg" answers "php", while
-	 * "payload.php" answers '': a final extension is already resolved against
-	 * the site's allowed types by wp_check_filetype(), whose refusal names the
-	 * type and (for SVG) the module that would allow it, and this check must not
-	 * swallow that better message. The leading segment is the base name, which
-	 * no server reads as an extension, so "php.jpg" passes too.
-	 *
-	 * Public and static because `sideload-image` (KarMCP_Stock_Image_Abilities)
-	 * applies the same rule to a filename derived from a remote URL.
-	 *
-	 * @since 1.33.0
-	 *
-	 * @param string $filename The filename as received, before sanitizing.
-	 * @return string The offending extension, lowercased, or ''.
-	 */
-	public static function executable_extension_in( string $filename ): string {
-		$segments = explode( '.', strtolower( $filename ) );
-		$count    = count( $segments );
-		if ( $count < 3 ) {
-			return '';
-		}
-		foreach ( array_slice( $segments, 1, $count - 2 ) as $segment ) {
-			if ( in_array( $segment, self::EXECUTABLE_EXTENSIONS, true ) ) {
-				return $segment;
-			}
-		}
-		return '';
-	}
-
-	/**
 	 * Validates the base64 payload and refuses anything the site would not
 	 * accept as an upload anyway — WITHOUT decoding it.
 	 *
@@ -885,19 +819,36 @@ class KarMCP_Media_Library_Abilities {
 			return new \WP_Error( 'missing_params', __( 'The "data" payload is empty once the data: prefix is removed.', 'karmcp' ) );
 		}
 
-		// The alphabet-and-padding shape base64_decode()'s strict mode enforced
-		// when this method still decoded. A remainder of 1 cannot be produced by
-		// any encoder, so it is refused along with foreign characters.
-		if ( ! preg_match( '#^[A-Za-z0-9+/]+={0,2}$#', $payload ) || 1 === strlen( rtrim( $payload, '=' ) ) % 4 ) {
+		// The alphabet shape base64_decode()'s strict mode enforced when this
+		// method still decoded: base64 characters, then at most two trailing
+		// pads. The regex confines '=' to that trailing run, which is what the
+		// two padding rules below lean on.
+		if ( ! preg_match( '#^[A-Za-z0-9+/]+={0,2}$#', $payload ) ) {
 			return new \WP_Error( 'invalid_base64', __( 'The "data" payload is not valid base64. Send the raw file bytes base64-encoded, not a file path, a URL, or JSON.', 'karmcp' ) );
 		}
 
-		// Re-pad an unpadded payload (base64_decode() tolerated those, so this
-		// keeps accepting them) — and from here on the length is a multiple of
-		// 4, which is what lets the decode run in fixed-size chunks.
-		$remainder = strlen( $payload ) % 4;
-		if ( $remainder > 0 ) {
-			$payload .= str_repeat( '=', 4 - $remainder );
+		// Padding, exactly as strict mode ruled: a payload that carries '='
+		// must be a complete multiple of 4 (a stray pad after a full quantum —
+		// "YWJj=" — is an encoder bug worth naming here, not a disk error three
+		// steps later), and an unpadded one is re-padded unless its remainder
+		// is 1, which no encoder can produce. Counting pads with substr_count
+		// on the last two chars, not rtrim(), matters at scale: rtrim() copies
+		// the whole multi-megabyte payload just to measure it.
+		$pad = substr_count( substr( $payload, -2 ), '=' );
+		if ( $pad > 0 ) {
+			if ( 0 !== strlen( $payload ) % 4 ) {
+				return new \WP_Error( 'invalid_base64', __( 'The "data" payload is not valid base64. Send the raw file bytes base64-encoded, not a file path, a URL, or JSON.', 'karmcp' ) );
+			}
+		} else {
+			$remainder = strlen( $payload ) % 4;
+			if ( 1 === $remainder ) {
+				return new \WP_Error( 'invalid_base64', __( 'The "data" payload is not valid base64. Send the raw file bytes base64-encoded, not a file path, a URL, or JSON.', 'karmcp' ) );
+			}
+			// From here on the length is a multiple of 4, which is what lets
+			// the decode run in fixed-size chunks.
+			if ( $remainder > 0 ) {
+				$payload .= str_repeat( '=', 4 - $remainder );
+			}
 		}
 
 		$limit = function_exists( 'wp_max_upload_size' ) ? (int) wp_max_upload_size() : 0;
@@ -942,7 +893,7 @@ class KarMCP_Media_Library_Abilities {
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- A temp file outside ABSPATH, as core's download_url() writes it; WP_Filesystem has no seam to attach a stream filter to.
 		$handle = fopen( $tmp_file, 'wb' );
 		if ( false === $handle ) {
-			return new \WP_Error( 'temp_write_failed', __( 'Could not write the decoded file to disk (check the temp directory is writable and has space).', 'karmcp' ) );
+			return $this->temp_write_error();
 		}
 		stream_filter_append( $handle, 'convert.base64-decode', STREAM_FILTER_WRITE );
 
@@ -955,21 +906,33 @@ class KarMCP_Media_Library_Abilities {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Same file; fwrite() reports the ENCODED bytes it consumed, which is what the short-write check needs.
 			if ( fwrite( $handle, $chunk ) !== strlen( $chunk ) ) {
 				fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Releasing the handle above.
-				return new \WP_Error( 'temp_write_failed', __( 'Could not write the decoded file to disk (check the temp directory is writable and has space).', 'karmcp' ) );
+				return $this->temp_write_error();
 			}
 		}
 		// The filter flushes its tail on close, so the size check must come after.
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Releasing the handle above.
 		if ( ! fclose( $handle ) ) {
-			return new \WP_Error( 'temp_write_failed', __( 'Could not write the decoded file to disk (check the temp directory is writable and has space).', 'karmcp' ) );
+			return $this->temp_write_error();
 		}
 
 		clearstatcache( true, $tmp_file );
 		if ( filesize( $tmp_file ) !== $this->decoded_payload_size( $payload ) ) {
-			return new \WP_Error( 'temp_write_failed', __( 'Could not write the decoded file to disk (check the temp directory is writable and has space).', 'karmcp' ) );
+			return $this->temp_write_error();
 		}
 
 		return true;
+	}
+
+	/**
+	 * The "could not write to disk" error, built in one place so the message
+	 * cannot fork between the four failure branches that return it.
+	 *
+	 * @since 1.33.1
+	 *
+	 * @return \WP_Error
+	 */
+	private function temp_write_error(): \WP_Error {
+		return new \WP_Error( 'temp_write_failed', __( 'Could not write the decoded file to disk (check the temp directory is writable and has space).', 'karmcp' ) );
 	}
 
 	/**

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.33.0
+Stable tag: 1.33.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.33.1 =
+Fixed: a stray = in a base64 payload was misdiagnosed as a disk error (now invalid_base64 up front); the executable-filename refusal now covers all four sideload intakes from one canonical list (KarMCP_Filename_Guard) instead of two; the malware scanner derives its PHP-extension regex from that same list, ending a drift where shell.php8 was refused at upload but invisible to the scanner; pl removed from the list (krakow.pl.jpg is a photo, not a Perl script); the payload validator no longer copies the whole payload to count its padding.
+Changed: sideload-image and upload-svg-icon refuse an executable filename before downloading, not after.
 
 = 1.33.0 =
 Changed: upload-media now decodes the base64 payload inside a stream filter on the way to disk, so the decoded file never exists as a string next to the write - the shape hosts' malware scanners flag as a backdoor - and an upload no longer holds two copies in memory.

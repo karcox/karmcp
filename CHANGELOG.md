@@ -2,6 +2,28 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.33.1]
+
+Everything a same-day audit of 1.33.0 found, fixed. Ten findings, none breaking a well-formed upload; the three that mattered are the first three below.
+
+### Fixed
+
+- **A stray `=` after a complete base64 quantum was misdiagnosed as a disk error.** The validator's remainder check measured the payload with its padding stripped while the re-pad step measured it with the padding still on; a payload like `YWJj=` — one `=` too many, a real off-by-one in client encoders — passed validation, got inflated to `YWJj====`, and died in the stream filter as `temp_write_failed` ("check the temp directory is writable") plus an unsuppressed PHP warning per attempt. The agent then debugs a disk problem that does not exist. The rule is now the one strict `base64_decode()` actually enforced: a payload that carries `=` must be a complete multiple of 4, refused as `invalid_base64` up front. This also closes the quieter half of the same gap — `YQ=` (half-padded) was being silently *accepted* where every strict decoder refuses it.
+
+- **The 1.33.0 memory claim is now true.** The validity check's `rtrim()` copied the whole multi-megabyte payload just to measure its padding, putting the new path's peak *above* the old decode-in-memory path for the common padded case. The pad count now comes from `substr_count()` on the last two characters — the same idiom `decoded_payload_size()` already used — so the streaming design's actual win (peak ≈ the encoded string plus one 1 MiB chunk) materializes.
+
+- **The executable-filename refusal now covers all four sideload intakes, from one canonical list.** 1.33.0 shipped it on `upload-media` and `sideload-image` only; the featured-image sideload (`create-post`/`update-post`) and `upload-svg-icon`'s URL path — the one that deliberately loosens the SVG MIME checks, where the rule matters most — still accepted `logo.php.jpg` via core's silent rename. Same input, contradictory answers between sibling tools. The check moved to a new `KarMCP_Filename_Guard` (`includes/class-filename-guard.php`), outside the abilities layer where every intake — and any future one — can reach it, and all four paths now call it.
+
+- **The malware scanner and the front door can no longer disagree about what "executable" means.** The plugin carried three independently-hardcoded executable-extension lists, and they had already drifted: `upload-media` refused `shell.php8` while `scan-security`'s regex — built to catch exactly that file under uploads — did not know `php8` or `phar` existed. Both of the audit's regexes are now built from `KarMCP_Filename_Guard::PHP_FAMILY`, and a test walks the whole family through `is_misplaced_php()` so the next added extension cannot drift.
+
+- **`krakow.pl.jpg` is a photo, not a Perl script.** `pl` was on the 1.33.0 list, and as a two-letter inner segment it collides with the Poland ccTLD and ordinary abbreviations — a screenshot named `onet.pl.jpg` was refused with a security error. Dropped; a `.pl` handler on an uploads directory is rare enough that the false positives outweighed it, and a test now keeps it from creeping back.
+
+### Changed
+
+- **`sideload-image` and `upload-svg-icon` refuse an executable filename *before* downloading.** The stored name derives from the URL alone, so running the check after `safe_download()` spent up to 30 seconds and the full transfer on a request that was always going to be refused — the attack/mistake path was the most expensive one. The featured-image path got the same ordering from the start.
+
+- **The `temp_write_failed` error is built in one place** (`temp_write_error()`, the `too_large_error()` pattern this class already used) instead of four verbatim copies whose translatable string could silently fork on the next edit.
+
 ## [1.33.0]
 
 Two hardenings on the media-intake path — the one route where bytes chosen by someone outside the site become files on its disk.

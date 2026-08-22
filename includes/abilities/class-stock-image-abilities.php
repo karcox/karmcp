@@ -452,6 +452,26 @@ class KarMCP_Stock_Image_Abilities {
 			$filename .= '.jpg';
 		}
 
+		// Same rule as upload-media, and for the same reason it runs before
+		// sanitize_file_name(): a name like "shell.php.jpg" derived from the URL
+		// may execute on a host whose handler matches any extension in the name,
+		// and core's sanitizer would defuse it by silently renaming — this names
+		// the problem instead.
+		$executable = KarMCP_Media_Library_Abilities::executable_extension_in( $filename );
+		if ( '' !== $executable ) {
+			wp_delete_file( $tmp_file );
+			return new \WP_Error(
+				'executable_filename',
+				sprintf(
+					/* translators: 1: filename, 2: the offending extension. */
+					__( 'The downloaded file would be stored as "%1$s", which contains ".%2$s" — an extension a web server may execute. Use a source URL whose path does not carry that extension.', 'karmcp' ),
+					$filename,
+					$executable
+				),
+				array( 'filename' => $filename )
+			);
+		}
+
 		$file_array = array(
 			'name'     => sanitize_file_name( $filename ),
 			'tmp_name' => $tmp_file,

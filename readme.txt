@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.32.0
+Stable tag: 1.33.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,10 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.33.0 =
+Changed: upload-media now decodes the base64 payload inside a stream filter on the way to disk, so the decoded file never exists as a string next to the write - the shape hosts' malware scanners flag as a backdoor - and an upload no longer holds two copies in memory.
+Added: upload-media and sideload-image refuse filenames carrying an executable extension anywhere in the name (photo.php.jpg), with an error naming the extension instead of core's silent rename.
 
 = 1.32.0 =
 Added: setting a typography without naming its font family kept the family of whatever was there before, so a restyled element went on wearing a font nobody chose. The element-update tools now report inherited_typography with the surviving keys and their values, and reset_typography:true drops the parts you did not name.

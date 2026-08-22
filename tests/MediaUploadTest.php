@@ -13,6 +13,13 @@
  * detail: it is what keeps an oversized upload from becoming a memory fatal
  * instead of an error message.
  *
+ * Since 1.33.0 the decode happens inside a stream filter on the way to disk
+ * (the decoded file never exists as a string — that shape is what hosts'
+ * malware scanners flag), so validity is settled by normalize_upload_payload()
+ * up front and the round-trip tests read the file back. The filter skips
+ * invalid bytes silently, which is why the refusals pinned here matter: they
+ * are the only thing standing between a garbage payload and a corrupt upload.
+ *
  * @package KarMCP
  */
 
@@ -190,37 +197,123 @@ class MediaUploadTest extends TestCase {
 		$this->assertStringContainsString( '.php', $err->get_error_message() );
 	}
 
+	/**
+	 * The check runs on the name BEFORE sanitize_file_name(): core defuses the
+	 * inner extension by renaming it to "php_", so a check placed after would
+	 * pass everything and this refusal would be dead code on a real site.
+	 */
+	public function test_an_executable_extension_hidden_inside_the_name_is_refused(): void {
+		foreach ( array( 'photo.php.jpg', 'photo.PHP.jpg', 'photo.phtml.png', 'shell.phar.gif' ) as $name ) {
+			$err = $this->call( 'resolve_upload_filename', $name );
+			$this->assertInstanceOf( WP_Error::class, $err, $name );
+			$this->assertSame( 'executable_filename', $err->get_error_code(), $name );
+		}
+	}
+
+	public function test_the_executable_refusal_names_the_offending_extension(): void {
+		$err = $this->call( 'resolve_upload_filename', 'photo.php.jpg' );
+		$this->assertStringContainsString( '.php', $err->get_error_message() );
+	}
+
+	public function test_harmless_extra_dots_in_a_filename_still_pass(): void {
+		$this->assertSame( 'mi.foto.bonita.jpg', $this->call( 'resolve_upload_filename', 'mi.foto.bonita.jpg' ) );
+	}
+
 	// -----------------------------------------------------------------
-	// decode_upload_payload()
+	// executable_extension_in()
 	// -----------------------------------------------------------------
+
+	public function test_only_inner_segments_are_judged(): void {
+		// A final ".php" is wp_check_filetype()'s to refuse — with the better
+		// message — and a leading "php" is a base name, not an extension.
+		$this->assertSame( '', KarMCP_Media_Library_Abilities::executable_extension_in( 'payload.php' ) );
+		$this->assertSame( '', KarMCP_Media_Library_Abilities::executable_extension_in( 'php.jpg' ) );
+		$this->assertSame( 'php', KarMCP_Media_Library_Abilities::executable_extension_in( 'photo.php.jpg' ) );
+		$this->assertSame( 'phtml', KarMCP_Media_Library_Abilities::executable_extension_in( 'a.b.phtml.c.jpg' ) );
+	}
+
+	// -----------------------------------------------------------------
+	// normalize_upload_payload() + write_decoded_payload()
+	// -----------------------------------------------------------------
+
+	/**
+	 * Runs a payload through the same two steps as the executor: validate,
+	 * then stream-decode into a real temp file, and returns the file's bytes.
+	 *
+	 * @param mixed $raw The `data` input value.
+	 * @return string|WP_Error
+	 */
+	private function decode_via_file( $raw ) {
+		$payload = $this->call( 'normalize_upload_payload', $raw );
+		if ( $payload instanceof WP_Error ) {
+			return $payload;
+		}
+
+		$tmp_file = tempnam( sys_get_temp_dir(), 'karmcp-test' );
+		$this->assertNotFalse( $tmp_file );
+		try {
+			$written = $this->call( 'write_decoded_payload', $payload, $tmp_file );
+			if ( $written instanceof WP_Error ) {
+				return $written;
+			}
+			return (string) file_get_contents( $tmp_file );
+		} finally {
+			unlink( $tmp_file );
+		}
+	}
 
 	public function test_plain_base64_round_trips(): void {
 		$bytes = "\x89PNG\r\n\x1a\n" . 'not really a png';
-		$this->assertSame( $bytes, $this->call( 'decode_upload_payload', base64_encode( $bytes ) ) );
+		$this->assertSame( $bytes, $this->decode_via_file( base64_encode( $bytes ) ) );
 	}
 
 	public function test_a_data_uri_prefix_is_stripped(): void {
 		$payload = 'data:image/png;base64,' . base64_encode( 'abc' );
-		$this->assertSame( 'abc', $this->call( 'decode_upload_payload', $payload ) );
+		$this->assertSame( 'abc', $this->decode_via_file( $payload ) );
 	}
 
 	public function test_line_wrapped_base64_is_accepted(): void {
 		$bytes = str_repeat( 'wrapped-payload', 20 );
 		$this->assertSame(
 			$bytes,
-			$this->call( 'decode_upload_payload', chunk_split( base64_encode( $bytes ), 76, "\r\n" ) )
+			$this->decode_via_file( chunk_split( base64_encode( $bytes ), 76, "\r\n" ) )
 		);
 	}
 
+	/**
+	 * base64_decode() in strict mode tolerated missing "=" padding, so the
+	 * validator must keep accepting it — some clients trim it.
+	 */
+	public function test_unpadded_base64_is_accepted(): void {
+		$this->assertSame( 'abcde', $this->decode_via_file( rtrim( base64_encode( 'abcde' ), '=' ) ) );
+	}
+
+	/**
+	 * The chunked write hands the filter 1 MiB of encoded input at a time, so a
+	 * payload spanning several chunks pins that no bytes are lost or doubled at
+	 * the seams.
+	 */
+	public function test_a_multi_chunk_payload_round_trips(): void {
+		$bytes  = random_bytes( 1024 );
+		$bytes  = str_repeat( $bytes, 3 * 1024 ); // 3 MiB decoded, 4 MiB encoded.
+		$result = $this->decode_via_file( base64_encode( $bytes ) );
+		$this->assertSame( strlen( $bytes ), strlen( $result ) );
+		$this->assertSame( hash( 'sha256', $bytes ), hash( 'sha256', $result ) );
+	}
+
 	public function test_a_non_base64_payload_is_refused(): void {
-		$err = $this->call( 'decode_upload_payload', '/home/user/photo.jpg' );
-		$this->assertInstanceOf( WP_Error::class, $err );
-		$this->assertSame( 'invalid_base64', $err->get_error_code() );
+		// The stream filter would swallow these silently — the validator is the
+		// only thing that turns them into an error instead of a corrupt upload.
+		foreach ( array( '/home/user/photo.jpg', '{"data":"x"}', 'YWJj=extra', 'x' ) as $payload ) {
+			$err = $this->call( 'normalize_upload_payload', $payload );
+			$this->assertInstanceOf( WP_Error::class, $err, $payload );
+			$this->assertSame( 'invalid_base64', $err->get_error_code(), $payload );
+		}
 	}
 
 	public function test_an_empty_payload_is_refused(): void {
 		foreach ( array( '', '   ', 'data:image/png;base64,', null, 42 ) as $payload ) {
-			$err = $this->call( 'decode_upload_payload', $payload );
+			$err = $this->call( 'normalize_upload_payload', $payload );
 			$this->assertInstanceOf( WP_Error::class, $err );
 			$this->assertSame( 'missing_params', $err->get_error_code() );
 		}
@@ -229,7 +322,7 @@ class MediaUploadTest extends TestCase {
 	public function test_a_payload_over_the_upload_limit_is_refused(): void {
 		$GLOBALS['karmcp_test']['max_upload'] = 1024;
 
-		$err = $this->call( 'decode_upload_payload', base64_encode( str_repeat( 'x', 4096 ) ) );
+		$err = $this->call( 'normalize_upload_payload', base64_encode( str_repeat( 'x', 4096 ) ) );
 		$this->assertInstanceOf( WP_Error::class, $err );
 		$this->assertSame( 'file_too_large', $err->get_error_code() );
 		// The limit is named so an agent resizes instead of retrying the same bytes.
@@ -240,13 +333,29 @@ class MediaUploadTest extends TestCase {
 		$GLOBALS['karmcp_test']['max_upload'] = 4096;
 
 		$bytes = str_repeat( 'x', 1024 );
-		$this->assertSame( $bytes, $this->call( 'decode_upload_payload', base64_encode( $bytes ) ) );
+		$this->assertSame( $bytes, $this->decode_via_file( base64_encode( $bytes ) ) );
 	}
 
 	public function test_an_unknown_upload_limit_does_not_refuse_anything(): void {
 		$GLOBALS['karmcp_test']['max_upload'] = 0;
 
 		$bytes = str_repeat( 'x', 200000 );
-		$this->assertSame( $bytes, $this->call( 'decode_upload_payload', base64_encode( $bytes ) ) );
+		$this->assertSame( $bytes, $this->decode_via_file( base64_encode( $bytes ) ) );
+	}
+
+	/**
+	 * The size ceiling still counts DECODED bytes, exactly: 1024 encoded chars
+	 * decode to 768 bytes, which must pass a 768-byte limit and fail a 767 one.
+	 */
+	public function test_the_size_estimate_is_exact_not_padded(): void {
+		$bytes = str_repeat( 'x', 768 );
+
+		$GLOBALS['karmcp_test']['max_upload'] = 768;
+		$this->assertSame( $bytes, $this->decode_via_file( base64_encode( $bytes ) ) );
+
+		$GLOBALS['karmcp_test']['max_upload'] = 767;
+		$err = $this->call( 'normalize_upload_payload', base64_encode( $bytes ) );
+		$this->assertInstanceOf( WP_Error::class, $err );
+		$this->assertSame( 'file_too_large', $err->get_error_code() );
 	}
 }

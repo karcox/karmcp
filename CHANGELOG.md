@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.33.0]
+
+Two hardenings on the media-intake path — the one route where bytes chosen by someone outside the site become files on its disk.
+
+### Changed
+
+- **`upload-media` now decodes the base64 payload inside a stream filter, on the way to disk.** "Decode incoming data, write it to a file" is the exact shape of a PHP backdoor, and hosts' pattern-based malware scanners flag that shape on sight — they cannot see the capability check and the type allowlist in front of it. A plugin file sitting in quarantine is truncated to zero bytes without being deleted, so the `require` succeeds, the class never exists, and the site fatals far from the cause (the same failure mode that made `class-security-malware-audit.php` assemble its patterns at runtime). The decode now happens inside PHP's `convert.base64-decode` filter as the bytes travel to the temp file, so the decoded content never exists as a string next to the write. It also drops the second in-memory copy the old `base64_decode()` round-trip held — an upload near the size limit no longer peaks at encoded + decoded at once.
+
+> **Validity moved up front, because the filter fails silently.** `base64_decode()` in strict mode refused garbage with an error an agent could act on; the stream filter skips foreign bytes and hands you a corrupt file. `normalize_upload_payload()` now settles alphabet, padding placement and length before anything touches disk, so a path or a JSON blob sent as `data` still gets the same `invalid_base64` answer it always did — and the size ceiling is still enforced from the encoded length, before the decoded copy exists anywhere.
+
+### Added
+
+- **`upload-media` and `sideload-image` refuse a filename carrying an executable extension anywhere in the name, not just at the end.** WordPress judges `photo.php.jpg` a JPEG by its final extension, but Apache's `AddHandler` matches *any* extension in the name — on a host configured that way the file executes as PHP. Core's `sanitize_file_name()` already defuses this by silently renaming the inner extension (`photo.php_.jpg`), which is why the new check runs on the name **as it arrived, before sanitizing**: checking afterwards would never see it. The refusal replaces core's silent rename with an `executable_filename` error that names the offending extension — an upload that succeeds under a name the caller did not send is worse than an error that says what was wrong with the one they did.
+
+> **Only the inner segments are judged.** A final `.php` is already resolved against the site's allowed types, whose refusal carries the better message (and, for SVG, names the module that would allow it); a leading `php.` is a base name, which no server reads as an extension. `payload.php` and `php.jpg` answer exactly as before.
+
 ## [1.32.0]
 
 The third and last of the family: a typography you declare without naming its font family keeps the family of whatever was there before, and now says so.

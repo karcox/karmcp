@@ -65,6 +65,15 @@ php tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon
 
 > **Cuando el arreglo obvio es el equivocado, el motivo va en el código.** Un `redirect_uri` de OAuth tiene que salir del sitio —`wp_safe_redirect()` rompería el login entero—, la cabecera `Authorization` no se sanea porque `parse_bearer()` ya la restringe al alfabeto base64url, el código de una plantilla PHP no se puede sanear sin destruirlo, y los hooks de terceros (WPML, el adapter, el `the_content` de core) no se pueden prefijar sin dejar de ser esos hooks. Todos llevan su `phpcs:ignore` **con la razón escrita al lado**. Si te encuentras uno, léelo antes de "arreglarlo".
 
+### CI: las mismas puertas, en GitHub Actions
+
+Dos workflows en `.github/workflows/`, en cada push y PR, **los dos bloqueantes**:
+
+- **`tests.yml`** — la suite en PHP 8.1 (el mínimo de la cabecera) a 8.5 (la máquina de desarrollo). Sin `composer install` a propósito: el bootstrap de tests carga con `require_once` y no depende de `vendor/`.
+- **`lint.yml`** — un job con PHPCS y PHPStan (con su baseline y el mismo `--memory-limit=2G` que `check.ps1`), y otro sin composer con la frescura del classmap y del POT.
+
+**La regla de paridad: si `bin/check.ps1` gana una puerta, el workflow que le toque la gana también.** La historia que la justifica: `lint.yml` nació (Pieza 0, 2026-08-15) con `continue-on-error` y un plan escrito — "quitarlos cuando el ruido esté triado". El triaje terminó dos días después (1.16.3) y nadie volvió al archivo: el check salía verde sin poder fallar, mientras este documento seguía diciendo "no hay CI". Un verde que no puede fallar y una doc que no se relee fallan igual: en silencio. Se cerró el 2026-08-23.
+
 ### La suite
 
 Corre sobre stubs, sin instalar WordPress. Los tests viven en `tests/`, nombrados `AlgoTest.php`, y prueban lógica pura (validadores, mapeo de esquemas, enrutado de dispatchers, delegación de permisos). Lo que toca el render real del front-end necesita verificación manual en un WordPress local.
@@ -270,7 +279,7 @@ Al añadir una herramienta que escribe: súbele `DEFAULTS_VERSION` en `class-adm
 
 Auditado el 2026-08-14. **La 1.2.0 fue una release de auditoría y vació la mitad de esta lista**: capacidades reales por post type en `create-post`/`update-post`, `read_post` en `get-post`, filtrado por tipo y `perm: readable` en `list-posts`, revalidación de cada salto en `safe_download()`, rate-limit y normalización de `scope` en OAuth, desinstalador completo, `load_plugin_textdomain()`, el falso positivo de `REPLACE()` y el código muerto de Memory. Lo de abajo es lo que sigue pendiente. **`duplicate-post` salió de esta lista en 1.1.0**: vive en `includes/class-post-duplicator.php` (la primitiva) y `includes/abilities/class-duplicate-abilities.php` (la herramienta), y es también sobre lo que se construye `create-translation`.
 
-Fuera de esta lista, sin abordar y verificado el 2026-08-14: **no hay CI** (`.github/` solo tiene plantillas de issues). Lo de `languages/` que decía aquí se resolvió en la 1.27.0 — POT, `.po` y `.mo` están, y la sección Traducciones cuenta cómo se regeneran.
+Fuera de esta lista: **lo del CI se cerró el 2026-08-23.** Lo que aquí decía ("no hay CI", verificado el 2026-08-14) dejó de ser cierto al día siguiente con la Pieza 0, y nadie corrigió esta línea; qué corre ahora y la trampa del verde hueco están en la sección CI. Lo de `languages/` se resolvió en la 1.27.0 — POT, `.po` y `.mo` están, y la sección Traducciones cuenta cómo se regeneran.
 
 - **`includes/admin/class-admin.php` son ~5.800 líneas** mezclando 6 responsabilidades. `get_tool_catalog()` es un único método de ~1.840 líneas que solo devuelve un array. La extracción natural es a archivos de datos, patrón que el repo ya usa en `includes/widgets/catalog-*.php`.
 - **Duplicación en abilities:** 168 registros repiten el literal completo; solo `class-database-abilities.php` y `class-wpcli-abilities.php` lo factorizan en un helper `ability()`. Esa es la plantilla a seguir.

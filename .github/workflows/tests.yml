@@ -30,9 +30,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 8.1 es el mínimo que declara la cabecera del plugin; el resto son las
-        # versiones en las que puede acabar corriendo en un hosting real.
-        php: [ '8.1', '8.2', '8.3', '8.4' ]
+        # 8.1 es el mínimo que declara la cabecera del plugin; 8.5 es la
+        # máquina de desarrollo; el resto son las versiones en las que puede
+        # acabar corriendo en un hosting real.
+        php: [ '8.1', '8.2', '8.3', '8.4', '8.5' ]
 
     steps:
       - uses: actions/checkout@v4

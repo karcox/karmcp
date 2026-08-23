@@ -1,20 +1,16 @@
 name: Lint
 
-# NO BLOQUEANTE TODAVÍA — y a propósito.
+# Bloqueante, como bin/check.ps1. La primera versión de este archivo (Pieza 0,
+# 2026-08-15) corría PHPCS y PHPStan con `continue-on-error`, y entonces era
+# razonable: 75.000 líneas nunca analizadas, y un check rojo permanente es un
+# check que se ignora. El plan que dejó escrito —triar el ruido y quitarlos—
+# se completó dos días después (PHPCS a cero en la 1.16.3, lo previo de
+# PHPStan congelado en phpstan-baseline.neon)… y nadie volvió a este archivo:
+# el check salía verde sin poder fallar. Desde el 2026-08-23 bloquea de verdad.
 #
-# Son 75.000 líneas escritas sin PHPCS ni PHPStan. La primera ejecución va a
-# devolver mucho ruido, y hasta que ese ruido esté triado no tiene sentido que
-# esto tumbe un push: un check rojo permanente es un check que se ignora, y
-# entonces no sirve de nada.
-#
-# El plan es de trinquete:
-#   1. Mirar la salida de este job.
-#   2. Arreglar lo real, y congelar el resto con un baseline
-#      (tools/vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon).
-#   3. QUITAR los `continue-on-error` de abajo. A partir de ahí, deuda nueva no
-#      entra.
-#
-# Mientras tanto la suite de tests (tests.yml) SÍ es bloqueante.
+# Regla de paridad: esto y bin/check.ps1 corren las mismas puertas. Si añades
+# una allí, añádela aquí — un gate que solo corre en un lado vuelve hueco el
+# verde del otro.
 
 on:
   push:
@@ -30,6 +26,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Los archivos generados que viajan en git tienen que cuadrar con el código.
+  # La suite no puede vigilar el POT (un __() nuevo simplemente nunca llega a
+  # un traductor), y el --check del classmap compara además los bytes
+  # renderizados, así que una edición a mano del archivo generado también cae.
+  # Solo PHP, sin composer: los dos scripts son autocontenidos.
+  freshness:
+    name: Classmap + POT
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, json
+          coverage: none
+
+      - name: Classmap al día
+        run: php bin/generate-classmap.php --check
+
+      - name: POT al día
+        run: php tools/make-pot.php --check
+
   analyse:
     name: PHPCS + PHPStan
     runs-on: ubuntu-latest
@@ -59,9 +80,10 @@ jobs:
         run: composer --working-dir=tools update --no-interaction --no-progress
 
       - name: PHPCS
-        continue-on-error: true
         run: tools/vendor/bin/phpcs --report=full --report-width=120
 
+      # El mismo límite de memoria que usa bin/check.ps1: el default de PHP se
+      # queda corto según crece el árbol, y un OOM aquí parecería un fallo del
+      # análisis en vez de lo que es.
       - name: PHPStan
-        continue-on-error: true
-        run: tools/vendor/bin/phpstan analyse --no-progress --error-format=table
+        run: tools/vendor/bin/phpstan analyse --no-progress --error-format=table --memory-limit=2G

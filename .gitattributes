@@ -43,3 +43,12 @@
 # but a .mo whose byte offsets went through a CRLF conversion is a corrupt file
 # that still looks plausible, so it is not left to a heuristic.
 *.mo binary
+
+# Generated files whose --check compares rendered bytes (make-pot.php,
+# generate-classmap.php). The generators always write LF; on a Windows clone
+# with autocrlf, a git checkout would hand back CRLF copies and both checks
+# would go red on a clean tree. Pin the working copy to LF so the comparison
+# sees what the generator wrote, on every OS.
+*.pot                  text eol=lf
+*.po                   text eol=lf
+/includes/classmap.php text eol=lf

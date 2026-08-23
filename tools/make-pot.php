@@ -115,8 +115,18 @@ function karmcp_pot_php_files( string $root ): Generator {
 			}
 		)
 	);
+	$files = array();
 	foreach ( $iterator as $file ) {
-		yield str_replace( '\\', '/', $file->getPathname() );
+		$files[] = str_replace( '\\', '/', $file->getPathname() );
+	}
+	// The iterator hands files back in filesystem order, which NTFS keeps
+	// sorted and ext4 does not. Entries are ksorted later, but each entry's
+	// reference comments accumulate in scan order, so the same tree rendered
+	// a byte-different POT per OS and --check disagreed between the dev
+	// machine and CI. Byte order, so every filesystem and locale agrees.
+	sort( $files, SORT_STRING );
+	foreach ( $files as $file ) {
+		yield $file;
 	}
 }
 

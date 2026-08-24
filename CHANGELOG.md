@@ -2,6 +2,36 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.34.0]
+
+Rebuilds how raw SQL is checked, and fixes an atomic text element being quietly emptied in the editor by an ordinary edit. Please update.
+
+### Security
+
+- **The read-only SQL guard now inspects a token stream instead of pattern-matching text.** The old design normalized a query into a plain string and ran regular expressions over the result, which is only ever as good as the normalizer's agreement with MySQL — and an audit found four places where the two disagreed: `--` treated as a comment where MySQL requires a space after it, a backslash assumed to escape regardless of the server's `NO_BACKSLASH_ESCAPES` setting, backticks stripped before scanning so the inside of a quoted name was re-read as SQL, and double quotes always read as text even though `ANSI_QUOTES` makes them a name. Three of the four let a query reach the user table while looking harmless to the guard. The failure was always the same shape: the scanner mis-read a byte and produced a plausible string, so the rules above it inspected something the server would never run.
+
+  The guard now splits a query into typed pieces and inspects those, so a keyword inside quotes is text and a name is a name whatever characters surround it. Anything it cannot account for is refused outright rather than guessed at, and a query is allowed only if it is safe under **every** way the server could read it — both settings that change how a query splits into pieces are tried, so the guard never has to know the session's actual configuration. Some deliberately malformed or exotic queries that previously slipped through are now refused; ordinary reporting queries are unaffected.
+
+- **Server system tables are off limits.** The guard protected the WordPress user tables but not the database server's own account tables, so a query naming them directly went through. Reading `mysql`, `information_schema`, `performance_schema` and `sys` is now refused.
+
+- **Assigning a variable inside a read-only query is refused**, since that changes state rather than reading it, as is `SELECT ... INTO` in any of its forms.
+
+- **Delay and lock functions are refused.** `SLEEP`, `BENCHMARK`, `GET_LOCK` and their relatives consume server resources without reading anything. A column that merely shares one of those names still works, because only the function call is matched.
+
+- **The row cap is enforced by the database.** Previously the whole result was fetched into PHP and cut down afterwards, so a wide query could exhaust memory and run unbounded before the limit ever applied. A query that carries no bound of its own is now given one, and a query whose own `LIMIT` is larger than the cap is **refused** rather than silently rewritten — editing raw SQL around literals is the exact trick this guard exists to stop. A bound that only appears inside a subquery no longer counts as bounding the outer result, and a server-side statement timeout is applied and then restored.
+
+### Fixed
+
+- **Editing the text of an atomic element containing an inline tag emptied its rich-text structure.** An atomic text value stores the same text twice: as markup, and as a node tree the editor's rich-text control reads from. Updating the text rebuilt the markup but always wrote an empty tree, so the two halves disagreed. The page kept rendering exactly as before and the tool reported success, so the only symptom was that the element opened empty in the editor — which is why this could go unnoticed across a whole site.
+
+  The two halves now come from a single parse of the markup, matching how Elementor's own editor builds them, so they cannot drift apart. Ids you have already set are kept, ids the parser has to invent are written into both halves, and nested formatting is preserved. All three paths that could trigger the flattening are closed. Elements already damaged are not repaired automatically: re-apply the text once and the structure is rebuilt.
+
+  Accented text and emoji survive the round trip, which is not automatic — the underlying HTML parser reads its input as Latin-1, so Spanish copy is the first thing that breaks without care. Both are covered by tests. On a host missing the DOM or mbstring extension the parse falls back to storing the text as-is rather than failing the write.
+
+### Changed
+
+- **`REPLACE()`, `INSERT()` and `TRUNCATE()` keep working in a `SELECT`.** Each shares a spelling with a write statement, and denylisting the bare word refuses ordinary analysis queries while telling the agent its `SELECT` contains an unsafe keyword — which is not something it can act on. The three are recognised as the read-only functions they also are. The statement forms remain blocked.
+
 ## [1.33.1]
 
 Everything a same-day audit of 1.33.0 found, fixed. Ten findings, none breaking a well-formed upload; the three that mattered are the first three below.

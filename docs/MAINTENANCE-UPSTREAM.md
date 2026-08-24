@@ -6,7 +6,11 @@ The origin tree is [`msrbuilds/elementor-mcp`](https://github.com/msrbuilds/elem
 
 It is a **source of ideas, not a source of code**. We never rebase or merge; changes are read, judged, and ported by hand. One line per reviewed release goes in the log below — in a year that log is the difference between knowing where you stand and re-reading forty releases.
 
-La rama de trabajo es **`master`** (antes `karmcp`, unificada el 2026-08-15). La rama local `main`, que seguía a `upstream/main`, se ha borrado a propósito: era la única cosa del repositorio que invitaba a mergear upstream por confusión de nombres. El punto de fork sigue marcado por el tag `baseline-3.12.0`, y `upstream/main` se lee directamente desde el remote-tracking.
+La rama de trabajo es **`karmcp`**, que es a donde apunta `origin/HEAD`. Este archivo decía `master`, y eso era falso: `master` se quedó parada el 2026-08-17 y va 51 commits por detrás (verificado el 2026-08-24). La unificación que describía no llegó a pasar. **`master` está muerta** — o se borra o se sincroniza, pero no se trabaja en ella.
+
+La rama local `main`, que seguía a `upstream/main`, se borró a propósito: era la única cosa del repositorio que invitaba a mergear upstream por confusión de nombres. `upstream/main` se lee directamente desde el remote-tracking.
+
+**Dos tags, dos cosas distintas.** `baseline-3.12.0` marca el **punto de fork** y no se mueve nunca. `baseline-<versión>` a secas marca lo último **revisado**, y ese sí se mueve en cada tanda de revisión.
 
 **The automatic daily `git merge upstream/main` workflow has been deleted** (it contradicted every line of this document — it would have silently overwritten the divergences below). Fetch and read; never merge.
 
@@ -14,9 +18,9 @@ La rama de trabajo es **`master`** (antes `karmcp`, unificada el 2026-08-15). La
 
 | | |
 |---|---|
-| Baseline tag | `baseline-3.12.0` |
-| Upstream commit | `73c9b92` |
-| Reviewed up to | 3.12.1 (reviewed from the published release notes and file tree, not a fetched commit — see the log row) |
+| Baseline tag | `baseline-3.14.0` |
+| Upstream commit | `24d1986` |
+| Reviewed up to | 3.14.0 (fetched and read, 2026-08-24) |
 
 `baseline-<version>` marks the last upstream commit that has been **reviewed** — not merged. Everything after it is unread.
 
@@ -24,13 +28,13 @@ La rama de trabajo es **`master`** (antes `karmcp`, unificada el 2026-08-15). La
 
 ```bash
 git fetch upstream
-git log --oneline baseline-3.12.0..upstream/main
+git log --oneline baseline-3.14.0..upstream/main
 ```
 
 Then narrow to where it landed:
 
 ```bash
-git diff baseline-3.12.0 upstream/main -- includes/abilities/
+git diff baseline-3.14.0 upstream/main -- includes/abilities/
 ```
 
 Port by hand, remembering that **every symbol is renamed here**: `EMCP_Tools_` → `KarMCP_`, `emcp_tools_` → `karmcp_`, `EMCP_TOOLS_` → `KARMCP_`, and the `emcp-tools` slug (text domain, ability namespace, server route, page slugs, table names, meta keys) → `karmcp`. A patch pasted straight from upstream will not apply and will not run.
@@ -96,6 +100,13 @@ See [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) for the g
 |---|---|---|---|
 | 3.12.0 | 2026-08-13 | Fork point — full tree adopted as the baseline. | Auto-updater, Freemius SDK, upsell banners and the Cloud endpoint removed; see Permanent divergences. |
 | 3.12.1 | 2026-08-15 | `upload-media`, reimplemented rather than transcribed (KarMCP 1.3.0). | Nothing else in the release. |
+| 3.12.2 | 2026-08-18 | The two OAuth fixes, both reimplemented (KarMCP 1.24.0) — see the 3.12.2/3.12.3 note. | Kadence static-save auto-repair (editor JS, no equivalent surface here). `invalid_position` on block inserts and the `elementor_pro_version` empty string were **already in this tree**; the front-end defer landed here in 1.16.2 and went further in 1.30.0. |
+| 3.12.3 | 2026-08-18 | The client-purge fix, reimplemented as `authorized_at` (store DB v3). | Nothing else in the release. |
+| 3.12.4 / 3.13.0 (security) | 2026-08-24 | **The SQL guard rewrite (KarMCP 1.34.0)** — lexer + policy, system schemas, delay/lock functions, variable assignment, and the database-side row bound. Written against the same design, not transcribed; four divergences below. | The loopback-spelling fix was **already correct here** (`redirect_uri_matches()` relaxes only http loopback). Connector pairing, AI Chat approval and AI Chat SSRF pinning touch subsystems that do not exist in this tree. Public-registration bounds: partly here since 1.2.0 (rate limit), the size/count caps are **still open**. |
+| 3.13.0 (Themer) | 2026-08-24 | Nothing yet. | **Open decision, not a rejection:** nine free Themer widgets and dynamic data on free Elementor (~2.800 lines over 23 files). It is the one thing upstream has that this tree does not, on the design axis. If it is ported, their 3.13.1 fix is part of the job: one class per dynamic source, or the front end fatals when Elementor rebuilds it. |
+| 3.13.1 | 2026-08-24 | Nothing to do. | Both fixes were **already in this tree**: the search-index re-entrancy guard (`class-search-index.php:29`) and the per-source class shape. |
+| 3.13.2 | 2026-08-24 | **The atomic rich-text fix (KarMCP 1.34.0)**, plus an mbstring guard upstream does not have. | The three-level PHP snippet validator (notes vs warnings vs blockers) is **still open** and worth doing — a good snippet currently arrives covered in warnings, which teaches a reviewer to skim. |
+| 3.14.0 | 2026-08-24 | Nothing. The stream-filter decode and the executable-extension refusal are **this tree's 1.33.0**, arrived at independently and shipped two days earlier. | BeTheme / BeBuilder is Pro and its source is not in the public repository. The "why a tool cannot be switched on" badges and the saved-notice toast are admin polish worth revisiting. |
 
 ### 3.12.1 — notes
 
@@ -111,3 +122,22 @@ Everything else in 3.12.0/3.12.1 was either already present or unavailable:
 
 - The **Backup / Sync / Migrate** suite (the headline of 3.12.0, seven MCP tools plus a paired connector) is Pro-only and **its source is not in the public repository** — there is no such directory under `includes/` or `includes/modules/`. It is also on the "dropped, not deferred" list above. Nothing to port even if we wanted it.
 - The three bug fixes in 3.12.0 were already in this tree at the fork point: dynamic-value paragraphs locking Theme Builder documents (#112, `KarMCP_Elementor_Data::is_atomic_validation_rejection()`), empty renders with the Flexbox Container experiment off (#111, `KarMCP_Atomic_Props::is_container_supported()`), and OAuth tokens issued without being persisted (`KarMCP_OAuth_Store::issue_token()` verifies the insert and self-heals the schema). Verified in the code, not assumed from the log.
+
+### 3.12.4 / 3.13.0 — the SQL guard, and four divergences
+
+The design was adopted wholesale and the code was written here: a fail-closed lexer that accounts for every byte, a policy over typed tokens, and analysis under all four session-mode readings. That part should not drift — if upstream extends `MODE_FLAGS`, extend it here too.
+
+Four places where this tree deliberately differs. **An upstream diff must not "fix" any of them back**, and each has a test that fails if it is:
+
+- **`REPLACE()`, `INSERT()` and `TRUNCATE()` are exempt when called as functions** (`KEYWORD_FUNCTIONS`). All three are ordinary read-only MySQL functions that share a spelling with a write statement. Upstream's rewrite denylists the bare word, which reintroduces the false positive this tree fixed in 1.2.0 — an agent gets "your SELECT contains an unsafe keyword" and has nothing to act on. Safe because none of the three can *begin* a statement here (the leading-keyword check runs first and does not consult the list), and elsewhere `WORD(` is a call: every statement form needs a table name where the parenthesis sits.
+- **The exemption requires an adjacent parenthesis; blocking does not.** MySQL itself requires no space between a built-in function name and its `(` outside `IGNORE_SPACE`. Upstream uses one notion of "followed by `(`" for both directions, which is generous in the exempting direction. Here the asymmetry is explicit so both errors fall towards refusing.
+- **`INTO` stays denylisted.** Upstream dropped it. In a `SELECT` it is only ever `INTO OUTFILE`, `INTO DUMPFILE` or `INTO @var` — a file write or a variable write — and the guard this replaced refused it.
+- **System schemas are matched on qualifiers only** (the name before a dot), which is upstream's rule, but the reasoning is written down here because it looks like a gap: `sys` is a plausible column name, and data in a system schema is unreachable without qualifying it, since `USE` is a forbidden keyword and a second statement is refused.
+
+One addition with no upstream counterpart: `KarMCP_Database_Guard::check_read_query()` bundles the three checks a raw read has to pass (read-only, no system schema, no protected table). Upstream leaves the three as separate calls at the ability layer, which works until a second raw-SQL path remembers two of them.
+
+### 3.13.2 — the atomic rich-text fix
+
+Ported as designed — both halves of an `html-v3` value from a single parse, generated ids written back into the markup — with one addition: `load_fragment()` also guards on `mb_encode_numericentity()`, not just `DOMDocument`. Neither extension is guaranteed on a WordPress host, and a fatal there would cost every atomic write on the site rather than just the editor tree.
+
+The encoding round-trip is covered by tests in Spanish and with an emoji. libxml reads its input as ISO-8859-1, so accented copy is the first thing that breaks if the numeric-entity encoding is ever "simplified" away.

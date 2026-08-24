@@ -22,6 +22,187 @@ if ( ! defined( 'ABSPATH' ) ) {
 class KarMCP_Atomic_Props {
 
 	/**
+	 * Elements Elementor treats as rich-text nodes inside an `html-v3` value.
+	 *
+	 * Read from Elementor's own INLINE_ELEMENTS set (editor-props, 4.2). Anything
+	 * outside this list is descended through rather than recorded, which is why a
+	 * `<div>` wrapper contributes its inline descendants but no node of its own.
+	 *
+	 * @since 1.34.0
+	 * @var string[]
+	 */
+	const INLINE_TAGS = array( 'span', 'b', 'strong', 'i', 'em', 'u', 'a', 'del', 'sup', 'sub', 's' );
+
+	/**
+	 * Splits rich-text markup into the `content` / `children` pair `html-v3`
+	 * stores.
+	 *
+	 * An `html-v3` value holds the same text twice: as markup in `content`, and as
+	 * a node tree in `children` that the editor's rich-text control renders from.
+	 * The two have to agree. Writing markup beside an empty tree leaves an element
+	 * that renders correctly on the front end and opens EMPTY in the editor, with
+	 * nothing anywhere to signal the damage — which is how it went unnoticed
+	 * across whole sites.
+	 *
+	 * Both halves come from a single parse, and any id generated for a node is
+	 * written back into the markup before it is re-serialized, so the pair is
+	 * keyed to itself by construction rather than by two passes agreeing.
+	 *
+	 * Mirrors `parseHtmlChildren()` in Elementor's editor-props package.
+	 *
+	 * @since 1.34.0
+	 * @param string $text Rich-text markup, possibly with no tags at all.
+	 * @return array{content:string,children:array<int,array<string,mixed>>}
+	 */
+	public static function parse_html_children( string $text ): array {
+		$plain = array(
+			'content'  => $text,
+			'children' => array(),
+		);
+
+		// Nothing to parse, and no reason to pay for a DOM round-trip.
+		if ( '' === $text || false === strpos( $text, '<' ) ) {
+			return $plain;
+		}
+
+		$root = self::load_fragment( $text );
+		if ( null === $root ) {
+			// Elementor keeps the original content on a parse failure rather than
+			// discarding it; an unparseable string is still the author's text.
+			return $plain;
+		}
+
+		$children = self::traverse_children( $root );
+
+		return array(
+			// Re-serialized AFTER traversal, so generated ids are present here too.
+			'content'  => self::inner_html( $root ),
+			'children' => $children,
+		);
+	}
+
+	/**
+	 * Parses a markup fragment and returns the wrapper element holding it.
+	 *
+	 * libxml decodes input as ISO-8859-1, so non-ASCII text would be mangled.
+	 * Encoding it to numeric entities first and decoding on the way out is the
+	 * portable fix; it works on the PHP 8.1 floor, where the spec-compliant
+	 * `Dom\HTMLDocument` (8.4+) is not available.
+	 *
+	 * @since 1.34.0
+	 * @param string $text Markup fragment.
+	 * @return \DOMElement|null Wrapper element, or null if it could not be parsed.
+	 */
+	private static function load_fragment( string $text ): ?\DOMElement {
+		// Both are ordinary on a WordPress host and neither is guaranteed. Falling
+		// back to the plain shape costs the editor tree; a fatal here would cost
+		// every atomic write on the site.
+		if ( ! class_exists( 'DOMDocument' ) || ! function_exists( 'mb_encode_numericentity' ) ) {
+			return null;
+		}
+
+		$encoded = mb_encode_numericentity( $text, array( 0x80, 0x10FFFF, 0, 0x1FFFFF ), 'UTF-8' );
+
+		$doc  = new \DOMDocument();
+		$prev = libxml_use_internal_errors( true );
+		$ok   = $doc->loadHTML(
+			'<div>' . $encoded . '</div>',
+			LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+		);
+		libxml_clear_errors();
+		libxml_use_internal_errors( $prev );
+
+		if ( ! $ok || ! $doc->documentElement instanceof \DOMElement ) {
+			return null;
+		}
+		return $doc->documentElement;
+	}
+
+	/**
+	 * Serializes an element's children back to markup.
+	 *
+	 * @since 1.34.0
+	 * @param \DOMElement $root Wrapper element.
+	 * @return string
+	 */
+	private static function inner_html( \DOMElement $root ): string {
+		$out = '';
+		foreach ( $root->childNodes as $child ) {
+			$html = $root->ownerDocument->saveHTML( $child );
+			if ( is_string( $html ) ) {
+				$out .= $html;
+			}
+		}
+		return mb_decode_numericentity( $out, array( 0x80, 0x10FFFF, 0, 0x1FFFFF ), 'UTF-8' );
+	}
+
+	/**
+	 * Walks the element tree and records the inline nodes.
+	 *
+	 * @since 1.34.0
+	 * @param \DOMElement $node Element whose children are walked.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function traverse_children( \DOMElement $node ): array {
+		$result = array();
+
+		foreach ( $node->childNodes as $child ) {
+			if ( ! $child instanceof \DOMElement ) {
+				continue;
+			}
+
+			$tag = strtolower( $child->tagName );
+
+			// A non-inline wrapper contributes its inline descendants, not itself.
+			if ( ! in_array( $tag, self::INLINE_TAGS, true ) ) {
+				foreach ( self::traverse_children( $child ) as $nested ) {
+					$result[] = $nested;
+				}
+				continue;
+			}
+
+			$id = $child->getAttribute( 'id' );
+			if ( '' === $id ) {
+				$id = self::generate_node_id();
+				// Written into the DOM so the re-serialized content carries it.
+				$child->setAttribute( 'id', $id );
+			}
+
+			$entry = array(
+				'id'   => $id,
+				'type' => $tag,
+			);
+
+			// The whole subtree's text, matching Elementor's use of textContent.
+			$content = trim( (string) $child->textContent );
+			if ( '' !== $content ) {
+				$entry['content'] = $content;
+			}
+
+			$nested_children = self::traverse_children( $child );
+			if ( $nested_children ) {
+				$entry['children'] = $nested_children;
+			}
+
+			$result[] = $entry;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * A node id in the shape the editor generates: `e-{base36 time}-{7 chars}`.
+	 *
+	 * @since 1.34.0
+	 * @return string
+	 */
+	private static function generate_node_id(): string {
+		$stamp  = base_convert( (string) (int) round( microtime( true ) * 1000 ), 10, 36 );
+		$random = substr( base_convert( bin2hex( random_bytes( 8 ) ), 16, 36 ), 0, 7 );
+		return 'e-' . $stamp . '-' . str_pad( $random, 7, '0' );
+	}
+
+	/**
 	 * Wraps a plain string into a typed prop.
 	 *
 	 * @param string $value The string value.
@@ -144,11 +325,13 @@ class KarMCP_Atomic_Props {
 	 * @return array Typed prop with html-v3 structure.
 	 */
 	public static function html( string $text ): array {
+		$parsed = self::parse_html_children( $text );
+
 		return array(
 			'$$type' => 'html-v3',
 			'value'  => array(
-				'content'  => self::string( $text ),
-				'children' => array(),
+				'content'  => self::string( $parsed['content'] ),
+				'children' => $parsed['children'],
 			),
 		);
 	}
@@ -662,7 +845,14 @@ class KarMCP_Atomic_Props {
 		} elseif ( is_array( $value ) && ! isset( $value['$$type'] ) ) {
 			$inner = $value;
 			if ( isset( $inner['content'] ) && is_string( $inner['content'] ) ) {
-				$inner['content'] = self::string( $inner['content'] );
+				// Same rule as the plain-string branch: children are derived from the
+				// markup, never left empty beside markup that has tags in it. A caller
+				// that supplies its own tree keeps it.
+				$parsed           = self::parse_html_children( $inner['content'] );
+				$inner['content'] = self::string( $parsed['content'] );
+				if ( ! isset( $inner['children'] ) || ! is_array( $inner['children'] ) ) {
+					$inner['children'] = $parsed['children'];
+				}
 			}
 			if ( ! isset( $inner['children'] ) || ! is_array( $inner['children'] ) ) {
 				$inner['children'] = array();
@@ -748,9 +938,14 @@ class KarMCP_Atomic_Props {
 				: $raw;
 		}
 
-		// `children` is a plain array on rich text, not a wrapped prop.
+		// `children` is a plain array on rich text, not a wrapped prop. Derive it
+		// from whatever content we just coerced rather than defaulting to empty,
+		// which would leave the pair disagreeing whenever the text has tags.
 		if ( isset( $shape['children'] ) && ! isset( $out['children'] ) ) {
-			$out['children'] = array();
+			$content         = $out['content']['value'] ?? ( is_string( $out['content'] ?? null ) ? $out['content'] : '' );
+			$out['children'] = is_string( $content ) && '' !== $content
+				? self::parse_html_children( $content )['children']
+				: array();
 		}
 
 		return empty( $out ) ? null : $out;

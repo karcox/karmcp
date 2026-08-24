@@ -2,8 +2,12 @@
 /**
  * Database safety guard: validates read-only SQL for the `query` tool,
  * validates/protects table names for structured writes, captures before-image
- * snapshots, and audits. is_read_only_sql() is the safety boundary for the
- * flexible read path.
+ * snapshots, and audits.
+ *
+ * Since 1.34.0 the SQL half is a thin layer over KarMCP_SQL_Policy, which
+ * inspects a typed token stream instead of pattern-matching normalized text.
+ * check_read_query() is the safety boundary for the flexible read path: it is
+ * the one call that answers all three questions a raw read has to pass.
  *
  * @package KarMCP
  * @since   3.0.0
@@ -21,58 +25,54 @@ class KarMCP_Database_Guard {
 	const MAX_ROWS         = 1000;
 	const BEFORE_IMAGE_CAP = 500;
 
+	/** Server-side statement timeout for read-only queries, in seconds. */
+	const MAX_QUERY_SECONDS = 10;
+
+	/** Schemas that are never a legitimate target of the `query` tool. */
+	const SYSTEM_SCHEMAS = KarMCP_SQL_Policy::SYSTEM_SCHEMAS;
+
 	/**
-	 * Pure: normalize SQL for safe keyword scanning — replace every comment with
-	 * a space and every string / backtick-identifier literal with an empty
-	 * placeholder, so keywords cannot hide inside comments, strings, or quoted
-	 * identifiers. Does NOT special-case /*! (the caller rejects those first).
+	 * Legacy text normalizer.
 	 *
-	 * @param string $sql
-	 * @return string
+	 * Superseded in 1.34.0 by KarMCP_SQL_Lexer. Nothing in the security path
+	 * calls this any more: a normalizer that quietly mis-reads a byte still
+	 * produces a plausible-looking string, and that is precisely how the four
+	 * bypasses an audit found were possible. Kept so a third-party caller does
+	 * not fatal, and deliberately not used for policy.
+	 *
+	 * @deprecated 1.34.0 Use KarMCP_SQL_Lexer::tokenize().
+	 * @param string $sql               SQL.
+	 * @param bool   $backslash_escapes Mode flag.
+	 * @param bool   $keep_identifiers  Emit identifier names rather than blanking them.
+	 * @param bool   $ansi_quotes       Mode flag.
+	 * @return string Empty string when the statement cannot be tokenized.
 	 */
-	public static function normalize_sql( string $sql ): string {
+	public static function normalize_sql( string $sql, bool $backslash_escapes = true, bool $keep_identifiers = false, bool $ansi_quotes = false ): string {
+		$tokens = KarMCP_SQL_Lexer::tokenize( $sql, $backslash_escapes, $ansi_quotes );
+		if ( is_wp_error( $tokens ) ) {
+			return '';
+		}
 		$out = '';
-		$len = strlen( $sql );
-		$i   = 0;
-		while ( $i < $len ) {
-			$c   = $sql[ $i ];
-			$two = substr( $sql, $i, 2 );
-			if ( '--' === $two || '#' === $c ) {
-				$nl  = strpos( $sql, "\n", $i );
-				$i   = ( false === $nl ) ? $len : $nl + 1;
-				$out .= ' ';
-				continue;
-			}
-			if ( '/*' === $two ) {
-				$end = strpos( $sql, '*/', $i + 2 );
-				$i   = ( false === $end ) ? $len : $end + 2;
-				$out .= ' ';
-				continue;
-			}
-			if ( "'" === $c || '"' === $c ) {
-				$q = $c;
-				$i++;
-				while ( $i < $len ) {
-					if ( '\\' === $sql[ $i ] ) { $i += 2; continue; }
-					if ( $sql[ $i ] === $q ) {
-						if ( $i + 1 < $len && $sql[ $i + 1 ] === $q ) { $i += 2; continue; }
-						$i++;
-						break;
+		foreach ( $tokens as $t ) {
+			switch ( $t['t'] ) {
+				case KarMCP_SQL_Lexer::T_COMMENT:
+					$out .= ' ';
+					break;
+				case KarMCP_SQL_Lexer::T_STRING:
+					$out .= "''";
+					break;
+				case KarMCP_SQL_Lexer::T_IDENT:
+					if ( ! $t['quoted'] ) {
+						$out .= $t['v'];
+					} elseif ( $keep_identifiers ) {
+						$out .= ' ' . $t['name'] . ' ';
+					} else {
+						$out .= '``';
 					}
-					$i++;
-				}
-				$out .= "''";
-				continue;
+					break;
+				default:
+					$out .= $t['v'];
 			}
-			if ( '`' === $c ) {
-				$i++;
-				while ( $i < $len && '`' !== $sql[ $i ] ) { $i++; }
-				$i++;
-				$out .= '``';
-				continue;
-			}
-			$out .= $c;
-			$i++;
 		}
 		return $out;
 	}
@@ -80,57 +80,162 @@ class KarMCP_Database_Guard {
 	/**
 	 * Validate that $sql is a single read-only statement. Pure (no DB).
 	 *
+	 * This answers "is this a read?", not "may this caller read that?" — the two
+	 * data-protection checks live in check_read_query(), which is what a raw read
+	 * path should call.
+	 *
 	 * @param string $sql
 	 * @return true|\WP_Error
 	 */
 	public static function is_read_only_sql( string $sql ) {
-		// MySQL executes the body of /*! ... */ executable comments, so we cannot
-		// safely strip-and-trust. Refuse any SQL containing the marker.
-		if ( false !== strpos( $sql, '/*!' ) ) {
-			return new \WP_Error( 'executable_comment', __( 'MySQL executable comments (/*! ... */) are not allowed.', 'karmcp' ) );
+		$analysis = KarMCP_SQL_Policy::analyze( $sql );
+		return is_wp_error( $analysis ) ? $analysis : true;
+	}
+
+	/**
+	 * The full gate for a raw read: read-only, no system schema, no protected
+	 * table.
+	 *
+	 * One call rather than three, because the three are only correct together and
+	 * a second raw-SQL path that remembered two of them would leak. Everything it
+	 * refuses, it refuses with the message the agent needs to act on.
+	 *
+	 * @since 1.34.0
+	 * @param string $sql Raw SQL.
+	 * @return true|\WP_Error
+	 */
+	public static function check_read_query( string $sql ) {
+		$read_only = self::is_read_only_sql( $sql );
+		if ( is_wp_error( $read_only ) ) {
+			return $read_only;
 		}
-		$norm = trim( self::normalize_sql( $sql ) );
-		if ( '' === $norm ) {
-			return new \WP_Error( 'empty_sql', __( 'Empty query.', 'karmcp' ) );
+		// Cross-schema secrets. The protected-table list covers the WordPress user
+		// tables only, so mysql.user (the server's own account hashes) and the
+		// metadata schemas would otherwise be readable straight through.
+		if ( self::references_system_schema( $sql ) ) {
+			return new \WP_Error( 'protected_read', KarMCP_SQL_Policy::system_schema_message() );
 		}
-		// Multi-statement: any ';' that isn't the sole trailing character.
-		$no_trailing = rtrim( $norm, "; \t\r\n" );
-		if ( false !== strpos( $no_trailing, ';' ) ) {
-			return new \WP_Error( 'multi_statement', __( 'Multiple SQL statements are not allowed.', 'karmcp' ) );
-		}
-		// File-access vectors (comments already normalized to spaces). Note: no
-		// trailing \b — the load_file(...) branch ends in '(', and '(' followed
-		// by another non-word char has no word boundary, so a trailing \b would
-		// (incorrectly) let LOAD_FILE through.
-		if ( preg_match( '/\b(into\s+outfile|into\s+dumpfile|load_file\s*\(|load\s+data\b)/i', $norm ) ) {
-			return new \WP_Error( 'file_access_blocked', __( 'File-access SQL (OUTFILE/DUMPFILE/LOAD_FILE/LOAD DATA) is not allowed.', 'karmcp' ) );
-		}
-		// First keyword must be read-only.
-		if ( ! preg_match( '/^([a-z]+)/i', $norm, $m ) ) {
-			return new \WP_Error( 'not_read_only', __( 'Only read-only queries are allowed.', 'karmcp' ) );
-		}
-		$kw      = strtoupper( $m[1] );
-		$allowed = array( 'SELECT', 'SHOW', 'DESCRIBE', 'DESC', 'EXPLAIN', 'WITH' );
-		if ( ! in_array( $kw, $allowed, true ) ) {
-			return new \WP_Error(
-				'not_read_only',
-				/* translators: %s: SQL keyword */
-				sprintf( __( 'Only read-only queries are allowed (got %s).', 'karmcp' ), $kw )
-			);
-		}
-		// Whole-statement write/DDL denylist (literals/comments already stripped,
-		// so these match only real keyword tokens, not strings or identifiers).
-		if ( preg_match( '/\b(INSERT|UPDATE|DELETE|MERGE|DROP|TRUNCATE|ALTER|CREATE|RENAME|GRANT|REVOKE|HANDLER|CALL|LOCK|UNLOCK|PREPARE|EXECUTE|INTO)\b/i', $norm ) ) {
-			return new \WP_Error( 'not_read_only', __( 'The query contains a write or unsafe keyword.', 'karmcp' ) );
-		}
-		// REPLACE is two different things: the write statement `REPLACE [INTO]
-		// tbl ...` and the read-only string function `REPLACE(col,'a','b')`.
-		// Denylisting the bare word rejected legitimate analysis queries. Only
-		// the statement form is a write, and it is never followed by '('.
-		if ( preg_match( '/\bREPLACE\b\s*(?!\()/i', $norm ) ) {
-			return new \WP_Error( 'not_read_only', __( 'The query contains a write or unsafe keyword.', 'karmcp' ) );
+		// The user tables hold password hashes, session tokens and activation
+		// keys. Refuse raw reads that touch them and point the agent at the
+		// dedicated, redacting user tools.
+		if ( self::query_touches_protected( $sql ) ) {
+			return new \WP_Error( 'protected_read', KarMCP_SQL_Policy::protected_table_message() );
 		}
 		return true;
+	}
+
+	/**
+	 * Does $sql reference a server system schema?
+	 *
+	 * @since 1.34.0
+	 * @param string $sql Raw SQL.
+	 * @return bool True also when the statement cannot be parsed (fail closed).
+	 */
+	public static function references_system_schema( string $sql ): bool {
+		return KarMCP_SQL_Policy::references_system_schema( $sql );
+	}
+
+	/**
+	 * Apply a server-side statement timeout for the next query, and return a
+	 * callable that restores the previous session value.
+	 *
+	 * MySQL 5.7.8+ uses `max_execution_time` (milliseconds, SELECT only);
+	 * MariaDB 10.1.1+ uses `max_statement_time` (seconds, as a double). We set
+	 * whichever exists and do nothing on a server that has neither, so this can
+	 * never break a query on an unsupported database.
+	 *
+	 * @since 1.34.0
+	 * @param object $wpdb WordPress database handle.
+	 * @return callable Restores the prior session setting.
+	 */
+	public static function apply_statement_timeout( $wpdb ): callable {
+		$noop = static function () {};
+		if ( ! is_object( $wpdb ) || ! method_exists( $wpdb, 'query' ) || ! method_exists( $wpdb, 'get_var' ) ) {
+			return $noop;
+		}
+		$seconds  = (int) apply_filters( 'karmcp_db_query_max_seconds', self::MAX_QUERY_SECONDS );
+		$seconds  = max( 1, $seconds );
+		$suppress = method_exists( $wpdb, 'suppress_errors' ) ? $wpdb->suppress_errors( true ) : null;
+		$restore  = $noop;
+
+		// MariaDB first: it also exposes max_statement_time, and asking for the
+		// MySQL-only variable there simply returns null.
+		$maria = $wpdb->get_var( 'SELECT @@SESSION.max_statement_time' );
+		if ( null !== $maria ) {
+			$prev    = (float) $maria;
+			$wpdb->query( $wpdb->prepare( 'SET SESSION max_statement_time = %f', (float) $seconds ) );
+			$restore = static function () use ( $wpdb, $prev ) {
+				$wpdb->query( $wpdb->prepare( 'SET SESSION max_statement_time = %f', $prev ) );
+			};
+		} else {
+			$mysql = $wpdb->get_var( 'SELECT @@SESSION.max_execution_time' );
+			if ( null !== $mysql ) {
+				$prev    = (int) $mysql;
+				$wpdb->query( $wpdb->prepare( 'SET SESSION max_execution_time = %d', $seconds * 1000 ) );
+				$restore = static function () use ( $wpdb, $prev ) {
+					$wpdb->query( $wpdb->prepare( 'SET SESSION max_execution_time = %d', $prev ) );
+				};
+			}
+		}
+		if ( null !== $suppress && method_exists( $wpdb, 'suppress_errors' ) ) {
+			$wpdb->suppress_errors( $suppress );
+		}
+		return $restore;
+	}
+
+	/**
+	 * Row count of a TOP-LEVEL trailing LIMIT, or null when there is none.
+	 *
+	 * Depth-aware via the token stream, so a LIMIT inside a subquery does not
+	 * count as bounding the outer result.
+	 *
+	 * @since 1.34.0
+	 * @param string $sql Raw SQL.
+	 * @return int|null
+	 */
+	public static function trailing_limit( string $sql ): ?int {
+		$analysis = KarMCP_SQL_Policy::analyze( $sql );
+		return is_wp_error( $analysis ) ? null : $analysis['limit'];
+	}
+
+	/**
+	 * Return $sql guaranteed to fetch at most $max rows, or a WP_Error.
+	 *
+	 * An oversized caller LIMIT is REFUSED rather than rewritten. Editing raw SQL
+	 * around literals is the very class of trick this guard exists to stop.
+	 *
+	 * @since 1.34.0
+	 * @param string $sql Raw SQL.
+	 * @param int    $max Maximum rows.
+	 * @return string|\WP_Error
+	 */
+	public static function bound_sql( string $sql, int $max ) {
+		$analysis = KarMCP_SQL_Policy::analyze( $sql );
+		if ( is_wp_error( $analysis ) ) {
+			return $analysis;
+		}
+		$trimmed = rtrim( trim( $sql ), "; \t\r\n" );
+		if ( null !== $analysis['limit'] ) {
+			if ( $analysis['limit'] > $max ) {
+				return new \WP_Error(
+					'limit_too_large',
+					sprintf(
+						/* translators: 1: requested LIMIT, 2: maximum allowed. */
+						__( 'The query asks for %1$d rows, above the %2$d row cap. Lower the LIMIT.', 'karmcp' ),
+						$analysis['limit'],
+						$max
+					)
+				);
+			}
+			return $trimmed;
+		}
+		// SHOW / DESCRIBE / EXPLAIN return their own small result and take no
+		// LIMIT clause, so appending one would be a syntax error.
+		if ( ! in_array( $analysis['first'], array( 'select', 'with', 'table', 'values' ), true ) ) {
+			return $trimmed;
+		}
+		// Newline first: a trailing line comment would otherwise swallow the clause.
+		return $trimmed . "\n LIMIT " . (int) $max;
 	}
 
 	/**
@@ -187,31 +292,20 @@ class KarMCP_Database_Guard {
 	/**
 	 * Pure: does a read-only $sql reference any of $tables as a real identifier?
 	 *
-	 * Comments and string literals are stripped (so `'wp_users'` in a literal is
-	 * not a reference), backticks are removed (so `` `wp_users` `` still matches),
-	 * and each table is matched on word boundaries (so `wp_users_backup` does not
-	 * match `wp_users`). This is the read-path counterpart to is_protected() —
-	 * the `query` tool refuses any read that touches the protected user tables.
+	 * Compares whole identifiers from the token stream, so `'wp_users'` inside a
+	 * literal is not a reference, `` `wp_users` `` still is, and `wp_users_backup`
+	 * is a different name rather than a substring match. This is the read-path
+	 * counterpart to is_protected() — the `query` tool refuses any read that
+	 * touches the protected user tables.
+	 *
+	 * Fails closed: a statement this cannot parse is treated as touching them.
 	 *
 	 * @param string   $sql
 	 * @param string[] $tables Real table names (e.g. {$wpdb->users}).
 	 * @return bool
 	 */
 	public static function query_touches_tables( string $sql, array $tables ): bool {
-		// Remove backticks first so quoted identifiers survive normalization
-		// (normalize_sql empties backtick-quoted spans), then strip comments +
-		// string literals via the shared normalizer.
-		$scan = strtolower( self::normalize_sql( str_replace( '`', ' ', $sql ) ) );
-		foreach ( $tables as $t ) {
-			$t = strtolower( trim( (string) $t ) );
-			if ( '' === $t ) {
-				continue;
-			}
-			if ( preg_match( '/(?<![a-z0-9_])' . preg_quote( $t, '/' ) . '(?![a-z0-9_])/', $scan ) ) {
-				return true;
-			}
-		}
-		return false;
+		return KarMCP_SQL_Policy::touches_tables( $sql, $tables );
 	}
 
 	/**

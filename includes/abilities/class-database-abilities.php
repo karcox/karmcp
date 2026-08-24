@@ -99,23 +99,31 @@ class KarMCP_Database_Abilities {
 	}
 	public function execute_query( $input ) {
 		$sql = (string) ( $input['sql'] ?? '' );
-		$ro  = KarMCP_Database_Guard::is_read_only_sql( $sql );
-		if ( is_wp_error( $ro ) ) {
-			return $ro;
-		}
-		// Read-path secret guard: the user tables hold password hashes, session
-		// tokens, and activation keys. Refuse raw reads that touch them and point
-		// the agent at the dedicated, redacting user tools.
-		if ( KarMCP_Database_Guard::query_touches_protected( $sql ) ) {
-			return new \WP_Error(
-				'protected_read',
-				__( 'Reading the user tables (passwords, session tokens, activation keys) via raw SQL is not allowed. Use the list-users / get-user tools instead.', 'karmcp' )
-			);
+		// One gate, not three: read-only, no server system schema, no protected
+		// user table. See KarMCP_Database_Guard::check_read_query().
+		$allowed = KarMCP_Database_Guard::check_read_query( $sql );
+		if ( is_wp_error( $allowed ) ) {
+			return $allowed;
 		}
 		global $wpdb;
 		$limit = isset( $input['limit'] ) ? (int) $input['limit'] : KarMCP_Database_Guard::MAX_ROWS;
 		$limit = min( KarMCP_Database_Guard::MAX_ROWS, max( 1, $limit ) );
-		$rows  = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB -- validated read-only; admin-authored.
+
+		// Bound the work in the DATABASE, not just the response. Slicing after the
+		// fetch still made the server materialize every row and PHP hold them, so
+		// a wide query was an out-of-memory fatal rather than a capped answer.
+		$bounded = KarMCP_Database_Guard::bound_sql( $sql, $limit + 1 ); // +1 detects truncation.
+		if ( is_wp_error( $bounded ) ) {
+			return $bounded;
+		}
+
+		// Server-side statement timeout, restored in the finally block.
+		$restore_timeout = KarMCP_Database_Guard::apply_statement_timeout( $wpdb );
+		try {
+			$rows = $wpdb->get_results( $bounded, ARRAY_A ); // phpcs:ignore WordPress.DB -- validated read-only and row-bounded above; admin-authored.
+		} finally {
+			$restore_timeout();
+		}
 		if ( null === $rows ) {
 			return new \WP_Error( 'query_failed', $wpdb->last_error ? $wpdb->last_error : __( 'Query failed.', 'karmcp' ) );
 		}

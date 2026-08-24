@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// 251 symbols.
+// 253 symbols.
 return array(
 	'karmcp_a11y_audit'                     => 'includes/audits/class-a11y-audit.php',
 	'karmcp_a11y_audit_abilities'           => 'includes/abilities/class-a11y-audit-abilities.php',
@@ -194,6 +194,8 @@ return array(
 	'karmcp_snippet_bundle_adapter'         => 'includes/sandbox/class-snippet-bundle-adapter.php',
 	'karmcp_spectra_catalog'                => 'includes/blocks-catalog/class-spectra-catalog.php',
 	'karmcp_spectra_integration'            => 'includes/abilities/class-spectra-integration.php',
+	'karmcp_sql_lexer'                      => 'includes/sql/class-sql-lexer.php',
+	'karmcp_sql_policy'                     => 'includes/sql/class-sql-policy.php',
 	'karmcp_stock_image_abilities'          => 'includes/abilities/class-stock-image-abilities.php',
 	'karmcp_stock_image_providers'          => 'includes/class-stock-image-providers.php',
 	'karmcp_structured_data'                => 'includes/class-structured-data.php',

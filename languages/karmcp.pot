@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: KarMCP 1.33.1\n"
 "Report-Msgid-Bugs-To: https://github.com/karcox/karmcp/issues\n"
-"POT-Creation-Date: 2026-08-23 07:27:56+0000\n"
+"POT-Creation-Date: 2026-08-24 12:05:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -746,8 +746,8 @@ msgid "A non-empty \"settings\" map is required."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:151
-#: includes/abilities/class-database-abilities.php:186
+#: includes/abilities/class-database-abilities.php:159
+#: includes/abilities/class-database-abilities.php:194
 msgid "A non-empty data object is required."
 msgstr ""
 
@@ -756,12 +756,12 @@ msgid "A non-empty source path is required."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:229
+#: includes/abilities/class-database-abilities.php:237
 msgid "A non-empty where object is required for delete."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:189
+#: includes/abilities/class-database-abilities.php:197
 msgid "A non-empty where object is required for update."
 msgstr ""
 
@@ -864,7 +864,7 @@ msgstr ""
 msgid "A skill named \"%s\" already exists. Use update or edit."
 msgstr ""
 
-#: includes/class-database-guard.php:147
+#: includes/class-database-guard.php:252
 msgid "A table name is required."
 msgstr ""
 
@@ -3247,7 +3247,7 @@ msgstr ""
 msgid "Could not read the downloaded feed."
 msgstr ""
 
-#: includes/class-database-guard.php:289
+#: includes/class-database-guard.php:383
 msgid "Could not read the table columns."
 msgstr ""
 
@@ -3766,6 +3766,10 @@ msgstr ""
 msgid "Defines a function/class (re-runs may redeclare and fatal)."
 msgstr ""
 
+#: includes/sql/class-sql-policy.php:275
+msgid "Delay, lock, and other resource-consuming SQL functions are not allowed."
+msgstr ""
+
 #: includes/admin/views/page-history.php:179
 #: includes/admin/views/page-redirects.php:156
 #: includes/admin/views/page-themer-php.php:129
@@ -3843,7 +3847,7 @@ msgstr ""
 msgid "Delete Redirect"
 msgstr ""
 
-#: includes/abilities/class-database-abilities.php:221
+#: includes/abilities/class-database-abilities.php:229
 #: includes/admin/class-admin.php:4043
 msgid "Delete Rows"
 msgstr ""
@@ -3905,7 +3909,7 @@ msgid "Delete an attachment (permanent; requires confirm)."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:246
+#: includes/abilities/class-database-abilities.php:254
 #: includes/abilities/class-themer-abilities.php:523
 msgid "Delete failed."
 msgstr ""
@@ -3915,7 +3919,7 @@ msgid "Delete rows matching a WHERE (confirm). Disabled by default."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:221
+#: includes/abilities/class-database-abilities.php:229
 msgid "Delete rows matching an equality WHERE (required). Needs confirm:true; before-image snapshot; refuses protected tables. Disabled by default."
 msgstr ""
 
@@ -4024,7 +4028,7 @@ msgid "Deleting media is permanent on most sites (WordPress bypasses Trash unles
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:225
+#: includes/abilities/class-database-abilities.php:233
 msgid "Deleting rows requires confirm:true."
 msgstr ""
 
@@ -4505,7 +4509,8 @@ msgstr ""
 msgid "Empty headings"
 msgstr ""
 
-#: includes/class-database-guard.php:94
+#: includes/sql/class-sql-policy.php:196
+#: includes/sql/class-sql-policy.php:211
 msgid "Empty query."
 msgstr ""
 
@@ -4893,7 +4898,7 @@ msgstr ""
 msgid "File not found."
 msgstr ""
 
-#: includes/class-database-guard.php:106
+#: includes/sql/class-sql-policy.php:266
 msgid "File-access SQL (OUTFILE/DUMPFILE/LOAD_FILE/LOAD DATA) is not allowed."
 msgstr ""
 
@@ -5942,7 +5947,7 @@ msgstr ""
 msgid "Insert Pattern"
 msgstr ""
 
-#: includes/abilities/class-database-abilities.php:146
+#: includes/abilities/class-database-abilities.php:154
 #: includes/admin/class-admin.php:4041
 msgid "Insert Row"
 msgstr ""
@@ -5983,12 +5988,12 @@ msgid "Insert a row (parameterized). Disabled by default."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:146
+#: includes/abilities/class-database-abilities.php:154
 msgid "Insert a row into a table (parameterized). Refuses protected tables. Disabled by default."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:167
+#: includes/abilities/class-database-abilities.php:175
 msgid "Insert failed."
 msgstr ""
 
@@ -7617,7 +7622,7 @@ msgstr ""
 msgid "Multi-line text. Escaped with esc_attr on output."
 msgstr ""
 
-#: includes/class-database-guard.php:99
+#: includes/sql/class-sql-policy.php:203
 msgid "Multiple SQL statements are not allowed."
 msgstr ""
 
@@ -7663,8 +7668,8 @@ msgstr ""
 msgid "My snippet"
 msgstr ""
 
-#: includes/class-database-guard.php:90
-msgid "MySQL executable comments (/*! ... */) are not allowed."
+#: includes/sql/class-sql-lexer.php:154
+msgid "MySQL executable comments and optimizer hints are not allowed."
 msgstr ""
 
 #: includes/admin/class-admin.php:2971
@@ -8291,12 +8296,13 @@ msgstr ""
 msgid "Only read when the request arrives from one of the proxies above. Cloudflare: HTTP_CF_CONNECTING_IP."
 msgstr ""
 
-#. translators: %s: SQL keyword
-#: includes/class-database-guard.php:118
+#. translators: %s: SQL keyword.
+#: includes/sql/class-sql-policy.php:228
 msgid "Only read-only queries are allowed (got %s)."
 msgstr ""
 
-#: includes/class-database-guard.php:110
+#. translators: %s: SQL keyword.
+#: includes/sql/class-sql-policy.php:229
 msgid "Only read-only queries are allowed."
 msgstr ""
 
@@ -9280,7 +9286,7 @@ msgid "Query (read-only)"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:120
+#: includes/abilities/class-database-abilities.php:128
 msgid "Query failed."
 msgstr ""
 
@@ -9524,8 +9530,11 @@ msgstr ""
 msgid "Reading ease %1$d (%2$s) on the %3$s scale, averaging %4$s words per sentence."
 msgstr ""
 
-#. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:112
+#: includes/sql/class-sql-policy.php:434
+msgid "Reading the server system schemas (mysql, information_schema, performance_schema, sys) is not allowed."
+msgstr ""
+
+#: includes/sql/class-sql-policy.php:444
 msgid "Reading the user tables (passwords, session tokens, activation keys) via raw SQL is not allowed. Use the list-users / get-user tools instead."
 msgstr ""
 
@@ -12695,9 +12704,34 @@ msgstr ""
 msgid "The post_type slug cannot change via MCP (it would orphan existing content)."
 msgstr ""
 
-#: includes/class-database-guard.php:124
-#: includes/class-database-guard.php:131
+#. translators: 1: requested LIMIT, 2: maximum allowed.
+#: includes/class-database-guard.php:224
+msgid "The query asks for %1$d rows, above the %2$d row cap. Lower the LIMIT."
+msgstr ""
+
+#: includes/sql/class-sql-policy.php:272
 msgid "The query contains a write or unsafe keyword."
+msgstr ""
+
+#. translators: 1: byte offset, 2: the character.
+#: includes/sql/class-sql-lexer.php:287
+msgid "The query contains something this guard cannot interpret at position %1$d (%2$s), so it was refused."
+msgstr ""
+
+#: includes/sql/class-sql-policy.php:338
+msgid "The query could not be interpreted."
+msgstr ""
+
+#: includes/sql/class-sql-lexer.php:158
+msgid "The query has an unterminated comment."
+msgstr ""
+
+#: includes/sql/class-sql-lexer.php:338
+msgid "The query has an unterminated quoted string or identifier."
+msgstr ""
+
+#: includes/sql/class-sql-lexer.php:115
+msgid "The query is not valid UTF-8 text."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
@@ -13678,7 +13712,7 @@ msgid "Unknown colour slot \"%1$s\". Supported: %2$s."
 msgstr ""
 
 #. translators: 1: input name (data or where), 2: comma-separated column names, 3: table name
-#: includes/class-database-guard.php:297
+#: includes/class-database-guard.php:391
 msgid "Unknown column(s) in %1$s: %2$s. Not columns of %3$s — call describe-table to see the real ones."
 msgstr ""
 
@@ -13737,7 +13771,7 @@ msgstr ""
 msgid "Unknown stock-image provider \"%s\". Use one of: unsplash, pexels, pixabay."
 msgstr ""
 
-#: includes/class-database-guard.php:155
+#: includes/class-database-guard.php:260
 msgid "Unknown table."
 msgstr ""
 
@@ -13935,7 +13969,7 @@ msgstr ""
 msgid "Update Redirect"
 msgstr ""
 
-#: includes/abilities/class-database-abilities.php:180
+#: includes/abilities/class-database-abilities.php:188
 #: includes/admin/class-admin.php:4042
 msgid "Update Rows"
 msgstr ""
@@ -14032,7 +14066,7 @@ msgid "Update available"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:208
+#: includes/abilities/class-database-abilities.php:216
 msgid "Update failed."
 msgstr ""
 
@@ -14049,7 +14083,7 @@ msgid "Update rows matching a WHERE. Disabled by default."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:180
+#: includes/abilities/class-database-abilities.php:188
 msgid "Update rows matching an equality WHERE (required, non-empty). Parameterized; before-image snapshot; refuses protected tables. Disabled by default."
 msgstr ""
 
@@ -14344,6 +14378,10 @@ msgstr ""
 
 #: includes/admin/class-admin.php:3032
 msgid "Value"
+msgstr ""
+
+#: includes/sql/class-sql-policy.php:240
+msgid "Variable assignment is not allowed in a read-only query."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
@@ -14844,9 +14882,9 @@ msgid "Writes are frozen between %1$s and %2$s (%3$s), site time. Reads are unaf
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-database-abilities.php:158
-#: includes/abilities/class-database-abilities.php:196
-#: includes/abilities/class-database-abilities.php:236
+#: includes/abilities/class-database-abilities.php:166
+#: includes/abilities/class-database-abilities.php:204
+#: includes/abilities/class-database-abilities.php:244
 msgid "Writes to this table are not allowed."
 msgstr ""
 

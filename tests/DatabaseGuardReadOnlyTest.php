@@ -12,6 +12,8 @@
 
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__ . '/../includes/sql/class-sql-lexer.php';
+require_once __DIR__ . '/../includes/sql/class-sql-policy.php';
 require_once __DIR__ . '/../includes/class-database-guard.php';
 
 class DatabaseGuardReadOnlyTest extends TestCase {

@@ -252,6 +252,23 @@ Toda herramienta comprueba una capacidad real de WordPress antes de actuar — u
 - El acceso a ficheros está confinado a `ABSPATH`, con backup automático y log de auditoría; `wp-config.php` y `.htaccess` se rechazan.
 - Los snippets PHP **nunca se ejecutan sin aprobación humana**: el agente crea borradores validados, pero solo un admin puede activarlos.
 
+### El guard de SQL: tokens, no texto (1.34.0)
+
+`query` es la única herramienta que acepta SQL crudo, y hasta la 1.34.0 lo validaba normalizando la sentencia a una cadena y pasándole expresiones regulares. Ese diseño solo vale lo que valga la paridad del normalizador con MySQL, y una auditoría del árbol de origen encontró **cuatro sitios donde discrepaban** — `--` sin espacio detrás, la barra invertida bajo `NO_BACKSLASH_ESCAPES`, los backticks quitados antes de lexar, y las comillas dobles bajo `ANSI_QUOTES`. Tres de las cuatro dejaban leer la tabla de usuarios, y dos las introdujo el arreglo de otra. El síntoma siempre era el mismo: el escáner leía un byte distinto del servidor y producía una cadena con buena pinta.
+
+Ahora hay dos clases puras en `includes/sql/`:
+
+- `KarMCP_SQL_Lexer` — parte la sentencia en tokens tipados y **da cuenta de cada byte**. Lo que no sabe clasificar, o no puede terminar, es un error duro, no una conjetura.
+- `KarMCP_SQL_Policy` — las reglas, sobre tokens. Una palabra dentro de un literal es un literal; un identificador lo es lleve lo que lleve dentro.
+
+> **Se analiza bajo los cuatro modos de sesión a la vez.** `ANSI_QUOTES` y `NO_BACKSLASH_ESCAPES` son los dos únicos modos de MySQL que cambian **cómo se tokeniza**, y una sentencia se acepta solo si es segura bajo *todas* las lecturas. Así el guard nunca tiene que saber el modo real del servidor. Están en `MODE_FLAGS`; si algún día hay un tercero, es el único sitio que tocar. La excepción es `MODE_DEPENDENT_ERRORS`: una comilla sin cerrar bajo un modo es un error de sintaxis en ese modo, así que esa lectura no es una que el servidor pudiera ejecutar y se descarta. Cualquier otro fallo del lexer rechaza la sentencia entera.
+
+> **Cuatro divergencias deliberadas respecto al árbol de origen**, todas verificadas con test. (1) `REPLACE()`, `INSERT()` y `TRUNCATE()` son funciones de solo lectura que comparten grafía con sentencias de escritura; upstream reintrodujo en su reescritura el falso positivo que esta rama arregló en la 1.2.0. Están exentas en `KEYWORD_FUNCTIONS`. (2) La exención exige el paréntesis **pegado**, que es lo que MySQL pide de una función interna fuera de `IGNORE_SPACE`; para **bloquear** una función, en cambio, vale cualquier paréntesis. La asimetría es a propósito: los dos errores caen hacia rechazar. (3) `INTO` sigue en la lista negra — en un `SELECT` solo puede ser `INTO OUTFILE`, `INTO DUMPFILE` o `INTO @var`, y ninguna es una lectura. (4) Los esquemas de sistema se comprueban solo en los **cualificadores** (lo que va antes del punto): `sys` es un nombre de columna plausible, y sin cualificar no se llega a esos datos porque `USE` está prohibido y la segunda sentencia también.
+
+> **`check_read_query()` es la puerta, y es una sola llamada a propósito.** Reúne las tres preguntas que una lectura cruda tiene que pasar: ¿es de solo lectura?, ¿toca un esquema de sistema?, ¿toca una tabla protegida? Las tres solo son correctas juntas, y un segundo camino de SQL crudo que recordara dos de ellas sería una fuga. Los métodos sueltos siguen existiendo para los tests.
+
+> **El tope de filas se impone en la base de datos.** Antes se traían todas las filas y se cortaban en PHP, así que una consulta ancha era un fatal por memoria en vez de una respuesta capada. `bound_sql()` añade el `LIMIT` —en su propia línea, porque un comentario de línea al final se lo tragaría— y **rechaza** un `LIMIT` del llamante que se pase, en vez de reescribirlo: editar SQL crudo alrededor de literales es justo la clase de truco que este guard existe para parar. Va con un timeout de sentencia del servidor (`max_statement_time` en MariaDB, `max_execution_time` en MySQL), restaurado en un `finally`.
+
 Por encima de eso está el **módulo Guardrails** (`includes/modules/guardrails/`), que es política del dueño del sitio, no seguridad: modo solo lectura, bloqueo de herramientas destructivas, ventana de congelación horaria, posts y tipos de contenido protegidos. La lógica vive en `KarMCP_Guardrails_Policy`, **deliberadamente pura** —ni `get_option()` ni `current_time()` dentro—, y por eso se testea sin WordPress; el módulo reúne los datos y se los pasa.
 
 Se apoya en dos costuras a la vez, y el emparejamiento es el diseño: `karmcp_discovery_memory` publica las reglas en el contexto del agente (prevención) y `karmcp_before_write` las aplica (cumplimiento).

@@ -146,6 +146,15 @@ function __( $text, $domain = 'default' ) {
 	return $text;
 }
 
+/**
+ * Plural form selector. English rules, which is what the untranslated source
+ * strings are written in — returning the singular unconditionally would make a
+ * count of 3 read "3 note" and no test would notice.
+ */
+function _n( $single, $plural, $number, $domain = 'default' ) {
+	return 1 === (int) $number ? $single : $plural;
+}
+
 function absint( $value ): int {
 	return abs( (int) $value );
 }

@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.34.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.35.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -272,6 +272,24 @@ Ahora hay dos clases puras en `includes/sql/`:
 Por encima de eso está el **módulo Guardrails** (`includes/modules/guardrails/`), que es política del dueño del sitio, no seguridad: modo solo lectura, bloqueo de herramientas destructivas, ventana de congelación horaria, posts y tipos de contenido protegidos. La lógica vive en `KarMCP_Guardrails_Policy`, **deliberadamente pura** —ni `get_option()` ni `current_time()` dentro—, y por eso se testea sin WordPress; el módulo reúne los datos y se los pasa.
 
 Se apoya en dos costuras a la vez, y el emparejamiento es el diseño: `karmcp_discovery_memory` publica las reglas en el contexto del agente (prevención) y `karmcp_before_write` las aplica (cumplimiento).
+
+### El validador de snippets: tres niveles, y por qué no dos (1.35.0)
+
+Los snippets **no se ejecutan sin aprobación humana**, así que el revisor es la frontera de seguridad de verdad. De ahí la regla que gobierna este validador: **cualquier cosa que enseñe al humano a mirar por encima ataca la frontera misma.**
+
+Con dos niveles (`critical` / `warning`) la lista de avisos incluía lo que hace *todo* snippet correcto — leer `$_POST`, un `exit` detrás de un redirect, `do_action`, definir una función — así que un snippet bien escrito llegaba cubierto de avisos. Ahora son tres:
+
+| Nivel | Qué significa |
+|---|---|
+| `critical` | Bloquea creación y activación. |
+| `warning` | Un efecto secundario real que el revisor debe confirmar (escribe una opción, manda correo, define una constante). |
+| `note` | Normal en código que funciona. Nunca es por sí solo motivo de mirar dos veces. |
+
+`verdict()` convierte el recuento en una frase (*"Seguro de activar. 3 notas, todo normal en código que funciona"*), y **las pantallas de admin siguen el veredicto**, no la mera existencia de un hallazgo: la de PHP Templates pintaba un recuadro rojo con una sola nota rutinaria dentro.
+
+> **Los callbacks se juzgan por su argumento, y eso cerró un bypass.** `array_map('system', $x)` ejecuta un comando de shell sin que el escaneo de llamadas directas vea nunca un `system(`. Antes eso era solo un *warning* — o sea, **no bloqueaba**. Ahora un literal de cadena que nombre una función crítica es `critical`, y todo lo demás (una closure, un callable de primera clase, `'trim'`) es nota. Un callback en una variable no se puede resolver aquí, y no hace falta: construirlo es una llamada a función variable o una invocación dinámica, críticas las dos por su cuenta.
+
+> **Una closure no es un riesgo de redeclaración.** La regla de "define una función" solo dispara con definiciones **con nombre**; `add_action( 'x', function () {} )` es la línea más común de un snippet y se estaba marcando en todos.
 
 Al lado están las **Skills** (`includes/skills/`), que son lo contrario: no lo que el agente no puede hacer, sino **cómo se hacen aquí las cosas**. Un CPT `karmcp_skill` mapeado sobre campos nativos —título = nombre, `post_name` = nombre de máquina, `post_excerpt` = resumen, `post_content` = cuerpo, `publish`/`draft` = encendido/apagado—, así que no hay meta propia y salen gratis el editor, las revisiones y el buscador. Edición solo para administradores: una skill dirige el comportamiento de los agentes en todo el sitio, está más cerca de la configuración que del contenido.
 

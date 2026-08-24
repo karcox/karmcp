@@ -31,9 +31,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	<?php if ( is_array( $detail ) && ! isset( $detail['error'] ) ) : ?>
 		<?php
-		$val         = $detail['validation'];
-		$has_finding = ! empty( $val['findings'] );
-		$save_url    = admin_url( 'admin-post.php' );
+		$val = $detail['validation'];
+		// Follow the VERDICT, not the mere presence of a finding. Colouring any
+		// finding as an error put a red box around a template whose only finding
+		// was a routine note, which is how a reviewer learns to ignore the box.
+		$karmcp_counts   = isset( $val['counts'] ) && is_array( $val['counts'] ) ? $val['counts'] : array();
+		$karmcp_blocking = (int) ( $karmcp_counts['critical'] ?? 0 );
+		$karmcp_warning  = (int) ( $karmcp_counts['warning'] ?? 0 );
+		$has_finding     = ! empty( $val['findings'] );
+		if ( $karmcp_blocking > 0 ) {
+			$karmcp_box = 'notice-error';
+		} elseif ( $karmcp_warning > 0 ) {
+			$karmcp_box = 'notice-warning';
+		} else {
+			$karmcp_box = 'notice-info';
+		}
+		$save_url = admin_url( 'admin-post.php' );
 		?>
 		<h2 style="margin-bottom:6px;">
 			<?php echo esc_html( $detail['title'] ); ?>
@@ -48,8 +61,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php endif; ?>
 
 		<?php if ( $has_finding ) : ?>
-			<div class="notice notice-error inline" style="margin:6px 0;">
-				<p><strong><?php esc_html_e( 'Validation findings:', 'karmcp' ); ?></strong></p>
+			<div class="notice <?php echo esc_attr( $karmcp_box ); ?> inline" style="margin:6px 0;">
+				<p><strong><?php echo esc_html( (string) ( $val['verdict'] ?? '' ) ); ?></strong></p>
 				<ul style="margin:.2em 0 .4em 1.4em;list-style:disc;">
 				<?php foreach ( $val['findings'] as $f ) : ?>
 					<li><strong><?php echo esc_html( $f['severity'] ); ?></strong>: <?php echo esc_html( $f['message'] ); ?> <?php echo $f['line'] ? esc_html( '(line ' . (int) $f['line'] . ')' ) : ''; ?></li>
@@ -57,7 +70,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</ul>
 			</div>
 		<?php else : ?>
-			<p style="color:#008a20;margin:6px 0;">&#10003; <?php esc_html_e( 'No validation findings.', 'karmcp' ); ?></p>
+			<p style="color:#008a20;margin:6px 0;">&#10003; <?php echo esc_html( (string) ( $val['verdict'] ?? __( 'No validation findings.', 'karmcp' ) ) ); ?></p>
 		<?php endif; ?>
 
 		<form method="post" action="<?php echo esc_url( $save_url ); ?>" class="karmcp-themer-php-editor">

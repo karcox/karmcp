@@ -246,14 +246,27 @@ $karmcp_sn_nonce = wp_create_nonce( 'karmcp_php_snippets' );
 				return fetch( ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } ).then( function ( r ) { return r.json(); } );
 			}
 
+			// Three colours for three levels. Painting a note the same amber as a
+			// warning is what made every snippet look like it needed attention.
+			var KARMCP_SEVERITY_COLOR = { critical: '#b32d2e', warning: '#996800', note: '#646970' };
+
 			function renderFindings( box, validation ) {
 				box.innerHTML = '';
-				if ( ! validation || ! validation.findings || ! validation.findings.length ) { return; }
+				if ( ! validation ) { return; }
+				if ( validation.verdict ) {
+					var verdict = document.createElement( 'p' );
+					verdict.style.margin = '8px 0 0';
+					verdict.style.fontWeight = '600';
+					verdict.style.color = validation.safe === false ? '#b32d2e' : '#1d2327';
+					verdict.textContent = validation.verdict;
+					box.appendChild( verdict );
+				}
+				if ( ! validation.findings || ! validation.findings.length ) { return; }
 				var ul = document.createElement( 'ul' );
 				ul.style.margin = '8px 0 0';
 				validation.findings.forEach( function ( f ) {
 					var li = document.createElement( 'li' );
-					li.style.color = ( f.severity === 'critical' ) ? '#b32d2e' : '#996800';
+					li.style.color = KARMCP_SEVERITY_COLOR[ f.severity ] || '#646970';
 					li.textContent = '[' + f.severity + '] ' + ( f.line ? 'line ' + f.line + ': ' : '' ) + f.message;
 					ul.appendChild( li );
 				} );

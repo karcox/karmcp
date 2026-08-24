@@ -84,12 +84,28 @@ class KarMCP_PHP_Snippet_Abilities {
 				'valid'       => array( 'type' => 'boolean' ),
 				'safe'        => array( 'type' => 'boolean' ),
 				'parse_error' => array( 'type' => 'string' ),
+				'verdict'     => array(
+					'type'        => 'string',
+					'description' => __( 'One-sentence summary, e.g. "Safe to activate. 3 notes, all ordinary in working code." Read this before the findings list.', 'karmcp' ),
+				),
+				'counts'      => array(
+					'type'       => 'object',
+					'properties' => array(
+						'critical' => array( 'type' => 'integer' ),
+						'warning'  => array( 'type' => 'integer' ),
+						'note'     => array( 'type' => 'integer' ),
+					),
+				),
 				'findings'    => array(
 					'type'  => 'array',
 					'items' => array(
 						'type'       => 'object',
 						'properties' => array(
-							'severity' => array( 'type' => 'string' ),
+							'severity' => array(
+								'type'        => 'string',
+								'enum'        => array( 'critical', 'warning', 'note' ),
+								'description' => __( 'critical blocks activation; warning is a real side effect to confirm; note is ordinary in working code and is not a reason to change anything.', 'karmcp' ),
+							),
 							'rule'     => array( 'type' => 'string' ),
 							'message'  => array( 'type' => 'string' ),
 							'line'     => array( 'type' => 'integer' ),
@@ -163,7 +179,7 @@ class KarMCP_PHP_Snippet_Abilities {
 			'karmcp/validate-php-snippet',
 			array(
 				'label'               => __( 'Validate PHP Snippet', 'karmcp' ),
-				'description'         => __( 'Statically checks PHP snippet code WITHOUT storing or running it: confirms it parses, then scans for dangerous constructs (code execution, shell, file writes, network, obfuscation, destructive SQL). Returns a report of critical (blocking) and warning findings. Use this to iterate before create-php-snippet.', 'karmcp' ),
+				'description'         => __( 'Statically checks PHP snippet code WITHOUT storing or running it: confirms it parses, then scans for dangerous constructs (code execution, shell, file writes, network, obfuscation, destructive SQL). Findings come at three levels: critical blocks activation, warning is a real side effect a human should confirm, and note is ordinary in working code. Read the verdict field first — notes alone are not a reason to change anything. Use this to iterate before create-php-snippet.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_validate' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),

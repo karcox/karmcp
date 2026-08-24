@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.35.0]
+
+Rewrites the PHP snippet validator's findings so a routine snippet no longer looks alarming, and closes a way a dangerous call could pass as a mere warning.
+
+### Changed
+
+- **Snippet findings now come at three levels, and ordinary code no longer looks like a problem.** Anything that blocks a snippet still blocks it. Things worth a reviewer's attention — writing a site option, sending email, defining a constant — are warnings. Things that are ordinary in working code — stopping the request after a redirect, reading request input, firing a hook, defining a callback — are notes.
+
+  This matters because a snippet can only ever be created as a draft: a human has to activate it, so the reviewer is the actual safety boundary. Almost every well-written snippet is built from constructs that were being reported as warnings, so a good snippet arrived covered in them — and a reviewer told that ten routine things are warnings learns to skim, which is how the one that mattered gets waved through. Every snippet now leads with a plain verdict such as "Safe to activate. 3 notes, all ordinary in working code."
+
+- **The admin screens follow that verdict rather than colouring any finding as an error.** The PHP Templates screen in particular used to show a red box whenever a template had any finding at all, including a single routine note. Notes are now shown in grey, warnings in amber, and only a blocking finding turns the box red.
+
+- **A closure is no longer reported as a redeclaration risk.** The "defines a function or class" note only applies to *named* definitions now. `add_action( 'init', function () { … } )` is the most ordinary line in a snippet and was being flagged on every one of them.
+
+### Security
+
+- **A dangerous function passed as a string callback now blocks instead of merely warning.** `array_map( 'system', $commands )` runs a shell command without the scan ever seeing a call to `system`, and that was reported as a warning — which does not block, so the one finding that mattered was exactly the one that could be waved through. The callback argument is now inspected: a string literal naming a blocked function is itself blocking. Ordinary callbacks (`'trim'`, a closure, a first-class callable) are notes, so the change removes noise and adds enforcement at the same time. A callback held in a variable is unchanged and does not need to be: building one is a variable function call or a dynamic invocation, both already blocking.
+
 ## [1.34.0]
 
 Rebuilds how raw SQL is checked, and fixes an atomic text element being quietly emptied in the editor by an ordinary edit. Please update.

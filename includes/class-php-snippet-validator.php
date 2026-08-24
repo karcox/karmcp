@@ -5,9 +5,27 @@
  * Two layers:
  *   1. PARSE — token_get_all( …, TOKEN_PARSE ) so the snippet must be
  *      syntactically valid PHP before it can be stored as runnable.
- *   2. SECURITY SCAN — a token walk that flags dangerous constructs. CRITICAL
- *      findings block creation/activation outright; WARNING findings are surfaced
- *      to the human reviewer in the Sandbox UI.
+ *   2. SECURITY SCAN — a token walk that flags dangerous constructs.
+ *
+ * THREE LEVELS, AND WHY IT IS NOT TWO
+ * -----------------------------------
+ * Findings used to be either CRITICAL or WARNING, and the warning list held
+ * things every correct snippet does: reading `$_POST`, calling `exit` after a
+ * redirect, firing `do_action`, defining a callback function. A well-written
+ * snippet therefore arrived covered in warnings — and a reviewer told that ten
+ * routine things are warnings learns to skim, which is exactly how the one that
+ * mattered gets waved through. Noise is not a cosmetic problem here; the human
+ * approval step is the real safety boundary, so anything that trains the human
+ * to stop reading attacks the boundary itself.
+ *
+ *   CRITICAL — blocks creation and activation outright.
+ *   WARNING  — a real side effect a reviewer should confirm is intended
+ *              (writes an option, sends mail, changes a constant).
+ *   NOTE     — ordinary in working code. Reported for completeness, and never
+ *              on its own a reason to look twice.
+ *
+ * verdict() turns the tally into one plain sentence, and the admin screens
+ * follow THAT rather than colouring any finding as an error.
  *
  * IMPORTANT — this is a GUARDRAIL, not a guarantee. PHP is expressive enough to
  * hide intent (variable functions, decoded strings, reflection), so static
@@ -114,8 +132,6 @@ class KarMCP_PHP_Snippet_Validator {
 		'fopen'             => 'Opens a file (could read or write).',
 		'file_get_contents' => 'Reads a file or a remote URL.',
 		'readfile'          => 'Reads and outputs a file.',
-		'fread'             => 'Reads from a file handle.',
-		'fgets'             => 'Reads from a file handle.',
 		'scandir'           => 'Lists a directory.',
 		'glob'              => 'Lists files by pattern.',
 		'opendir'           => 'Opens a directory.',
@@ -134,23 +150,51 @@ class KarMCP_PHP_Snippet_Validator {
 		'switch_theme'      => 'Switches the active theme.',
 		'activate_plugin'   => 'Activates a plugin.',
 		'deactivate_plugins' => 'Deactivates plugins.',
-		'do_action'         => 'Fires arbitrary hooks.',
-		// Functions that take a callback chosen at runtime — a string callback
-		// (e.g. array_map('system', ...)) bypasses the direct-call scan above.
-		// Flagged so the human reviewer inspects the callback argument.
-		'array_map'         => 'Runs a callback (verify the callback is not a dangerous function name).',
-		'array_filter'      => 'Runs a callback (verify the callback is not a dangerous function name).',
-		'array_walk'        => 'Runs a callback (verify the callback is not a dangerous function name).',
-		'array_walk_recursive' => 'Runs a callback (verify the callback is not a dangerous function name).',
-		'array_reduce'      => 'Runs a callback (verify the callback is not a dangerous function name).',
-		'usort'             => 'Runs a comparison callback (verify the callback).',
-		'uasort'            => 'Runs a comparison callback (verify the callback).',
-		'uksort'            => 'Runs a comparison callback (verify the callback).',
-		'ob_start'          => 'Can run an output callback at buffer flush (verify the callback).',
-		'preg_replace_callback' => 'Runs a callback per match (verify the callback).',
-		'preg_replace_callback_array' => 'Runs callbacks per match (verify the callbacks).',
-		'set_exception_handler' => 'Registers a callback that runs on uncaught exceptions.',
-		'iterator_apply'    => 'Runs a callback over an iterator (verify the callback).',
+	);
+
+	/**
+	 * Functions that are ordinary in working code. Reported, never alarming.
+	 *
+	 * Every entry here used to be a WARNING, which is what made a good snippet
+	 * arrive looking like a problem.
+	 *
+	 * @var array<string,string>
+	 */
+	private static $note_funcs = array(
+		'fread'     => 'Reads from a file handle.',
+		'fgets'     => 'Reads from a file handle.',
+		'do_action' => 'Fires a hook.',
+	);
+
+	/**
+	 * Functions whose first argument is a callback.
+	 *
+	 * A callback given as a STRING can name any function, so `array_map('system',
+	 * $x)` executes a shell command without the scan above ever seeing a call to
+	 * `system`. That is a real bypass, and it used to be handled by warning on
+	 * every one of these — which flags `array_map('trim', $x)` just as loudly and
+	 * buys nothing but noise.
+	 *
+	 * The callback argument is inspected instead: a string literal naming a
+	 * critical function is CRITICAL (it is that call, merely spelled differently),
+	 * and everything else is a note.
+	 *
+	 * @var string[]
+	 */
+	private static $callback_funcs = array(
+		'array_map',
+		'array_filter',
+		'array_walk',
+		'array_walk_recursive',
+		'array_reduce',
+		'usort',
+		'uasort',
+		'uksort',
+		'ob_start',
+		'preg_replace_callback',
+		'preg_replace_callback_array',
+		'set_exception_handler',
+		'iterator_apply',
 	);
 
 	/**
@@ -166,21 +210,28 @@ class KarMCP_PHP_Snippet_Validator {
 	 * @since 2.1.0
 	 *
 	 * @param string $code Raw snippet source (with or without PHP tags).
-	 * @return array{valid:bool,safe:bool,parse_error:string,findings:array<int,array{severity:string,rule:string,message:string,line:int}>}
+	 * @return array{valid:bool,safe:bool,parse_error:string,verdict:string,counts:array{critical:int,warning:int,note:int},findings:array<int,array{severity:string,rule:string,message:string,line:int}>}
 	 */
 	public static function validate( string $code ): array {
 		$result = array(
 			'valid'       => true,
 			'safe'        => true,
 			'parse_error' => '',
+			'verdict'     => '',
+			'counts'      => array(
+				'critical' => 0,
+				'warning'  => 0,
+				'note'     => 0,
+			),
 			'findings'    => array(),
 		);
 
 		$clean = self::strip_tags( $code );
 
 		if ( '' === trim( $clean ) ) {
-			$result['valid'] = false;
+			$result['valid']       = false;
 			$result['parse_error'] = __( 'The snippet is empty.', 'karmcp' );
+			$result['verdict']     = self::verdict( $result );
 			return $result;
 		}
 
@@ -199,26 +250,83 @@ class KarMCP_PHP_Snippet_Validator {
 		try {
 			$tokens = token_get_all( $wrapped, TOKEN_PARSE );
 		} catch ( \ParseError $e ) {
-			$result['valid'] = false;
+			$result['valid']       = false;
 			$result['parse_error'] = $e->getMessage();
+			$result['verdict']     = self::verdict( $result );
 			return $result;
 		} catch ( \Throwable $e ) {
-			$result['valid'] = false;
+			$result['valid']       = false;
 			$result['parse_error'] = $e->getMessage();
+			$result['verdict']     = self::verdict( $result );
 			return $result;
 		}
 
 		self::scan_tokens( $tokens, $result );
 
-		// `safe` is false if any CRITICAL finding exists.
 		foreach ( $result['findings'] as $f ) {
-			if ( 'critical' === $f['severity'] ) {
-				$result['safe'] = false;
-				break;
+			$severity = $f['severity'];
+			if ( isset( $result['counts'][ $severity ] ) ) {
+				++$result['counts'][ $severity ];
 			}
 		}
 
+		// `safe` is false if any CRITICAL finding exists. Warnings and notes never
+		// block: they are for the human, who is the actual approval step.
+		$result['safe']    = 0 === $result['counts']['critical'];
+		$result['verdict'] = self::verdict( $result );
+
 		return $result;
+	}
+
+	/**
+	 * One plain sentence a reviewer can act on.
+	 *
+	 * The admin screens follow this rather than colouring any finding as an
+	 * error, which is what made a snippet carrying a single routine note show up
+	 * in a red box.
+	 *
+	 * @since 1.35.0
+	 * @param array $result Result so far (counts already tallied).
+	 * @return string
+	 */
+	public static function verdict( array $result ): string {
+		if ( empty( $result['valid'] ) ) {
+			return __( 'Does not parse, so it cannot be stored as runnable.', 'karmcp' );
+		}
+
+		$counts = isset( $result['counts'] ) && is_array( $result['counts'] ) ? $result['counts'] : array();
+		$blocks = (int) ( $counts['critical'] ?? 0 );
+		$warns  = (int) ( $counts['warning'] ?? 0 );
+		$notes  = (int) ( $counts['note'] ?? 0 );
+
+		$parts = array();
+		if ( $blocks > 0 ) {
+			/* translators: %d: number of blocking findings. */
+			$parts[] = sprintf( _n( '%d blocking finding', '%d blocking findings', $blocks, 'karmcp' ), $blocks );
+		}
+		if ( $warns > 0 ) {
+			/* translators: %d: number of warnings. */
+			$parts[] = sprintf( _n( '%d warning', '%d warnings', $warns, 'karmcp' ), $warns );
+		}
+		if ( $notes > 0 ) {
+			/* translators: %d: number of notes. */
+			$parts[] = sprintf( _n( '%d note', '%d notes', $notes, 'karmcp' ), $notes );
+		}
+		$tally = implode( ', ', $parts );
+
+		if ( $blocks > 0 ) {
+			/* translators: %s: tally such as "2 blocking findings, 1 note". */
+			return sprintf( __( 'Cannot be activated: %s.', 'karmcp' ), $tally );
+		}
+		if ( $warns > 0 ) {
+			/* translators: %s: tally such as "1 warning, 3 notes". */
+			return sprintf( __( 'Safe to activate, but read the warnings first: %s.', 'karmcp' ), $tally );
+		}
+		if ( $notes > 0 ) {
+			/* translators: %s: tally such as "3 notes". */
+			return sprintf( __( 'Safe to activate. %s, all ordinary in working code.', 'karmcp' ), $tally );
+		}
+		return __( 'Safe to activate. Nothing flagged.', 'karmcp' );
 	}
 
 	/**
@@ -310,9 +418,10 @@ class KarMCP_PHP_Snippet_Validator {
 				continue;
 			}
 
-			// die / exit — abruptly terminates the request (can skip recovery logic).
+			// die / exit. `wp_redirect(); exit;` is the canonical correct pattern, so
+			// this is a note: alarming it trains the reviewer to skim.
 			if ( defined( 'T_EXIT' ) && T_EXIT === $id ) {
-				$result['findings'][] = self::finding( 'warning', 'exit', __( 'Terminates the request (die/exit).', 'karmcp' ), $line );
+				$result['findings'][] = self::finding( 'note', 'exit', __( 'Stops the request (die/exit) — normal after a redirect.', 'karmcp' ), $line );
 				continue;
 			}
 
@@ -328,10 +437,12 @@ class KarMCP_PHP_Snippet_Validator {
 				continue;
 			}
 
-			// Superglobals.
+			// Superglobals. Reading request input is what a snippet handling a form
+			// or a query var is FOR, so this is a note. It was the single biggest
+			// source of warnings on snippets that had nothing wrong with them.
 			if ( T_VARIABLE === $id && in_array( $text, self::$warn_superglobals, true ) ) {
 				$result['findings'][] = self::finding(
-					'warning',
+					'note',
 					'superglobal',
 					sprintf(
 						/* translators: %s: superglobal name */
@@ -365,28 +476,90 @@ class KarMCP_PHP_Snippet_Validator {
 				$name = strtolower( $text );
 				if ( isset( self::$critical_funcs[ $name ] ) ) {
 					$result['findings'][] = self::finding( 'critical', 'function:' . $name, self::$critical_funcs[ $name ], $line );
+				} elseif ( in_array( $name, self::$callback_funcs, true ) ) {
+					$result['findings'][] = self::callback_finding( $name, $sig, $i, $line );
 				} elseif ( isset( self::$warn_funcs[ $name ] ) ) {
 					$result['findings'][] = self::finding( 'warning', 'function:' . $name, self::$warn_funcs[ $name ], $line );
+				} elseif ( isset( self::$note_funcs[ $name ] ) ) {
+					$result['findings'][] = self::finding( 'note', 'function:' . $name, self::$note_funcs[ $name ], $line );
 				}
 				continue;
 			}
 
-			// Top-level function/class definitions inside a snippet (redeclaration risk).
+			// NAMED function/class definitions inside a snippet (redeclaration risk).
 			if ( in_array( $id, array( T_FUNCTION, T_CLASS, T_TRAIT, T_INTERFACE ), true ) ) {
 				// Skip the wrapper's own function token (line 1, name __karmcp_snippet_validate).
 				if ( $next && T_STRING === $next['id'] && '__karmcp_snippet_validate' === $next['text'] ) {
 					continue;
 				}
-				$result['findings'][] = self::finding( 'warning', 'definition', __( 'Defines a function/class (re-runs may redeclare and fatal).', 'karmcp' ), $line );
+				// A closure or an anonymous class declares no name, so it cannot be
+				// redeclared and there is nothing to report. `add_action( 'x',
+				// function () {} )` is the most ordinary line in a snippet, and it
+				// was being flagged on every one of them.
+				if ( ! $next || T_STRING !== $next['id'] ) {
+					continue;
+				}
+				$result['findings'][] = self::finding( 'note', 'definition', __( 'Defines a function or class — would fatal only if the snippet ran twice in one request.', 'karmcp' ), $line );
 				continue;
 			}
 		}
 	}
 
 	/**
+	 * Judge one call to a callback-taking function by its callback argument.
+	 *
+	 * A string literal naming a critical function IS that call, written so the
+	 * direct-call scan does not see it — `array_map('system', $cmds)` runs a shell
+	 * command. Anything else (a closure, a first-class callable, a variable, an
+	 * ordinary name like 'trim') is a note: warning on all of them flags routine
+	 * code as loudly as the bypass and teaches the reviewer to skim past both.
+	 *
+	 * A callback held in a VARIABLE is not resolvable here, but it does not need
+	 * to be: building one is a variable function call or a dynamic invocation,
+	 * both already critical in their own right.
+	 *
+	 * @since 1.35.0
+	 * @param string  $name Lowercase function name.
+	 * @param array[] $sig  Significant tokens.
+	 * @param int     $i    Index of the function-name token.
+	 * @param int     $line Line number.
+	 * @return array Finding row.
+	 */
+	private static function callback_finding( string $name, array $sig, int $i, int $line ): array {
+		// The token after the '(' is the first argument.
+		$arg = $sig[ $i + 2 ] ?? null;
+		if ( $arg && T_CONSTANT_ENCAPSED_STRING === $arg['id'] ) {
+			$callee = strtolower( trim( $arg['text'], "'\"" ) );
+			if ( isset( self::$critical_funcs[ $callee ] ) ) {
+				return self::finding(
+					'critical',
+					'callback:' . $callee,
+					sprintf(
+						/* translators: 1: the calling function, 2: the callback named as a string. */
+						__( 'Passes %2$s to %1$s as a string callback, which runs it without naming it directly.', 'karmcp' ),
+						$name,
+						$callee
+					),
+					$line
+				);
+			}
+		}
+		return self::finding(
+			'note',
+			'function:' . $name,
+			sprintf(
+				/* translators: %s: function name. */
+				__( 'Runs a callback (%s).', 'karmcp' ),
+				$name
+			),
+			$line
+		);
+	}
+
+	/**
 	 * Builds a finding row.
 	 *
-	 * @param string $severity 'critical' | 'warning'.
+	 * @param string $severity 'critical' | 'warning' | 'note'.
 	 * @param string $rule     Machine rule id.
 	 * @param string $message  Human message.
 	 * @param int    $line     1-based line in the snippet (0 = whole snippet).

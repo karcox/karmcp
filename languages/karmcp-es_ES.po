@@ -3,9 +3,9 @@
 # This file is distributed under the GPL-2.0-or-later licence.
 msgid ""
 msgstr ""
-"Project-Id-Version: KarMCP 1.34.0\n"
+"Project-Id-Version: KarMCP 1.35.0\n"
 "Report-Msgid-Bugs-To: https://github.com/karcox/karmcp/issues\n"
-"POT-Creation-Date: 2026-08-24 12:13:03+0000\n"
+"POT-Creation-Date: 2026-08-24 13:18:34+0000\n"
 "PO-Revision-Date: 2026-08-19 19:00+0200\n"
 "Last-Translator: karcox <https://github.com/karcox>\n"
 "Language-Team: Español <https://github.com/karcox/karmcp>\n"
@@ -279,6 +279,13 @@ msgstr "%d MB"
 msgid "%d SEO plugins are active at once. They each emit their own title and meta tags, and which one wins comes down to hook order."
 msgstr "Hay %d plugins de SEO activos a la vez. Cada uno emite su propio título y sus metaetiquetas, y cuál gana depende del orden de los hooks."
 
+#. translators: %d: number of blocking findings.
+#: includes/class-php-snippet-validator.php:305
+msgid "%d blocking finding"
+msgid_plural "%d blocking findings"
+msgstr[0] "%d hallazgo bloqueante"
+msgstr[1] "%d hallazgos bloqueantes"
+
 #. translators: %d: number of empty containers.
 #: includes/class-content-extractor.php:787
 msgid "%d containers render completely empty. In the builder they look like real sections; on the page they are blank space."
@@ -313,6 +320,13 @@ msgstr "%d enlaces no tienen texto, ni aria-label, ni un icono etiquetado, así 
 #: includes/class-content-extractor.php:604
 msgid "%d links still point at a placeholder href such as \"#\". They look like working buttons and go nowhere."
 msgstr "%d enlaces siguen apuntando a un href de relleno como «#». Parecen botones que funcionan y no llevan a ninguna parte."
+
+#. translators: %d: number of notes.
+#: includes/class-php-snippet-validator.php:313
+msgid "%d note"
+msgid_plural "%d notes"
+msgstr[0] "%d nota"
+msgstr[1] "%d notas"
 
 #. translators: %d: number of operations
 #: includes/admin/views/page-tools.php:314
@@ -349,6 +363,13 @@ msgstr[1] "%d avisos del validador, revisa el código"
 #: includes/admin/views/page-security.php:523
 msgid "%d vulnerability(ies), and WordPress is offering no update. For a premium plugin this usually means the licence is not delivering updates."
 msgstr "%d vulnerabilidad(es), y WordPress no ofrece ninguna actualización. En un plugin premium, esto suele significar que la licencia no está sirviendo actualizaciones."
+
+#. translators: %d: number of warnings.
+#: includes/class-php-snippet-validator.php:309
+msgid "%d warning"
+msgid_plural "%d warnings"
+msgstr[0] "%d aviso"
+msgstr[1] "%d avisos"
 
 #. translators: %d: how many remain.
 #: includes/admin/views/page-security.php:540
@@ -615,7 +636,7 @@ msgstr ""
 msgid "A Kadence block's key attributes (real names + defaults from the live registry) + a ready-to-use example ({ name } or { names: [...] }). { full: true } returns the block's full attribute set. Notes container children + RichText-content blocks."
 msgstr ""
 
-#: includes/class-php-snippet-validator.php:191
+#: includes/class-php-snippet-validator.php:242
 msgid "A PHP closing tag ( ?> ) is not allowed in a snippet."
 msgstr "No se permite una etiqueta de cierre de PHP ( ?> ) en un fragmento."
 
@@ -708,7 +729,7 @@ msgid "A form on this page has no submit control, so it cannot be sent."
 msgstr "Un formulario de esta página no tiene control de envío, así que no se puede enviar."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:112
+#: includes/abilities/class-php-snippet-abilities.php:128
 msgid "A label for the snippet."
 msgstr ""
 
@@ -1059,7 +1080,7 @@ msgstr "Activa el tema GeneratePress para habilitar esta herramienta."
 msgid "Activate the Kadence theme to enable this tool."
 msgstr "Activa el tema Kadence para habilitar esta herramienta."
 
-#: includes/admin/views/sandbox/snippets.php:305
+#: includes/admin/views/sandbox/snippets.php:318
 msgid "Activate this snippet? It will run real PHP on your site. Make sure you have read and trust the code."
 msgstr "¿Activar este fragmento? Ejecutará PHP real en tu sitio. Asegúrate de haber leído el código y de confiar en él."
 
@@ -1684,7 +1705,7 @@ msgstr "Antigravity"
 msgid "Any"
 msgstr "Cualquiera"
 
-#: includes/admin/views/page-themer-php.php:74
+#: includes/admin/views/page-themer-php.php:87
 msgid "Any type"
 msgstr "Cualquier tipo"
 
@@ -1763,7 +1784,7 @@ msgstr "Aplicar plantilla"
 msgid "Approve"
 msgstr "Aprobar"
 
-#: includes/admin/views/page-themer-php.php:73
+#: includes/admin/views/page-themer-php.php:86
 #: includes/themer/class-themer-cpt.php:173
 #: includes/themer/class-themer-metabox.php:190
 msgid "Archive"
@@ -2074,7 +2095,7 @@ msgstr "Disponible"
 msgid "Back to Sandbox"
 msgstr "Volver al sandbox"
 
-#: includes/admin/views/page-themer-php.php:101
+#: includes/admin/views/page-themer-php.php:114
 msgid "Back to list"
 msgstr "Volver a la lista"
 
@@ -2433,7 +2454,7 @@ msgstr ""
 msgid "Call render-page on this post to confirm the form renders with every field and a submit button."
 msgstr ""
 
-#: includes/class-php-snippet-validator.php:292
+#: includes/class-php-snippet-validator.php:400
 msgid "Calls a function named by a variable (bypasses static checks)."
 msgstr "Llama a una función cuyo nombre está en una variable (esquiva las comprobaciones estáticas)."
 
@@ -2456,6 +2477,11 @@ msgstr "No se puede activar: el fragmento no pasa la validación. Corrige el có
 #: includes/class-widget-store.php:527
 msgid "Cannot activate, the widget errors when Elementor builds it: %s. Fix the spec and update the widget."
 msgstr "No se puede activar: el widget da error cuando Elementor lo construye: %s. Corrige la especificación y actualiza el widget."
+
+#. translators: %s: tally such as "2 blocking findings, 1 note".
+#: includes/class-php-snippet-validator.php:319
+msgid "Cannot be activated: %s."
+msgstr "No se puede activar: %s."
 
 #: includes/admin/views/page-connection.php:271
 msgid "Cannot change the CDN? Use an Application Password instead - it authenticates with a header on every request and is never blocked by bot filters. Pick \"Application Password\" under \"Choose your authentication method\" below."
@@ -2846,11 +2872,11 @@ msgstr "Modo de herramientas compacto"
 msgid "Compact tool mode is active, your client sees only the 3 dispatcher tools (list-tools, get-tool-schema, call-tool). The per-tool toggles below still control what call-tool is allowed to run."
 msgstr "El modo de herramientas compacto está activo: tu cliente solo ve las 3 herramientas despachadoras (list-tools, get-tool-schema, call-tool). Los interruptores por herramienta de abajo siguen controlando qué puede ejecutar call-tool."
 
-#: includes/admin/views/page-themer-php.php:109
+#: includes/admin/views/page-themer-php.php:122
 msgid "Compiled"
 msgstr "Compilada"
 
-#: includes/admin/views/page-themer-php.php:42
+#: includes/admin/views/page-themer-php.php:55
 msgid "Compiled (attached to a template)"
 msgstr "Compilada (asociada a una plantilla)"
 
@@ -2995,7 +3021,7 @@ msgstr ""
 msgid "Container: add-block scaffolds %1$s children automatically."
 msgstr ""
 
-#: includes/class-php-snippet-validator.php:349
+#: includes/class-php-snippet-validator.php:460
 msgid "Contains destructive SQL (DROP/TRUNCATE/ALTER/DELETE)."
 msgstr "Contiene SQL destructivo (DROP/TRUNCATE/ALTER/DELETE)."
 
@@ -3371,7 +3397,7 @@ msgid "Create PHP Snippet"
 msgstr "Crear fragmento PHP"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:206
+#: includes/abilities/class-php-snippet-abilities.php:222
 msgid "Create PHP Snippet (draft)"
 msgstr ""
 
@@ -3492,7 +3518,7 @@ msgid "Creates a 301/302 redirect from an old path to a target URL or post. Disa
 msgstr "Crea una redirección 301/302 de una ruta antigua a una URL o entrada de destino. Desactivada por defecto."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:207
+#: includes/abilities/class-php-snippet-abilities.php:223
 msgid "Creates a PHP snippet as an INACTIVE DRAFT. It does NOT run: a site administrator must review and activate it in KarMCP → Sandbox before it executes. The code is validated first and rejected if it trips a critical security finding (the findings are returned so you can fix it)."
 msgstr ""
 
@@ -3767,9 +3793,9 @@ msgstr ""
 msgid "Defines DISALLOW_FILE_EDIT early on every request, so the dashboard editor disappears. A compromised administrator account can no longer edit PHP from the browser."
 msgstr "Define DISALLOW_FILE_EDIT pronto en cada petición, de modo que el editor del escritorio desaparece. Una cuenta de administrador comprometida ya no puede editar PHP desde el navegador."
 
-#: includes/class-php-snippet-validator.php:380
-msgid "Defines a function/class (re-runs may redeclare and fatal)."
-msgstr "Define una función o una clase (al volver a ejecutarse podría redeclararla y provocar un error fatal)."
+#: includes/class-php-snippet-validator.php:502
+msgid "Defines a function or class — would fatal only if the snippet ran twice in one request."
+msgstr "Define una función o una clase; solo daría error fatal si el snippet se ejecutara dos veces en la misma petición."
 
 #: includes/sql/class-sql-policy.php:275
 msgid "Delay, lock, and other resource-consuming SQL functions are not allowed."
@@ -3777,7 +3803,7 @@ msgstr "No se permiten funciones SQL de espera, de bloqueo ni otras que consuman
 
 #: includes/admin/views/page-history.php:179
 #: includes/admin/views/page-redirects.php:156
-#: includes/admin/views/page-themer-php.php:129
+#: includes/admin/views/page-themer-php.php:142
 #: includes/admin/views/sandbox/blocks.php:137
 #: includes/admin/views/sandbox/extensions.php:147
 #: includes/admin/views/sandbox/snippets.php:211
@@ -3827,7 +3853,7 @@ msgstr "Elimina entradas de MetForm (confirm:true)."
 msgid "Delete Ninja Forms submissions (confirm:true)."
 msgstr "Elimina envíos de Ninja Forms (confirm:true)."
 
-#: includes/abilities/class-php-snippet-abilities.php:375
+#: includes/abilities/class-php-snippet-abilities.php:391
 #: includes/admin/class-admin.php:5415
 msgid "Delete PHP Snippet"
 msgstr "Eliminar fragmento PHP"
@@ -3928,7 +3954,7 @@ msgstr "Elimina las filas que cumplan un WHERE (confirmación). Desactivada por 
 msgid "Delete rows matching an equality WHERE (required). Needs confirm:true; before-image snapshot; refuses protected tables. Disabled by default."
 msgstr ""
 
-#: includes/admin/views/page-themer-php.php:125
+#: includes/admin/views/page-themer-php.php:138
 msgid "Delete this PHP template?"
 msgstr "¿Eliminar esta plantilla PHP?"
 
@@ -3956,7 +3982,7 @@ msgstr "¿Eliminar esta entrada del historial? Esto no se puede deshacer."
 msgid "Delete this redirect? (reversible from History)"
 msgstr "¿Eliminar esta redirección? (reversible desde el Historial)"
 
-#: includes/admin/views/sandbox/snippets.php:317
+#: includes/admin/views/sandbox/snippets.php:330
 msgid "Delete this snippet permanently?"
 msgstr "¿Eliminar este fragmento para siempre?"
 
@@ -4179,6 +4205,10 @@ msgstr ""
 msgid "Documentation"
 msgstr "Documentación"
 
+#: includes/class-php-snippet-validator.php:294
+msgid "Does not parse, so it cannot be stored as runnable."
+msgstr "No compila, así que no se puede guardar como ejecutable."
+
 #: includes/admin/class-admin.php:2104
 msgid "Done"
 msgstr "Hecho"
@@ -4297,7 +4327,7 @@ msgid "Each update_fields entry needs the field \"key\"."
 msgstr ""
 
 #: includes/admin/views/page-redirects.php:154
-#: includes/admin/views/page-themer-php.php:124
+#: includes/admin/views/page-themer-php.php:137
 #: includes/admin/views/sandbox/snippets.php:210
 msgid "Edit"
 msgstr "Editar"
@@ -4505,7 +4535,7 @@ msgstr ""
 msgid "Embedding your pages in an iframe on another domain."
 msgstr "Incrustar tus páginas en un iframe de otro dominio."
 
-#: includes/admin/views/page-themer-php.php:96
+#: includes/admin/views/page-themer-php.php:109
 msgid "Emit markup with echo/heredoc, a closing PHP tag is not allowed. eval/exec/include, network calls and file writes are rejected on save. If this template is attached, saving re-validates and recompiles it."
 msgstr "Emite el marcado con echo o heredoc; no se permite la etiqueta de cierre de PHP. eval, exec, include, las llamadas de red y las escrituras de archivos se rechazan al guardar. Si esta plantilla está asociada, al guardar se vuelve a validar y a recompilar."
 
@@ -4629,7 +4659,7 @@ msgstr "Excluir"
 msgid "Exclude rules require KarMCP Pro."
 msgstr ""
 
-#: includes/class-php-snippet-validator.php:286
+#: includes/class-php-snippet-validator.php:394
 msgid "Executes arbitrary code (eval)."
 msgstr "Ejecuta código arbitrario (eval)."
 
@@ -4976,7 +5006,7 @@ msgid "Filter by status. Default: all."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:335
+#: includes/abilities/class-php-snippet-abilities.php:351
 msgid "Filter by status. Default: any."
 msgstr ""
 
@@ -5104,7 +5134,7 @@ msgstr ""
 msgid "Font weight (100-900, normal, bold)."
 msgstr ""
 
-#: includes/admin/views/page-themer-php.php:71
+#: includes/admin/views/page-themer-php.php:84
 #: includes/themer/class-themer-cpt.php:171
 #: includes/themer/class-themer-metabox.php:188
 msgid "Footer"
@@ -5368,7 +5398,7 @@ msgstr "Obtener los ajustes globales"
 msgid "Get Media"
 msgstr "Obtener archivo multimedia"
 
-#: includes/abilities/class-php-snippet-abilities.php:285
+#: includes/abilities/class-php-snippet-abilities.php:301
 #: includes/admin/class-admin.php:5405
 msgid "Get PHP Snippet"
 msgstr "Obtener fragmento PHP"
@@ -5631,7 +5661,7 @@ msgstr ""
 msgid "Hardening changed from the Security tab"
 msgstr "Fortificación cambiada desde la pestaña Seguridad"
 
-#: includes/admin/views/page-themer-php.php:70
+#: includes/admin/views/page-themer-php.php:83
 #: includes/themer/class-themer-cpt.php:170
 #: includes/themer/class-themer-metabox.php:187
 msgid "Header"
@@ -5715,7 +5745,7 @@ msgid "Hook"
 msgstr "Hook"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:129
+#: includes/abilities/class-php-snippet-abilities.php:145
 msgid "Hook priority (default 10)."
 msgstr ""
 
@@ -5734,7 +5764,7 @@ msgid "How much smaller the inserted block is after stripping, in characters of 
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:121
+#: includes/abilities/class-php-snippet-abilities.php:137
 msgid "How the snippet runs: \"shortcode\" via [karmcp_snippet id=\"N\"], \"hook\" on a WordPress action, or \"both\". Default: shortcode."
 msgstr ""
 
@@ -6250,7 +6280,7 @@ msgstr ""
 msgid "Installs a theme from wordpress.org by slug."
 msgstr "Instala un tema de wordpress.org por su slug."
 
-#: includes/class-php-snippet-validator.php:298
+#: includes/class-php-snippet-validator.php:406
 msgid "Instantiates a class named by a variable (bypasses static checks)."
 msgstr "Instancia una clase cuyo nombre está en una variable (esquiva las comprobaciones estáticas)."
 
@@ -6539,7 +6569,7 @@ msgstr "Idiomas, traducciones y los enlaces entre ellas."
 msgid "Large page (%d elements). If build-page times out over a remote connector, split it into multiple calls or run dry_run first."
 msgstr ""
 
-#: includes/admin/views/page-themer-php.php:110
+#: includes/admin/views/page-themer-php.php:123
 msgid "Last error"
 msgstr "Último error"
 
@@ -6548,7 +6578,7 @@ msgstr "Último error"
 msgid "Last refreshed %1$s ago, %2$d records."
 msgstr "Actualizado hace %1$s, %2$d registros."
 
-#: includes/admin/views/page-themer-php.php:47
+#: includes/admin/views/page-themer-php.php:60
 msgid "Last runtime error:"
 msgstr "Último error en ejecución:"
 
@@ -6786,7 +6816,7 @@ msgstr "Listar bloqueos de acceso"
 msgid "List Media"
 msgstr "Listar archivos multimedia"
 
-#: includes/abilities/class-php-snippet-abilities.php:324
+#: includes/abilities/class-php-snippet-abilities.php:340
 #: includes/admin/class-admin.php:5410
 msgid "List PHP Snippets"
 msgstr "Listar fragmentos PHP"
@@ -6980,7 +7010,7 @@ msgid "Lists KarMCP Themer templates (header/footer/single/archive/search/404) w
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:325
+#: includes/abilities/class-php-snippet-abilities.php:341
 msgid "Lists PHP snippets with their status (draft/active), run context, and shortcode."
 msgstr ""
 
@@ -7185,7 +7215,7 @@ msgstr ""
 msgid "Load order priority (1-10, lower = earlier). Default: 1."
 msgstr ""
 
-#: includes/class-php-snippet-validator.php:280
+#: includes/class-php-snippet-validator.php:388
 msgid "Loads and runs another PHP file (include/require)."
 msgstr "Carga y ejecuta otro archivo PHP (include/require)."
 
@@ -7777,7 +7807,7 @@ msgstr "Todavía no se ha registrado ninguna petición MCP."
 msgid "No PHP templates match this type yet. Ask your AI agent to create one."
 msgstr "Todavía no hay ninguna plantilla PHP que encaje con este tipo. Pídele a tu agente de IA que cree una."
 
-#: includes/admin/views/page-themer-php.php:115
+#: includes/admin/views/page-themer-php.php:128
 msgid "No PHP templates yet. Ask your AI agent to create one with create-theme-php-template."
 msgstr "Todavía no hay plantillas PHP. Pídele a tu agente de IA que cree una con create-theme-php-template."
 
@@ -8017,7 +8047,7 @@ msgstr "Todavía no hay plantillas de tema."
 msgid "No user selected."
 msgstr "No se ha seleccionado ningún usuario."
 
-#: includes/admin/views/page-themer-php.php:60
+#: includes/admin/views/page-themer-php.php:73
 msgid "No validation findings."
 msgstr "No hay hallazgos de validación."
 
@@ -8214,6 +8244,11 @@ msgstr "Una de un conjunto fijo de opciones. Requiere \"options\". Se escapa con
 #: includes/sandbox/class-extension-spec.php:96
 msgid "One of a fixed set of options. Requires \"options\"; the values are enforced by the prop type itself."
 msgstr "Una de un conjunto fijo de opciones. Requiere \"options\"; los valores los impone el propio tipo de prop."
+
+#. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
+#: includes/abilities/class-php-snippet-abilities.php:89
+msgid "One-sentence summary, e.g. \"Safe to activate. 3 notes, all ordinary in working code.\" Read this before the findings list."
+msgstr ""
 
 #: includes/class-url-guard.php:205
 #: includes/class-url-guard.php:210
@@ -8711,6 +8746,11 @@ msgstr ""
 msgid "Pass name or post_id."
 msgstr ""
 
+#. translators: 1: the calling function, 2: the callback named as a string.
+#: includes/class-php-snippet-validator.php:539
+msgid "Passes %2$s to %1$s as a string callback, which runs it without naming it directly."
+msgstr "Pasa %2$s a %1$s como callback en texto, lo que lo ejecuta sin nombrarlo directamente."
+
 #: includes/admin/views/page-connection.php:573
 msgid "Paste your API key"
 msgstr "Pega aquí tu clave de API"
@@ -8769,7 +8809,7 @@ msgid "Permanently delete instead of trashing. Default: false."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:376
+#: includes/abilities/class-php-snippet-abilities.php:392
 msgid "Permanently deletes a PHP snippet and removes its sandbox file."
 msgstr ""
 
@@ -9553,7 +9593,7 @@ msgid "Reads curated site settings (general, reading, writing, discussion, media
 msgstr "Lee los ajustes curados del sitio (generales, lectura, escritura, comentarios, medios, enlaces permanentes)."
 
 #. translators: %s: superglobal name
-#: includes/class-php-snippet-validator.php:338
+#: includes/class-php-snippet-validator.php:449
 msgid "Reads request/server input (%s)."
 msgstr "Lee entrada de la petición o del servidor (%s)."
 
@@ -10161,7 +10201,7 @@ msgid "Returns a snippet's code, status, shortcode, and validation report."
 msgstr "Devuelve el código de un fragmento, su estado, su shortcode y su informe de validación."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:286
+#: includes/abilities/class-php-snippet-abilities.php:302
 msgid "Returns a snippet: its code, status (draft/active), run context, shortcode, and the latest validation report."
 msgstr ""
 
@@ -10420,6 +10460,11 @@ msgstr "Ejecuciones"
 msgid "Runs OPTIMIZE TABLE on tables carrying free space left by deleted rows. Removes no data — it compacts what is there, which is what actually returns the space the tasks above free up."
 msgstr "Ejecuta OPTIMIZE TABLE en las tablas que arrastran espacio libre dejado por filas eliminadas. No elimina datos: compacta lo que hay, que es lo que de verdad devuelve el espacio que liberan las tareas de arriba."
 
+#. translators: %s: function name.
+#: includes/class-php-snippet-validator.php:552
+msgid "Runs a callback (%s)."
+msgstr "Ejecuta un callback (%s)."
+
 #: includes/admin/views/sandbox/snippets.php:104
 msgid "Runs as"
 msgstr "Se ejecuta como"
@@ -10510,6 +10555,21 @@ msgstr ""
 msgid "SVG uploads are already enabled on this site (e.g. by Elementor or another plugin). This module will still sanitize SVGs when active."
 msgstr "La subida de SVG ya está habilitada en este sitio (por Elementor o por otro plugin, por ejemplo). Este módulo seguirá saneando los SVG mientras esté activo."
 
+#. translators: %s: tally such as "1 warning, 3 notes".
+#: includes/class-php-snippet-validator.php:323
+msgid "Safe to activate, but read the warnings first: %s."
+msgstr "Seguro de activar, pero léete antes los avisos: %s."
+
+#. translators: %s: tally such as "3 notes".
+#: includes/class-php-snippet-validator.php:327
+msgid "Safe to activate. %s, all ordinary in working code."
+msgstr "Seguro de activar. %s, todo normal en código que funciona."
+
+#. translators: %s: tally such as "3 notes".
+#: includes/class-php-snippet-validator.php:329
+msgid "Safe to activate. Nothing flagged."
+msgstr "Seguro de activar. Nada que señalar."
+
 #: includes/modules/svg-support/class-svg-support-module.php:44
 msgid "Safely allow SVG uploads to the Media Library. Every SVG is sanitized (scripts, event handlers and external references stripped) before it is saved. Mainly for sites without Elementor, Elementor already allows SVG uploads for authorized users."
 msgstr "Permite subir SVG a la biblioteca de medios de forma segura. Cada SVG se sanea (se le quitan scripts, manejadores de eventos y referencias externas) antes de guardarlo. Pensado sobre todo para sitios sin Elementor: Elementor ya permite subir SVG a los usuarios autorizados."
@@ -10558,7 +10618,7 @@ msgid "Save as Template"
 msgstr "Guardar como plantilla"
 
 #: includes/admin/views/page-security.php:637
-#: includes/admin/views/page-themer-php.php:100
+#: includes/admin/views/page-themer-php.php:113
 msgid "Save changes"
 msgstr "Guardar los cambios"
 
@@ -10571,7 +10631,7 @@ msgid "Save hardening"
 msgstr "Guardar la fortificación"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:440
+#: includes/abilities/class-php-snippet-abilities.php:456
 msgid "Saved as an INACTIVE draft. A site administrator must activate it in KarMCP → Sandbox before it runs."
 msgstr ""
 
@@ -11068,7 +11128,7 @@ msgstr "Ajustes guardados."
 msgid "Settings to merge."
 msgstr ""
 
-#: includes/class-php-snippet-validator.php:274
+#: includes/class-php-snippet-validator.php:382
 msgid "Shell execution via the backtick operator."
 msgstr "Ejecución de shell mediante el operador de comillas invertidas."
 
@@ -11126,7 +11186,7 @@ msgstr "Sesión iniciada como %1$s (%2$s)"
 msgid "Single"
 msgstr "Individual"
 
-#: includes/admin/views/page-themer-php.php:72
+#: includes/admin/views/page-themer-php.php:85
 #: includes/themer/class-themer-metabox.php:189
 msgid "Single (post/page)"
 msgstr "Individual (entrada o página)"
@@ -11331,8 +11391,8 @@ msgid "Starting…"
 msgstr "Empezando…"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:166
-msgid "Statically checks PHP snippet code WITHOUT storing or running it: confirms it parses, then scans for dangerous constructs (code execution, shell, file writes, network, obfuscation, destructive SQL). Returns a report of critical (blocking) and warning findings. Use this to iterate before create-php-snippet."
+#: includes/abilities/class-php-snippet-abilities.php:182
+msgid "Statically checks PHP snippet code WITHOUT storing or running it: confirms it parses, then scans for dangerous constructs (code execution, shell, file writes, network, obfuscation, destructive SQL). Findings come at three levels: critical blocks activation, warning is a real side effect a human should confirm, and note is ordinary in working code. Read the verdict field first — notes alone are not a reason to change anything. Use this to iterate before create-php-snippet."
 msgstr ""
 
 #: includes/admin/class-admin.php:5391
@@ -11381,6 +11441,10 @@ msgstr "Imágenes de banco y de la biblioteca"
 #: includes/security/class-security-hardening-fixer.php:66
 msgid "Stop disclosing the WordPress version"
 msgstr "Dejar de revelar la versión de WordPress"
+
+#: includes/class-php-snippet-validator.php:424
+msgid "Stops the request (die/exit) — normal after a redirect."
+msgstr "Para la petición (die/exit); es lo normal después de un redirect."
 
 #: includes/modules/image-optimization/settings-fields.php:117
 msgid "Store an untouched copy of every file so optimization stays reversible."
@@ -11455,7 +11519,7 @@ msgstr "Dom"
 msgid "Support"
 msgstr "Soporte"
 
-#: includes/class-php-snippet-validator.php:327
+#: includes/class-php-snippet-validator.php:436
 msgid "Suppresses errors with @ (can hide failures)."
 msgstr "Silencia errores con @ (puede ocultar fallos)."
 
@@ -11571,7 +11635,7 @@ msgstr "Tarea"
 msgid "Taxonomy name (e.g. category, post_tag)."
 msgstr ""
 
-#: includes/admin/views/page-themer-php.php:93
+#: includes/admin/views/page-themer-php.php:106
 msgid "Template code"
 msgstr "Código de la plantilla"
 
@@ -11648,10 +11712,6 @@ msgstr "Plantillas"
 #: includes/abilities/class-content-abilities.php:1241
 msgid "Term IDs or names."
 msgstr ""
-
-#: includes/class-php-snippet-validator.php:315
-msgid "Terminates the request (die/exit)."
-msgstr "Termina la petición (die/exit)."
 
 #: includes/admin/views/page-connection.php:462
 msgid "Test authentication"
@@ -11914,12 +11974,12 @@ msgid "The Navigator label to set."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:116
+#: includes/abilities/class-php-snippet-abilities.php:132
 msgid "The PHP code (no <?php tags needed). Runs inside an isolated function. Use return or echo for shortcode output."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:175
+#: includes/abilities/class-php-snippet-abilities.php:191
 msgid "The PHP code to validate."
 msgstr ""
 
@@ -12832,13 +12892,13 @@ msgid "The skills post type is not registered."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:250
-#: includes/abilities/class-php-snippet-abilities.php:292
-#: includes/abilities/class-php-snippet-abilities.php:382
+#: includes/abilities/class-php-snippet-abilities.php:266
+#: includes/abilities/class-php-snippet-abilities.php:308
+#: includes/abilities/class-php-snippet-abilities.php:398
 msgid "The snippet ID."
 msgstr ""
 
-#: includes/class-php-snippet-validator.php:183
+#: includes/class-php-snippet-validator.php:233
 msgid "The snippet is empty."
 msgstr "El fragmento está vacío."
 
@@ -13425,8 +13485,8 @@ msgstr "Jue"
 msgid "Timing rules: { \"devices\": [\"desktop\",\"tablet\",\"mobile\"], \"show_after_x_page_views\": 0, \"show_after_x_sessions\": 0, \"show_up_to_x_times\": 0, \"url_contains\": \"\", \"url_not_contains\": \"\" }."
 msgstr ""
 
-#: includes/admin/views/page-themer-php.php:79
-#: includes/admin/views/page-themer-php.php:107
+#: includes/admin/views/page-themer-php.php:92
+#: includes/admin/views/page-themer-php.php:120
 #: includes/admin/views/sandbox/snippets.php:94
 #: includes/audits/class-seo-audit.php:372
 #: includes/audits/class-seo-audit.php:385
@@ -13564,8 +13624,8 @@ msgid "Two pages would share the slug \"%s\". WordPress would rename one of them
 msgstr "Dos páginas compartirían el slug «%s». WordPress renombraría una de ellas y el menú apuntaría a la página equivocada."
 
 #: includes/admin/views/page-history.php:129
-#: includes/admin/views/page-themer-php.php:83
-#: includes/admin/views/page-themer-php.php:108
+#: includes/admin/views/page-themer-php.php:96
+#: includes/admin/views/page-themer-php.php:121
 #: includes/themer/class-themer-cpt.php:116
 msgid "Type"
 msgstr "Tipo"
@@ -13945,7 +14005,7 @@ msgstr "Actualizar la tipografía global"
 msgid "Update Media"
 msgstr "Actualizar archivo multimedia"
 
-#: includes/abilities/class-php-snippet-abilities.php:242
+#: includes/abilities/class-php-snippet-abilities.php:258
 #: includes/admin/class-admin.php:5400
 msgid "Update PHP Snippet"
 msgstr "Actualizar fragmento PHP"
@@ -14130,7 +14190,7 @@ msgid "Updates a plugin to the latest wordpress.org version."
 msgstr "Actualiza un plugin a la última versión de wordpress.org."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:243
+#: includes/abilities/class-php-snippet-abilities.php:259
 msgid "Updates a snippet's code or settings. Re-validates and rejects critical findings. If the snippet is currently active it is re-compiled (or demoted to draft if it no longer passes). Activation still requires an admin."
 msgstr ""
 
@@ -14328,11 +14388,11 @@ msgid "Users > Profile"
 msgstr "Usuarios > Perfil"
 
 #. translators: %s: class name
-#: includes/class-php-snippet-validator.php:307
+#: includes/class-php-snippet-validator.php:415
 msgid "Uses %s, which can invoke functions/methods chosen at runtime."
 msgstr "Usa %s, que puede invocar funciones o métodos elegidos en tiempo de ejecución."
 
-#: includes/class-php-snippet-validator.php:321
+#: includes/class-php-snippet-validator.php:430
 msgid "Uses a variable variable ($$x)."
 msgstr "Usa una variable variable ($$x)."
 
@@ -14350,7 +14410,7 @@ msgstr "Validar la especificación del bloque"
 msgid "Validate Extension Spec"
 msgstr "Validar la especificación de la extensión"
 
-#: includes/abilities/class-php-snippet-abilities.php:165
+#: includes/abilities/class-php-snippet-abilities.php:181
 #: includes/admin/class-admin.php:5390
 msgid "Validate PHP Snippet"
 msgstr "Validar fragmento PHP"
@@ -14376,10 +14436,6 @@ msgstr "Valida la especificación de un widget y simula el generador sin guardar
 #: includes/admin/class-admin.php:5630
 msgid "Validates an extension spec and dry-runs the compiler without saving."
 msgstr "Valida la especificación de una extensión y simula el compilador sin guardar nada."
-
-#: includes/admin/views/page-themer-php.php:52
-msgid "Validation findings:"
-msgstr "Hallazgos de la validación:"
 
 #: includes/admin/class-admin.php:3032
 msgid "Value"
@@ -14579,7 +14635,7 @@ msgstr ""
 msgid "Whether the lockout is on an address or a username."
 msgstr ""
 
-#: includes/admin/views/page-themer-php.php:89
+#: includes/admin/views/page-themer-php.php:102
 msgid "Which Themer region this can be attached to. “Any type” matches every template type."
 msgstr "A qué región del Themer se puede asociar. «Cualquier tipo» encaja con todos los tipos de plantilla."
 
@@ -14758,7 +14814,7 @@ msgid "WordPress Settings"
 msgstr "Ajustes de WordPress"
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:125
+#: includes/abilities/class-php-snippet-abilities.php:141
 msgid "WordPress action to attach to when context is hook/both (e.g. wp_footer, init)."
 msgstr ""
 
@@ -15280,6 +15336,11 @@ msgid "content: the post's own rendered content, drafts included (default). full
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
+#: includes/abilities/class-php-snippet-abilities.php:107
+msgid "critical blocks activation; warning is a real side effect to confirm; note is ordinary in working code and is not a reason to change anything."
+msgstr ""
+
+#. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #: includes/abilities/class-extension-builder-abilities.php:169
 msgid "data-* / aria-* attributes to write."
 msgstr ""
@@ -15664,9 +15725,9 @@ msgid "sku is limited to 100 characters."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-php-snippet-abilities.php:271
-#: includes/abilities/class-php-snippet-abilities.php:311
-#: includes/abilities/class-php-snippet-abilities.php:407
+#: includes/abilities/class-php-snippet-abilities.php:287
+#: includes/abilities/class-php-snippet-abilities.php:327
+#: includes/abilities/class-php-snippet-abilities.php:423
 msgid "snippet_id is required."
 msgstr ""
 

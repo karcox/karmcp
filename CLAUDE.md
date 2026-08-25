@@ -39,7 +39,7 @@ pwsh bin/check.ps1
 
 PHPUnit + comprobación de frescura del POT + PHPStan + PHPCS, las cuatro bloqueantes. Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
 
-Estado de referencia (medido el 2026-08-25): **1.345 tests, 9.500 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
+Estado de referencia (medido el 2026-08-25): **1.346 tests, 9.455 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
 
 > La cifra anterior que vivía aquí — 1.147 tests, 8.955 aserciones, fechada en la 1.27.0 — llevaba ocho releases sin revisarse. Es la misma clase de deriva que el "no hay CI": cierta cuando se escribió, y nadie volvió. Al cambiarla, mídela; no la estimes.
 
@@ -162,7 +162,9 @@ Es la base compartida que pedía el roadmap de SEO y accesibilidad, y **las dos 
 Dos piezas alrededor:
 
 - `KarMCP_Audit_Score` (`includes/audits/class-audit-score.php`) — pesos, nota y recuento. Separado **para que la auditoría de accesibilidad gradúe en la misma curva**; dos auditorías con su propio 0-100 dan números que nadie puede comparar.
-- `KarMCP_Seo_Meta` (`includes/class-seo-meta.php`) — un solo vocabulario sobre Yoast, Rank Math y Slim SEO. Reutiliza los nombres de campo que ya usaba la integración de Slim SEO; no inventes un segundo.
+- `KarMCP_Seo_Meta` (`includes/class-seo-meta.php`) — un solo vocabulario sobre Yoast, Rank Math y KarSEO. Reutiliza los nombres de campo que ya usaba la integración de KarSEO; no inventes un segundo.
+
+> **KarSEO guarda bajo la clave `slim_seo`, y eso no es un descuido.** El plugin es un fork que rebautizó su superficie —namespace, text domain, constantes `KAR_SEO_*`— y dejó intacto el almacenamiento para que una instalación existente conserve sus datos. Renombrar la clave aquí leería todas las entradas vacías informando de éxito. Y **detectarlo se hace con `KAR_SEO_VER`, nunca con `SLIM_SEO_VER`**: KarSEO define las dos por compatibilidad, así que la segunda no distingue el fork del original.
 
 > **Intención guardada contra resultado renderizado.** `KarMCP_Seo_Meta` dice lo que hay *guardado*; el digest dice lo que *sale*. La auditoría compara los dos, y ahí es donde aparecen los hallazgos que importan: una plantilla `%%title%%` que expande a nada, una descripción que el tema nunca emite. Un valor con variables sin expandir **se reporta como plantilla, no se mide**: medir su longitud sería graduar la plantilla en vez de lo que lee el visitante.
 

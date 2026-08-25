@@ -389,12 +389,12 @@ class KarMCP_Ability_Registrar {
 		}
 
 		// SEO-plugin integrations. Each registers only when its SEO plugin is
-		// active. Only the Slim SEO adapter ships in this build; the Yoast,
+		// active. Only the KarSEO adapter ships in this build; the Yoast,
 		// Rank Math, AIOSEO, SEOPress, SEO Framework and SureRank adapters were
 		// upstream Pro files and are absent.
 		$seo_integrations = array();
-		if ( class_exists( 'KarMCP_SlimSEO_Integration' ) ) {
-			$seo_integrations[] = new KarMCP_SlimSEO_Integration();
+		if ( class_exists( 'KarMCP_KarSEO_Integration' ) ) {
+			$seo_integrations[] = new KarMCP_KarSEO_Integration();
 		}
 		foreach ( $seo_integrations as $seo_integration ) {
 			if ( $seo_integration->is_available() ) {

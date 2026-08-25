@@ -220,11 +220,11 @@ class KarMCP_Bootstrap {
 		require_once KARMCP_DIR . 'includes/abilities/i18n/class-translation-integration.php';
 		require_once KARMCP_DIR . 'includes/abilities/i18n/class-polylang-integration.php';
 		require_once KARMCP_DIR . 'includes/abilities/i18n/class-wpml-integration.php';
-		// SEO plugin integrations — abstract base + Slim SEO. The Yoast, Rank Math,
+		// SEO plugin integrations — abstract base + KarSEO. The Yoast, Rank Math,
 		// AIOSEO, SEOPress, SEO Framework and SureRank adapters were upstream Pro
 		// files and are not in this build.
 		require_once KARMCP_DIR . 'includes/abilities/seo/class-seo-integration.php';
-		require_once KARMCP_DIR . 'includes/abilities/seo/class-slimseo-integration.php';
+		require_once KARMCP_DIR . 'includes/abilities/seo/class-karseo-integration.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-performance-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-seo-audit-abilities.php';
 		require_once KARMCP_DIR . 'includes/abilities/class-a11y-audit-abilities.php';

@@ -91,7 +91,7 @@ class KarMCP_Seo_Audit_Abilities {
 			'karmcp/audit-page-seo',
 			array(
 				'label'               => __( 'Audit Page SEO', 'karmcp' ),
-				'description'         => __( 'Audits one page for SEO and returns scored findings with a recommendation on each. Renders the page the way a visitor gets it and grades that against the metadata the active SEO plugin (Yoast, Rank Math, Slim SEO) has stored: title and description presence and length, H1 and heading outline, content depth, image alt text, placeholder links, indexability, canonical, focus keyword placement. scope:"content" works on drafts; scope:"full" fetches the served page and is the only one that can judge the real title, canonical and lang. Read-only.', 'karmcp' ),
+				'description'         => __( 'Audits one page for SEO and returns scored findings with a recommendation on each. Renders the page the way a visitor gets it and grades that against the metadata the active SEO plugin (Yoast, Rank Math, KarSEO) has stored: title and description presence and length, H1 and heading outline, content depth, image alt text, placeholder links, indexability, canonical, focus keyword placement. scope:"content" works on drafts; scope:"full" fetches the served page and is the only one that can judge the real title, canonical and lang. Read-only.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),

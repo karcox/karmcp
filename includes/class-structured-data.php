@@ -372,7 +372,7 @@ class KarMCP_Structured_Data {
 			'Rank Math'   => 'RANK_MATH_VERSION',
 			'All in One SEO' => 'AIOSEO_VERSION',
 			'SEOPress'    => 'SEOPRESS_VERSION',
-			'Slim SEO'    => 'SLIM_SEO_VER',
+			'KarSEO'      => 'KAR_SEO_VER',
 		);
 
 		$active = array();

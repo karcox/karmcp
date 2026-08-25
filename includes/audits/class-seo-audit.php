@@ -333,7 +333,7 @@ class KarMCP_Seo_Audit {
 			'info',
 			'none',
 			__( 'No SEO plugin is active and the page emits no SEO metadata of its own. WordPress alone has no field for a meta description, a social image or a per-page robots setting, so those cannot be set on this page at all.', 'karmcp' ),
-			__( 'Install one — Yoast, Rank Math and Slim SEO are all read by this audit — or accept that the pages will be described by whatever text a search engine picks out first.', 'karmcp' )
+			__( 'Install one — Yoast, Rank Math and KarSEO are all read by this audit — or accept that the pages will be described by whatever text a search engine picks out first.', 'karmcp' )
 		);
 	}
 

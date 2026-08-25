@@ -42,7 +42,7 @@ para que un plugin SEO que no guarda en postmeta (All in One SEO usa tabla propi
 
 > **Actualizado 2026-08-15: la dependencia cara ya no lo es.** Este apartado listaba tres clases; `KarMCP_Content_Extractor` se escribió para `render-page` (1.1.0) y vive en `includes/class-content-extractor.php`. Era la pieza central y el motivo por el que este trabajo se aplazaba una y otra vez. **Ya no bloquea nada.**
 
-- ~~`KarMCP_Seo_Meta`~~ — **hecho**, `includes/class-seo-meta.php`. Una sola línea de campos sobre Yoast, Rank Math y Slim SEO. AIOSEO y SEOPress se detectan pero **no se leen**, a propósito: guardan en tablas propias y adivinar un esquema ajeno produce un lector que devuelve cadenas vacías para siempre. El seam para ellos es el filtro `karmcp_seo_meta`.
+- ~~`KarMCP_Seo_Meta`~~ — **hecho**, `includes/class-seo-meta.php`. Una sola línea de campos sobre Yoast, Rank Math y KarSEO. AIOSEO y SEOPress se detectan pero **no se leen**, a propósito: guardan en tablas propias y adivinar un esquema ajeno produce un lector que devuelve cadenas vacías para siempre. El seam para ellos es el filtro `karmcp_seo_meta`.
 - ~~`KarMCP_Color_Contrast`~~ — **hecho**, `includes/audits/class-color-contrast.php`. La matemática es exacta; lo que no lo es sigue siendo saber **qué dos colores comparar**, y ahí manda la regla de abajo. Añadido sobre el plan original: cuando no se conoce el tamaño de letra —lo normal, porque vive en la hoja de estilos— dos tercios del rango siguen teniendo respuesta rigurosa, y solo la banda entre 3:1 y 4.5:1 depende de él.
 
 Y una que no estaba en la lista original porque no se había pensado el diseño:

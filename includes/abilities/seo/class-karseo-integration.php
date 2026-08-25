@@ -1,11 +1,17 @@
 <?php
 /**
- * Slim SEO integration (free) — two dispatcher tools (slimseo-read /
- * slimseo-write) over Slim SEO's `slim_seo` post/term meta + option.
+ * KarSEO integration — two dispatcher tools (karseo-read / karseo-write) over
+ * KarSEO's `slim_seo` post/term meta + option.
  *
- * Slim SEO stores per-post and per-term SEO in a single `slim_seo` meta array
- * (keys: title, description, canonical, noindex, nofollow, facebook_image,
- * twitter_image); site settings live in the `slim_seo` option. Verified live.
+ * KarSEO stores per-post and per-term SEO in a single meta array (keys: title,
+ * description, canonical, noindex, nofollow, facebook_image, twitter_image);
+ * site settings live in the option of the same name.
+ *
+ * The meta and option key is `slim_seo`, not `kar_seo`, and that is deliberate
+ * on KarSEO's side rather than an oversight here: the plugin rebranded its
+ * surface (namespace, text domain, `KAR_SEO_*` constants) and left the storage
+ * layer untouched so an existing install keeps its data. Renaming the constant
+ * here would read every post as empty and report success doing it.
  *
  * @package KarMCP
  * @since   3.5.0
@@ -18,23 +24,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * @since 3.5.0
  */
-class KarMCP_SlimSEO_Integration extends KarMCP_SEO_Integration {
+class KarMCP_KarSEO_Integration extends KarMCP_SEO_Integration {
 
 	const META_KEY = 'slim_seo';
 
 	/** @return string */
 	public function id(): string {
-		return 'slimseo';
+		return 'karseo';
 	}
 
 	/** @return string */
 	public function label(): string {
-		return 'Slim SEO';
+		return 'KarSEO';
 	}
 
-	/** @return bool */
+	/**
+	 * KarSEO also defines `SLIM_SEO_VER` as a back-compat alias, so that
+	 * constant cannot tell the two apart. `KAR_SEO_VER` only exists in KarSEO.
+	 *
+	 * @return bool
+	 */
 	public function is_active(): bool {
-		return defined( 'SLIM_SEO_VER' );
+		return defined( 'KAR_SEO_VER' );
 	}
 
 	/** @return array<string,array> */
@@ -51,37 +62,37 @@ class KarMCP_SlimSEO_Integration extends KarMCP_SEO_Integration {
 				'mode' => 'read',
 				'run'  => array( $this, 'op_get_post_seo' ),
 				'perm' => $edit_posts,
-				'desc' => 'Get a post\'s Slim SEO metadata by { post_id } (title, description, canonical, noindex, nofollow, og_image, twitter_image).',
+				'desc' => 'Get a post\'s KarSEO metadata by { post_id } (title, description, canonical, noindex, nofollow, og_image, twitter_image).',
 			),
 			'get-term-seo'    => array(
 				'mode' => 'read',
 				'run'  => array( $this, 'op_get_term_seo' ),
 				'perm' => $edit_posts,
-				'desc' => 'Get a term\'s Slim SEO metadata by { term_id }.',
+				'desc' => 'Get a term\'s KarSEO metadata by { term_id }.',
 			),
 			'get-settings'    => array(
 				'mode' => 'read',
 				'run'  => array( $this, 'op_get_settings' ),
 				'perm' => $manage,
-				'desc' => 'Get Slim SEO site settings (the slim_seo option).',
+				'desc' => 'Get KarSEO site settings.',
 			),
 			'update-post-seo' => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'op_update_post_seo' ),
 				'perm' => $edit_posts,
-				'desc' => 'Update a post\'s Slim SEO metadata: { post_id, title?, description?, canonical?, noindex?, nofollow?, og_image?, twitter_image? }. Only provided fields change.',
+				'desc' => 'Update a post\'s KarSEO metadata: { post_id, title?, description?, canonical?, noindex?, nofollow?, og_image?, twitter_image? }. Only provided fields change.',
 			),
 			'update-term-seo' => array(
 				'mode' => 'write',
 				'run'  => array( $this, 'op_update_term_seo' ),
 				'perm' => $edit_posts,
-				'desc' => 'Update a term\'s Slim SEO metadata: { term_id, title?, description?, ... }.',
+				'desc' => 'Update a term\'s KarSEO metadata: { term_id, title?, description?, ... }.',
 			),
 		);
 	}
 
 	/**
-	 * Unified field => Slim SEO meta-array key.
+	 * Unified field => KarSEO meta-array key.
 	 *
 	 * @return array<string,string>
 	 */
@@ -97,13 +108,13 @@ class KarMCP_SlimSEO_Integration extends KarMCP_SEO_Integration {
 		);
 	}
 
-	/** The single `slim_seo` meta array is snapshotted by the base for the ledger. */
+	/** The single meta array is snapshotted by the base for the ledger. */
 	protected function recordable_meta_keys( string $object ): array {
 		return array( self::META_KEY );
 	}
 
 	/**
-	 * Shape a stored slim_seo array into the unified read view.
+	 * Shape a stored KarSEO array into the unified read view.
 	 *
 	 * @param array $data Stored meta.
 	 * @return array<string,mixed>
@@ -122,7 +133,7 @@ class KarMCP_SlimSEO_Integration extends KarMCP_SEO_Integration {
 	}
 
 	/**
-	 * Merge unified input fields into a stored slim_seo array.
+	 * Merge unified input fields into a stored KarSEO array.
 	 *
 	 * @param array $current Existing meta.
 	 * @param array $args    Operation arguments.

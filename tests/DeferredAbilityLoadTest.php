@@ -36,7 +36,7 @@ class DeferredAbilityLoadTest extends TestCase {
 		'KarMCP_WPCLI_Abilities'       => array( 'class-admin.php' ),
 		// Named in a doc comment only.
 		'KarMCP_Seo_Audit_Abilities'   => array( 'class-page-snapshot.php' ),
-		'KarMCP_SlimSEO_Integration'   => array( 'class-seo-meta.php' ),
+		'KarMCP_KarSEO_Integration'    => array( 'class-seo-meta.php' ),
 	);
 
 	/**
@@ -116,7 +116,7 @@ class DeferredAbilityLoadTest extends TestCase {
 			array( 'class-theme-integration.php', 'class-astra-integration.php' ),
 			array( 'class-theme-integration.php', 'class-kadence-integration.php' ),
 			array( 'class-form-integration.php', 'class-cf7-integration.php' ),
-			array( 'class-seo-integration.php', 'class-slimseo-integration.php' ),
+			array( 'class-seo-integration.php', 'class-karseo-integration.php' ),
 			array( 'class-translation-integration.php', 'class-polylang-integration.php' ),
 			array( 'class-translation-integration.php', 'class-wpml-integration.php' ),
 		);

@@ -2,6 +2,20 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.37.0]
+
+Replaces the Slim SEO integration with one for KarSEO.
+
+### Changed
+
+- **The SEO adapter now targets KarSEO.** `KarMCP_SlimSEO_Integration` became `KarMCP_KarSEO_Integration`, and its two dispatcher tools are `karmcp/karseo-read` and `karmcp/karseo-write`. The Tools card, the `audit-page-seo` description and the finding the audit emits when no SEO plugin is installed all name KarSEO now.
+
+- **Detection moved to `KAR_SEO_VER`.** KarSEO defines `SLIM_SEO_VER` as well, as a back-compat alias, so that constant cannot tell the fork from the plugin it forked from — a check on it would light up for either. `KAR_SEO_VER` exists only in KarSEO. The admin's availability helper had a second clause testing for a `\SlimSEO\Plugin` class that has never existed in either tree; it went with the rest.
+
+- **Stored data is deliberately untouched.** KarSEO rebranded its namespace, text domain and constants and left its storage alone, so per-post and per-term SEO still lives in the `slim_seo` meta array and site settings in the option of the same name. Renaming the key to match the new brand would have read every post as empty while reporting success, which is the failure mode this repo keeps writing tests against — so the key stays, with the reason in the code.
+
+- **Upgrades keep the write tool switched off.** `karmcp/slimseo-write` shipped seeded disabled since defaults v22. Renaming it would have left an upgraded site carrying a slug that names nothing while `karmcp/karseo-write` — the tool that writes now — arrived with no seed line at all, which is to say enabled. Defaults v42 strips the retired pair from the stored option and seeds the new write tool off. `AbilitySeedTest` covers it, via a third retirement list the scanner now reads.
+
 ## [1.36.0]
 
 Makes the Tools screen agree with what the plugin actually implements, and stops the guardrails refusing reads they were never meant to refuse.

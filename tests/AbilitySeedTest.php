@@ -50,7 +50,8 @@ class AbilitySeedTest extends TestCase {
 	/**
 	 * The retirement lists name tools that are *gone*: v5 strips the 62
 	 * per-widget Pro slugs the consolidation removed, v14 the pre-release ACF
-	 * per-operation slugs. A name reappearing as a live ability means the strip
+	 * per-operation slugs, v42 the two Slim SEO dispatcher slugs the KarSEO
+	 * rename replaced. A name reappearing as a live ability means the strip
 	 * now deletes a real user setting on upgrade.
 	 */
 	public function test_retired_slugs_have_not_come_back(): void {

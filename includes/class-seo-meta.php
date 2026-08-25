@@ -6,7 +6,7 @@
  * canonical, robots, social — under its own key names. This class reduces them
  * to one vocabulary so the audit does not need to know which plugin is running.
  *
- * The vocabulary is the one already in use by `KarMCP_SlimSEO_Integration`
+ * The vocabulary is the one already in use by `KarMCP_KarSEO_Integration`
  * (title, description, canonical, noindex, nofollow, og_image, twitter_image),
  * extended with the fields the audit needs. Do not invent a second one.
  *
@@ -63,7 +63,7 @@ class KarMCP_Seo_Meta {
 	 * installed at once. The rest are reported in `others` so the audit can say
 	 * so out loud, because two active SEO plugins is a real and confusing bug.
 	 */
-	const READABLE_PROVIDERS = array( 'yoast', 'rankmath', 'slimseo' );
+	const READABLE_PROVIDERS = array( 'yoast', 'rankmath', 'karseo' );
 
 	/**
 	 * Providers we can detect but deliberately do not read.
@@ -138,8 +138,10 @@ class KarMCP_Seo_Meta {
 				return defined( 'WPSEO_VERSION' );
 			case 'rankmath':
 				return defined( 'RANK_MATH_VERSION' );
-			case 'slimseo':
-				return defined( 'SLIM_SEO_VER' );
+			case 'karseo':
+				// KarSEO also defines SLIM_SEO_VER as a back-compat alias, so only
+				// KAR_SEO_VER identifies it rather than the plugin it forked from.
+				return defined( 'KAR_SEO_VER' );
 			case 'aioseo':
 				return defined( 'AIOSEO_VERSION' );
 			case 'seopress':
@@ -158,7 +160,7 @@ class KarMCP_Seo_Meta {
 		$labels = array(
 			'yoast'    => 'Yoast SEO',
 			'rankmath' => 'Rank Math',
-			'slimseo'  => 'Slim SEO',
+			'karseo'   => 'KarSEO',
 			'aioseo'   => 'All in One SEO',
 			'seopress' => 'SEOPress',
 			'none'     => __( 'No SEO plugin', 'karmcp' ),
@@ -272,8 +274,8 @@ class KarMCP_Seo_Meta {
 				return self::read_yoast( $post_id );
 			case 'rankmath':
 				return self::read_rankmath( $post_id );
-			case 'slimseo':
-				return self::read_slimseo( $post_id );
+			case 'karseo':
+				return self::read_karseo( $post_id );
 		}
 
 		return self::empty_fields();
@@ -305,8 +307,8 @@ class KarMCP_Seo_Meta {
 				self::write_mapped( $post_id, $known, self::rankmath_map() );
 				self::write_rankmath_robots( $post_id, $known );
 				return true;
-			case 'slimseo':
-				self::write_slimseo( $post_id, $known );
+			case 'karseo':
+				self::write_karseo( $post_id, $known );
 				return true;
 		}
 
@@ -393,12 +395,15 @@ class KarMCP_Seo_Meta {
 	}
 
 	/**
-	 * Reads Slim SEO's single meta array.
+	 * Reads KarSEO's single meta array.
+	 *
+	 * The key is `slim_seo`: KarSEO rebranded its surface and deliberately left
+	 * its storage alone, so an existing install keeps its data.
 	 *
 	 * @param int $post_id Post id.
 	 * @return array<string,mixed>
 	 */
-	private static function read_slimseo( int $post_id ): array {
+	private static function read_karseo( int $post_id ): array {
 		$fields = self::empty_fields();
 
 		$data = get_post_meta( $post_id, 'slim_seo', true );
@@ -508,12 +513,12 @@ class KarMCP_Seo_Meta {
 	}
 
 	/**
-	 * Writes Slim SEO's single meta array, merging into what is stored.
+	 * Writes KarSEO's single meta array, merging into what is stored.
 	 *
 	 * @param int   $post_id Post id.
 	 * @param array $fields  Supplied fields.
 	 */
-	private static function write_slimseo( int $post_id, array $fields ): void {
+	private static function write_karseo( int $post_id, array $fields ): void {
 		$current = get_post_meta( $post_id, 'slim_seo', true );
 		$current = is_array( $current ) ? $current : array();
 

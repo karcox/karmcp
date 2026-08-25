@@ -162,9 +162,9 @@ final class SeoMetaTest extends TestCase {
 		$this->assertSame( array( 'noindex' ), array_values( $robots ) );
 	}
 
-	// ----------------------------------------------------------- Slim SEO
+	// ------------------------------------------------------------- KarSEO
 
-	public function test_reads_slim_seo_single_meta_array(): void {
+	public function test_reads_karseo_single_meta_array(): void {
 		update_post_meta(
 			16,
 			'slim_seo',
@@ -176,7 +176,7 @@ final class SeoMetaTest extends TestCase {
 			)
 		);
 
-		$fields = KarMCP_Seo_Meta::read( 16, 'slimseo' );
+		$fields = KarMCP_Seo_Meta::read( 16, 'karseo' );
 
 		$this->assertSame( 'Slim título', $fields['title'] );
 		$this->assertSame( 'Slim descripción', $fields['description'] );
@@ -184,10 +184,10 @@ final class SeoMetaTest extends TestCase {
 		$this->assertTrue( $fields['noindex'] );
 	}
 
-	public function test_slim_seo_write_merges_into_the_stored_array(): void {
+	public function test_karseo_write_merges_into_the_stored_array(): void {
 		update_post_meta( 17, 'slim_seo', array( 'description' => 'Se queda' ) );
 
-		KarMCP_Seo_Meta::write( 17, array( 'title' => 'Nuevo' ), 'slimseo' );
+		KarMCP_Seo_Meta::write( 17, array( 'title' => 'Nuevo' ), 'karseo' );
 
 		$stored = get_post_meta( 17, 'slim_seo', true );
 
@@ -195,10 +195,10 @@ final class SeoMetaTest extends TestCase {
 		$this->assertSame( 'Se queda', $stored['description'] );
 	}
 
-	public function test_slim_seo_non_array_meta_reads_empty(): void {
+	public function test_karseo_non_array_meta_reads_empty(): void {
 		update_post_meta( 18, 'slim_seo', 'corrupto' );
 
-		$this->assertSame( KarMCP_Seo_Meta::empty_fields(), KarMCP_Seo_Meta::read( 18, 'slimseo' ) );
+		$this->assertSame( KarMCP_Seo_Meta::empty_fields(), KarMCP_Seo_Meta::read( 18, 'karseo' ) );
 	}
 
 	// -------------------------------------------------- template variables

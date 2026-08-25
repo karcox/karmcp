@@ -174,16 +174,17 @@ class KarMCP_Ability_Scan {
 	/**
 	 * Slugs the seeding routine deliberately *removes* from the stored option.
 	 *
-	 * These name tools that no longer exist — the v5 widget consolidation and
-	 * the v14 ACF layout change strip them so they stop lingering. A gate that
-	 * demanded they resolve to an ability would have the fact exactly backwards.
+	 * These name tools that no longer exist — the v5 widget consolidation, the
+	 * v14 ACF layout change and the v42 Slim SEO to KarSEO rename strip them so
+	 * they stop lingering. A gate that demanded they resolve to an ability would
+	 * have the fact exactly backwards.
 	 *
 	 * @return string[]
 	 */
 	public static function retired_slugs(): array {
 		$admin = self::read( 'includes/admin/class-admin.php' );
 		$out   = array();
-		foreach ( array( 'removed_widget_tool_slugs', 'legacy_acf_operation_slugs' ) as $fn ) {
+		foreach ( array( 'removed_widget_tool_slugs', 'legacy_acf_operation_slugs', 'retired_seo_tool_slugs' ) as $fn ) {
 			if ( preg_match( '/function ' . $fn . '\(\): array \{(.*?)\n\t\}/s', $admin, $m ) ) {
 				preg_match_all( '/\'(karmcp\/[a-z0-9-]+)\'/', $m[1], $hits );
 				$out = array_merge( $out, $hits[1] );

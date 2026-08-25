@@ -571,7 +571,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 41;
+	const DEFAULTS_VERSION = 42;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1066,7 +1066,7 @@ class KarMCP_Admin {
 
 		// v22 — SEO-plugin writes disabled-by-default (all 7 plugins).
 		if ( $applied < 22 ) {
-			$add[] = 'karmcp/slimseo-write';
+			$add[] = 'karmcp/karseo-write';
 			$add[] = 'karmcp/yoast-write';
 			$add[] = 'karmcp/rankmath-write';
 			$add[] = 'karmcp/aioseo-write';
@@ -1203,6 +1203,15 @@ class KarMCP_Admin {
 		// it ships off so that turning it on stays a decision a human makes.
 		if ( $applied < 41 ) {
 			$add[] = 'karmcp/skill-write';
+		}
+
+		// v42 - the Slim SEO adapter became the KarSEO adapter and its two slugs
+		// changed with it. Strip the old pair so it stops lingering in the stored
+		// option, and seed the new write tool off, which is where its predecessor
+		// was left since v22.
+		if ( $applied < 42 ) {
+			$existing = array_values( array_diff( $existing, self::retired_seo_tool_slugs() ) );
+			$add[]    = 'karmcp/karseo-write';
 		}
 
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
@@ -3317,8 +3326,10 @@ class KarMCP_Admin {
 	 *
 	 * @since 3.5.0
 	 */
-	public static function slimseo_available(): bool {
-		return defined( 'SLIM_SEO_VER' ) || class_exists( '\\SlimSEO\\Plugin' );
+	public static function karseo_available(): bool {
+		// KarSEO defines SLIM_SEO_VER too, as a back-compat alias, so only
+		// KAR_SEO_VER tells it apart from the plugin it forked from.
+		return defined( 'KAR_SEO_VER' );
 	}
 
 	/** @since 3.5.0 */
@@ -3360,8 +3371,8 @@ class KarMCP_Admin {
 	 */
 	public static function seo_tool_slugs(): array {
 		return array(
-			'karmcp/slimseo-read',
-			'karmcp/slimseo-write',
+			'karmcp/karseo-read',
+			'karmcp/karseo-write',
 			'karmcp/yoast-read',
 			'karmcp/yoast-write',
 			'karmcp/rankmath-read',
@@ -3374,6 +3385,25 @@ class KarMCP_Admin {
 			'karmcp/seoframework-write',
 			'karmcp/surerank-read',
 			'karmcp/surerank-write',
+		);
+	}
+
+	/**
+	 * The Slim SEO dispatcher slugs, retired in 1.37.0 when the adapter was
+	 * pointed at KarSEO.
+	 *
+	 * They are stripped rather than left to rot because the write half shipped
+	 * seeded disabled: an upgraded site would carry a slug that names nothing
+	 * while `karmcp/karseo-write` — the tool that actually writes now — arrived
+	 * with no seed line at all, which is to say enabled.
+	 *
+	 * @since 1.37.0
+	 * @return string[]
+	 */
+	public static function retired_seo_tool_slugs(): array {
+		return array(
+			'karmcp/slimseo-read',
+			'karmcp/slimseo-write',
 		);
 	}
 
@@ -3703,7 +3733,7 @@ class KarMCP_Admin {
 					),
 					'karmcp/audit-page-seo' => array(
 						'label'       => __( 'Audit Page SEO', 'karmcp' ),
-						'description' => __( 'Grades one page for SEO and returns findings with a recommendation on each: title and description presence and length, H1 and heading outline, content depth, readability in the language\'s own formula, image alt text, placeholder links, indexability, canonical and focus keyword. Reads the stored metadata from Yoast, Rank Math or Slim SEO when present. Read-only.', 'karmcp' ),
+						'description' => __( 'Grades one page for SEO and returns findings with a recommendation on each: title and description presence and length, H1 and heading outline, content depth, readability in the language\'s own formula, image alt text, placeholder links, indexability, canonical and focus keyword. Reads the stored metadata from Yoast, Rank Math or KarSEO when present. Read-only.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
 					),
 					'karmcp/audit-page-a11y' => array(
@@ -4612,27 +4642,27 @@ class KarMCP_Admin {
 					),
 				),
 			),
-			'wp_slimseo'       => array(
+			'wp_karseo'        => array(
 				'platform' => 'plugins',
 				'group'    => 'seo',
-				'label'    => __( 'Slim SEO', 'karmcp' ),
-				'note'     => __( 'Slim SEO exposed as two tools, one Read, one Write. Read and write the SEO metadata (title, description, canonical, robots, social) Slim SEO stores for posts and terms, plus its site settings.', 'karmcp' ),
+				'label'    => __( 'KarSEO', 'karmcp' ),
+				'note'     => __( 'KarSEO exposed as two tools, one Read, one Write. Read and write the SEO metadata (title, description, canonical, robots, social) KarSEO stores for posts and terms, plus its site settings.', 'karmcp' ),
 				'tools'    => array(
-					'karmcp/slimseo-read'  => array(
-						'label'            => __( 'Slim SEO Read', 'karmcp' ),
-						'description'      => __( 'Read Slim SEO post/term SEO metadata and site settings.', 'karmcp' ),
+					'karmcp/karseo-read'  => array(
+						'label'            => __( 'KarSEO Read', 'karmcp' ),
+						'description'      => __( 'Read KarSEO post/term SEO metadata and site settings.', 'karmcp' ),
 						'badges'           => array( 'read-only' ),
 						'operations'       => array( 'get-post-seo', 'get-term-seo', 'get-settings' ),
-						'available'        => self::slimseo_available(),
-						'unavailable_note' => __( 'Install & activate Slim SEO to enable this tool.', 'karmcp' ),
+						'available'        => self::karseo_available(),
+						'unavailable_note' => __( 'Install & activate KarSEO to enable this tool.', 'karmcp' ),
 					),
-					'karmcp/slimseo-write' => array(
-						'label'            => __( 'Slim SEO Write', 'karmcp' ),
-						'description'      => __( 'Update Slim SEO post/term SEO metadata.', 'karmcp' ),
+					'karmcp/karseo-write' => array(
+						'label'            => __( 'KarSEO Write', 'karmcp' ),
+						'description'      => __( 'Update KarSEO post/term SEO metadata.', 'karmcp' ),
 						'badges'           => array(),
 						'operations'       => array( 'update-post-seo', 'update-term-seo' ),
-						'available'        => self::slimseo_available(),
-						'unavailable_note' => __( 'Install & activate Slim SEO to enable this tool.', 'karmcp' ),
+						'available'        => self::karseo_available(),
+						'unavailable_note' => __( 'Install & activate KarSEO to enable this tool.', 'karmcp' ),
 					),
 				),
 			),

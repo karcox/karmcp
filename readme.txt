@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.36.0
+Stable tag: 1.37.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -50,7 +50,7 @@ There is no telemetry and no auto-updater: the plugin makes no outbound calls un
 
 **Speak your plugins**
 
-Integrations register only when their plugin is active, and follow a fixed two-tool shape (`<plugin>-read` / `<plugin>-write`) to keep the tool list small: **ACF / ACF PRO**, **Meta Box**, **Contact Form 7**, **Slim SEO**, **Astra**, **Spectra**, plus an active-theme integration that works with any theme.
+Integrations register only when their plugin is active, and follow a fixed two-tool shape (`<plugin>-read` / `<plugin>-write`) to keep the tool list small: **ACF / ACF PRO**, **Meta Box**, **Contact Form 7**, **KarSEO**, **Astra**, **Spectra**, plus an active-theme integration that works with any theme.
 
 **Requires:**
 
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.37.0 =
+Changed: the Slim SEO adapter is now the KarSEO adapter. The two dispatcher tools are `karseo-read` and `karseo-write`, the Tools card and the SEO audit name KarSEO, and detection is on `KAR_SEO_VER` rather than `SLIM_SEO_VER` - KarSEO defines both for back-compat, so only the first tells the two apart. Stored data is untouched: KarSEO rebranded its surface and deliberately kept the `slim_seo` meta and option keys, so an existing install keeps everything it had. On upgrade the retired `slimseo-*` slugs are stripped from the disabled-tools option and `karseo-write` is seeded off, where its predecessor was.
 
 = 1.36.0 =
 Fixed: WooCommerce and audit-page-seo were implemented but hidden from the Tools screen, so woo-read could not be switched off and woo-write and audit-page-seo could not be switched on; twelve toggles for integrations not in this build (GeneratePress, Blocksy, Brand Kits) no longer appear; five read-only tools (list-changes, get-change, get-page-snapshot, list-content-exports, search-content) were being refused by read-only mode and the freeze window because they never declared themselves read-only.

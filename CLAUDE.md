@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.35.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir |
+| Versión actual | `1.36.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir, y `VersionTripleTest` lo comprueba |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -39,7 +39,9 @@ pwsh bin/check.ps1
 
 PHPUnit + comprobación de frescura del POT + PHPStan + PHPCS, las cuatro bloqueantes. Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
 
-Estado de referencia (1.27.0): **1.147 tests, 8.955 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
+Estado de referencia (medido el 2026-08-25): **1.345 tests, 9.500 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
+
+> La cifra anterior que vivía aquí — 1.147 tests, 8.955 aserciones, fechada en la 1.27.0 — llevaba ocho releases sin revisarse. Es la misma clase de deriva que el "no hay CI": cierta cuando se escribió, y nadie volvió. Al cambiarla, mídela; no la estimes.
 
 ### El entorno, montado en la 1.16.2
 
@@ -149,7 +151,9 @@ El escape es el filtro `karmcp_needs_mcp_server`, para un cliente que llegue por
 
 `KarMCP_Content_Extractor` (`includes/class-content-extractor.php`) renderiza un post como lo recibe un visitante y lo reduce a un digest normalizado. Está partido a propósito: `analyze()` es **puro** (HTML entra, digest sale, sin WordPress) y es lo que se testea; `extract()` es la mitad que resuelve un post a HTML. No reinventa nada: el render delega en `KarMCP_Themer_Content_Renderer::render()` y el `scope: full` en `KarMCP_Performance_Page_Audit::fetch()`, que ya revalida cada salto de redirección contra el host de origen.
 
-Es la base compartida que pedía el roadmap de SEO y accesibilidad. **`audit-page-seo` ya la consume** (`includes/audits/class-seo-audit.php`); `audit-page-a11y` está pendiente y consumirá la misma vista.
+Es la base compartida que pedía el roadmap de SEO y accesibilidad, y **las dos auditorías ya la consumen**: `audit-page-seo` (`includes/audits/class-seo-audit.php`) y `audit-page-a11y` (`includes/audits/class-a11y-audit.php`), que además registra su sección de `get-page-snapshot`.
+
+> Esta línea decía que `audit-page-a11y` "está pendiente y consumirá la misma vista" mucho después de que la consumiera. Lo que sigue pendiente del roadmap de accesibilidad son las **dos herramientas de remediación** — `fix-color-contrast` y `add-alt-text-from-context` —, que no existen en el árbol.
 
 ### Las auditorías: reglas puras sobre el digest
 
@@ -323,11 +327,72 @@ Fuera de esta lista: **lo del CI se cerró el 2026-08-23.** Lo que aquí decía 
 - **Los `scope` OAuth se normalizan al emitirlos pero nadie los lee.** `KarMCP_OAuth_Bearer::permission_callback()` autentica el token y no mira su columna `scopes`. Hoy da igual —solo existe el scope `mcp`—, pero el día que haya un segundo scope, ese callback es donde hay que aplicarlo.
 - **El desinstalador conserva a propósito el contenido de los CPT** (brand kits, plantillas del Themer, Skills). Es una decisión, no un olvido: son cosas que escribió una persona. Está documentada en `class-uninstaller.php` para que no se re-litigue.
 
+## Revisión: cuatro ópticas y cinco puertas
+
+Montado el 2026-08-25. El punto de partida fue que el suelo determinista de este repo ya es
+grueso — PHPCS a cero sin baseline, PHPStan congelado, 1.345 tests, todo bloqueante en local
+y en CI — así que **un revisor que hable de escaping, nonces, SQL preparado o prefijos
+produce ruido, no señal**. Lo que se revisa a mano es solo lo que ninguna herramienta puede
+decidir.
+
+### Los agentes (`.claude/agents/`)
+
+| Agente | Su única pregunta | Cuándo se invoca |
+|---|---|---|
+| `contrato-agente` | ¿Lo que le declaramos al agente MCP es verdad? Anotaciones, descripciones, `input_schema`, `permission_callback`, catálogo de widgets, contra lo que hace el `execute_` | Diffs en `includes/abilities/`, `includes/widgets/catalog-*.php`, `class-schema-compat.php` |
+| `fallo-silencioso` | Si esto estuviera mal, ¿qué lo diría? Pares que deben cuadrar, escrituras que informan de éxito, puertas que no pueden fallar | Diffs que escriben en BD, meta, opciones o disco; y cambios en tests o CI |
+| `coste-arranque` | ¿Qué le acaba de cobrar esto a cada petición que no lo necesita? | Solo `class-bootstrap.php`, `class-plugin.php`, `class-autoloader.php`, `class-mcp-adapter-bootstrap.php`, módulos, o un archivo nuevo en `includes/abilities/` |
+| `doc-veraz` | ¿Sigue siendo cierto lo que está escrito? | Al preparar una release, y cuando un diff toca algo que este archivo nombra |
+
+Son cuatro y no dos porque **ninguno encuentra los hallazgos de los otros**: el texto atómico
+de la 1.34.0 no tenía ninguna declaración equivocada, un `get_option()` añadido a
+`wire_hooks()` es correcto y observable, y una descripción que miente falla en voz alta.
+Y no son seis porque los dos candidatos siguientes no son ópticas de revisión: la deriva
+contra Elementor y los plugins de terceros la dispara el calendario, no un diff, y ya tiene
+herramienta propia (`audit-widget-catalog`); y el porte desde el árbol de origen es un
+procedimiento con checklist escrita en [docs/MAINTENANCE-UPSTREAM.md](docs/MAINTENANCE-UPSTREAM.md).
+
+### Las puertas nuevas (`tests/`)
+
+Cinco cosas que la propuesta identificó como frágiles **no necesitaban un revisor: necesitaban
+un test**. Van como tests-invariante, que es el idioma que ya usan `ClassmapTest` y
+`AjaxActionContractTest`, y por eso corren en `bin/check.ps1` y en `tests.yml` sin tocar
+ninguno de los dos y sin romper la regla de paridad.
+
+| Test | Qué sujeta |
+|---|---|
+| `VersionTripleTest` | Cabecera, `KARMCP_VERSION` y `Stable tag` coinciden, y hay entrada de CHANGELOG. Era el paso 1 del ritual de release y no tenía nada detrás |
+| `AbilityCatalogParityTest` | El flag `'pro' => true` del catálogo cuadra con lo que el árbol implementa, en las dos direcciones |
+| `AbilitySeedTest` | Todo slug sembrado como deshabilitado significa algo, y ningún slug retirado ha vuelto |
+| `AbilityFileListTest` | Todo archivo de `includes/abilities/` está en `load_ability_classes()` — la dirección que `DeferredAbilityLoadTest` no cubría |
+| `GatesParityTest` | `bin/check.ps1` y los workflows corren las mismas puertas, y ningún paso lleva `continue-on-error` |
+
+`tests/lib-ability-scan.php` es el escáner compartido por los tres de abilities. Resuelve las
+seis formas en que este árbol nombra una ability y **falla si encuentra una séptima**
+(`unattributed()`), en vez de saltársela: un escáner que calla lo que no entiende convierte
+las tres puertas en verde hueco. Es la misma decisión que `KarMCP_SQL_Lexer`.
+
+> **`AbilityCatalogParityTest::KNOWN_DRIFT` es un trinquete, no una excusa.** Congela las 17
+> discrepancias que ya existían el día que se escribió, con el diagnóstico de cada una, para
+> que no crezcan mientras se decide qué hacer. Mismo patrón que `phpstan-baseline.neon` y que
+> `DeferredAbilityLoadTest::ALLOWED`. Hay un test que comprueba que cada línea siga
+> describiendo una discrepancia real, así que arreglar una **falla** hasta que se quita la
+> línea.
+
+### El hook (`.claude/settings.json`)
+
+Uno solo: `PostToolUse` sobre `Write|Edit`, y si la ruta cae en `includes/`, corre
+`php bin/generate-classmap.php --check` (~1,8 s). Te dice al momento que has añadido una clase
+sin regenerar el mapa, en vez de al final de un `check.ps1` de dos minutos. No hay `jq` en esta
+máquina, así que el filtro de ruta va con `grep` sobre el JSON de stdin; las dos ramas están
+probadas. No se enganchó `check.ps1` entero a ningún hook a propósito: 45 s de PHPCS en cada
+edición es la clase de fricción que acaba desactivada.
+
 ## Documentos
 
 | Archivo | Qué es |
 |---|---|
-| [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) | Themer extendido: **hecho** (referencia en el apéndice). SEO: **`audit-page-seo` hecho**. Accesibilidad: pendiente, con los seams verificados y el motor de reglas ya construido. |
+| [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) | Themer extendido: **hecho** (referencia en el apéndice). SEO: **`audit-page-seo` hecho**. Accesibilidad: **`audit-page-a11y` hecho** (motor en `includes/audits/class-a11y-audit.php`); pendientes las dos herramientas de remediación, `fix-color-contrast` y `add-alt-text-from-context`. |
 | [docs/ROADMAP-SECURITY.md](docs/ROADMAP-SECURITY.md) | El apartado de Seguridad, para sustituir a Wordfence: CI, pestaña Security, `harden-site`, drop-in de fatales, `update-core`, módulo de vulnerabilidades y parcheo. Escrito para implementarse desde cero. |
 | [docs/ROADMAP-OPTIMIZE.md](docs/ROADMAP-OPTIMIZE.md) | Continuación de la pestaña Optimize (1.11.0): prevención, autocargadas, cron, índices, coste por plugin. Lo que ya está hecho y lo que no debe entrar. |
 | [docs/AUDIT-RENDIMIENTO-PLUGIN.md](docs/AUDIT-RENDIMIENTO-PLUGIN.md) | Lo que cuesta **este** plugin por petición (2026-08-19, medido): 1,5 MB en cada visita, 2,7 MB en cada petición REST, 3-4 consultas de opción evitables. Siete hallazgos, y la lista de sospechosos que resultaron inocentes. |

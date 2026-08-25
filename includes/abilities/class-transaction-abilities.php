@@ -41,6 +41,21 @@ class KarMCP_Transaction_Abilities {
 
 	/**
 	 * Register the three abilities.
+	 *
+	 * All three carry MCP annotations, and the two readers need theirs for a
+	 * reason that is not obvious: `KarMCP_Schema_Compat::wrap_execute_callback()`
+	 * derives `$readonly` from `meta.annotations.readonly` and runs the
+	 * `karmcp_before_write` veto whenever it is falsy. A missing annotation is
+	 * falsy, so this file registered two pure reads that Guardrails treated as
+	 * writes: read-only mode and the freeze window both refused `list-changes`
+	 * and `get-change`, and the compact dispatcher left them out of its
+	 * read-only pass-through. The failure ran in the safe direction, which is
+	 * why it survived — nothing broke, a ledger the operator was entitled to
+	 * read simply came back refused.
+	 *
+	 * `KarMCP_Change_Log::all()` and `::get()` are `get_option()` and a loop
+	 * over it. That is worth stating, because CLAUDE.md records the opposite
+	 * case in `paused()`, where a reader wrote and the annotation became a lie.
 	 */
 	public function register(): void {
 		karmcp_register_ability(
@@ -51,6 +66,14 @@ class KarMCP_Transaction_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list' ),
 				'permission_callback' => array( $this, 'check_manage' ),
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -71,6 +94,14 @@ class KarMCP_Transaction_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get' ),
 				'permission_callback' => array( $this, 'check_manage' ),
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -89,6 +120,21 @@ class KarMCP_Transaction_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_rollback' ),
 				'permission_callback' => array( $this, 'check_manage' ),
+				// Not annotated destructive, which is a deliberate reading rather
+				// than an omission: Guardrails is the only consumer of that flag,
+				// and its "block destructive tools" mode would then block the one
+				// tool that undoes damage. This reverts only changes KarMCP itself
+				// recorded, refuses on conflict unless forced, and writes a
+				// compensating entry rather than erasing the original. The admin
+				// catalog says the same by giving it no badge.
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => false,
+						'destructive' => false,
+						'idempotent'  => false,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(

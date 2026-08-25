@@ -4214,10 +4214,20 @@ class KarMCP_Admin {
 					),
 				),
 			),
+			// Not 'pro'-flagged: the integration is implemented here, in
+			// includes/abilities/woo/, so the two dispatchers do register and
+			// belong on the screen that switches them on and off. (Naming its
+			// class in this comment is enough to trip DeferredAbilityLoadTest —
+			// that guard reads the source, prose included, and it is right to:
+			// this file runs before the tool classes load.) While the flag
+			// was set, get_all_tools() dropped the whole group: woo-read shipped
+			// enabled with no way to turn it off, and woo-write shipped disabled
+			// by v19 with no way to turn it on. The group is env-gated rather
+			// than absent, and that is what `available` / `unavailable_note`
+			// below are for.
 			'wp_woo'           => array(
 				'platform' => 'plugins',
 				'group'    => 'ecommerce',
-				'pro'      => true,
 				'label'    => __( 'WooCommerce', 'karmcp' ),
 				'note'     => __( 'WooCommerce is exposed as two tools, one Read, one Write, scoped to the product catalog and the store setup a site builder needs. Orders, refunds and customers are deliberately not exposed: that is the money and personal-data surface, and building a site never needs it. The AI calls a tool with an operation name; toggle a tool to allow or block all of its operations at once. Deleting a product also requires confirm:true. Requires WooCommerce active.', 'karmcp' ),
 				'tools'    => array(
@@ -4874,8 +4884,15 @@ class KarMCP_Admin {
 					),
 				),
 			),
+			// Flagged: neither integration is in this tree, so the four slugs
+			// below can never register and get_all_tools() drops the group. The
+			// `available` fields further down describe an environment gate — a
+			// component that could be installed — which is a different thing
+			// from an implementation that is absent, and only the flag covers
+			// the second.
 			'theme_generatepress' => array(
 				'platform' => 'themes',
+				'pro'      => true,
 				'label'    => __( 'GeneratePress + GenerateBlocks', 'karmcp' ),
 				'note'     => __( 'The GeneratePress theme and its GenerateBlocks companion (Pro). GeneratePress tools manage the theme\'s settings (enabled only when GeneratePress is the active theme); GenerateBlocks tools give the block catalog + insertion (enabled only when the GenerateBlocks plugin is active). Toggles for an inactive component are disabled until you install and activate it.', 'karmcp' ),
 				'tools'    => array(
@@ -4913,8 +4930,11 @@ class KarMCP_Admin {
 					),
 				),
 			),
+			// Flagged for the same reason as GeneratePress above: the Blocksy
+			// integration is not in this tree.
 			'theme_blocksy'    => array(
 				'platform' => 'themes',
+				'pro'      => true,
 				'label'    => __( 'Blocksy', 'karmcp' ),
 				'note'     => __( 'Blocksy (Pro): its dynamic content blocks (query/tax-query loops, dynamic-data, about-me, socials, share-box, breadcrumbs, …) and its Blocksy Companion extensions (activate/deactivate). Enabled when Blocksy Companion is active. Theme settings are reachable via the free Active Theme tools (theme-read/theme-write).', 'karmcp' ),
 				'tools'    => array(
@@ -5350,8 +5370,13 @@ class KarMCP_Admin {
 			class_exists( 'KarMCP_Pro_Brand_Kits' )
 			&& KarMCP_Pro_Brand_Kits::user_has_access()
 		) {
+			// Flagged: the four tools are registered by KarMCP_System_Kit_Abilities,
+			// which is one of the classes this tree does not have — its guard in
+			// the registrar always resolves false. (KarMCP_System_Kit_Writer does
+			// exist, but it is a primitive and registers nothing.)
 			$tools['brand_kits'] = array(
 				'platform' => 'elementor',
+				'pro'      => true,
 				'label' => __( 'Brand Kits', 'karmcp' ),
 				'tools' => array(
 					'karmcp/list-brand-kits'           => array(
@@ -5506,24 +5531,48 @@ class KarMCP_Admin {
 			);
 		}
 
-		// SEO & Accessibility describe abilities that are not in this build, so
-		// they stay 'pro'-flagged and get_all_tools() drops them — listing a
-		// toggle for a tool that can never register would be a lie the Tools
-		// screen tells the admin. The Widget and Block Builders below are NOT
-		// flagged: they are implemented here, so they belong on the screen where
-		// an administrator can switch them on. Bare block keeps the group
-		// assignments together.
+		// The 'pro' flag means "this group's abilities are not in this build", and
+		// get_all_tools() drops the whole group — listing a toggle for a tool that
+		// can never register would be a lie the Tools screen tells the admin. The
+		// flag has to track what the tree actually implements, in both directions:
+		// flagging an implemented group hides a working tool from the only screen
+		// that could enable it (the Widget and Block Builders, until 1.12.0), and
+		// leaving an absent group unflagged shows a toggle that does nothing.
+		//
+		// So the two page audits, which ARE implemented, live in unflagged groups,
+		// and the parts of each toolkit that are still absent live in flagged ones
+		// alongside them. AbilityCatalogParityTest holds both directions.
+		// Bare block keeps the group assignments together.
 		{
+			// audit-page-seo is implemented here — includes/abilities/class-seo-audit-abilities.php,
+			// registered unconditionally — so it gets its own unflagged group. It
+			// used to sit in the flagged group below, which meant it registered,
+			// shipped disabled by the v2 seeding, and was then dropped from the
+			// only screen that could switch it back on. That is the same trap the
+			// Widget and Block Builders were in until 1.12.0.
+			//
+			// No 'pro' badge either: the badge is what the v1 seeding reads on a
+			// fresh install, and it renders as an upsell on a build that has no
+			// other tier. It still ships disabled — v2 names its slug outright.
 			$tools['seo'] = array(
+				'platform' => 'wordpress',
+				'label' => __( 'SEO', 'karmcp' ),
+				'tools' => array(
+					'karmcp/audit-page-seo' => array(
+						'label'       => __( 'Audit Page SEO', 'karmcp' ),
+						'description' => __( 'Scored on-page SEO report (H1, title/meta, canonical, alts, links, word count).', 'karmcp' ),
+						'badges'      => array( 'read-only' ),
+					),
+				),
+			);
+
+			// The rest of the SEO toolkit is genuinely not in this build, so it
+			// stays flagged and get_all_tools() drops it.
+			$tools['seo_pro'] = array(
 				'platform' => 'wordpress',
 				'pro'      => true,
 				'label' => __( 'SEO', 'karmcp' ),
 				'tools' => array(
-					'karmcp/audit-page-seo'                => array(
-						'label'       => __( 'Audit Page SEO', 'karmcp' ),
-						'description' => __( 'Scored on-page SEO report (H1, title/meta, canonical, alts, links, word count).', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
-					),
 					'karmcp/extract-keywords-from-content' => array(
 						'label'       => __( 'Extract Keywords', 'karmcp' ),
 						'description' => __( 'Frequency keyword + phrase extraction from page content.', 'karmcp' ),
@@ -5547,15 +5596,32 @@ class KarMCP_Admin {
 				),
 			);
 
+			// Same split as SEO above, for the same reason. audit-page-a11y is
+			// implemented — includes/abilities/class-a11y-audit-abilities.php,
+			// registered unconditionally — and was already visible; what was
+			// wrong here is the other direction. The group was unflagged as a
+			// whole, so the Tools screen also offered toggles for the two
+			// remediation tools, which nothing in this build registers. A switch
+			// that does nothing is the same lie as a missing one.
 			$tools['a11y'] = array(
 				'platform' => 'elementor',
 				'label' => __( 'Accessibility', 'karmcp' ),
 				'tools' => array(
-					'karmcp/audit-page-a11y'           => array(
+					'karmcp/audit-page-a11y' => array(
 						'label'       => __( 'Audit Page Accessibility', 'karmcp' ),
 						'description' => __( 'WCAG-oriented report: contrast, alts, heading order, link text, form labels.', 'karmcp' ),
-						'badges'      => array( 'pro', 'read-only' ),
+						'badges'      => array( 'read-only' ),
 					),
+				),
+			);
+
+			// The two remediation tools are not in this build, so they stay
+			// flagged and get_all_tools() drops them.
+			$tools['a11y_pro'] = array(
+				'platform' => 'elementor',
+				'pro'      => true,
+				'label' => __( 'Accessibility', 'karmcp' ),
+				'tools' => array(
 					'karmcp/fix-color-contrast'        => array(
 						'label'       => __( 'Fix Color Contrast', 'karmcp' ),
 						'description' => __( 'Proposes (apply:true to write) adjusted text colors so failing pairs meet WCAG AA. Dry-run by default.', 'karmcp' ),

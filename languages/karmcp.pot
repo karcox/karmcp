@@ -2,9 +2,9 @@
 # This file is distributed under the GPL-2.0-or-later licence.
 msgid ""
 msgstr ""
-"Project-Id-Version: KarMCP 1.35.0\n"
+"Project-Id-Version: KarMCP 1.36.0\n"
 "Report-Msgid-Bugs-To: https://github.com/karcox/karmcp/issues\n"
-"POT-Creation-Date: 2026-08-24 13:18:34+0000\n"
+"POT-Creation-Date: 2026-08-25 13:16:15+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -813,7 +813,7 @@ msgid "A post type \"%s\" already exists."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-search-abilities.php:97
+#: includes/abilities/class-search-abilities.php:118
 msgid "A query is required."
 msgstr ""
 
@@ -946,10 +946,10 @@ msgid "A valid \"object_id\" (existing term) is required."
 msgstr ""
 
 #: includes/abilities/class-a11y-audit-abilities.php:162
-#: includes/abilities/class-content-mirror-abilities.php:120
+#: includes/abilities/class-content-mirror-abilities.php:157
 #: includes/abilities/class-render-abilities.php:110
 #: includes/abilities/class-seo-audit-abilities.php:231
-#: includes/abilities/class-snapshot-abilities.php:109
+#: includes/abilities/class-snapshot-abilities.php:123
 #: includes/class-seo-meta.php:227
 msgid "A valid post_id is required."
 msgstr ""
@@ -1010,7 +1010,8 @@ msgstr ""
 msgid "Abilities API:"
 msgstr ""
 
-#: includes/admin/class-admin.php:5552
+#: includes/admin/class-admin.php:5608
+#: includes/admin/class-admin.php:5623
 msgid "Accessibility"
 msgstr ""
 
@@ -1056,22 +1057,22 @@ msgstr ""
 msgid "Activate immediately (default true). Pass false to leave it as a draft for a human to review."
 msgstr ""
 
-#: includes/admin/class-admin.php:4947
+#: includes/admin/class-admin.php:4967
 msgid "Activate or deactivate a Blocksy Companion extension by slug."
 msgstr ""
 
-#: includes/admin/class-admin.php:4810
-#: includes/admin/class-admin.php:4818
+#: includes/admin/class-admin.php:4820
+#: includes/admin/class-admin.php:4828
 msgid "Activate the Astra theme to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4888
-#: includes/admin/class-admin.php:4896
+#: includes/admin/class-admin.php:4905
+#: includes/admin/class-admin.php:4913
 msgid "Activate the GeneratePress theme to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4849
-#: includes/admin/class-admin.php:4857
+#: includes/admin/class-admin.php:4859
+#: includes/admin/class-admin.php:4867
 msgid "Activate the Kadence theme to enable this tool."
 msgstr ""
 
@@ -1097,7 +1098,7 @@ msgstr ""
 msgid "Activates an installed theme."
 msgstr ""
 
-#: includes/admin/class-admin.php:5702
+#: includes/admin/class-admin.php:5768
 msgid "Activates or deactivates a custom block."
 msgstr ""
 
@@ -1106,7 +1107,7 @@ msgstr ""
 msgid "Activates or deactivates a custom block. A deactivated block stops rendering everywhere it is used."
 msgstr ""
 
-#: includes/admin/class-admin.php:5608
+#: includes/admin/class-admin.php:5674
 msgid "Activates or deactivates a custom widget."
 msgstr ""
 
@@ -1115,7 +1116,7 @@ msgstr ""
 msgid "Activates or deactivates a custom widget. Activation is refused if the widget errors when Elementor builds it."
 msgstr ""
 
-#: includes/admin/class-admin.php:5655
+#: includes/admin/class-admin.php:5721
 msgid "Activates or deactivates an element extension."
 msgstr ""
 
@@ -1148,7 +1149,7 @@ msgid "Active Elementor kit not found."
 msgstr ""
 
 #: includes/abilities/class-active-theme-integration.php:51
-#: includes/admin/class-admin.php:4781
+#: includes/admin/class-admin.php:4791
 msgid "Active Theme"
 msgstr ""
 
@@ -1180,52 +1181,52 @@ msgstr ""
 msgid "Actually delete. Default false, which returns the plan only."
 msgstr ""
 
-#: includes/admin/class-admin.php:5565
+#: includes/admin/class-admin.php:5631
 msgid "Add Alt Text from Context"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:361
-#: includes/admin/class-admin.php:5312
+#: includes/admin/class-admin.php:5332
 msgid "Add Atomic Button"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:453
-#: includes/admin/class-admin.php:5337
+#: includes/admin/class-admin.php:5357
 msgid "Add Atomic Divider"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:324
-#: includes/admin/class-admin.php:5302
+#: includes/admin/class-admin.php:5322
 msgid "Add Atomic Heading"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:380
-#: includes/admin/class-admin.php:5317
+#: includes/admin/class-admin.php:5337
 msgid "Add Atomic Image"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:343
-#: includes/admin/class-admin.php:5307
+#: includes/admin/class-admin.php:5327
 msgid "Add Atomic Paragraph"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:400
-#: includes/admin/class-admin.php:5322
+#: includes/admin/class-admin.php:5342
 msgid "Add Atomic SVG"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:435
-#: includes/admin/class-admin.php:5332
+#: includes/admin/class-admin.php:5352
 msgid "Add Atomic Video"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:101
-#: includes/admin/class-admin.php:5292
+#: includes/admin/class-admin.php:5312
 msgid "Add Atomic Widget"
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:418
-#: includes/admin/class-admin.php:5327
+#: includes/admin/class-admin.php:5347
 msgid "Add Atomic YouTube"
 msgstr ""
 
@@ -1235,37 +1236,37 @@ msgid "Add Block"
 msgstr ""
 
 #: includes/abilities/class-custom-code-abilities.php:451
-#: includes/admin/class-admin.php:5223
+#: includes/admin/class-admin.php:5243
 msgid "Add Code Snippet"
 msgstr ""
 
 #: includes/abilities/forms/class-form-widget-abilities.php:99
-#: includes/admin/class-admin.php:5067
+#: includes/admin/class-admin.php:5087
 msgid "Add Contact Form"
 msgstr ""
 
 #: includes/abilities/class-layout-abilities.php:324
-#: includes/admin/class-admin.php:4991
+#: includes/admin/class-admin.php:5011
 msgid "Add Container"
 msgstr ""
 
 #: includes/abilities/class-custom-code-abilities.php:160
-#: includes/admin/class-admin.php:5213
+#: includes/admin/class-admin.php:5233
 msgid "Add Custom CSS"
 msgstr ""
 
 #: includes/abilities/class-custom-code-abilities.php:324
-#: includes/admin/class-admin.php:5218
+#: includes/admin/class-admin.php:5238
 msgid "Add Custom JavaScript"
 msgstr ""
 
 #: includes/abilities/class-atomic-layout-abilities.php:200
-#: includes/admin/class-admin.php:5280
+#: includes/admin/class-admin.php:5300
 msgid "Add Div Block"
 msgstr ""
 
 #: includes/abilities/class-atomic-layout-abilities.php:89
-#: includes/admin/class-admin.php:5275
+#: includes/admin/class-admin.php:5295
 msgid "Add Flexbox"
 msgstr ""
 
@@ -1274,7 +1275,7 @@ msgid "Add New"
 msgstr ""
 
 #: includes/abilities/class-widget-abilities.php:302
-#: includes/admin/class-admin.php:5057
+#: includes/admin/class-admin.php:5077
 msgid "Add Pro Widget"
 msgstr ""
 
@@ -1288,7 +1289,7 @@ msgid "Add Skill"
 msgstr ""
 
 #: includes/abilities/class-stock-image-abilities.php:554
-#: includes/admin/class-admin.php:5191
+#: includes/admin/class-admin.php:5211
 msgid "Add Stock Image"
 msgstr ""
 
@@ -1297,7 +1298,7 @@ msgid "Add Theme Template"
 msgstr ""
 
 #: includes/abilities/class-widget-abilities.php:271
-#: includes/admin/class-admin.php:5052
+#: includes/admin/class-admin.php:5072
 msgid "Add Widget"
 msgstr ""
 
@@ -1339,7 +1340,7 @@ msgstr ""
 msgid "Adds X-Frame-Options: SAMEORIGIN, X-Content-Type-Options: nosniff and a conservative Referrer-Policy, plus HSTS when the site is already on HTTPS. Content-Security-Policy is deliberately NOT set: a generated CSP breaks page builders, and a broken CSP is worse than none."
 msgstr ""
 
-#: includes/admin/class-admin.php:5219
+#: includes/admin/class-admin.php:5239
 msgid "Adds a JavaScript snippet to a page via an HTML widget."
 msgstr ""
 
@@ -1353,11 +1354,11 @@ msgstr ""
 msgid "Adds a custom JavaScript snippet to a page by inserting an HTML widget containing a <script> tag. Works with free Elementor (no Pro required). The JS code is automatically wrapped in <script> tags, do NOT include them yourself. Use wrap_dom_ready=true to wrap in a DOMContentLoaded listener. For site-wide JS, use add-code-snippet instead (requires Pro)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4992
+#: includes/admin/class-admin.php:5012
 msgid "Adds a new flexbox container to a page or inside another container."
 msgstr ""
 
-#: includes/admin/class-admin.php:5068
+#: includes/admin/class-admin.php:5088
 msgid "Adds a working Elementor Pro form from a plain field list, wiring the notification email, reply-to and submit button. Registers only when the Form widget is available."
 msgstr ""
 
@@ -1421,51 +1422,51 @@ msgstr ""
 msgid "Adds an Elementor Pro (or WooCommerce) widget to a container. Discover types with list-widgets (tier:pro) and settings with get-widget-schema. Only available when Elementor Pro is active."
 msgstr ""
 
-#: includes/admin/class-admin.php:5058
+#: includes/admin/class-admin.php:5078
 msgid "Adds an Elementor Pro / WooCommerce widget by type. Registers only when Elementor Pro is active."
 msgstr ""
 
-#: includes/admin/class-admin.php:5323
+#: includes/admin/class-admin.php:5343
 msgid "Adds an atomic SVG element (e-svg)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5328
+#: includes/admin/class-admin.php:5348
 msgid "Adds an atomic YouTube embed (e-youtube)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5313
+#: includes/admin/class-admin.php:5333
 msgid "Adds an atomic button element (e-button)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5281
+#: includes/admin/class-admin.php:5301
 msgid "Adds an atomic div-block container (e-div-block)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5338
+#: includes/admin/class-admin.php:5358
 msgid "Adds an atomic divider element (e-divider)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5276
+#: includes/admin/class-admin.php:5296
 msgid "Adds an atomic flexbox container (e-flexbox)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5303
+#: includes/admin/class-admin.php:5323
 msgid "Adds an atomic heading element (e-heading)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5318
+#: includes/admin/class-admin.php:5338
 msgid "Adds an atomic image element (e-image)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5308
+#: includes/admin/class-admin.php:5328
 msgid "Adds an atomic paragraph element (e-paragraph)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5333
+#: includes/admin/class-admin.php:5353
 msgid "Adds an atomic self-hosted video (e-self-hosted-video)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5635
+#: includes/admin/class-admin.php:5701
 msgid "Adds an option to Elementor elements: a section in the panel of the targeted elements, compiled into the sandbox."
 msgstr ""
 
@@ -1474,7 +1475,7 @@ msgstr ""
 msgid "Adds any Elementor 4.0+ atomic widget to a container. Settings must use the $$type prop format. For simpler usage, prefer the convenience tools (add-atomic-heading, etc.)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5053
+#: includes/admin/class-admin.php:5073
 msgid "Adds any free/core Elementor widget by type (discover with list-widgets / get-widget-schema)."
 msgstr ""
 
@@ -1483,7 +1484,7 @@ msgstr ""
 msgid "Adds any free/core Elementor widget to a container. Discover types with list-widgets and their settings with get-widget-schema. Catalog defaults are merged automatically."
 msgstr ""
 
-#: includes/admin/class-admin.php:5214
+#: includes/admin/class-admin.php:5234
 msgid "Adds custom CSS to a specific element or the entire page."
 msgstr ""
 
@@ -1500,7 +1501,7 @@ msgstr ""
 msgid "After saving, run  openclaw mcp login %NAME%  to authorize through your browser."
 msgstr ""
 
-#: includes/admin/class-admin.php:5450
+#: includes/admin/class-admin.php:5475
 #: includes/modules/class-agent-skills-module.php:34
 msgid "Agent Skills"
 msgstr ""
@@ -1538,19 +1539,19 @@ msgstr ""
 msgid "All archives"
 msgstr ""
 
-#: includes/admin/class-admin.php:4683
+#: includes/admin/class-admin.php:4693
 msgid "All in One SEO"
 msgstr ""
 
-#: includes/admin/class-admin.php:4687
+#: includes/admin/class-admin.php:4697
 msgid "All in One SEO Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4695
+#: includes/admin/class-admin.php:4705
 msgid "All in One SEO Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4684
+#: includes/admin/class-admin.php:4694
 msgid "All in One SEO exposed as two tools, one Read, one Write. Read/write post SEO metadata and read schema (structured data) + site settings."
 msgstr ""
 
@@ -1736,7 +1737,7 @@ msgstr ""
 msgid "Application passwords can only be generated for administrator accounts here."
 msgstr ""
 
-#: includes/admin/class-admin.php:5364
+#: includes/admin/class-admin.php:5389
 msgid "Applies a brand kit: replaces system colors + typography site-wide."
 msgstr ""
 
@@ -1745,11 +1746,11 @@ msgstr ""
 msgid "Applies a saved Elementor template to a page at a given position, inserting its elements with fresh IDs."
 msgstr ""
 
-#: includes/admin/class-admin.php:5084
+#: includes/admin/class-admin.php:5104
 msgid "Applies a saved template to a target page."
 msgstr ""
 
-#: includes/admin/class-admin.php:5032
+#: includes/admin/class-admin.php:5052
 msgid "Applies multiple element updates in a single call."
 msgstr ""
 
@@ -1766,12 +1767,12 @@ msgstr ""
 msgid "Applies to"
 msgstr ""
 
-#: includes/admin/class-admin.php:5363
+#: includes/admin/class-admin.php:5388
 msgid "Apply Brand Kit"
 msgstr ""
 
 #: includes/abilities/class-template-abilities.php:301
-#: includes/admin/class-admin.php:5083
+#: includes/admin/class-admin.php:5103
 msgid "Apply Template"
 msgstr ""
 
@@ -1859,15 +1860,15 @@ msgstr ""
 msgid "Astra"
 msgstr ""
 
-#: includes/admin/class-admin.php:4800
+#: includes/admin/class-admin.php:4810
 msgid "Astra + Spectra"
 msgstr ""
 
-#: includes/admin/class-admin.php:4805
+#: includes/admin/class-admin.php:4815
 msgid "Astra Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4813
+#: includes/admin/class-admin.php:4823
 msgid "Astra Write"
 msgstr ""
 
@@ -1880,11 +1881,11 @@ msgstr ""
 msgid "At least one location rule is required."
 msgstr ""
 
-#: includes/admin/class-admin.php:5242
+#: includes/admin/class-admin.php:5262
 msgid "Atomic Layout (Elementor 4.0+)"
 msgstr ""
 
-#: includes/admin/class-admin.php:5289
+#: includes/admin/class-admin.php:5309
 msgid "Atomic Widgets (Elementor 4.0+)"
 msgstr ""
 
@@ -1996,13 +1997,13 @@ msgstr ""
 
 #: includes/abilities/class-a11y-audit-abilities.php:48
 #: includes/admin/class-admin.php:3710
-#: includes/admin/class-admin.php:5555
+#: includes/admin/class-admin.php:5611
 msgid "Audit Page Accessibility"
 msgstr ""
 
 #: includes/abilities/class-seo-audit-abilities.php:93
 #: includes/admin/class-admin.php:3705
-#: includes/admin/class-admin.php:5523
+#: includes/admin/class-admin.php:5562
 msgid "Audit Page SEO"
 msgstr ""
 
@@ -2121,7 +2122,7 @@ msgstr ""
 msgid "Backup, %s"
 msgstr ""
 
-#: includes/admin/class-admin.php:5031
+#: includes/admin/class-admin.php:5051
 msgid "Batch Update"
 msgstr ""
 
@@ -2158,7 +2159,7 @@ msgstr ""
 msgid "Block"
 msgstr ""
 
-#: includes/admin/class-admin.php:5668
+#: includes/admin/class-admin.php:5734
 msgid "Block Builder"
 msgstr ""
 
@@ -2233,27 +2234,27 @@ msgstr ""
 msgid "Blocks, widgets & snippets"
 msgstr ""
 
-#: includes/admin/class-admin.php:4918
+#: includes/admin/class-admin.php:4938
 msgid "Blocksy"
 msgstr ""
 
-#: includes/admin/class-admin.php:4919
+#: includes/admin/class-admin.php:4939
 msgid "Blocksy (Pro): its dynamic content blocks (query/tax-query loops, dynamic-data, about-me, socials, share-box, breadcrumbs, …) and its Blocksy Companion extensions (activate/deactivate). Enabled when Blocksy Companion is active. Theme settings are reachable via the free Active Theme tools (theme-read/theme-write)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4922
+#: includes/admin/class-admin.php:4942
 msgid "Blocksy Blocks Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4930
+#: includes/admin/class-admin.php:4950
 msgid "Blocksy Blocks Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4938
+#: includes/admin/class-admin.php:4958
 msgid "Blocksy Extensions Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4946
+#: includes/admin/class-admin.php:4966
 msgid "Blocksy Extensions Write"
 msgstr ""
 
@@ -2287,7 +2288,7 @@ msgstr ""
 msgid "Brand Color"
 msgstr ""
 
-#: includes/admin/class-admin.php:5355
+#: includes/admin/class-admin.php:5380
 msgid "Brand Kits"
 msgstr ""
 
@@ -2325,7 +2326,7 @@ msgid "Broken images"
 msgstr ""
 
 #: includes/abilities/class-composite-abilities.php:115
-#: includes/admin/class-admin.php:5140
+#: includes/admin/class-admin.php:5160
 msgid "Build Page"
 msgstr ""
 
@@ -2407,7 +2408,7 @@ msgid "By author"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-snapshot-abilities.php:91
+#: includes/abilities/class-snapshot-abilities.php:105
 msgid "Bypass the heavy-section cache."
 msgstr ""
 
@@ -2535,19 +2536,19 @@ msgstr ""
 msgid "Cards"
 msgstr ""
 
-#: includes/admin/class-admin.php:4861
+#: includes/admin/class-admin.php:4871
 msgid "Catalog of available Kadence blocks (list-blocks) and each block's real attributes + example markup (get-block-schema)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4822
+#: includes/admin/class-admin.php:4832
 msgid "Catalog of available Spectra blocks (list-blocks) and each block's real attributes + example markup (get-block-schema)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4923
+#: includes/admin/class-admin.php:4943
 msgid "Catalog of the Blocksy blocks (list-blocks) and each block's attributes (get-block-schema)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4900
+#: includes/admin/class-admin.php:4917
 msgid "Catalog of the GenerateBlocks V2 blocks (list-blocks) and each block's attributes + styles model (get-block-schema)."
 msgstr ""
 
@@ -2578,16 +2579,16 @@ msgid "Change history"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:95
+#: includes/abilities/class-transaction-abilities.php:141
 msgid "Change id to roll back."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:77
+#: includes/abilities/class-transaction-abilities.php:108
 msgid "Change id."
 msgstr ""
 
-#: includes/abilities/class-transaction-abilities.php:160
+#: includes/abilities/class-transaction-abilities.php:206
 #: includes/class-change-log.php:205
 msgid "Change not found."
 msgstr ""
@@ -2875,11 +2876,11 @@ msgstr ""
 msgid "Compiled (attached to a template)"
 msgstr ""
 
-#: includes/admin/class-admin.php:5588
+#: includes/admin/class-admin.php:5654
 msgid "Compiles a custom Elementor widget from a spec into an isolated sandbox and activates it."
 msgstr ""
 
-#: includes/admin/class-admin.php:5682
+#: includes/admin/class-admin.php:5748
 msgid "Compiles a custom Gutenberg block from a spec into an isolated sandbox and activates it."
 msgstr ""
 
@@ -2898,7 +2899,7 @@ msgstr ""
 msgid "Compiles a spec into an element extension inside the sandbox and, by default, activates it — adding its section to the panel of every targeted element. Requires Elementor 4.2+ atomic elements; it does not touch classic sections or columns."
 msgstr ""
 
-#: includes/admin/class-admin.php:5137
+#: includes/admin/class-admin.php:5157
 msgid "Composite"
 msgstr ""
 
@@ -2964,15 +2965,15 @@ msgstr ""
 msgid "Connection settings"
 msgstr ""
 
-#: includes/admin/class-admin.php:4384
+#: includes/admin/class-admin.php:4394
 msgid "Contact Form 7"
 msgstr ""
 
-#: includes/admin/class-admin.php:4388
+#: includes/admin/class-admin.php:4398
 msgid "Contact Form 7 Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4396
+#: includes/admin/class-admin.php:4406
 msgid "Contact Form 7 Write"
 msgstr ""
 
@@ -2981,7 +2982,7 @@ msgstr ""
 msgid "Contact Form 7 does not store submissions; it sends them by email and keeps nothing. Install the Flamingo plugin (by the same author) to have them saved, and this operation will read them."
 msgstr ""
 
-#: includes/admin/class-admin.php:4385
+#: includes/admin/class-admin.php:4395
 msgid "Contact Form 7 exposed as two tools, one Read, one Write. Reads list forms, fields, mail templates and messages; writes create forms from a field list and update mail, messages and settings. CF7 stores no submissions of its own, so list-entries reads them from Flamingo when that plugin is installed."
 msgstr ""
 
@@ -3359,17 +3360,17 @@ msgid "Create Backup"
 msgstr ""
 
 #: includes/abilities/class-block-builder-abilities.php:291
-#: includes/admin/class-admin.php:5681
+#: includes/admin/class-admin.php:5747
 msgid "Create Custom Block"
 msgstr ""
 
 #: includes/abilities/class-widget-builder-abilities.php:295
-#: includes/admin/class-admin.php:5587
+#: includes/admin/class-admin.php:5653
 msgid "Create Custom Widget"
 msgstr ""
 
 #: includes/abilities/class-extension-builder-abilities.php:363
-#: includes/admin/class-admin.php:5634
+#: includes/admin/class-admin.php:5700
 msgid "Create Element Extension"
 msgstr ""
 
@@ -3378,16 +3379,16 @@ msgstr ""
 msgid "Create Elementor Page"
 msgstr ""
 
-#: includes/admin/class-admin.php:5088
+#: includes/admin/class-admin.php:5108
 msgid "Create Elementor Theme Template"
 msgstr ""
 
 #: includes/abilities/class-global-classes-write-abilities.php:89
-#: includes/admin/class-admin.php:5255
+#: includes/admin/class-admin.php:5275
 msgid "Create Global Class"
 msgstr ""
 
-#: includes/admin/class-admin.php:5395
+#: includes/admin/class-admin.php:5420
 msgid "Create PHP Snippet"
 msgstr ""
 
@@ -3396,12 +3397,12 @@ msgstr ""
 msgid "Create PHP Snippet (draft)"
 msgstr ""
 
-#: includes/admin/class-admin.php:4960
+#: includes/admin/class-admin.php:4980
 msgid "Create Page"
 msgstr ""
 
 #: includes/abilities/class-template-abilities.php:840
-#: includes/admin/class-admin.php:5108
+#: includes/admin/class-admin.php:5128
 msgid "Create Popup"
 msgstr ""
 
@@ -3416,7 +3417,7 @@ msgid "Create Redirect"
 msgstr ""
 
 #: includes/abilities/class-themer-php-abilities.php:63
-#: includes/admin/class-admin.php:5481
+#: includes/admin/class-admin.php:5506
 msgid "Create Theme PHP Template"
 msgstr ""
 
@@ -3435,7 +3436,7 @@ msgstr ""
 msgid "Create a .webp copy of each image size on upload."
 msgstr ""
 
-#: includes/admin/class-admin.php:4397
+#: includes/admin/class-admin.php:4407
 msgid "Create a CF7 form from a field list, and update mail templates, messages and additional settings."
 msgstr ""
 
@@ -3459,12 +3460,12 @@ msgstr ""
 msgid "Create a skill. Arguments: name (machine name / slug), title, summary, body, status (publish|draft, default draft)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4258
-#: includes/admin/class-admin.php:4282
+#: includes/admin/class-admin.php:4268
+#: includes/admin/class-admin.php:4292
 msgid "Create a translation of a page, assign a post's language, and link existing posts as translations. Disabled by default."
 msgstr ""
 
-#: includes/admin/class-admin.php:5482
+#: includes/admin/class-admin.php:5507
 msgid "Create a validated DRAFT PHP region template (never runs until a human attaches it)."
 msgstr ""
 
@@ -3473,7 +3474,7 @@ msgstr ""
 msgid "Create an Elementor v4 Global Class (Class Manager) with a label and styles. Returns the new g- id to apply to elements. Pass friendly \"styles\" and/or raw \"props\"; optional breakpoint/state."
 msgstr ""
 
-#: includes/admin/class-admin.php:5256
+#: includes/admin/class-admin.php:5276
 msgid "Create an Elementor v4 Global Class with a label + styles; returns the new g- id."
 msgstr ""
 
@@ -3481,7 +3482,7 @@ msgstr ""
 msgid "Create and manage 301/302 redirects so a deleted or renamed page never leaves a dead URL. Suggests a redirect when a page is removed or its slug changes, scans for broken internal links, and every redirect is reversible from History."
 msgstr ""
 
-#: includes/admin/class-admin.php:4234
+#: includes/admin/class-admin.php:4244
 msgid "Create and update products (simple, grouped, external), set their categories and tags, and delete them. Prices are accepted in any human format and normalized. Deletes require confirm:true."
 msgstr ""
 
@@ -3495,7 +3496,7 @@ msgstr ""
 msgid "Create term names that do not exist. Default: true."
 msgstr ""
 
-#: includes/admin/class-admin.php:4371
+#: includes/admin/class-admin.php:4381
 msgid "Create, update, retarget and delete UAE templates. These render site-wide, so this tool is off by default and delete needs confirmation."
 msgstr ""
 
@@ -3527,15 +3528,15 @@ msgstr ""
 msgid "Creates a complete Elementor page from a declarative structure in a single call. Supports nested containers and any widget types. IMPORTANT LAYOUT RULES: (1) For side-by-side columns, use a parent container with flex_direction=row, children are auto-set to content_width=full with equal percentage widths (e.g. 2 children = 50%, 3 = 33.33%). (2) NEVER set flex_wrap or _flex_size in settings, these cause layout overflow. The tool handles layout automatically. (3) Background colors: set background_background=classic and background_color=#hex on containers. (4) Background images: set background_background=classic, background_image={url,id}, background_size=cover. (5) Background overlay: background_overlay_background=classic, background_overlay_color=#hex, background_overlay_opacity={size:0.7,unit:px}. (6) Text alignment: text_align on text/heading widgets. (7) Use search-images and sideload-image tools to get real images before building."
 msgstr ""
 
-#: includes/admin/class-admin.php:5141
+#: includes/admin/class-admin.php:5161
 msgid "Creates a complete page from a declarative structure in one call."
 msgstr ""
 
-#: includes/admin/class-admin.php:5007
+#: includes/admin/class-admin.php:5027
 msgid "Creates a deep copy of an element and inserts it after the original."
 msgstr ""
 
-#: includes/admin/class-admin.php:5089
+#: includes/admin/class-admin.php:5109
 msgid "Creates a native Elementor Pro theme builder template (header, footer, single, archive, etc). For the builder-agnostic KarMCP Themer, use create-theme-template."
 msgstr ""
 
@@ -3549,7 +3550,7 @@ msgstr ""
 msgid "Creates a new Elementor Pro theme builder template (header, footer, single, archive, 404, etc.)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4961
+#: includes/admin/class-admin.php:4981
 msgid "Creates a new WordPress page with Elementor enabled."
 msgstr ""
 
@@ -3584,7 +3585,7 @@ msgstr ""
 msgid "Creates a site skeleton in one call: pages, navigation menu, static front page, and the global palette and fonts. Dry-run unless called with apply:true and confirm:true, and idempotent by slug. Requires administrator. Disabled by default."
 msgstr ""
 
-#: includes/admin/class-admin.php:5224
+#: includes/admin/class-admin.php:5244
 msgid "Creates a site-wide Custom Code snippet for head/body injection."
 msgstr ""
 
@@ -3593,15 +3594,15 @@ msgstr ""
 msgid "Creates a site-wide Custom Code snippet using Elementor Pro. Injects CSS or JavaScript into the <head>, after <body> open, or before </body> close on ALL pages. Use this for analytics scripts, site-wide CSS overrides, meta tags, or tracking pixels. Requires Elementor Pro and manage_options capability."
 msgstr ""
 
-#: includes/admin/class-admin.php:5109
+#: includes/admin/class-admin.php:5129
 msgid "Creates an Elementor popup template."
 msgstr ""
 
-#: includes/admin/class-admin.php:5396
+#: includes/admin/class-admin.php:5421
 msgid "Creates an INACTIVE draft snippet (validated; an admin must activate it before it runs)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5464
+#: includes/admin/class-admin.php:5489
 msgid "Creates and edits skills through the API, so a body is stored exactly as written instead of being escaped a level deeper on every save by the editor. Search-and-replace editing for long skills. Off by default: a skill steers every agent on this site. Needs manage_options + unfiltered_html, and every write leaves a revision."
 msgstr ""
 
@@ -3645,7 +3646,7 @@ msgstr ""
 msgid "Custom Block"
 msgstr ""
 
-#: includes/admin/class-admin.php:5210
+#: includes/admin/class-admin.php:5230
 msgid "Custom Code"
 msgstr ""
 
@@ -3807,17 +3808,17 @@ msgid "Delete"
 msgstr ""
 
 #: includes/abilities/class-block-builder-abilities.php:527
-#: includes/admin/class-admin.php:5706
+#: includes/admin/class-admin.php:5772
 msgid "Delete Custom Block"
 msgstr ""
 
 #: includes/abilities/class-widget-builder-abilities.php:531
-#: includes/admin/class-admin.php:5612
+#: includes/admin/class-admin.php:5678
 msgid "Delete Custom Widget"
 msgstr ""
 
 #: includes/abilities/class-extension-builder-abilities.php:598
-#: includes/admin/class-admin.php:5659
+#: includes/admin/class-admin.php:5725
 msgid "Delete Element Extension"
 msgstr ""
 
@@ -3826,35 +3827,35 @@ msgstr ""
 msgid "Delete File"
 msgstr ""
 
-#: includes/admin/class-admin.php:4522
+#: includes/admin/class-admin.php:4532
 msgid "Delete Formidable entries (confirm:true)."
 msgstr ""
 
 #: includes/abilities/class-global-classes-write-abilities.php:137
-#: includes/admin/class-admin.php:5265
+#: includes/admin/class-admin.php:5285
 msgid "Delete Global Class"
 msgstr ""
 
 #: includes/abilities/class-media-library-abilities.php:1117
-#: includes/admin/class-admin.php:5176
+#: includes/admin/class-admin.php:5196
 msgid "Delete Media"
 msgstr ""
 
-#: includes/admin/class-admin.php:4547
+#: includes/admin/class-admin.php:4557
 msgid "Delete MetForm entries (confirm:true)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4497
+#: includes/admin/class-admin.php:4507
 msgid "Delete Ninja Forms submissions (confirm:true)."
 msgstr ""
 
 #: includes/abilities/class-php-snippet-abilities.php:391
-#: includes/admin/class-admin.php:5415
+#: includes/admin/class-admin.php:5440
 msgid "Delete PHP Snippet"
 msgstr ""
 
 #: includes/abilities/class-page-abilities.php:333
-#: includes/admin/class-admin.php:4970
+#: includes/admin/class-admin.php:4990
 msgid "Delete Page Content"
 msgstr ""
 
@@ -3884,7 +3885,7 @@ msgid "Delete Theme"
 msgstr ""
 
 #: includes/abilities/class-themer-php-abilities.php:195
-#: includes/admin/class-admin.php:5501
+#: includes/admin/class-admin.php:5526
 msgid "Delete Theme PHP Template"
 msgstr ""
 
@@ -3893,11 +3894,11 @@ msgstr ""
 msgid "Delete Theme Template"
 msgstr ""
 
-#: includes/admin/class-admin.php:4597
+#: includes/admin/class-admin.php:4607
 msgid "Delete a Forminator submission (confirm:true)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5266
+#: includes/admin/class-admin.php:5286
 msgid "Delete a Global Class by g- id (also removes it from elements using it); requires confirm:true."
 msgstr ""
 
@@ -3907,7 +3908,7 @@ msgid "Delete a Global Class by g- id. Destructive — also removes the class fr
 msgstr ""
 
 #: includes/abilities/class-themer-php-abilities.php:196
-#: includes/admin/class-admin.php:5502
+#: includes/admin/class-admin.php:5527
 msgid "Delete a PHP template and its sandbox file."
 msgstr ""
 
@@ -3930,7 +3931,7 @@ msgstr ""
 msgid "Delete a menu. arguments: { menu }."
 msgstr ""
 
-#: includes/admin/class-admin.php:5177
+#: includes/admin/class-admin.php:5197
 msgid "Delete an attachment (permanent; requires confirm)."
 msgstr ""
 
@@ -4110,7 +4111,7 @@ msgid "Destructive tools are blocked. Prefer reversible edits: draft instead of 
 msgstr ""
 
 #: includes/abilities/class-atomic-layout-abilities.php:302
-#: includes/admin/class-admin.php:5245
+#: includes/admin/class-admin.php:5265
 msgid "Detect Elementor Version"
 msgstr ""
 
@@ -4153,7 +4154,7 @@ msgstr ""
 msgid "Discarded the WebP for %1$s: %2$s bytes against %3$s for the source (%4$s%% larger), so keeping it would cost disk and bandwidth for nothing. If this happens to every image, the encode quality is set too high for this material."
 msgstr ""
 
-#: includes/admin/class-admin.php:4360
+#: includes/admin/class-admin.php:4370
 msgid "Discover UAE widgets, and list its header/footer/block templates with their type, status and display conditions."
 msgstr ""
 
@@ -4161,7 +4162,7 @@ msgstr ""
 msgid "Discover addon widget packs, and manage Ultimate Addons for Elementor templates."
 msgstr ""
 
-#: includes/admin/class-admin.php:4361
+#: includes/admin/class-admin.php:4371
 msgid "Discover the UAE widgets registered on this site and inspect the content controls of a widget."
 msgstr ""
 
@@ -4170,11 +4171,11 @@ msgstr ""
 msgid "Discovery for set-template-conditions: available selector keys, public post types, and taxonomies to target."
 msgstr ""
 
-#: includes/admin/class-admin.php:4321
+#: includes/admin/class-admin.php:4331
 msgid "Discovery for the Essential Addons widget pack. Its widgets are placed with the standard Add Free Widget tool, so this adds no widget-adding tool of its own, just the catalog and a readable schema (an addon widget can carry 400+ controls)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4338
+#: includes/admin/class-admin.php:4348
 msgid "Discovery for the Premium Addons widget pack. As with Essential Addons, widgets are placed with the standard Add Free Widget tool; this supplies the catalog and a curated schema."
 msgstr ""
 
@@ -4217,7 +4218,7 @@ msgstr ""
 msgid "Downloads an external image URL into the WordPress Media Library and returns the local attachment ID and URL. Use this after search-images: pass the EXACT `url` from a search result, never construct, guess, or edit an image URL (a made-up URL 404s, and the Unsplash api.unsplash.com/…/download endpoint needs a key). For stock photos, prefer add-stock-image, which searches, sideloads, and places the image in one call."
 msgstr ""
 
-#: includes/admin/class-admin.php:5187
+#: includes/admin/class-admin.php:5207
 msgid "Downloads an external image URL into the WordPress Media Library. Core WordPress tool, available without Elementor."
 msgstr ""
 
@@ -4246,7 +4247,7 @@ msgid "Duplicate Block"
 msgstr ""
 
 #: includes/abilities/class-layout-abilities.php:1351
-#: includes/admin/class-admin.php:5006
+#: includes/admin/class-admin.php:5026
 msgid "Duplicate Element"
 msgstr ""
 
@@ -4359,7 +4360,7 @@ msgstr ""
 msgid "Edit an ACF-managed taxonomy (slug immutable). arguments: { key, ... }."
 msgstr ""
 
-#: includes/admin/class-admin.php:5167
+#: includes/admin/class-admin.php:5187
 msgid "Edit an attachment's alt text, title, caption, description."
 msgstr ""
 
@@ -4388,7 +4389,7 @@ msgstr ""
 msgid "Element \"%s\" not found on this page."
 msgstr ""
 
-#: includes/admin/class-admin.php:5621
+#: includes/admin/class-admin.php:5687
 msgid "Element Extensions"
 msgstr ""
 
@@ -4590,11 +4591,11 @@ msgstr ""
 msgid "Escaping is chosen by the control type, not by you. There is no raw output modifier."
 msgstr ""
 
-#: includes/admin/class-admin.php:4324
+#: includes/admin/class-admin.php:4334
 msgid "Essential Addons Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4320
+#: includes/admin/class-admin.php:4330
 msgid "Essential Addons for Elementor"
 msgstr ""
 
@@ -4683,17 +4684,17 @@ msgid "Export Content"
 msgstr ""
 
 #: includes/abilities/class-page-abilities.php:485
-#: includes/admin/class-admin.php:4980
+#: includes/admin/class-admin.php:5000
 msgid "Export Page"
 msgstr ""
 
 #: includes/abilities/class-sandbox-cloud-abilities.php:130
-#: includes/admin/class-admin.php:5432
+#: includes/admin/class-admin.php:5457
 msgid "Export Sandbox Artifact"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-content-mirror-abilities.php:57
+#: includes/abilities/class-content-mirror-abilities.php:69
 msgid "Export just this page/template. Omit to export all."
 msgstr ""
 
@@ -4706,11 +4707,11 @@ msgstr ""
 msgid "Exports Elementor page/template content to git-trackable JSON files under uploads/karmcp-content-mirror/, so an external version-control system can diff and version your designs. Pass post_id to export one page/template, or omit it to export all. (Enable auto-export-on-save in KarMCP → Tools to keep the mirror current automatically.)"
 msgstr ""
 
-#: includes/admin/class-admin.php:5433
+#: includes/admin/class-admin.php:5458
 msgid "Exports a custom widget/block/snippet as a portable bundle."
 msgstr ""
 
-#: includes/admin/class-admin.php:4981
+#: includes/admin/class-admin.php:5001
 msgid "Exports a page's Elementor data as JSON."
 msgstr ""
 
@@ -4760,7 +4761,7 @@ msgstr ""
 msgid "Extra query arguments for the scope \"full\" loopback request, e.g. {\"preview_key\":\"abc\"}. The loopback carries no session, so a site behind an access wall answers it with its login page; pass whatever key that site accepts to get the real page. Ignored for scope \"content\", which needs no request."
 msgstr ""
 
-#: includes/admin/class-admin.php:5528
+#: includes/admin/class-admin.php:5577
 msgid "Extract Keywords"
 msgstr ""
 
@@ -4946,7 +4947,7 @@ msgid "Fill the heading in or remove the widget. An empty heading still occupies
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:57
+#: includes/abilities/class-transaction-abilities.php:80
 msgid "Filter by domain."
 msgstr ""
 
@@ -5051,11 +5052,11 @@ msgid "Find Broken Links"
 msgstr ""
 
 #: includes/abilities/class-query-abilities.php:748
-#: includes/admin/class-admin.php:5021
+#: includes/admin/class-admin.php:5041
 msgid "Find Element"
 msgstr ""
 
-#: includes/admin/class-admin.php:5022
+#: includes/admin/class-admin.php:5042
 msgid "Finds elements by type, settings, or CSS class within a page."
 msgstr ""
 
@@ -5071,7 +5072,7 @@ msgstr ""
 msgid "First lock, in minutes (each further lock doubles it, up to 24 h)"
 msgstr ""
 
-#: includes/admin/class-admin.php:5560
+#: includes/admin/class-admin.php:5626
 msgid "Fix Color Contrast"
 msgstr ""
 
@@ -5093,19 +5094,19 @@ msgstr ""
 msgid "Flex wrap."
 msgstr ""
 
-#: includes/admin/class-admin.php:4459
+#: includes/admin/class-admin.php:4469
 msgid "Fluent Forms"
 msgstr ""
 
-#: includes/admin/class-admin.php:4463
+#: includes/admin/class-admin.php:4473
 msgid "Fluent Forms Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4471
+#: includes/admin/class-admin.php:4481
 msgid "Fluent Forms Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4460
+#: includes/admin/class-admin.php:4470
 msgid "Fluent Forms exposed as two tools, one Read, one Write. Reads cover forms, fields, and submissions; writes set submission status and delete submissions. Requires Fluent Forms active."
 msgstr ""
 
@@ -5171,35 +5172,35 @@ msgstr ""
 msgid "Form submission"
 msgstr ""
 
-#: includes/admin/class-admin.php:4509
+#: includes/admin/class-admin.php:4519
 msgid "Formidable Forms"
 msgstr ""
 
-#: includes/admin/class-admin.php:4513
+#: includes/admin/class-admin.php:4523
 msgid "Formidable Forms Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4521
+#: includes/admin/class-admin.php:4531
 msgid "Formidable Forms Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4510
+#: includes/admin/class-admin.php:4520
 msgid "Formidable Forms exposed as two tools, one Read, one Write. Reads cover forms, fields, notifications, and entries; writes update notifications and delete entries. Requires Formidable Forms active."
 msgstr ""
 
-#: includes/admin/class-admin.php:4584
+#: includes/admin/class-admin.php:4594
 msgid "Forminator"
 msgstr ""
 
-#: includes/admin/class-admin.php:4588
+#: includes/admin/class-admin.php:4598
 msgid "Forminator Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4596
+#: includes/admin/class-admin.php:4606
 msgid "Forminator Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4585
+#: includes/admin/class-admin.php:4595
 msgid "Forminator exposed as two tools, one Read, one Write. Reads cover forms (id, name, shortcode, fields) and submissions; writes delete a submission. Requires Forminator active."
 msgstr ""
 
@@ -5238,7 +5239,7 @@ msgstr ""
 msgid "Freeze writes on a schedule"
 msgstr ""
 
-#: includes/admin/class-admin.php:5529
+#: includes/admin/class-admin.php:5578
 msgid "Frequency keyword + phrase extraction from page content."
 msgstr ""
 
@@ -5260,7 +5261,7 @@ msgstr ""
 msgid "Front page"
 msgstr ""
 
-#: includes/admin/class-admin.php:5157
+#: includes/admin/class-admin.php:5177
 msgid "Full detail of one attachment (sizes, metadata, alt/caption)."
 msgstr ""
 
@@ -5268,7 +5269,7 @@ msgstr ""
 msgid "Full detail of one change-ledger entry, including its rollback reference."
 msgstr ""
 
-#: includes/admin/class-admin.php:5459
+#: includes/admin/class-admin.php:5484
 msgid "Full text of one skill by machine name."
 msgstr ""
 
@@ -5286,7 +5287,7 @@ msgstr ""
 msgid "Gap unit. Default: px."
 msgstr ""
 
-#: includes/admin/class-admin.php:5533
+#: includes/admin/class-admin.php:5582
 msgid "Generate Meta Tags"
 msgstr ""
 
@@ -5294,7 +5295,7 @@ msgstr ""
 msgid "Generate Password &amp; Configs"
 msgstr ""
 
-#: includes/admin/class-admin.php:5538
+#: includes/admin/class-admin.php:5587
 msgid "Generate Schema Markup"
 msgstr ""
 
@@ -5315,27 +5316,27 @@ msgstr ""
 msgid "Generate your credentials above, the config for %s then appears here."
 msgstr ""
 
-#: includes/admin/class-admin.php:4899
+#: includes/admin/class-admin.php:4916
 msgid "GenerateBlocks Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4907
+#: includes/admin/class-admin.php:4924
 msgid "GenerateBlocks Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4879
+#: includes/admin/class-admin.php:4896
 msgid "GeneratePress + GenerateBlocks"
 msgstr ""
 
-#: includes/admin/class-admin.php:4883
+#: includes/admin/class-admin.php:4900
 msgid "GeneratePress Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4891
+#: includes/admin/class-admin.php:4908
 msgid "GeneratePress Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:5539
+#: includes/admin/class-admin.php:5588
 msgid "Generates (apply:true injects) JSON-LD structured data (Article, LocalBusiness, FAQPage, etc.). Dry-run by default."
 msgstr ""
 
@@ -5348,28 +5349,28 @@ msgstr ""
 msgid "Get Block Schema"
 msgstr ""
 
-#: includes/abilities/class-transaction-abilities.php:69
+#: includes/abilities/class-transaction-abilities.php:92
 #: includes/admin/class-admin.php:4062
 msgid "Get Change"
 msgstr ""
 
 #: includes/abilities/class-query-abilities.php:351
-#: includes/admin/class-admin.php:5016
+#: includes/admin/class-admin.php:5036
 msgid "Get Container Schema"
 msgstr ""
 
 #: includes/abilities/class-block-builder-abilities.php:377
-#: includes/admin/class-admin.php:5691
+#: includes/admin/class-admin.php:5757
 msgid "Get Custom Block"
 msgstr ""
 
 #: includes/abilities/class-widget-builder-abilities.php:382
-#: includes/admin/class-admin.php:5597
+#: includes/admin/class-admin.php:5663
 msgid "Get Custom Widget"
 msgstr ""
 
 #: includes/abilities/class-extension-builder-abilities.php:449
-#: includes/admin/class-admin.php:5644
+#: includes/admin/class-admin.php:5710
 msgid "Get Element Extension"
 msgstr ""
 
@@ -5389,12 +5390,12 @@ msgid "Get Global Settings"
 msgstr ""
 
 #: includes/abilities/class-media-library-abilities.php:325
-#: includes/admin/class-admin.php:5156
+#: includes/admin/class-admin.php:5176
 msgid "Get Media"
 msgstr ""
 
 #: includes/abilities/class-php-snippet-abilities.php:301
-#: includes/admin/class-admin.php:5405
+#: includes/admin/class-admin.php:5430
 msgid "Get PHP Snippet"
 msgstr ""
 
@@ -5429,12 +5430,12 @@ msgid "Get Settings"
 msgstr ""
 
 #: includes/abilities/class-skill-abilities.php:92
-#: includes/admin/class-admin.php:5458
+#: includes/admin/class-admin.php:5483
 msgid "Get Skill"
 msgstr ""
 
 #: includes/abilities/class-themer-php-abilities.php:127
-#: includes/admin/class-admin.php:5491
+#: includes/admin/class-admin.php:5516
 msgid "Get Theme PHP Template"
 msgstr ""
 
@@ -5519,7 +5520,7 @@ msgstr ""
 msgid "Global Classes are not available; Elementor 4.0+ is required."
 msgstr ""
 
-#: includes/admin/class-admin.php:5121
+#: includes/admin/class-admin.php:5141
 msgid "Global Settings"
 msgstr ""
 
@@ -5561,19 +5562,19 @@ msgstr ""
 msgid "Granting an administrator role over WP-CLI is not allowed."
 msgstr ""
 
-#: includes/admin/class-admin.php:4434
+#: includes/admin/class-admin.php:4444
 msgid "Gravity Forms"
 msgstr ""
 
-#: includes/admin/class-admin.php:4438
+#: includes/admin/class-admin.php:4448
 msgid "Gravity Forms Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4446
+#: includes/admin/class-admin.php:4456
 msgid "Gravity Forms Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4435
+#: includes/admin/class-admin.php:4445
 msgid "Gravity Forms exposed as two tools, one Read, one Write, over the GFAPI. Reads cover forms, fields, notifications, and entries; writes set entry status and delete entries. Requires Gravity Forms active."
 msgstr ""
 
@@ -5694,7 +5695,7 @@ msgid "Heads up: this source path currently resolves to live published post #%d 
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-snapshot-abilities.php:79
+#: includes/abilities/class-snapshot-abilities.php:93
 msgid "Heavy opt-in sections. performance needs manage_options; seo returns the scored SEO audit for this page; a11y is not implemented yet and returns an unavailable stub."
 msgstr ""
 
@@ -5861,12 +5862,12 @@ msgid "Image width (list)"
 msgstr ""
 
 #: includes/abilities/class-sandbox-cloud-abilities.php:207
-#: includes/admin/class-admin.php:5437
+#: includes/admin/class-admin.php:5462
 msgid "Import Sandbox Artifact"
 msgstr ""
 
 #: includes/abilities/class-page-abilities.php:390
-#: includes/admin/class-admin.php:4975
+#: includes/admin/class-admin.php:4995
 msgid "Import Template"
 msgstr ""
 
@@ -5900,7 +5901,7 @@ msgstr ""
 msgid "Imports a portable sandbox-artifact bundle (custom block, custom widget, or PHP snippet) as a new local draft. The bundle is validated (schema version, checksum) before anything is written."
 msgstr ""
 
-#: includes/admin/class-admin.php:5438
+#: includes/admin/class-admin.php:5463
 msgid "Imports a sandbox artifact bundle produced by export-sandbox-artifact."
 msgstr ""
 
@@ -5908,7 +5909,7 @@ msgstr ""
 msgid "Imports always land as a new inactive draft, recompiled locally from the spec."
 msgstr ""
 
-#: includes/admin/class-admin.php:4976
+#: includes/admin/class-admin.php:4996
 msgid "Imports an Elementor template JSON into a page."
 msgstr ""
 
@@ -5982,11 +5983,11 @@ msgstr ""
 msgid "Insert Row"
 msgstr ""
 
-#: includes/admin/class-admin.php:4931
+#: includes/admin/class-admin.php:4951
 msgid "Insert a Blocksy block into a post (add-block); query/tax-query get a scaffolded template child."
 msgstr ""
 
-#: includes/admin/class-admin.php:4908
+#: includes/admin/class-admin.php:4925
 msgid "Insert a GenerateBlocks V2 block with a generated uniqueId, styles object + compiled css, and content (add-block)."
 msgstr ""
 
@@ -6000,7 +6001,7 @@ msgstr ""
 msgid "Insert a Kadence block into a post ({ post_id, block, attributes?, position? }); a uniqueID is generated and container inner blocks (columns, buttons, list items) are scaffolded. position: { mode: append|prepend|before|after|inside, path?: [..] }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4869
+#: includes/admin/class-admin.php:4879
 msgid "Insert a Kadence block into a post with a generated uniqueID + scaffolded inner blocks (add-block)."
 msgstr ""
 
@@ -6009,7 +6010,7 @@ msgstr ""
 msgid "Insert a Spectra block into a post ({ post_id, block, attributes?, position? }); Spectra applies its own defaults, a block_id is generated. position: { mode: append|prepend|before|after|inside, path?: [..] }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4830
+#: includes/admin/class-admin.php:4840
 msgid "Insert a Spectra block into a post with a generated block_id (add-block); Spectra applies its own defaults."
 msgstr ""
 
@@ -6086,133 +6087,133 @@ msgstr ""
 msgid "Inserts raw Gutenberg block markup into a post at a position. markup may contain one or more blocks. position.mode = append|prepend|before|after|inside (before/after/inside need position.path from get-post-blocks)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4692
-#: includes/admin/class-admin.php:4700
+#: includes/admin/class-admin.php:4702
+#: includes/admin/class-admin.php:4710
 msgid "Install & activate All in One SEO to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4927
-#: includes/admin/class-admin.php:4935
-#: includes/admin/class-admin.php:4943
-#: includes/admin/class-admin.php:4951
+#: includes/admin/class-admin.php:4947
+#: includes/admin/class-admin.php:4955
+#: includes/admin/class-admin.php:4963
+#: includes/admin/class-admin.php:4971
 msgid "Install & activate Blocksy Companion to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4393
-#: includes/admin/class-admin.php:4401
+#: includes/admin/class-admin.php:4403
+#: includes/admin/class-admin.php:4411
 msgid "Install & activate Contact Form 7 to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4329
+#: includes/admin/class-admin.php:4339
 msgid "Install & activate Essential Addons for Elementor to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4468
-#: includes/admin/class-admin.php:4476
+#: includes/admin/class-admin.php:4478
+#: includes/admin/class-admin.php:4486
 msgid "Install & activate Fluent Forms to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4518
-#: includes/admin/class-admin.php:4526
+#: includes/admin/class-admin.php:4528
+#: includes/admin/class-admin.php:4536
 msgid "Install & activate Formidable Forms to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4593
-#: includes/admin/class-admin.php:4601
+#: includes/admin/class-admin.php:4603
+#: includes/admin/class-admin.php:4611
 msgid "Install & activate Forminator to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4443
-#: includes/admin/class-admin.php:4451
+#: includes/admin/class-admin.php:4453
+#: includes/admin/class-admin.php:4461
 msgid "Install & activate Gravity Forms to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4543
-#: includes/admin/class-admin.php:4551
+#: includes/admin/class-admin.php:4553
+#: includes/admin/class-admin.php:4561
 msgid "Install & activate MetForm to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4493
-#: includes/admin/class-admin.php:4501
+#: includes/admin/class-admin.php:4503
+#: includes/admin/class-admin.php:4511
 msgid "Install & activate Ninja Forms to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4254
-#: includes/admin/class-admin.php:4262
+#: includes/admin/class-admin.php:4264
+#: includes/admin/class-admin.php:4272
 msgid "Install & activate Polylang to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4346
+#: includes/admin/class-admin.php:4356
 msgid "Install & activate Premium Addons for Elementor to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4667
-#: includes/admin/class-admin.php:4675
+#: includes/admin/class-admin.php:4677
+#: includes/admin/class-admin.php:4685
 msgid "Install & activate Rank Math to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4717
-#: includes/admin/class-admin.php:4725
+#: includes/admin/class-admin.php:4727
+#: includes/admin/class-admin.php:4735
 msgid "Install & activate SEOPress to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4617
-#: includes/admin/class-admin.php:4625
+#: includes/admin/class-admin.php:4627
+#: includes/admin/class-admin.php:4635
 msgid "Install & activate Slim SEO to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4568
-#: includes/admin/class-admin.php:4576
+#: includes/admin/class-admin.php:4578
+#: includes/admin/class-admin.php:4586
 msgid "Install & activate SureForms to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4767
-#: includes/admin/class-admin.php:4775
+#: includes/admin/class-admin.php:4777
+#: includes/admin/class-admin.php:4785
 msgid "Install & activate SureRank to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4742
-#: includes/admin/class-admin.php:4750
+#: includes/admin/class-admin.php:4752
+#: includes/admin/class-admin.php:4760
 msgid "Install & activate The SEO Framework to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4367
 #: includes/admin/class-admin.php:4377
+#: includes/admin/class-admin.php:4387
 msgid "Install & activate Ultimate Addons for Elementor to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4418
-#: includes/admin/class-admin.php:4426
+#: includes/admin/class-admin.php:4428
+#: includes/admin/class-admin.php:4436
 msgid "Install & activate WPForms to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4278
-#: includes/admin/class-admin.php:4286
+#: includes/admin/class-admin.php:4288
+#: includes/admin/class-admin.php:4296
 msgid "Install & activate WPML to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4230
-#: includes/admin/class-admin.php:4238
+#: includes/admin/class-admin.php:4240
+#: includes/admin/class-admin.php:4248
 msgid "Install & activate WooCommerce to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4642
-#: includes/admin/class-admin.php:4650
+#: includes/admin/class-admin.php:4652
+#: includes/admin/class-admin.php:4660
 msgid "Install & activate Yoast SEO to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4904
-#: includes/admin/class-admin.php:4912
+#: includes/admin/class-admin.php:4921
+#: includes/admin/class-admin.php:4929
 msgid "Install & activate the GenerateBlocks plugin to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4865
-#: includes/admin/class-admin.php:4873
+#: includes/admin/class-admin.php:4875
+#: includes/admin/class-admin.php:4883
 msgid "Install & activate the Kadence Blocks plugin to enable this tool."
 msgstr ""
 
-#: includes/admin/class-admin.php:4826
-#: includes/admin/class-admin.php:4834
+#: includes/admin/class-admin.php:4836
+#: includes/admin/class-admin.php:4844
 msgid "Install & activate the Spectra plugin to enable this tool."
 msgstr ""
 
@@ -6370,7 +6371,7 @@ msgstr ""
 msgid "Kadence"
 msgstr ""
 
-#: includes/admin/class-admin.php:4840
+#: includes/admin/class-admin.php:4850
 msgid "Kadence + Kadence Blocks"
 msgstr ""
 
@@ -6379,19 +6380,19 @@ msgstr ""
 msgid "Kadence Blocks"
 msgstr ""
 
-#: includes/admin/class-admin.php:4860
+#: includes/admin/class-admin.php:4870
 msgid "Kadence Blocks Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4868
+#: includes/admin/class-admin.php:4878
 msgid "Kadence Blocks Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4844
+#: includes/admin/class-admin.php:4854
 msgid "Kadence Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4852
+#: includes/admin/class-admin.php:4862
 msgid "Kadence Write"
 msgstr ""
 
@@ -6585,7 +6586,7 @@ msgstr ""
 msgid "Layout"
 msgstr ""
 
-#: includes/admin/class-admin.php:4988
+#: includes/admin/class-admin.php:5008
 msgid "Layout & Structure"
 msgstr ""
 
@@ -6700,7 +6701,7 @@ msgid "List Backups"
 msgstr ""
 
 #: includes/abilities/class-block-builder-abilities.php:198
-#: includes/admin/class-admin.php:5671
+#: includes/admin/class-admin.php:5737
 msgid "List Block Control Types"
 msgstr ""
 
@@ -6709,21 +6710,21 @@ msgstr ""
 msgid "List Blocks"
 msgstr ""
 
-#: includes/admin/class-admin.php:4939
+#: includes/admin/class-admin.php:4959
 msgid "List Blocksy Companion extensions with name, description, pro flag, and active status (list-extensions)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5358
+#: includes/admin/class-admin.php:5383
 msgid "List Brand Kits"
 msgstr ""
 
-#: includes/abilities/class-transaction-abilities.php:49
+#: includes/abilities/class-transaction-abilities.php:64
 #: includes/admin/class-admin.php:4061
 msgid "List Changes"
 msgstr ""
 
 #: includes/abilities/class-custom-code-abilities.php:601
-#: includes/admin/class-admin.php:5228
+#: includes/admin/class-admin.php:5248
 msgid "List Code Snippets"
 msgstr ""
 
@@ -6732,23 +6733,23 @@ msgstr ""
 msgid "List Condition Targets"
 msgstr ""
 
-#: includes/abilities/class-content-mirror-abilities.php:84
+#: includes/abilities/class-content-mirror-abilities.php:109
 #: includes/admin/class-admin.php:4080
 msgid "List Content Exports"
 msgstr ""
 
 #: includes/abilities/class-widget-builder-abilities.php:200
-#: includes/admin/class-admin.php:5577
+#: includes/admin/class-admin.php:5643
 msgid "List Control Types"
 msgstr ""
 
 #: includes/abilities/class-block-builder-abilities.php:428
-#: includes/admin/class-admin.php:5696
+#: includes/admin/class-admin.php:5762
 msgid "List Custom Blocks"
 msgstr ""
 
 #: includes/abilities/class-widget-builder-abilities.php:432
-#: includes/admin/class-admin.php:5602
+#: includes/admin/class-admin.php:5668
 msgid "List Custom Widgets"
 msgstr ""
 
@@ -6758,17 +6759,17 @@ msgid "List Directory"
 msgstr ""
 
 #: includes/abilities/class-template-abilities.php:675
-#: includes/admin/class-admin.php:5098
+#: includes/admin/class-admin.php:5118
 msgid "List Dynamic Tags"
 msgstr ""
 
 #: includes/abilities/class-extension-builder-abilities.php:499
-#: includes/admin/class-admin.php:5649
+#: includes/admin/class-admin.php:5715
 msgid "List Element Extensions"
 msgstr ""
 
 #: includes/abilities/class-extension-builder-abilities.php:216
-#: includes/admin/class-admin.php:5624
+#: includes/admin/class-admin.php:5690
 msgid "List Element Targets"
 msgstr ""
 
@@ -6787,12 +6788,12 @@ msgstr ""
 msgid "List Elementor Widgets"
 msgstr ""
 
-#: includes/admin/class-admin.php:4325
+#: includes/admin/class-admin.php:4335
 msgid "List Essential Addons widgets registered on this site and inspect a widget's content controls."
 msgstr ""
 
 #: includes/abilities/class-global-classes-abilities.php:64
-#: includes/admin/class-admin.php:5250
+#: includes/admin/class-admin.php:5270
 msgid "List Global Classes"
 msgstr ""
 
@@ -6807,12 +6808,12 @@ msgid "List Login Lockouts"
 msgstr ""
 
 #: includes/abilities/class-media-library-abilities.php:101
-#: includes/admin/class-admin.php:5151
+#: includes/admin/class-admin.php:5171
 msgid "List Media"
 msgstr ""
 
 #: includes/abilities/class-php-snippet-abilities.php:340
-#: includes/admin/class-admin.php:5410
+#: includes/admin/class-admin.php:5435
 msgid "List PHP Snippets"
 msgstr ""
 
@@ -6845,7 +6846,7 @@ msgstr ""
 msgid "List Posts"
 msgstr ""
 
-#: includes/admin/class-admin.php:4342
+#: includes/admin/class-admin.php:4352
 msgid "List Premium Addons widgets registered on this site and inspect a widget's content controls."
 msgstr ""
 
@@ -6855,7 +6856,7 @@ msgid "List Redirects"
 msgstr ""
 
 #: includes/abilities/class-skill-abilities.php:61
-#: includes/admin/class-admin.php:5453
+#: includes/admin/class-admin.php:5478
 msgid "List Skills"
 msgstr ""
 
@@ -6878,7 +6879,7 @@ msgid "List Templates"
 msgstr ""
 
 #: includes/abilities/class-themer-php-abilities.php:99
-#: includes/admin/class-admin.php:5486
+#: includes/admin/class-admin.php:5511
 msgid "List Theme PHP Templates"
 msgstr ""
 
@@ -6925,8 +6926,8 @@ msgstr ""
 msgid "List all nav menus with id, name, slug, item count, and assigned theme locations. arguments: {}."
 msgstr ""
 
-#: includes/admin/class-admin.php:4250
-#: includes/admin/class-admin.php:4274
+#: includes/admin/class-admin.php:4260
+#: includes/admin/class-admin.php:4284
 msgid "List configured languages and read a post's translation status."
 msgstr ""
 
@@ -6944,7 +6945,7 @@ msgstr ""
 msgid "List draft PHP templates (id, title, type, compiled state, last error). Optional type filter."
 msgstr ""
 
-#: includes/admin/class-admin.php:5487
+#: includes/admin/class-admin.php:5512
 msgid "List draft PHP templates."
 msgstr ""
 
@@ -7009,7 +7010,7 @@ msgstr ""
 msgid "Lists PHP snippets with their status (draft/active), run context, and shortcode."
 msgstr ""
 
-#: includes/admin/class-admin.php:5411
+#: includes/admin/class-admin.php:5436
 msgid "Lists PHP snippets with their status and run context."
 msgstr ""
 
@@ -7027,11 +7028,11 @@ msgstr ""
 msgid "Lists all available Elementor widget types and their names."
 msgstr ""
 
-#: includes/admin/class-admin.php:5099
+#: includes/admin/class-admin.php:5119
 msgid "Lists all available dynamic tags and their categories."
 msgstr ""
 
-#: includes/admin/class-admin.php:5229
+#: includes/admin/class-admin.php:5249
 msgid "Lists all existing Custom Code snippets."
 msgstr ""
 
@@ -7040,11 +7041,11 @@ msgstr ""
 msgid "Lists all existing Elementor Pro Custom Code snippets with their titles, locations, priorities, and statuses. Requires Elementor Pro."
 msgstr ""
 
-#: includes/admin/class-admin.php:5697
+#: includes/admin/class-admin.php:5763
 msgid "Lists all generated custom blocks with their status."
 msgstr ""
 
-#: includes/admin/class-admin.php:5603
+#: includes/admin/class-admin.php:5669
 msgid "Lists all generated custom widgets with their status."
 msgstr ""
 
@@ -7056,7 +7057,7 @@ msgstr ""
 msgid "Lists all saved Elementor templates."
 msgstr ""
 
-#: includes/admin/class-admin.php:5152
+#: includes/admin/class-admin.php:5172
 msgid "Lists and searches images already in the WordPress Media Library (the site's own uploads)."
 msgstr ""
 
@@ -7065,7 +7066,7 @@ msgstr ""
 msgid "Lists and searches images already in the WordPress Media Library. Use this to find a site's own uploaded photos (e.g. a client's product or job-site images) before reaching for stock photos. The optional \"search\" matches the title, alt text, caption, and description. Returns attachment IDs and URLs you can pass straight to add-free-widget."
 msgstr ""
 
-#: includes/admin/class-admin.php:5359
+#: includes/admin/class-admin.php:5384
 msgid "Lists available premium brand kits from the cached library."
 msgstr ""
 
@@ -7074,7 +7075,7 @@ msgstr ""
 msgid "Lists every element extension with its status, its targets and the props it declares."
 msgstr ""
 
-#: includes/admin/class-admin.php:5650
+#: includes/admin/class-admin.php:5716
 msgid "Lists every element extension with its status, targets and props."
 msgstr ""
 
@@ -7125,7 +7126,7 @@ msgid "Lists plugins the fatal-error handler deactivated because they crashed th
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:50
+#: includes/abilities/class-transaction-abilities.php:65
 msgid "Lists recent AI-made changes (Elementor edits, filesystem writes, database writes) recorded in the change ledger, newest first, each with a summary, whether it is reversible, and whether it has already been rolled back. Filter by domain (elementor/filesystem/database), rolled_back, or reversible. Use get-change for full detail and rollback-change to undo one. Read-only."
 msgstr ""
 
@@ -7166,7 +7167,7 @@ msgid "Lists taxonomies and optionally their terms."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-content-mirror-abilities.php:85
+#: includes/abilities/class-content-mirror-abilities.php:110
 msgid "Lists the mirror files currently on disk (id, type, title, exported time) so you can see what is versioned and pick something to restore. Read-only."
 msgstr ""
 
@@ -7380,7 +7381,7 @@ msgid "Max dimension cap"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:60
+#: includes/abilities/class-transaction-abilities.php:83
 msgid "Max entries (default 50)."
 msgstr ""
 
@@ -7390,7 +7391,7 @@ msgid "Max nesting depth to return. Omit for full tree."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-search-abilities.php:59
+#: includes/abilities/class-search-abilities.php:69
 msgid "Max results (default 20)."
 msgstr ""
 
@@ -7454,19 +7455,19 @@ msgstr ""
 msgid "Message shown after a successful submission."
 msgstr ""
 
-#: includes/admin/class-admin.php:4534
+#: includes/admin/class-admin.php:4544
 msgid "MetForm"
 msgstr ""
 
-#: includes/admin/class-admin.php:4538
+#: includes/admin/class-admin.php:4548
 msgid "MetForm Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4546
+#: includes/admin/class-admin.php:4556
 msgid "MetForm Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4535
+#: includes/admin/class-admin.php:4545
 msgid "MetForm exposed as two tools, one Read, one Write. Reads cover forms, fields, and entries; writes delete entries. Requires MetForm (and Elementor) active."
 msgstr ""
 
@@ -7474,17 +7475,17 @@ msgstr ""
 msgid "Meta (date)"
 msgstr ""
 
-#: includes/admin/class-admin.php:4293
+#: includes/admin/class-admin.php:4303
 msgid "Meta Box"
 msgstr ""
 
 #: includes/abilities/class-metabox-abilities.php:82
-#: includes/admin/class-admin.php:4297
+#: includes/admin/class-admin.php:4307
 msgid "Meta Box Read"
 msgstr ""
 
 #: includes/abilities/class-metabox-abilities.php:107
-#: includes/admin/class-admin.php:4307
+#: includes/admin/class-admin.php:4317
 msgid "Meta Box Write"
 msgstr ""
 
@@ -7618,7 +7619,7 @@ msgid "Move Block"
 msgstr ""
 
 #: includes/abilities/class-layout-abilities.php:1162
-#: includes/admin/class-admin.php:4996
+#: includes/admin/class-admin.php:5016
 msgid "Move Element"
 msgstr ""
 
@@ -7631,7 +7632,7 @@ msgstr ""
 msgid "Moves an element to a new parent container and/or position within the page tree."
 msgstr ""
 
-#: includes/admin/class-admin.php:4997
+#: includes/admin/class-admin.php:5017
 msgid "Moves an element to a new parent or position."
 msgstr ""
 
@@ -7712,12 +7713,12 @@ msgstr ""
 msgid "Name of the extension, for the humans managing it. Required."
 msgstr ""
 
-#: includes/admin/class-admin.php:5454
+#: includes/admin/class-admin.php:5479
 msgid "Names and one-line summaries of this site's skills — the operating manuals you wrote for agents."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-search-abilities.php:53
+#: includes/abilities/class-search-abilities.php:63
 msgid "Natural-language query, e.g. \"pricing table\" or \"team testimonials\"."
 msgstr ""
 
@@ -7753,19 +7754,19 @@ msgstr ""
 msgid "Nginx"
 msgstr ""
 
-#: includes/admin/class-admin.php:4484
+#: includes/admin/class-admin.php:4494
 msgid "Ninja Forms"
 msgstr ""
 
-#: includes/admin/class-admin.php:4488
+#: includes/admin/class-admin.php:4498
 msgid "Ninja Forms Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4496
+#: includes/admin/class-admin.php:4506
 msgid "Ninja Forms Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4485
+#: includes/admin/class-admin.php:4495
 msgid "Ninja Forms exposed as two tools, one Read, one Write. Reads cover forms, fields, and submissions; writes delete submissions. Requires Ninja Forms active."
 msgstr ""
 
@@ -8291,7 +8292,7 @@ msgid "Only entries at or above this CVSS score (0-10). Default: 0, everything."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:59
+#: includes/abilities/class-transaction-abilities.php:82
 msgid "Only entries that are (or are not) reversible."
 msgstr ""
 
@@ -8301,7 +8302,7 @@ msgid "Only entries that have a fix available, i.e. the ones you can act on righ
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:58
+#: includes/abilities/class-transaction-abilities.php:81
 msgid "Only entries with this rolled-back state."
 msgstr ""
 
@@ -8540,7 +8541,7 @@ msgstr ""
 msgid "PHP Snippets"
 msgstr ""
 
-#: includes/admin/class-admin.php:5387
+#: includes/admin/class-admin.php:5412
 msgid "PHP Snippets (Sandbox)"
 msgstr ""
 
@@ -8582,7 +8583,7 @@ msgstr ""
 msgid "Page %d is neither a title nor an object."
 msgstr ""
 
-#: includes/admin/class-admin.php:4957
+#: includes/admin/class-admin.php:4977
 msgid "Page Management"
 msgstr ""
 
@@ -8625,7 +8626,7 @@ msgid "Page-level Elementor settings (background, padding, etc.)."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-content-mirror-abilities.php:74
+#: includes/abilities/class-content-mirror-abilities.php:99
 msgid "Page/template to restore from its mirror file."
 msgstr ""
 
@@ -8808,7 +8809,7 @@ msgstr ""
 msgid "Permanently deletes a PHP snippet and removes its sandbox file."
 msgstr ""
 
-#: includes/admin/class-admin.php:5707
+#: includes/admin/class-admin.php:5773
 msgid "Permanently deletes a custom block and its sandbox files. Needs confirm:true."
 msgstr ""
 
@@ -8817,7 +8818,7 @@ msgstr ""
 msgid "Permanently deletes a custom block, its spec, and its sandbox files. Posts already using the block lose it. Requires confirm:true."
 msgstr ""
 
-#: includes/admin/class-admin.php:5613
+#: includes/admin/class-admin.php:5679
 msgid "Permanently deletes a custom widget and its sandbox files. Needs confirm:true."
 msgstr ""
 
@@ -8826,11 +8827,11 @@ msgstr ""
 msgid "Permanently deletes a custom widget, its spec, and its sandbox files. Pages already using the widget lose it. Requires confirm:true."
 msgstr ""
 
-#: includes/admin/class-admin.php:5416
+#: includes/admin/class-admin.php:5441
 msgid "Permanently deletes a snippet and its sandbox file."
 msgstr ""
 
-#: includes/admin/class-admin.php:5660
+#: includes/admin/class-admin.php:5726
 msgid "Permanently deletes an element extension and its sandbox files. Needs confirm:true."
 msgstr ""
 
@@ -8949,7 +8950,7 @@ msgstr ""
 msgid "Plugin installation failed."
 msgstr ""
 
-#: includes/admin/class-admin.php:4294
+#: includes/admin/class-admin.php:4304
 msgid "Plugin integrations are exposed as two tools, one Read, one Write. The AI calls a tool with an operation name; each tool bundles the operations listed on its card. Toggle a tool to allow or block all of its operations at once."
 msgstr ""
 
@@ -9000,19 +9001,19 @@ msgstr ""
 msgid "Poll a background job's status, exit code, and output."
 msgstr ""
 
-#: includes/admin/class-admin.php:4245
+#: includes/admin/class-admin.php:4255
 msgid "Polylang"
 msgstr ""
 
-#: includes/admin/class-admin.php:4249
+#: includes/admin/class-admin.php:4259
 msgid "Polylang Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4257
+#: includes/admin/class-admin.php:4267
 msgid "Polylang Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4246
+#: includes/admin/class-admin.php:4256
 msgid "Polylang exposed as two tools, one Read, one Write. Reads list the site's languages and tell you which translations of a page exist and which are missing; writes create a translation by duplicating the page, assigning its language and linking the pair, so the language switcher finds it. The copy carries the original text: translate it afterwards with the normal content tools."
 msgstr ""
 
@@ -9073,7 +9074,7 @@ msgstr ""
 #: includes/abilities/class-metabox-abilities.php:379
 #: includes/abilities/class-query-abilities.php:536
 #: includes/abilities/class-seo-audit-abilities.php:236
-#: includes/abilities/class-snapshot-abilities.php:113
+#: includes/abilities/class-snapshot-abilities.php:127
 #: includes/abilities/class-spectra-integration.php:121
 #: includes/abilities/class-structured-data-abilities.php:227
 #: includes/abilities/i18n/class-translation-integration.php:281
@@ -9132,11 +9133,11 @@ msgstr ""
 msgid "Preferably \"container\" or \"widget\". A widget name (e.g. \"heading\") is accepted as shorthand and coerced, with a note in \"warnings\"."
 msgstr ""
 
-#: includes/admin/class-admin.php:4341
+#: includes/admin/class-admin.php:4351
 msgid "Premium Addons Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4337
+#: includes/admin/class-admin.php:4347
 msgid "Premium Addons for Elementor"
 msgstr ""
 
@@ -9222,15 +9223,15 @@ msgstr ""
 msgid "Prop names must start with karmcp_: the props schema is shared with Elementor and with Elementor Pro."
 msgstr ""
 
-#: includes/admin/class-admin.php:5561
+#: includes/admin/class-admin.php:5627
 msgid "Proposes (apply:true to write) adjusted text colors so failing pairs meet WCAG AA. Dry-run by default."
 msgstr ""
 
-#: includes/admin/class-admin.php:5566
+#: includes/admin/class-admin.php:5632
 msgid "Proposes (apply:true to write) alt text for images lacking it, from filename/heading/title. Dry-run by default."
 msgstr ""
 
-#: includes/admin/class-admin.php:5534
+#: includes/admin/class-admin.php:5583
 msgid "Proposes (apply:true writes to Yoast/Rank Math) an SEO title and meta description. Dry-run by default."
 msgstr ""
 
@@ -9338,19 +9339,19 @@ msgstr ""
 msgid "Quick links to the free and premium support channels."
 msgstr ""
 
-#: includes/admin/class-admin.php:4658
+#: includes/admin/class-admin.php:4668
 msgid "Rank Math"
 msgstr ""
 
-#: includes/admin/class-admin.php:4662
+#: includes/admin/class-admin.php:4672
 msgid "Rank Math Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4670
+#: includes/admin/class-admin.php:4680
 msgid "Rank Math Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4659
+#: includes/admin/class-admin.php:4669
 msgid "Rank Math exposed as two tools, one Read, one Write. Read/write post & term SEO metadata and site settings; also read schema (structured data)."
 msgstr ""
 
@@ -9391,7 +9392,7 @@ msgstr ""
 msgid "Read ACF field values from a post or options page. arguments: { post_id } or { options_page }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4688
+#: includes/admin/class-admin.php:4698
 msgid "Read AIOSEO post SEO metadata, schema, and site settings."
 msgstr ""
 
@@ -9404,11 +9405,11 @@ msgstr ""
 msgid "Read Advanced Custom Fields data: field groups, field values, options pages, and (ACF 6.1+) ACF-managed post types and taxonomies. Call with no \"operation\" to list the available read operations and their arguments, then call again with { operation, arguments }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4806
+#: includes/admin/class-admin.php:4816
 msgid "Read Astra settings (colors, typography, layout, header/footer) with value + type/label/group metadata."
 msgstr ""
 
-#: includes/admin/class-admin.php:4389
+#: includes/admin/class-admin.php:4399
 msgid "Read CF7 forms, fields, mail templates, messages, settings, and stored submissions."
 msgstr ""
 
@@ -9417,31 +9418,31 @@ msgstr ""
 msgid "Read File"
 msgstr ""
 
-#: includes/admin/class-admin.php:4464
+#: includes/admin/class-admin.php:4474
 msgid "Read Fluent Forms forms, fields, and submissions."
 msgstr ""
 
-#: includes/admin/class-admin.php:4514
+#: includes/admin/class-admin.php:4524
 msgid "Read Formidable forms, fields, notifications, and entries."
 msgstr ""
 
-#: includes/admin/class-admin.php:4589
+#: includes/admin/class-admin.php:4599
 msgid "Read Forminator forms, fields, shortcodes, and submissions."
 msgstr ""
 
-#: includes/admin/class-admin.php:4884
+#: includes/admin/class-admin.php:4901
 msgid "Read GeneratePress settings (global palette, colors, layout, typography) with value + type/label/group/shape metadata."
 msgstr ""
 
-#: includes/admin/class-admin.php:4439
+#: includes/admin/class-admin.php:4449
 msgid "Read Gravity Forms forms, fields, notifications, and entries."
 msgstr ""
 
-#: includes/admin/class-admin.php:4845
+#: includes/admin/class-admin.php:4855
 msgid "Read Kadence settings (palette, colors, typography, layout, buttons, header/footer) with value + type/label/group/shape metadata."
 msgstr ""
 
-#: includes/admin/class-admin.php:4539
+#: includes/admin/class-admin.php:4549
 msgid "Read MetForm forms, fields, and entries."
 msgstr ""
 
@@ -9450,7 +9451,7 @@ msgstr ""
 msgid "Read Meta Box (metabox.io) custom-field data: registered field groups, their field definitions, and field values on a post or object. Call with no \"operation\" to list the available read operations and their arguments, then call again with { operation, arguments }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4298
+#: includes/admin/class-admin.php:4308
 msgid "Read Meta Box data, field groups, field definitions, and field values for posts and other supported object types."
 msgstr ""
 
@@ -9459,35 +9460,35 @@ msgstr ""
 msgid "Read Meta Box field values from a post or object. arguments: { post_id } or { object_type, object_id }; optional { fields, include_field_settings }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4489
+#: includes/admin/class-admin.php:4499
 msgid "Read Ninja Forms forms, fields, and submissions."
 msgstr ""
 
-#: includes/admin/class-admin.php:4663
+#: includes/admin/class-admin.php:4673
 msgid "Read Rank Math post/term SEO metadata, schema, and site settings."
 msgstr ""
 
-#: includes/admin/class-admin.php:4713
+#: includes/admin/class-admin.php:4723
 msgid "Read SEOPress post/term SEO metadata, schema, and site settings."
 msgstr ""
 
-#: includes/admin/class-admin.php:4613
+#: includes/admin/class-admin.php:4623
 msgid "Read Slim SEO post/term SEO metadata and site settings."
 msgstr ""
 
-#: includes/admin/class-admin.php:4564
+#: includes/admin/class-admin.php:4574
 msgid "Read SureForms forms, fields, and entries."
 msgstr ""
 
-#: includes/admin/class-admin.php:4763
+#: includes/admin/class-admin.php:4773
 msgid "Read SureRank post/term SEO metadata and site settings."
 msgstr ""
 
-#: includes/admin/class-admin.php:4738
+#: includes/admin/class-admin.php:4748
 msgid "Read The SEO Framework post/term SEO metadata."
 msgstr ""
 
-#: includes/admin/class-admin.php:4414
+#: includes/admin/class-admin.php:4424
 msgid "Read WPForms forms, fields, notifications, and entries (entries require WPForms Pro)."
 msgstr ""
 
@@ -9496,7 +9497,7 @@ msgstr ""
 msgid "Read WordPress nav menus: list menus, get a menu's nested item tree, list theme locations, and render a menu to HTML. Call with no \"operation\" to list the available read operations and their arguments, then call again with { operation, arguments }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4638
+#: includes/admin/class-admin.php:4648
 msgid "Read Yoast post/term SEO metadata and site settings."
 msgstr ""
 
@@ -9532,11 +9533,11 @@ msgstr ""
 msgid "Read one section instead of the whole skill. Takes the id from the outline (\"1.5\"), the section title, or the start of it — all three resolve to the same section. A section includes its subsections."
 msgstr ""
 
-#: includes/admin/class-admin.php:4226
+#: includes/admin/class-admin.php:4236
 msgid "Read products, product categories, and the store setup (currency, base country, shop pages, catalog and stock settings). Call the tool with no operation to list them."
 msgstr ""
 
-#: includes/admin/class-admin.php:4786
+#: includes/admin/class-admin.php:4796
 msgid "Read the active theme: context (framework, block-theme, supports, menu locations, child status) and theme_mod values."
 msgstr ""
 
@@ -9606,7 +9607,7 @@ msgid "Rebuild the content-search index (also updates on save)."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-search-abilities.php:70
+#: includes/abilities/class-search-abilities.php:80
 msgid "Rebuilds the content-search index from the current site (pages, templates, widgets, global styles). The index also updates incrementally when a page/template is saved, so this is only needed for a full refresh or a first-time build. Returns the number of items indexed per group. Optionally restrict to certain types."
 msgstr ""
 
@@ -9714,7 +9715,7 @@ msgstr ""
 msgid "Register a taxonomy through ACF (data, no code). arguments: { taxonomy, title, object_type: [...] }."
 msgstr ""
 
-#: includes/abilities/class-search-abilities.php:69
+#: includes/abilities/class-search-abilities.php:79
 #: includes/admin/class-admin.php:4071
 msgid "Reindex Search"
 msgstr ""
@@ -9733,7 +9734,7 @@ msgid "Remove Block"
 msgstr ""
 
 #: includes/abilities/class-layout-abilities.php:1269
-#: includes/admin/class-admin.php:5001
+#: includes/admin/class-admin.php:5021
 msgid "Remove Element"
 msgstr ""
 
@@ -9760,7 +9761,7 @@ msgstr ""
 msgid "Removes accumulated database bloat that slows WordPress down without touching caching: old post revisions, expired transients, orphaned metadata, spam and trashed comments, trashed posts, and table overhead reclaimed with OPTIMIZE TABLE. DRY-RUN BY DEFAULT — returns how much each task would remove, and only acts when called again with apply:true and confirm:true. Deletions run in bounded batches, so on a large site call it repeatedly until the counts reach zero. Revisions, comments and posts go through the WordPress API so their metadata goes with them; only genuinely orphaned rows are deleted with SQL. Several tasks are NOT reversible and the plan says which."
 msgstr ""
 
-#: includes/admin/class-admin.php:4971
+#: includes/admin/class-admin.php:4991
 msgid "Removes all Elementor content from a page."
 msgstr ""
 
@@ -9769,7 +9770,7 @@ msgstr ""
 msgid "Removes an element and all its children from a page."
 msgstr ""
 
-#: includes/admin/class-admin.php:5002
+#: includes/admin/class-admin.php:5022
 msgid "Removes an element and all its children from the page."
 msgstr ""
 
@@ -9845,16 +9846,16 @@ msgid "Reorder / re-parent items in one call; other fields preserved. arguments:
 msgstr ""
 
 #: includes/abilities/class-layout-abilities.php:1015
-#: includes/admin/class-admin.php:5041
+#: includes/admin/class-admin.php:5061
 msgid "Reorder Elements"
 msgstr ""
 
 #: includes/abilities/class-global-classes-write-abilities.php:157
-#: includes/admin/class-admin.php:5270
+#: includes/admin/class-admin.php:5290
 msgid "Reorder Global Classes"
 msgstr ""
 
-#: includes/admin/class-admin.php:5042
+#: includes/admin/class-admin.php:5062
 msgid "Reorders child elements within a container."
 msgstr ""
 
@@ -9867,11 +9868,11 @@ msgstr ""
 msgid "Repeated, never on the first crash: one transient fatal must not be able to take the site offline in a different way. KarMCP can never deactivate itself."
 msgstr ""
 
-#: includes/admin/class-admin.php:5368
+#: includes/admin/class-admin.php:5393
 msgid "Replace System Colors"
 msgstr ""
 
-#: includes/admin/class-admin.php:5373
+#: includes/admin/class-admin.php:5398
 msgid "Replace System Typography"
 msgstr ""
 
@@ -9899,11 +9900,11 @@ msgstr ""
 msgid "Replaces a block's spec and regenerates its files. Every place the block is already used picks the change up, because the markup lives in the render file rather than in post content."
 msgstr ""
 
-#: includes/admin/class-admin.php:5687
+#: includes/admin/class-admin.php:5753
 msgid "Replaces a custom block's spec and regenerates its code."
 msgstr ""
 
-#: includes/admin/class-admin.php:5593
+#: includes/admin/class-admin.php:5659
 msgid "Replaces a custom widget's spec and regenerates its code."
 msgstr ""
 
@@ -9912,7 +9913,7 @@ msgstr ""
 msgid "Replaces a widget's spec and regenerates its code. An active widget is re-checked and demoted to draft if the new code no longer builds, so a bad edit cannot break the editor."
 msgstr ""
 
-#: includes/admin/class-admin.php:5640
+#: includes/admin/class-admin.php:5706
 msgid "Replaces an extension's spec and regenerates its code."
 msgstr ""
 
@@ -9930,11 +9931,11 @@ msgstr ""
 msgid "Replaces the block at an index path with new markup."
 msgstr ""
 
-#: includes/admin/class-admin.php:5369
+#: includes/admin/class-admin.php:5394
 msgid "Replaces the four Elementor system color slots atomically."
 msgstr ""
 
-#: includes/admin/class-admin.php:5374
+#: includes/admin/class-admin.php:5399
 msgid "Replaces the four Elementor system typography slots atomically."
 msgstr ""
 
@@ -9994,11 +9995,11 @@ msgid "Reserved: when true, sample same-host asset sizes for an estimated page w
 msgstr ""
 
 #: includes/abilities/class-image-resize-abilities.php:35
-#: includes/admin/class-admin.php:5171
+#: includes/admin/class-admin.php:5191
 msgid "Resize Media"
 msgstr ""
 
-#: includes/admin/class-admin.php:5172
+#: includes/admin/class-admin.php:5192
 msgid "Resize a Media Library image in place (scale to fit or crop), reversible via backup. Registers only when the Image Optimization module is enabled."
 msgstr ""
 
@@ -10022,7 +10023,7 @@ msgstr ""
 msgid "Resolve as if viewing this singular post."
 msgstr ""
 
-#: includes/admin/class-admin.php:5251
+#: includes/admin/class-admin.php:5271
 msgid "Resolves Class Manager \"g-\" class IDs to their names and CSS properties."
 msgstr ""
 
@@ -10036,7 +10037,7 @@ msgstr ""
 msgid "Resting value. It is also what an element that never touched this extension evaluates as."
 msgstr ""
 
-#: includes/abilities/class-content-mirror-abilities.php:66
+#: includes/abilities/class-content-mirror-abilities.php:78
 #: includes/admin/class-admin.php:4079
 msgid "Restore Content"
 msgstr ""
@@ -10050,7 +10051,7 @@ msgid "Restore originals"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-content-mirror-abilities.php:67
+#: includes/abilities/class-content-mirror-abilities.php:79
 msgid "Restores a page/template's Elementor content from its mirror file (the JSON previously written by export-content), a file-based undo. Overwrites the current content with the mirrored version."
 msgstr ""
 
@@ -10063,12 +10064,12 @@ msgid "Restrict SVG uploads to administrators only"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-search-abilities.php:80
+#: includes/abilities/class-search-abilities.php:101
 msgid "Restrict the rebuild to these types. Default: all."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-search-abilities.php:57
+#: includes/abilities/class-search-abilities.php:67
 msgid "Restrict to these object types. Default: all."
 msgstr ""
 
@@ -10097,7 +10098,7 @@ msgstr ""
 msgid "Return a lighter tree: omit per-element settings and add a child_count per node. Use for large pages."
 msgstr ""
 
-#: includes/admin/class-admin.php:5492
+#: includes/admin/class-admin.php:5517
 msgid "Return one PHP template with its validation report."
 msgstr ""
 
@@ -10155,7 +10156,7 @@ msgstr ""
 msgid "Returns a block's attributes, supports, and a markup example."
 msgstr ""
 
-#: includes/admin/class-admin.php:5692
+#: includes/admin/class-admin.php:5758
 msgid "Returns a custom block's spec, generated code, status, and last error."
 msgstr ""
 
@@ -10164,7 +10165,7 @@ msgstr ""
 msgid "Returns a custom block: its spec, the generated block.json and render.php, its status, and the last error if it was auto-deactivated."
 msgstr ""
 
-#: includes/admin/class-admin.php:5598
+#: includes/admin/class-admin.php:5664
 msgid "Returns a custom widget's spec, generated PHP, status, and last error."
 msgstr ""
 
@@ -10191,7 +10192,7 @@ msgstr ""
 msgid "Returns a single post/page/CPT: title, content, status, author, dates, terms, non-protected meta, and featured image. The is_elementor flag tells you whether the page is built with Elementor (edit those with the Elementor tools, not update-post)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5406
+#: includes/admin/class-admin.php:5431
 msgid "Returns a snippet's code, status, shortcode, and validation report."
 msgstr ""
 
@@ -10210,7 +10211,7 @@ msgstr ""
 msgid "Returns all saved Elementor templates from the template library. Optionally filter by template type (page, section, container)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5645
+#: includes/admin/class-admin.php:5711
 msgid "Returns an extension's spec, generated PHP, status and last error."
 msgstr ""
 
@@ -10257,7 +10258,7 @@ msgstr ""
 msgid "Returns the Elementor version and whether atomic elements (v4.0+) are supported. Call this first to decide whether to use legacy tools (add-free-widget, add-container) or atomic tools (add-atomic-heading, add-flexbox)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5246
+#: includes/admin/class-admin.php:5266
 msgid "Returns the Elementor version and whether atomic elements are supported."
 msgstr ""
 
@@ -10265,7 +10266,7 @@ msgstr ""
 msgid "Returns the JSON schema for a specific widget type."
 msgstr ""
 
-#: includes/admin/class-admin.php:5017
+#: includes/admin/class-admin.php:5037
 msgid "Returns the JSON schema for container settings."
 msgstr ""
 
@@ -10288,7 +10289,7 @@ msgstr ""
 msgid "Returns the attribute types a block spec may declare, the template placeholder syntax, and the size limits. Read this before writing your first block spec: the attribute type you pick is what decides how a value is escaped when the block renders."
 msgstr ""
 
-#: includes/admin/class-admin.php:5672
+#: includes/admin/class-admin.php:5738
 msgid "Returns the attribute types and template syntax for building block specs."
 msgstr ""
 
@@ -10297,7 +10298,7 @@ msgstr ""
 msgid "Returns the control types a widget spec may declare, the template placeholder syntax, and the size limits. Read this before writing your first spec: the control type you pick is what decides how a value is escaped when the widget renders."
 msgstr ""
 
-#: includes/admin/class-admin.php:5578
+#: includes/admin/class-admin.php:5644
 msgid "Returns the control types and template syntax for building widget specs."
 msgstr ""
 
@@ -10321,7 +10322,7 @@ msgid "Returns the full Elementor element tree for a page."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:70
+#: includes/abilities/class-transaction-abilities.php:93
 msgid "Returns the full detail of one change-ledger entry by id, including its rollback reference (the before-image / backup pointer). Read-only."
 msgstr ""
 
@@ -10329,7 +10330,7 @@ msgstr ""
 msgid "Returns the settings of a specific element by ID."
 msgstr ""
 
-#: includes/admin/class-admin.php:5625
+#: includes/admin/class-admin.php:5691
 msgid "Returns this site's Elementor 4 atomic element types plus the extension spec vocabulary."
 msgstr ""
 
@@ -10372,7 +10373,7 @@ msgstr ""
 msgid "Role slug (non-admin). Default: subscriber."
 msgstr ""
 
-#: includes/abilities/class-transaction-abilities.php:87
+#: includes/abilities/class-transaction-abilities.php:118
 #: includes/admin/class-admin.php:4063
 msgid "Roll Back Change"
 msgstr ""
@@ -10386,7 +10387,7 @@ msgid "Roll back anyway"
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:96
+#: includes/abilities/class-transaction-abilities.php:142
 msgid "Roll back even if the target changed since (overwrites the newer state). Default: false."
 msgstr ""
 
@@ -10480,7 +10481,8 @@ msgid "Runs the real compiler against a spec WITHOUT saving anything, and return
 msgstr ""
 
 #: includes/admin/class-admin.php:2897
-#: includes/admin/class-admin.php:5520
+#: includes/admin/class-admin.php:5559
+#: includes/admin/class-admin.php:5574
 msgid "SEO"
 msgstr ""
 
@@ -10489,19 +10491,19 @@ msgstr ""
 msgid "SEO metadata storage"
 msgstr ""
 
-#: includes/admin/class-admin.php:4708
+#: includes/admin/class-admin.php:4718
 msgid "SEOPress"
 msgstr ""
 
-#: includes/admin/class-admin.php:4712
+#: includes/admin/class-admin.php:4722
 msgid "SEOPress Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4720
+#: includes/admin/class-admin.php:4730
 msgid "SEOPress Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4709
+#: includes/admin/class-admin.php:4719
 msgid "SEOPress exposed as two tools, one Read, one Write. Read/write post & term SEO metadata and site settings; also read schema (structured data)."
 msgstr ""
 
@@ -10517,7 +10519,7 @@ msgstr ""
 msgid "SKU \"%1$s\" already belongs to product %2$d. WooCommerce requires SKUs to be unique."
 msgstr ""
 
-#: includes/admin/class-admin.php:5199
+#: includes/admin/class-admin.php:5219
 msgid "SVG Icons"
 msgstr ""
 
@@ -10575,7 +10577,7 @@ msgstr ""
 msgid "Sandbox"
 msgstr ""
 
-#: includes/admin/class-admin.php:5429
+#: includes/admin/class-admin.php:5454
 msgid "Sandbox Cloud (Export / Import)"
 msgstr ""
 
@@ -10608,7 +10610,7 @@ msgstr ""
 msgid "Save Settings"
 msgstr ""
 
-#: includes/admin/class-admin.php:5078
+#: includes/admin/class-admin.php:5098
 msgid "Save as Template"
 msgstr ""
 
@@ -10635,7 +10637,7 @@ msgstr ""
 msgid "Saves a page or a specific element as a reusable Elementor template."
 msgstr ""
 
-#: includes/admin/class-admin.php:5079
+#: includes/admin/class-admin.php:5099
 msgid "Saves the current page content as a reusable template."
 msgstr ""
 
@@ -10694,7 +10696,7 @@ msgstr ""
 msgid "Score %1$d / 100 — grade %2$s"
 msgstr ""
 
-#: includes/admin/class-admin.php:5524
+#: includes/admin/class-admin.php:5563
 msgid "Scored on-page SEO report (H1, title/meta, canonical, alts, links, word count)."
 msgstr ""
 
@@ -10717,7 +10719,7 @@ msgid "Search Files"
 msgstr ""
 
 #: includes/abilities/class-stock-image-abilities.php:160
-#: includes/admin/class-admin.php:5181
+#: includes/admin/class-admin.php:5201
 msgid "Search Images"
 msgstr ""
 
@@ -10800,13 +10802,13 @@ msgstr ""
 msgid "Searches a stock-photo provider (Unsplash, Pexels, or Pixabay) for high-quality images. Returns image URLs, thumbnails, dimensions, and attribution. Use the returned URLs with sideload-image or add-stock-image. Requires a free API key for at least one provider (set on KarMCP → Connection)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5182
+#: includes/admin/class-admin.php:5202
 msgid "Searches a stock-photo provider (Unsplash, Pexels, or Pixabay) for images. Core WordPress tool, available without Elementor. Needs a free provider API key (Connection tab)."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #: includes/abilities/class-search-abilities.php:46
-msgid "Searches an indexed corpus of the site's own pages, saved templates, widgets, and global styles by natural-language query, returning the best matches ranked by relevance, so you can REUSE an existing page/template/widget instead of building from scratch. Returns object_type + object_id + title + score + snippet; then read/clone the winner with the relevant tool (get-page-structure, apply-template, add-*-widget, etc.). Filter by types. Call reindex-search first if results look stale. Read-only."
+msgid "Searches an indexed corpus of the site's own pages, saved templates, widgets, and global styles by natural-language query, returning the best matches ranked by relevance, so you can REUSE an existing page/template/widget instead of building from scratch. Returns object_type + object_id + title + score + snippet; then read/clone the winner with the relevant tool (get-page-structure, apply-template, add-*-widget, etc.). Filter by types. Needs the index to exist: if it has never been built this returns an \"index_not_built\" error — run reindex-search once and search again. Call reindex-search too if results look stale. Read-only."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
@@ -10832,7 +10834,7 @@ msgstr ""
 msgid "Searches the wordpress.org theme directory."
 msgstr ""
 
-#: includes/admin/class-admin.php:5192
+#: includes/admin/class-admin.php:5212
 msgid "Searches, downloads, and adds a stock image to the page in one call."
 msgstr ""
 
@@ -10962,39 +10964,39 @@ msgid "Serving over HTTPS needs a certificate on the server. Nothing inside Word
 msgstr ""
 
 #: includes/abilities/class-block-builder-abilities.php:479
-#: includes/admin/class-admin.php:5701
+#: includes/admin/class-admin.php:5767
 msgid "Set Block Status"
 msgstr ""
 
 #: includes/abilities/class-template-abilities.php:745
-#: includes/admin/class-admin.php:5103
+#: includes/admin/class-admin.php:5123
 msgid "Set Dynamic Tag"
 msgstr ""
 
 #: includes/abilities/class-layout-abilities.php:920
-#: includes/admin/class-admin.php:5036
+#: includes/admin/class-admin.php:5056
 msgid "Set Element Label"
 msgstr ""
 
-#: includes/admin/class-admin.php:5093
+#: includes/admin/class-admin.php:5113
 msgid "Set Elementor Template Conditions"
 msgstr ""
 
 #: includes/abilities/class-extension-builder-abilities.php:550
-#: includes/admin/class-admin.php:5654
+#: includes/admin/class-admin.php:5720
 msgid "Set Extension Status"
 msgstr ""
 
-#: includes/admin/class-admin.php:4472
+#: includes/admin/class-admin.php:4482
 msgid "Set Fluent Forms submission status and delete submissions (confirm:true)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4447
+#: includes/admin/class-admin.php:4457
 msgid "Set Gravity Forms entry status (active/spam/trash) and delete entries (confirm:true)."
 msgstr ""
 
 #: includes/abilities/class-template-abilities.php:909
-#: includes/admin/class-admin.php:5113
+#: includes/admin/class-admin.php:5133
 msgid "Set Popup Settings"
 msgstr ""
 
@@ -11008,11 +11010,11 @@ msgstr ""
 msgid "Set Post Terms"
 msgstr ""
 
-#: includes/admin/class-admin.php:5543
+#: includes/admin/class-admin.php:5592
 msgid "Set Social Image"
 msgstr ""
 
-#: includes/admin/class-admin.php:4572
+#: includes/admin/class-admin.php:4582
 msgid "Set SureForms entry status and delete entries (confirm:true)."
 msgstr ""
 
@@ -11027,7 +11029,7 @@ msgid "Set Type to “Streamable HTTP”, then enter a name and this server URL:
 msgstr ""
 
 #: includes/abilities/class-widget-builder-abilities.php:483
-#: includes/admin/class-admin.php:5607
+#: includes/admin/class-admin.php:5673
 msgid "Set Widget Status"
 msgstr ""
 
@@ -11040,7 +11042,7 @@ msgstr ""
 msgid "Set one per page for the pages people actually share, or configure a site-wide fallback in the SEO plugin."
 msgstr ""
 
-#: includes/admin/class-admin.php:5271
+#: includes/admin/class-admin.php:5291
 msgid "Set the Class Manager order (= CSS source order / specificity) of the v4 Global Classes."
 msgstr ""
 
@@ -11054,7 +11056,7 @@ msgstr ""
 msgid "Set theme_mod values ({ values: { key: value } }). Structural mods (menu locations, widgets) are refused."
 msgstr ""
 
-#: includes/admin/class-admin.php:4792
+#: includes/admin/class-admin.php:4802
 msgid "Set theme_mod values and create + activate a child theme so the agent can edit theme files (create-child-theme requires confirm:true)."
 msgstr ""
 
@@ -11065,7 +11067,7 @@ msgstr ""
 msgid "Set via the %s constant"
 msgstr ""
 
-#: includes/admin/class-admin.php:5104
+#: includes/admin/class-admin.php:5124
 msgid "Sets a dynamic tag on a specific element setting."
 msgstr ""
 
@@ -11079,7 +11081,7 @@ msgstr ""
 msgid "Sets a template's include/exclude display rules + priority. Granular selectors (per-ID/per-term/per-author/exclude/priority) require KarMCP Pro; free accepts broad scope selectors. Use list-condition-targets for valid selectors."
 msgstr ""
 
-#: includes/admin/class-admin.php:5037
+#: includes/admin/class-admin.php:5057
 msgid "Sets an element's Navigator label (editor_settings.title)."
 msgstr ""
 
@@ -11093,15 +11095,15 @@ msgstr ""
 msgid "Sets display conditions for a theme builder template (e.g., Entire Site, specific pages, post types)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5094
+#: includes/admin/class-admin.php:5114
 msgid "Sets display conditions on a native Elementor Pro theme builder template."
 msgstr ""
 
-#: includes/admin/class-admin.php:5544
+#: includes/admin/class-admin.php:5593
 msgid "Sets the Open Graph + Twitter share image (Yoast / Rank Math) so link previews use the image you choose, not the first content image."
 msgstr ""
 
-#: includes/admin/class-admin.php:5114
+#: includes/admin/class-admin.php:5134
 msgid "Sets triggers, conditions, and timing on a popup template."
 msgstr ""
 
@@ -11164,7 +11166,7 @@ msgid "Showing the first %1$d of %2$d attributes; pass full:true for all. The he
 msgstr ""
 
 #: includes/abilities/class-stock-image-abilities.php:326
-#: includes/admin/class-admin.php:5186
+#: includes/admin/class-admin.php:5206
 msgid "Sideload Image"
 msgstr ""
 
@@ -11270,19 +11272,19 @@ msgstr ""
 msgid "Skip Trash even when MEDIA_TRASH is defined. Default: false."
 msgstr ""
 
-#: includes/admin/class-admin.php:4608
+#: includes/admin/class-admin.php:4618
 msgid "Slim SEO"
 msgstr ""
 
-#: includes/admin/class-admin.php:4612
+#: includes/admin/class-admin.php:4622
 msgid "Slim SEO Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4620
+#: includes/admin/class-admin.php:4630
 msgid "Slim SEO Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4609
+#: includes/admin/class-admin.php:4619
 msgid "Slim SEO exposed as two tools, one Read, one Write. Read and write the SEO metadata (title, description, canonical, robots, social) Slim SEO stores for posts and terms, plus its site settings."
 msgstr ""
 
@@ -11365,11 +11367,11 @@ msgstr ""
 msgid "Spectra Blocks"
 msgstr ""
 
-#: includes/admin/class-admin.php:4821
+#: includes/admin/class-admin.php:4831
 msgid "Spectra Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4829
+#: includes/admin/class-admin.php:4839
 msgid "Spectra Write"
 msgstr ""
 
@@ -11390,7 +11392,7 @@ msgstr ""
 msgid "Statically checks PHP snippet code WITHOUT storing or running it: confirms it parses, then scans for dangerous constructs (code execution, shell, file writes, network, obfuscation, destructive SQL). Findings come at three levels: critical blocks activation, warning is a real side effect a human should confirm, and note is ordinary in working code. Read the verdict field first — notes alone are not a reason to change anything. Use this to iterate before create-php-snippet."
 msgstr ""
 
-#: includes/admin/class-admin.php:5391
+#: includes/admin/class-admin.php:5416
 msgid "Statically checks snippet code (parse + security scan) without storing or running it."
 msgstr ""
 
@@ -11429,7 +11431,7 @@ msgstr ""
 msgid "Step 3: Connect"
 msgstr ""
 
-#: includes/admin/class-admin.php:5148
+#: includes/admin/class-admin.php:5168
 msgid "Stock & Media Images"
 msgstr ""
 
@@ -11482,7 +11484,7 @@ msgid "Subset of audits to run. Omit to run all four."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-snapshot-abilities.php:87
+#: includes/abilities/class-snapshot-abilities.php:101
 msgid "Subset which core sections to return. Default: all."
 msgstr ""
 
@@ -11518,35 +11520,35 @@ msgstr ""
 msgid "Suppresses errors with @ (can hide failures)."
 msgstr ""
 
-#: includes/admin/class-admin.php:4559
+#: includes/admin/class-admin.php:4569
 msgid "SureForms"
 msgstr ""
 
-#: includes/admin/class-admin.php:4563
+#: includes/admin/class-admin.php:4573
 msgid "SureForms Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4571
+#: includes/admin/class-admin.php:4581
 msgid "SureForms Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4560
+#: includes/admin/class-admin.php:4570
 msgid "SureForms exposed as two tools, one Read, one Write. Reads cover forms, fields, and entries; writes set entry status and delete entries. Requires SureForms active."
 msgstr ""
 
-#: includes/admin/class-admin.php:4758
+#: includes/admin/class-admin.php:4768
 msgid "SureRank"
 msgstr ""
 
-#: includes/admin/class-admin.php:4762
+#: includes/admin/class-admin.php:4772
 msgid "SureRank Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4770
+#: includes/admin/class-admin.php:4780
 msgid "SureRank Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4759
+#: includes/admin/class-admin.php:4769
 msgid "SureRank exposed as two tools, one Read, one Write. Read and write the SEO metadata (title, description, canonical, robots, social) SureRank stores for posts and terms."
 msgstr ""
 
@@ -11603,7 +11605,7 @@ msgstr ""
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #: includes/abilities/class-a11y-audit-abilities.php:58
 #: includes/abilities/class-seo-audit-abilities.php:103
-#: includes/abilities/class-snapshot-abilities.php:71
+#: includes/abilities/class-snapshot-abilities.php:85
 msgid "Target post/page ID."
 msgstr ""
 
@@ -11699,7 +11701,7 @@ msgstr ""
 msgid "Template type. Default: page."
 msgstr ""
 
-#: includes/admin/class-admin.php:5075
+#: includes/admin/class-admin.php:5095
 msgid "Templates"
 msgstr ""
 
@@ -11922,7 +11924,7 @@ msgstr ""
 msgid "The %1$s slug must be %2$d characters or fewer."
 msgstr ""
 
-#: includes/admin/class-admin.php:4801
+#: includes/admin/class-admin.php:4811
 msgid "The Astra theme and its Spectra blocks companion, grouped as one pack. Astra tools manage the theme's settings (enabled only when Astra is the active theme); Spectra tools give the block catalog + insertion (enabled only when the Spectra plugin is active). Toggles for an inactive component are disabled until you install and activate it."
 msgstr ""
 
@@ -11945,7 +11947,7 @@ msgstr ""
 msgid "The Form widget comes with Elementor Pro, which is not active on this site. Contact Form 7 is a free alternative: create the form with cf7-write create-form and place it with a shortcode widget."
 msgstr ""
 
-#: includes/admin/class-admin.php:4880
+#: includes/admin/class-admin.php:4897
 msgid "The GeneratePress theme and its GenerateBlocks companion (Pro). GeneratePress tools manage the theme's settings (enabled only when GeneratePress is the active theme); GenerateBlocks tools give the block catalog + insertion (enabled only when the GenerateBlocks plugin is active). Toggles for an inactive component are disabled until you install and activate it."
 msgstr ""
 
@@ -11959,7 +11961,7 @@ msgstr ""
 msgid "The Kadence Prebuilt Library is not available on this site."
 msgstr ""
 
-#: includes/admin/class-admin.php:4841
+#: includes/admin/class-admin.php:4851
 msgid "The Kadence theme and its Kadence Blocks companion, grouped as one pack. Kadence tools manage the theme's settings (enabled only when Kadence is the active theme); Kadence Blocks tools give the block catalog + insertion (enabled only when the Kadence Blocks plugin is active). Toggles for an inactive component are disabled until you install and activate it."
 msgstr ""
 
@@ -11978,19 +11980,19 @@ msgstr ""
 msgid "The PHP code to validate."
 msgstr ""
 
-#: includes/admin/class-admin.php:4733
+#: includes/admin/class-admin.php:4743
 msgid "The SEO Framework"
 msgstr ""
 
-#: includes/admin/class-admin.php:4737
+#: includes/admin/class-admin.php:4747
 msgid "The SEO Framework Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4745
+#: includes/admin/class-admin.php:4755
 msgid "The SEO Framework Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4734
+#: includes/admin/class-admin.php:4744
 msgid "The SEO Framework exposed as two tools, one Read, one Write. Read and write the SEO metadata (title, description, canonical, robots, social) it stores for posts and terms."
 msgstr ""
 
@@ -12168,6 +12170,11 @@ msgstr ""
 
 #: includes/class-content-extractor.php:245
 msgid "The content renderer is not available on this install."
+msgstr ""
+
+#. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
+#: includes/abilities/class-search-abilities.php:133
+msgid "The content search index has not been built yet. Run reindex-search once, then search again."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
@@ -13154,7 +13161,7 @@ msgstr ""
 msgid "The write operation to run. Omit to list operations. One of: update-fields."
 msgstr ""
 
-#: includes/admin/class-admin.php:4785
+#: includes/admin/class-admin.php:4795
 msgid "Theme Read"
 msgstr ""
 
@@ -13163,7 +13170,7 @@ msgstr ""
 msgid "Theme Template"
 msgstr ""
 
-#: includes/admin/class-admin.php:4791
+#: includes/admin/class-admin.php:4801
 msgid "Theme Write"
 msgstr ""
 
@@ -13177,7 +13184,7 @@ msgstr ""
 msgid "Theme installation failed."
 msgstr ""
 
-#: includes/admin/class-admin.php:4782
+#: includes/admin/class-admin.php:4792
 msgid "Theme integrations are exposed as two tools, one Read, one Write, that bundle internal operations. The AI calls a tool with an operation name; toggle a tool to allow or block all of its operations at once."
 msgstr ""
 
@@ -13202,7 +13209,7 @@ msgstr ""
 msgid "Themer"
 msgstr ""
 
-#: includes/admin/class-admin.php:5478
+#: includes/admin/class-admin.php:5503
 msgid "Themer PHP Templates"
 msgstr ""
 
@@ -13634,7 +13641,7 @@ msgstr ""
 msgid "Type(s) to query. Default: post."
 msgstr ""
 
-#: includes/admin/class-admin.php:4376
+#: includes/admin/class-admin.php:4386
 msgid "UAE templates come from the free Ultimate Addons for Elementor plugin. UAE Pro on its own supplies widgets, which the Read tool already covers."
 msgstr ""
 
@@ -13652,19 +13659,19 @@ msgstr ""
 msgid "URLs containing credentials cannot be fetched."
 msgstr ""
 
-#: includes/admin/class-admin.php:4354
+#: includes/admin/class-admin.php:4364
 msgid "Ultimate Addons for Elementor"
 msgstr ""
 
-#: includes/admin/class-admin.php:4355
+#: includes/admin/class-admin.php:4365
 msgid "Ultimate Addons for Elementor (UAE, formerly Header Footer Elementor) exposed as two tools, one Read, one Write. UAE is both a widget pack and a template plugin: reads discover its widgets and list header/footer templates with their display conditions; writes create, update, retarget and delete templates. Widgets are placed, and template content built, with the normal Elementor tools. Delete requires confirm:true."
 msgstr ""
 
-#: includes/admin/class-admin.php:4358
+#: includes/admin/class-admin.php:4368
 msgid "Ultimate Addons for Elementor Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4370
+#: includes/admin/class-admin.php:4380
 msgid "Ultimate Addons for Elementor Write"
 msgstr ""
 
@@ -13681,7 +13688,7 @@ msgid "Undo one recorded change by id (page/file/database). Only reverts changes
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
-#: includes/abilities/class-transaction-abilities.php:88
+#: includes/abilities/class-transaction-abilities.php:119
 msgid "Undoes one recorded change by id, restores a page's prior Elementor data, restores/removes a file from its backup, or inverses a database write from its before-image. Refuses with a \"conflict\" error if the target changed since the change was recorded (pass force:true to override and overwrite the newer state). Marks the entry rolled back (no double-rollback) and records a compensating entry. Only reverts changes KarMCP itself recorded."
 msgstr ""
 
@@ -13701,11 +13708,11 @@ msgstr ""
 msgid "Unique typography ID (e.g. \"primary\")."
 msgstr ""
 
-#: includes/admin/class-admin.php:5293
+#: includes/admin/class-admin.php:5313
 msgid "Universal: adds any atomic widget by type with raw $$type settings."
 msgstr ""
 
-#: includes/admin/class-admin.php:5298
+#: includes/admin/class-admin.php:5318
 msgid "Universal: partial-merge update on an existing atomic widget."
 msgstr ""
 
@@ -13941,12 +13948,12 @@ msgstr ""
 msgid "Update %1$s to %2$s or later."
 msgstr ""
 
-#: includes/admin/class-admin.php:4696
+#: includes/admin/class-admin.php:4706
 msgid "Update AIOSEO post SEO metadata."
 msgstr ""
 
 #: includes/abilities/class-atomic-widget-abilities.php:173
-#: includes/admin/class-admin.php:5297
+#: includes/admin/class-admin.php:5317
 msgid "Update Atomic Widget"
 msgstr ""
 
@@ -13956,57 +13963,57 @@ msgid "Update Block"
 msgstr ""
 
 #: includes/abilities/class-layout-abilities.php:480
-#: includes/admin/class-admin.php:5011
+#: includes/admin/class-admin.php:5031
 msgid "Update Container"
 msgstr ""
 
 #: includes/abilities/class-block-builder-abilities.php:334
-#: includes/admin/class-admin.php:5686
+#: includes/admin/class-admin.php:5752
 msgid "Update Custom Block"
 msgstr ""
 
 #: includes/abilities/class-widget-builder-abilities.php:339
-#: includes/admin/class-admin.php:5592
+#: includes/admin/class-admin.php:5658
 msgid "Update Custom Widget"
 msgstr ""
 
 #: includes/abilities/class-layout-abilities.php:590
-#: includes/admin/class-admin.php:5026
+#: includes/admin/class-admin.php:5046
 msgid "Update Element"
 msgstr ""
 
 #: includes/abilities/class-extension-builder-abilities.php:406
-#: includes/admin/class-admin.php:5639
+#: includes/admin/class-admin.php:5705
 msgid "Update Element Extension"
 msgstr ""
 
 #: includes/abilities/class-global-classes-write-abilities.php:112
-#: includes/admin/class-admin.php:5260
+#: includes/admin/class-admin.php:5280
 msgid "Update Global Class"
 msgstr ""
 
 #: includes/abilities/class-global-abilities.php:82
-#: includes/admin/class-admin.php:5124
+#: includes/admin/class-admin.php:5144
 msgid "Update Global Colors"
 msgstr ""
 
 #: includes/abilities/class-global-abilities.php:284
-#: includes/admin/class-admin.php:5129
+#: includes/admin/class-admin.php:5149
 msgid "Update Global Typography"
 msgstr ""
 
 #: includes/abilities/class-media-library-abilities.php:1004
-#: includes/admin/class-admin.php:5166
+#: includes/admin/class-admin.php:5186
 msgid "Update Media"
 msgstr ""
 
 #: includes/abilities/class-php-snippet-abilities.php:258
-#: includes/admin/class-admin.php:5400
+#: includes/admin/class-admin.php:5425
 msgid "Update PHP Snippet"
 msgstr ""
 
 #: includes/abilities/class-page-abilities.php:267
-#: includes/admin/class-admin.php:4965
+#: includes/admin/class-admin.php:4985
 msgid "Update Page Settings"
 msgstr ""
 
@@ -14020,7 +14027,7 @@ msgstr ""
 msgid "Update Post"
 msgstr ""
 
-#: includes/admin/class-admin.php:4671
+#: includes/admin/class-admin.php:4681
 msgid "Update Rank Math post/term SEO metadata."
 msgstr ""
 
@@ -14034,7 +14041,7 @@ msgstr ""
 msgid "Update Rows"
 msgstr ""
 
-#: includes/admin/class-admin.php:4721
+#: includes/admin/class-admin.php:4731
 msgid "Update SEOPress post/term SEO metadata."
 msgstr ""
 
@@ -14043,15 +14050,15 @@ msgstr ""
 msgid "Update Settings"
 msgstr ""
 
-#: includes/admin/class-admin.php:4621
+#: includes/admin/class-admin.php:4631
 msgid "Update Slim SEO post/term SEO metadata."
 msgstr ""
 
-#: includes/admin/class-admin.php:4771
+#: includes/admin/class-admin.php:4781
 msgid "Update SureRank post/term SEO metadata."
 msgstr ""
 
-#: includes/admin/class-admin.php:4746
+#: includes/admin/class-admin.php:4756
 msgid "Update The SEO Framework post/term SEO metadata."
 msgstr ""
 
@@ -14061,7 +14068,7 @@ msgid "Update Theme"
 msgstr ""
 
 #: includes/abilities/class-themer-php-abilities.php:155
-#: includes/admin/class-admin.php:5496
+#: includes/admin/class-admin.php:5521
 msgid "Update Theme PHP Template"
 msgstr ""
 
@@ -14075,12 +14082,12 @@ msgstr ""
 msgid "Update User"
 msgstr ""
 
-#: includes/admin/class-admin.php:4422
+#: includes/admin/class-admin.php:4432
 msgid "Update WPForms notifications, set entry status, and delete entries (confirm:true). Entry operations require WPForms Pro."
 msgstr ""
 
 #: includes/abilities/class-widget-abilities.php:462
-#: includes/admin/class-admin.php:5062
+#: includes/admin/class-admin.php:5082
 msgid "Update Widget"
 msgstr ""
 
@@ -14089,7 +14096,7 @@ msgstr ""
 msgid "Update WordPress Core"
 msgstr ""
 
-#: includes/admin/class-admin.php:4646
+#: includes/admin/class-admin.php:4656
 msgid "Update Yoast post/term SEO metadata."
 msgstr ""
 
@@ -14098,11 +14105,11 @@ msgstr ""
 msgid "Update a Global Class by g- id: change its label and/or merge styles/props into the variant for a breakpoint+state (replace_variant:true replaces that variant instead of merging)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5261
+#: includes/admin/class-admin.php:5281
 msgid "Update a Global Class label and/or its styles (per breakpoint/state)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5497
+#: includes/admin/class-admin.php:5522
 msgid "Update a PHP template and re-validate."
 msgstr ""
 
@@ -14157,7 +14164,7 @@ msgstr ""
 msgid "Updated. Scan again to confirm it is cleared."
 msgstr ""
 
-#: includes/admin/class-admin.php:4966
+#: includes/admin/class-admin.php:4986
 msgid "Updates Elementor page-level settings (layout, canvas, etc)."
 msgstr ""
 
@@ -14189,7 +14196,7 @@ msgstr ""
 msgid "Updates a snippet's code or settings. Re-validates and rejects critical findings. If the snippet is currently active it is re-compiled (or demoted to draft if it no longer passes). Activation still requires an admin."
 msgstr ""
 
-#: includes/admin/class-admin.php:5401
+#: includes/admin/class-admin.php:5426
 msgid "Updates a snippet's code/settings and re-validates."
 msgstr ""
 
@@ -14245,7 +14252,7 @@ msgstr ""
 msgid "Updates settings on an existing Elementor 4.0+ atomic widget. Performs a partial merge, only provided keys are changed."
 msgstr ""
 
-#: includes/admin/class-admin.php:5012
+#: includes/admin/class-admin.php:5032
 msgid "Updates settings on an existing container element."
 msgstr ""
 
@@ -14254,7 +14261,7 @@ msgstr ""
 msgid "Updates settings on an existing container. Settings are merged (partial update). Supports all container controls: flex_direction, flex_justify_content, flex_align_items, flex_wrap, flex_align_content, gap, content_width, min_height, overflow, html_tag, container_type, grid controls, background (set background_background=classic first), border (set border_border=solid first), border_radius, box_shadow, padding, margin, position, z_index, animation, shape dividers, etc. (The unprefixed justify_content / align_items / align_content are accepted and remapped to the flex_-prefixed keys.)"
 msgstr ""
 
-#: includes/admin/class-admin.php:5063
+#: includes/admin/class-admin.php:5083
 msgid "Updates settings on an existing widget (partial merge)."
 msgstr ""
 
@@ -14268,15 +14275,15 @@ msgstr ""
 msgid "Updates settings on any element (container or widget). Settings are merged (partial update). Works for all element types, no need to know if the target is a container or widget. For v4 atomic elements you may also include a `styles` map (the element's local CSS classes) and/or `editor_settings` (e.g. `{ \"title\": \"Hero\" }` for the Navigator label) in the settings object, these are routed to the element root automatically. Use set-element-label for just the Navigator name."
 msgstr ""
 
-#: includes/admin/class-admin.php:5027
+#: includes/admin/class-admin.php:5047
 msgid "Updates settings on any element (widget or container) by ID. Also writes v4 atomic styles / editor_settings when included."
 msgstr ""
 
-#: includes/admin/class-admin.php:5125
+#: includes/admin/class-admin.php:5145
 msgid "Updates the site-wide Elementor color palette."
 msgstr ""
 
-#: includes/admin/class-admin.php:5130
+#: includes/admin/class-admin.php:5150
 msgid "Updates the site-wide Elementor typography presets."
 msgstr ""
 
@@ -14295,12 +14302,12 @@ msgid "Updating…"
 msgstr ""
 
 #: includes/abilities/class-media-library-abilities.php:478
-#: includes/admin/class-admin.php:5161
+#: includes/admin/class-admin.php:5181
 msgid "Upload Media"
 msgstr ""
 
 #: includes/abilities/class-svg-icon-abilities.php:96
-#: includes/admin/class-admin.php:5202
+#: includes/admin/class-admin.php:5222
 msgid "Upload SVG Icon"
 msgstr ""
 
@@ -14321,11 +14328,11 @@ msgstr ""
 msgid "Uploads a file from the CLIENT machine into the WordPress Media Library by passing its raw bytes as base64. Use this for a file the user has locally; use sideload-image instead when the image is at a public URL the server can fetch itself. Only file types WordPress accepts are allowed (executables are refused), and the content is verified against the extension. Returns the attachment ID and URL, ready to pass to add-free-widget, or to update-post as featured_image:{id}."
 msgstr ""
 
-#: includes/admin/class-admin.php:5162
+#: includes/admin/class-admin.php:5182
 msgid "Uploads a file from the client machine into the Media Library (bytes sent as base64). The companion to Sideload Image, which fetches a URL the server can reach."
 msgstr ""
 
-#: includes/admin/class-admin.php:5203
+#: includes/admin/class-admin.php:5223
 msgid "Uploads an SVG icon (from URL or raw markup) for use with icon/icon-box widgets."
 msgstr ""
 
@@ -14396,22 +14403,22 @@ msgid "Using the ChatGPT App “Custom MCP” form"
 msgstr ""
 
 #: includes/abilities/class-block-builder-abilities.php:233
-#: includes/admin/class-admin.php:5676
+#: includes/admin/class-admin.php:5742
 msgid "Validate Block Spec"
 msgstr ""
 
 #: includes/abilities/class-extension-builder-abilities.php:307
-#: includes/admin/class-admin.php:5629
+#: includes/admin/class-admin.php:5695
 msgid "Validate Extension Spec"
 msgstr ""
 
 #: includes/abilities/class-php-snippet-abilities.php:181
-#: includes/admin/class-admin.php:5390
+#: includes/admin/class-admin.php:5415
 msgid "Validate PHP Snippet"
 msgstr ""
 
 #: includes/abilities/class-widget-builder-abilities.php:235
-#: includes/admin/class-admin.php:5582
+#: includes/admin/class-admin.php:5648
 msgid "Validate Widget Spec"
 msgstr ""
 
@@ -14420,15 +14427,15 @@ msgstr ""
 msgid "Validate the structure and report the element count + any coercion/skip warnings WITHOUT creating a page. Use to check a large payload before committing (build-page can time out over a remote connector past ~150 elements)."
 msgstr ""
 
-#: includes/admin/class-admin.php:5677
+#: includes/admin/class-admin.php:5743
 msgid "Validates a block spec and dry-runs the generator without saving."
 msgstr ""
 
-#: includes/admin/class-admin.php:5583
+#: includes/admin/class-admin.php:5649
 msgid "Validates a widget spec and dry-runs the generator without saving."
 msgstr ""
 
-#: includes/admin/class-admin.php:5630
+#: includes/admin/class-admin.php:5696
 msgid "Validates an extension spec and dry-runs the compiler without saving."
 msgstr ""
 
@@ -14470,7 +14477,7 @@ msgstr ""
 msgid "Vulnerability data"
 msgstr ""
 
-#: includes/admin/class-admin.php:5556
+#: includes/admin/class-admin.php:5612
 msgid "WCAG-oriented report: contrast, alts, heading order, link text, form labels."
 msgstr ""
 
@@ -14486,35 +14493,35 @@ msgstr ""
 msgid "WP-CLI can only run in-process over the WP-CLI stdio transport. To enable it over HTTP, set a wp base command (KarMCP → Connection, or the KARMCP_WPCLI_COMMAND constant) and ensure PHP proc_open is available."
 msgstr ""
 
-#: includes/admin/class-admin.php:4409
+#: includes/admin/class-admin.php:4419
 msgid "WPForms"
 msgstr ""
 
-#: includes/admin/class-admin.php:4413
+#: includes/admin/class-admin.php:4423
 msgid "WPForms Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4421
+#: includes/admin/class-admin.php:4431
 msgid "WPForms Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4410
+#: includes/admin/class-admin.php:4420
 msgid "WPForms exposed as two tools, one Read, one Write. Reads cover forms, fields, notifications, and entries (entries require WPForms Pro); writes update settings/notifications and manage entries. Requires WPForms active."
 msgstr ""
 
-#: includes/admin/class-admin.php:4269
+#: includes/admin/class-admin.php:4279
 msgid "WPML"
 msgstr ""
 
-#: includes/admin/class-admin.php:4273
+#: includes/admin/class-admin.php:4283
 msgid "WPML Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4281
+#: includes/admin/class-admin.php:4291
 msgid "WPML Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4270
+#: includes/admin/class-admin.php:4280
 msgid "WPML exposed as two tools, one Read, one Write, over its published hooks API. Same operations as the Polylang pair: read the languages and a page's translation status, create a translation by duplicating and linking, or link copies that already exist."
 msgstr ""
 
@@ -14677,7 +14684,7 @@ msgstr ""
 msgid "Widget"
 msgstr ""
 
-#: includes/admin/class-admin.php:5574
+#: includes/admin/class-admin.php:5640
 msgid "Widget Builder"
 msgstr ""
 
@@ -14720,7 +14727,7 @@ msgstr ""
 msgid "Widget type from list-widgets. Use get-widget-schema for its curated params."
 msgstr ""
 
-#: includes/admin/class-admin.php:5049
+#: includes/admin/class-admin.php:5069
 #: includes/admin/views/sandbox/overview.php:77
 #: includes/admin/views/sandbox/widgets.php:48
 msgid "Widgets"
@@ -14749,17 +14756,17 @@ msgstr ""
 msgid "Without a submit control the form cannot be completed from the keyboard."
 msgstr ""
 
-#: includes/admin/class-admin.php:4221
+#: includes/admin/class-admin.php:4231
 msgid "WooCommerce"
 msgstr ""
 
 #: includes/abilities/woo/class-woo-integration.php:84
-#: includes/admin/class-admin.php:4225
+#: includes/admin/class-admin.php:4235
 msgid "WooCommerce Read"
 msgstr ""
 
 #: includes/abilities/woo/class-woo-integration.php:100
-#: includes/admin/class-admin.php:4233
+#: includes/admin/class-admin.php:4243
 msgid "WooCommerce Write"
 msgstr ""
 
@@ -14773,7 +14780,7 @@ msgstr ""
 msgid "WooCommerce did not save the product."
 msgstr ""
 
-#: includes/admin/class-admin.php:4222
+#: includes/admin/class-admin.php:4232
 msgid "WooCommerce is exposed as two tools, one Read, one Write, scoped to the product catalog and the store setup a site builder needs. Orders, refunds and customers are deliberately not exposed: that is the money and personal-data surface, and building a site never needs it. The AI calls a tool with an operation name; toggle a tool to allow or block all of its operations at once. Deleting a product also requires confirm:true. Requires WooCommerce active."
 msgstr ""
 
@@ -14873,7 +14880,7 @@ msgstr ""
 msgid "Write Advanced Custom Fields data: field values, field groups, and (ACF 6.1+) ACF-managed post types and taxonomies. Individual write operations are disabled by default, enable them under KarMCP → Tools → Plugins → ACF. Call with no \"operation\" to list the available write operations and their arguments, then call again with { operation, arguments }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4814
+#: includes/admin/class-admin.php:4824
 msgid "Write Astra settings; non-allowlisted keys are reported in skipped[]."
 msgstr ""
 
@@ -14882,11 +14889,11 @@ msgstr ""
 msgid "Write File"
 msgstr ""
 
-#: includes/admin/class-admin.php:4892
+#: includes/admin/class-admin.php:4909
 msgid "Write GeneratePress settings; non-allowlisted keys are reported in skipped[]."
 msgstr ""
 
-#: includes/admin/class-admin.php:4853
+#: includes/admin/class-admin.php:4863
 msgid "Write Kadence settings as theme_mods; non-allowlisted keys are reported in skipped[]."
 msgstr ""
 
@@ -14900,12 +14907,12 @@ msgstr ""
 msgid "Write Meta Box field values on a post or object. arguments: { post_id | object_type + object_id, fields: { id: value } }."
 msgstr ""
 
-#: includes/admin/class-admin.php:4308
+#: includes/admin/class-admin.php:4318
 msgid "Write Meta Box field values. No delete operations; unknown fields are skipped, not created."
 msgstr ""
 
 #: includes/abilities/class-skill-write-abilities.php:81
-#: includes/admin/class-admin.php:5463
+#: includes/admin/class-admin.php:5488
 msgid "Write Skill"
 msgstr ""
 
@@ -14949,19 +14956,19 @@ msgstr ""
 msgid "Y-m-d H:i:s. Required for status=future."
 msgstr ""
 
-#: includes/admin/class-admin.php:4633
+#: includes/admin/class-admin.php:4643
 msgid "Yoast SEO"
 msgstr ""
 
-#: includes/admin/class-admin.php:4637
+#: includes/admin/class-admin.php:4647
 msgid "Yoast SEO Read"
 msgstr ""
 
-#: includes/admin/class-admin.php:4645
+#: includes/admin/class-admin.php:4655
 msgid "Yoast SEO Write"
 msgstr ""
 
-#: includes/admin/class-admin.php:4634
+#: includes/admin/class-admin.php:4644
 msgid "Yoast SEO exposed as two tools, one Read, one Write. Read and write the SEO metadata (title, description, canonical, robots, social, focus keyword) Yoast stores for posts and terms, plus site settings."
 msgstr ""
 

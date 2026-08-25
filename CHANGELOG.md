@@ -2,6 +2,34 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.36.0]
+
+Makes the Tools screen agree with what the plugin actually implements, and stops the guardrails refusing reads they were never meant to refuse.
+
+### Fixed
+
+- **Three implemented tools were registered but impossible to reach.** The Tools screen drops any category marked as belonging to a tier this build does not have, which is correct — offering a toggle for a tool that can never register is a lie. What nothing watched was whether that mark still matched reality. WooCommerce and the SEO page audit had since been implemented and stayed marked, so `woo-read` shipped **enabled with no way to switch it off**, and `woo-write` and `audit-page-seo` shipped **disabled with no way to switch them on**. All three are now on the screen. This is the same trap the Widget and Block Builders were in until 1.12.0, and it is now held by a test rather than by attention.
+
+- **Twelve toggles on that screen did nothing.** The mirror image of the same drift: the GeneratePress, Blocksy and Brand Kits groups list tools whose integrations are not in this build, and were not marked, so the screen offered switches for them. They are marked now and no longer appear.
+
+- **Five read-only tools were being treated as writes.** A tool declares whether it is read-only, and the write guard runs whenever that declaration is missing — which is what "missing" evaluates to. Five tools never declared it, so read-only mode, the freeze window and the protected-content rules all refused `list-changes`, `get-change`, `get-page-snapshot`, `list-content-exports` and `search-content`, and the compact tool mode left them out of its read-only pass-through. Nothing broke and nothing errored anywhere visible: a ledger or a snapshot the operator was entitled to read simply came back refused. Every registered tool now declares it, and a test keeps it that way.
+
+  Two of those five needed more than a declaration to be honest about it. `export-content` reads like a query and sits next to `list-content-exports`, but it writes JSON files to disk, so it is declared a write. And `search-content` is covered below.
+
+### Changed
+
+- **`search-content` no longer creates the search index; it asks you to.** It used to install the index table on its first call, which made a tool documented as read-only perform a schema write — the exact thing that stopped its declaration from being true. The install now belongs to `reindex-search`, which is the tool that owns it, and searching an index that has never been built returns an `index_not_built` error naming that tool.
+
+  Refusing is better than what it did before. The table was empty on a first call anyway, so the old behaviour answered "no matches" to a question it had not been able to ask — indistinguishable from a genuine no-match, with no way for the caller to learn it needed to build an index first. If you have never run `reindex-search`, run it once.
+
+- **The `Pro` badge is gone from the two page audits.** `audit-page-seo` and `audit-page-a11y` are implemented in this build; the badge is read by the first-run defaults and renders as an upsell for a tier that does not exist here. Both still ship switched off.
+
+### Documentation
+
+- **This file's user-facing copy in `readme.txt` was two releases behind.** 1.34.0 and 1.35.0 never got their entries there, so the plugin screen's changelog stopped at 1.33.1 while this file carried both. Backfilled.
+
+- The translation count in the README said 2,184 strings; it is 2,154.
+
 ## [1.35.0]
 
 Rewrites the PHP snippet validator's findings so a routine snippet no longer looks alarming, and closes a way a dangerous call could pass as a mere warning.

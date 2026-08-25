@@ -80,7 +80,7 @@ Anything that writes, deletes, or renders site-wide **ships disabled** and is op
 
 ## Languages
 
-English and Spanish (`es_ES`). Switch your site's language and the admin, the Themer, the sandbox screens, the SEO and accessibility findings and every tool error message follow it — 2,184 strings, everything a person can see.
+English and Spanish (`es_ES`). Switch your site's language and the admin, the Themer, the sandbox screens, the SEO and accessibility findings and every tool error message follow it — 2,154 strings, everything a person can see.
 
 The `label` and `description` of each MCP tool stay in English on purpose. They are read by the AI agent, never rendered in the admin, and their wording is tested against agent behaviour; the POT marks them so nobody translates them by mistake.
 

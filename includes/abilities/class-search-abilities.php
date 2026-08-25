@@ -43,10 +43,20 @@ class KarMCP_Search_Abilities {
 			'karmcp/search-content',
 			array(
 				'label'               => __( 'Search Content', 'karmcp' ),
-				'description'         => __( 'Searches an indexed corpus of the site\'s own pages, saved templates, widgets, and global styles by natural-language query, returning the best matches ranked by relevance, so you can REUSE an existing page/template/widget instead of building from scratch. Returns object_type + object_id + title + score + snippet; then read/clone the winner with the relevant tool (get-page-structure, apply-template, add-*-widget, etc.). Filter by types. Call reindex-search first if results look stale. Read-only.', 'karmcp' ),
+				'description'         => __( 'Searches an indexed corpus of the site\'s own pages, saved templates, widgets, and global styles by natural-language query, returning the best matches ranked by relevance, so you can REUSE an existing page/template/widget instead of building from scratch. Returns object_type + object_id + title + score + snippet; then read/clone the winner with the relevant tool (get-page-structure, apply-template, add-*-widget, etc.). Filter by types. Needs the index to exist: if it has never been built this returns an "index_not_built" error — run reindex-search once and search again. Call reindex-search too if results look stale. Read-only.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_search' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
+				// Read-only, and execute_search() had to stop calling
+				// maybe_install() before that could be true — see the note there.
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -71,6 +81,17 @@ class KarMCP_Search_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_reindex' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
+				// Writes: it installs the table if needed and rebuilds its rows.
+				// This is the tool that owns the DDL, which is why the search
+				// path can refuse instead of installing.
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => false,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -96,7 +117,23 @@ class KarMCP_Search_Abilities {
 		if ( '' === $query ) {
 			return new WP_Error( 'query_required', __( 'A query is required.', 'karmcp' ) );
 		}
-		KarMCP_Search_Index::maybe_install();
+		// Deliberately NOT maybe_install(): that runs dbDelta the first time it
+		// is called, which made this tool a reader that writes — the exact thing
+		// CLAUDE.md refuses in `paused()`, and the reason its readonly
+		// annotation could not honestly be set. reindex-search owns the install.
+		//
+		// Refusing beats returning an empty list. The table would be empty on a
+		// first call anyway, so the old behaviour answered "no matches" to a
+		// question it had not been able to ask — indistinguishable from a real
+		// no-match, and the agent has no way to tell it needs to build an index.
+		// The save_post hook takes the same reading of "not installed" and skips.
+		if ( KarMCP_Schema_State::installed( KarMCP_Schema_State::KEY_SEARCH ) < KarMCP_Search_Index::DB_VERSION ) {
+			return new WP_Error(
+				'index_not_built',
+				__( 'The content search index has not been built yet. Run reindex-search once, then search again.', 'karmcp' )
+			);
+		}
+
 		$types   = ( isset( $input['types'] ) && is_array( $input['types'] ) ) ? array_map( 'strval', $input['types'] ) : array();
 		$limit   = isset( $input['limit'] ) ? max( 1, (int) $input['limit'] ) : 20;
 		$results = KarMCP_Search_Index::search( $query, $types, $limit );

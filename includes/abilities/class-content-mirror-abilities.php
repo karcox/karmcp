@@ -51,6 +51,18 @@ class KarMCP_Content_Mirror_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_export' ),
 				'permission_callback' => array( $this, 'check_permission' ),
+				// NOT read-only, despite reading like a query: this writes JSON
+				// files under uploads/karmcp-content-mirror/. The name is the
+				// trap — "export" sits next to "list" in this file and both
+				// sound like questions, but only one of them is.
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => false,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -68,6 +80,19 @@ class KarMCP_Content_Mirror_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_restore' ),
 				'permission_callback' => array( $this, 'check_permission' ),
+				// Overwrites a page's current Elementor content with the mirrored
+				// version, so it is a write. Not flagged destructive, matching the
+				// admin catalog and the same reading as rollback-change: it
+				// restores from an artifact this plugin wrote rather than
+				// discarding data outright.
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => false,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -86,6 +111,18 @@ class KarMCP_Content_Mirror_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list' ),
 				'permission_callback' => array( $this, 'check_permission' ),
+				// Read-only for real: glob() plus file_get_contents(), and
+				// KarMCP_Content_Mirror::dir() only builds the path — it does not
+				// create the directory, which is the kind of helper that turns a
+				// listing into a write without anyone noticing.
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array( 'type' => 'object', 'properties' => array() ),
 			)
 		);

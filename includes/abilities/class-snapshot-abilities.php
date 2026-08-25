@@ -63,6 +63,20 @@ class KarMCP_Snapshot_Abilities {
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
+				// Read-only, and the transient in KarMCP_Page_Snapshot::cached_section()
+				// does not change that: it memoizes the heavy sections for 15
+				// minutes and nothing reads it as a fact about the site, so
+				// dropping it changes no answer. That is a different thing from
+				// the case CLAUDE.md records in `paused()`, where a reader
+				// reconciled real state that other tools read as truth.
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(

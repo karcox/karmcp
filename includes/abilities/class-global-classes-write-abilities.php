@@ -102,7 +102,7 @@ class KarMCP_Global_Classes_Write_Abilities {
 					),
 					'required'   => array( 'label' ),
 				),
-				'meta'                => array( 'annotations' => array( 'destructive' => false, 'idempotent' => false ), 'show_in_rest' => true ),
+				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => false, 'idempotent' => false ), 'show_in_rest' => true ),
 			)
 		);
 
@@ -127,7 +127,7 @@ class KarMCP_Global_Classes_Write_Abilities {
 					),
 					'required'   => array( 'id' ),
 				),
-				'meta'                => array( 'annotations' => array( 'destructive' => false, 'idempotent' => false ), 'show_in_rest' => true ),
+				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => false, 'idempotent' => false ), 'show_in_rest' => true ),
 			)
 		);
 
@@ -147,7 +147,7 @@ class KarMCP_Global_Classes_Write_Abilities {
 					),
 					'required'   => array( 'id' ),
 				),
-				'meta'                => array( 'annotations' => array( 'destructive' => true, 'idempotent' => false ), 'show_in_rest' => true ),
+				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => true, 'idempotent' => false ), 'show_in_rest' => true ),
 			)
 		);
 
@@ -170,7 +170,7 @@ class KarMCP_Global_Classes_Write_Abilities {
 					),
 					'required'   => array( 'order' ),
 				),
-				'meta'                => array( 'annotations' => array( 'destructive' => false, 'idempotent' => true ), 'show_in_rest' => true ),
+				'meta'                => array( 'annotations' => array( 'readonly' => false, 'destructive' => false, 'idempotent' => true ), 'show_in_rest' => true ),
 			)
 		);
 	}

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.35.0
+Stable tag: 1.36.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,19 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.36.0 =
+Fixed: WooCommerce and audit-page-seo were implemented but hidden from the Tools screen, so woo-read could not be switched off and woo-write and audit-page-seo could not be switched on; twelve toggles for integrations not in this build (GeneratePress, Blocksy, Brand Kits) no longer appear; five read-only tools (list-changes, get-change, get-page-snapshot, list-content-exports, search-content) were being refused by read-only mode and the freeze window because they never declared themselves read-only.
+Changed: search-content no longer installs the search index on first use - run reindex-search once and it returns index_not_built until you do, instead of answering "no matches" to a question it could not ask. The Pro badge is gone from the two page audits, which are implemented in this build.
+
+= 1.35.0 =
+Changed: PHP snippet findings now come at three levels, so a well-written snippet no longer arrives covered in warnings a reviewer learns to skim; the admin screens follow the plain verdict rather than colouring any finding as an error; a closure is no longer reported as a redeclaration risk.
+Security: a dangerous function passed as a string callback (array_map('system', ...)) now blocks instead of merely warning.
+
+= 1.34.0 =
+Security: the read-only SQL guard now inspects a token stream instead of pattern-matching text, closing four places where its normalizer disagreed with MySQL and three of which let a query reach the user table; database server system tables are off limits; variable assignment and SELECT ... INTO are refused; delay and lock functions are refused; the row cap is enforced by the database instead of after the fact.
+Fixed: editing the text of an atomic element containing an inline tag emptied its rich-text structure - the page rendered the same and the tool reported success, so the only symptom was the element opening empty in the editor. Elements already damaged are not repaired automatically: re-apply the text once.
+Changed: REPLACE(), INSERT() and TRUNCATE() keep working as functions inside a SELECT.
 
 = 1.33.1 =
 Fixed: a stray = in a base64 payload was misdiagnosed as a disk error (now invalid_base64 up front); the executable-filename refusal now covers all four sideload intakes from one canonical list (KarMCP_Filename_Guard) instead of two; the malware scanner derives its PHP-extension regex from that same list, ending a drift where shell.php8 was refused at upload but invisible to the scanner; pl removed from the list (krakow.pl.jpg is a photo, not a Perl script); the payload validator no longer copies the whole payload to count its padding.

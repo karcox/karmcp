@@ -2,6 +2,30 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.37.2]
+
+Makes the token endpoint able to read a JSON request body, which is what several MCP clients send.
+
+### Fixed
+
+- **A client that posts the token exchange as JSON could never get a token.** `WP_REST_Request::get_body_params()` fills only for `application/x-www-form-urlencoded` (and multipart); a JSON body lands in `get_json_params()`. The token endpoint read only the first, so a JSON exchange arrived with an empty `grant_type` and was answered `unsupported_grant_type`. RFC 6749 §4.1.3 does specify form encoding, but the clients that send JSON are not going to stop, and the registration endpoint has read both encodings since it shipped — only this one had not.
+
+  What made it expensive to find is that it does not look like what it is. The discovery documents resolve, registration returns 201, the browser flow completes, the user approves, and a valid authorization code is issued — and then the client reports nothing more specific than `Unauthorized`, because from its side the token request simply failed. Application Passwords keep working throughout, which points the search at OAuth as a whole rather than at the one endpoint that could not read its own request body. Both handlers that take a body — token and revocation — now read either encoding, with form winning a collision since that is the encoding the spec mandates.
+
+## [1.37.1]
+
+Fixes OAuth sign-in for anyone who was not already logged into WordPress.
+
+### Fixed
+
+- **The login round trip destroyed the client's callback URL.** A user who reaches the authorize endpoint without a WordPress session is sent to `wp-login.php` with the whole authorize request as `redirect_to`. That URL was rebuilt with `sanitize_text_field()`, which strips every percent-encoded octet — so a client's `redirect_uri=http%3A%2F%2F127.0.0.1%3A33418%2Fcallback` came back from the login screen as `http127.0.0.133418callback`. Authorize compared that against the URI the client had registered, correctly found they did not match, and refused. The client never received a code and the connection sat on `Unauthorized`, with nothing on the server side looking wrong: discovery resolved, registration returned 201, and the 401 challenge carried the right `resource_metadata`. The URL is now assembled by `build_return_url()` and escaped with `esc_url_raw()` — the sanitizer for a URL, which leaves the encoding alone.
+
+  It only ever bit a logged-out browser, which is why it lasted. Connecting from a browser that already held an admin session skips the login redirect entirely and worked every time; an IDE opening a fresh browser profile hit it on the first attempt.
+
+### Changed
+
+- **The suite's `sanitize_text_field()` stub now strips percent-encoded octets, as core does.** It modelled only the whitespace half, so the corrupted URL round-tripped intact through every test and the suite reported green while sign-in was broken in production. A stub gentler than core tests a WordPress that does not exist.
+
 ## [1.37.0]
 
 Replaces the Slim SEO integration with one for KarSEO.

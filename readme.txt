@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.37.0
+Stable tag: 1.37.2
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,12 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.37.2 =
+Fixed: a client that posts the OAuth token exchange as JSON could never obtain a token. WP_REST_Request::get_body_params() fills only for form-encoded bodies, so a JSON exchange arrived with an empty grant_type and was answered `unsupported_grant_type` - the browser flow completed, the code was valid, and the client still reported only "Unauthorized". The token and revocation endpoints now read either encoding, as the registration endpoint always has.
+
+= 1.37.1 =
+Fixed: OAuth sign-in dead-ended for anyone who was not already logged into WordPress. The authorize endpoint rebuilt its login-return URL with sanitize_text_field(), which strips percent-encoded characters, so a client's `redirect_uri=http%3A%2F%2F127.0.0.1%3A33418%2Fcallback` came back from wp-login.php as `http127.0.0.133418callback` - no longer the URI the client registered, so authorize refused it and the client never received a code. Connecting from a browser that already held a session skipped the login redirect and always worked, which is why it went unnoticed.
 
 = 1.37.0 =
 Changed: the Slim SEO adapter is now the KarSEO adapter. The two dispatcher tools are `karseo-read` and `karseo-write`, the Tools card and the SEO audit name KarSEO, and detection is on `KAR_SEO_VER` rather than `SLIM_SEO_VER` - KarSEO defines both for back-compat, so only the first tells the two apart. Stored data is untouched: KarSEO rebranded its surface and deliberately kept the `slim_seo` meta and option keys, so an existing install keeps everything it had. On upgrade the retired `slimseo-*` slugs are stripped from the disabled-tools option and `karseo-write` is seeded off, where its predecessor was.

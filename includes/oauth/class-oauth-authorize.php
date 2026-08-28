@@ -516,7 +516,31 @@ class KarMCP_OAuth_Authorize {
 	private static function current_url(): string {
 		$scheme = ( function_exists( 'is_ssl' ) && is_ssl() ) ? 'https' : 'http';
 		$host   = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
-		$uri    = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+		// Deliberately not sanitize_text_field(): REQUEST_URI still carries its
+		// percent-encoding here, and that function strips every %XX octet. The
+		// client's redirect_uri=http%3A%2F%2F127.0.0.1%3A33418%2Fcallback came back
+		// from wp-login.php as http127.0.0.133418callback — no longer the URI the
+		// client registered, so authorize rejected it and sign-in dead-ended for
+		// every user who was not already logged in. esc_url_raw(), in
+		// build_return_url() below, is the sanitizer for a URL: it keeps %XX intact.
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- esc_url_raw() in build_return_url() sanitizes it; see the note above for why the usual sanitizer cannot be used here.
+		return self::build_return_url( $scheme, $host, (string) $uri );
+	}
+
+	/**
+	 * Assemble the absolute login-return URL from its parts.
+	 *
+	 * Pure, so the percent-encoding the OAuth parameters ride on is testable
+	 * without WordPress.
+	 *
+	 * @since 1.37.1
+	 *
+	 * @param string $scheme Request scheme.
+	 * @param string $host   Request host.
+	 * @param string $uri    Request URI, percent-encoding intact.
+	 * @return string
+	 */
+	public static function build_return_url( string $scheme, string $host, string $uri ): string {
 		return esc_url_raw( $scheme . '://' . $host . $uri );
 	}
 }

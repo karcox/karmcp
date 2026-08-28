@@ -159,8 +159,22 @@ function absint( $value ): int {
 	return abs( (int) $value );
 }
 
+/**
+ * Reproduces the half of core that bites: it collapses whitespace *and strips
+ * every percent-encoded octet*. That second half is not a detail — it is why
+ * this stub existed for versions while the OAuth login return was silently
+ * destroying `redirect_uri=http%3A%2F%2F127.0.0.1%3A33418%2Fcallback`, and the
+ * suite reported green. A stub that is gentler than core tests a WordPress that
+ * does not exist.
+ */
 function sanitize_text_field( $value ): string {
-	return trim( preg_replace( '/[\r\n\t ]+/', ' ', strip_tags( (string) $value ) ) );
+	$filtered = trim( preg_replace( '/[\r\n\t ]+/', ' ', strip_tags( (string) $value ) ) );
+	$found    = false;
+	while ( preg_match( '/%[a-f0-9]{2}/i', $filtered, $match ) ) {
+		$filtered = str_replace( $match[0], '', $filtered );
+		$found    = true;
+	}
+	return $found ? trim( preg_replace( '/ +/', ' ', $filtered ) ) : $filtered;
 }
 
 function sanitize_textarea_field( $value ): string {

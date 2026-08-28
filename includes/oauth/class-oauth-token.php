@@ -86,7 +86,7 @@ class KarMCP_OAuth_Token {
 	 * @return WP_REST_Response
 	 */
 	public static function handle_token( $request ) {
-		$p          = $request->get_body_params();
+		$p          = self::request_params( $request );
 		$grant_type = (string) ( $p['grant_type'] ?? '' );
 
 		if ( 'authorization_code' === $grant_type ) {
@@ -165,7 +165,7 @@ class KarMCP_OAuth_Token {
 	 * @return WP_REST_Response
 	 */
 	public static function handle_revoke( $request ) {
-		$token = (string) ( $request->get_body_params()['token'] ?? '' );
+		$token = (string) ( self::request_params( $request )['token'] ?? '' );
 		if ( '' !== $token ) {
 			foreach ( array( 'access', 'refresh' ) as $type ) {
 				$row = KarMCP_OAuth_Store::find_token( $token, $type );
@@ -176,6 +176,35 @@ class KarMCP_OAuth_Token {
 			}
 		}
 		return new WP_REST_Response( array( 'revoked' => true ), 200 );
+	}
+
+	/**
+	 * The request's parameters, whichever encoding the client used for the body.
+	 *
+	 * RFC 6749 §4.1.3 specifies `application/x-www-form-urlencoded`, and
+	 * `WP_REST_Request::get_body_params()` fills only for that (and multipart) —
+	 * a JSON body lands in `get_json_params()` instead. Reading just the form
+	 * params meant a client that posts the exchange as JSON, which Antigravity
+	 * does, arrived with an empty `grant_type` and was answered
+	 * `unsupported_grant_type`. The browser flow had completed and the code was
+	 * valid; it simply could never be exchanged, and the client reported nothing
+	 * more useful than "Unauthorized". The registration endpoint has read both
+	 * encodings since it shipped — this one had not.
+	 *
+	 * Form params win a collision: that is the encoding the spec mandates.
+	 *
+	 * @since 1.37.2
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return array
+	 */
+	public static function request_params( $request ): array {
+		$form = ( is_object( $request ) && method_exists( $request, 'get_body_params' ) ) ? $request->get_body_params() : array();
+		$json = ( is_object( $request ) && method_exists( $request, 'get_json_params' ) ) ? $request->get_json_params() : array();
+		return array_merge(
+			is_array( $json ) ? $json : array(),
+			is_array( $form ) ? $form : array()
+		);
 	}
 
 	// ---------------------------------------------------------------------

@@ -67,6 +67,19 @@ class NavigatorLabelRoutingTest extends \PHPUnit\Framework\TestCase {
 		return $data[0];
 	}
 
+	/**
+	 * The same write, keeping the report the caller would have received.
+	 *
+	 * @param array $data     The tree.
+	 * @param array $settings The payload.
+	 * @return array{0:array,1:array} The element node and the report.
+	 */
+	private function write_reported( array $data, array $settings ): array {
+		$report = array();
+		$this->assertTrue( $this->data->update_element_settings( $data, 'abc1234', $settings, $report ) );
+		return array( $data[0], $report );
+	}
+
 	// ---------------------------------------------------------------------
 	// The predicate
 	// ---------------------------------------------------------------------
@@ -295,6 +308,109 @@ class NavigatorLabelRoutingTest extends \PHPUnit\Framework\TestCase {
 		$this->assertSame( 'Hero', $el['editor_settings']['title'] );
 		$this->assertSame( 'e-abc', $el['styles']['e-abc']['id'] );
 		$this->assertArrayNotHasKey( 'styles', $el['settings'] );
+	}
+
+	// ---------------------------------------------------------------------
+	// Values whose shape is wrong: dropped and reported, never stored
+	// ---------------------------------------------------------------------
+
+	public function test_a_non_map_editor_settings_does_not_replace_the_stored_map() {
+		// It used to: the hoisting assigned any non-array straight onto the
+		// element root, so one mistyped key destroyed the whole map and the
+		// call still returned true.
+		list( $el, $report ) = $this->write_reported(
+			$this->tree( 'e-flexbox', array( 'editor_settings' => array( 'title' => 'Hero', 'other' => 'kept' ) ) ),
+			array( 'editor_settings' => 'oops' )
+		);
+
+		$this->assertSame(
+			array(
+				'title' => 'Hero',
+				'other' => 'kept',
+			),
+			$el['editor_settings']
+		);
+		$this->assertSame( array( 'editor_settings' => 'string' ), $report['rejected'] );
+	}
+
+	public function test_a_non_map_styles_does_not_replace_the_stored_map() {
+		list( $el, $report ) = $this->write_reported(
+			$this->tree( 'e-flexbox', array( 'styles' => array( 'e-abc' => array( 'id' => 'e-abc' ) ) ) ),
+			array( 'styles' => 42 )
+		);
+
+		$this->assertSame( array( 'e-abc' => array( 'id' => 'e-abc' ) ), $el['styles'] );
+		$this->assertSame( array( 'styles' => 'int' ), $report['rejected'] );
+	}
+
+	public function test_a_null_root_key_is_rejected_rather_than_stored() {
+		// `null` is the obvious spelling for "clear the map" and no caller uses
+		// it, so it stays a mistake rather than becoming a deletion idiom.
+		list( $el, $report ) = $this->write_reported(
+			$this->tree( 'e-flexbox', array( 'editor_settings' => array( 'title' => 'Hero' ) ) ),
+			array( 'editor_settings' => null )
+		);
+
+		$this->assertSame( array( 'title' => 'Hero' ), $el['editor_settings'] );
+		$this->assertSame( array( 'editor_settings' => 'null' ), $report['rejected'] );
+	}
+
+	public function test_the_same_malformed_value_behaves_the_same_with_a_label_beside_it() {
+		// The asymmetry this closes: routing treated a malformed
+		// `editor_settings` as an absent one, so the identical bad value was
+		// discarded when a label came with it and destructive when it did not.
+		list( $el, $report ) = $this->write_reported(
+			$this->tree( 'container', array( 'editor_settings' => array( 'title' => 'Stale', 'other' => 'kept' ) ) ),
+			array(
+				'editor_settings' => 'oops',
+				'_title'          => 'Hero',
+			)
+		);
+
+		$this->assertSame( 'Hero', $el['settings']['_title'], 'The label still lands: it does not depend on the malformed key.' );
+		$this->assertSame( array( 'other' => 'kept' ), $el['editor_settings'] );
+		$this->assertSame( array( 'editor_settings' => 'string' ), $report['rejected'] );
+	}
+
+	public function test_the_rest_of_the_payload_still_lands() {
+		list( $el, $report ) = $this->write_reported(
+			$this->tree( 'container' ),
+			array(
+				'editor_settings' => 'oops',
+				'align'           => 'center',
+			)
+		);
+
+		$this->assertSame( 'center', $el['settings']['align'] );
+		$this->assertSame( array( 'editor_settings' => 'string' ), $report['rejected'] );
+	}
+
+	public function test_a_label_that_is_not_text_is_rejected_rather_than_stored() {
+		list( $el, $report ) = $this->write_reported(
+			$this->tree( 'container' ),
+			array( '_title' => array( 'nested' => 1 ) )
+		);
+
+		$this->assertArrayNotHasKey( '_title', $el['settings'] );
+		$this->assertSame( array( '_title' => 'array' ), $report['rejected'] );
+	}
+
+	public function test_a_non_text_label_in_the_v4_spelling_is_reported_under_that_spelling() {
+		list( , $report ) = $this->write_reported(
+			$this->tree( 'e-flexbox', array( 'editor_settings' => array() ) ),
+			array( 'editor_settings' => array( 'title' => 12 ) )
+		);
+
+		$this->assertSame( array( 'editor_settings.title' => 'int' ), $report['rejected'] );
+	}
+
+	public function test_nothing_is_reported_when_every_value_has_the_right_shape() {
+		list( , $report ) = $this->write_reported(
+			$this->tree( 'e-flexbox', array( 'editor_settings' => array() ) ),
+			array( 'editor_settings' => array( 'title' => 'Hero' ) )
+		);
+
+		$this->assertArrayNotHasKey( 'rejected', $report );
 	}
 
 	public function test_a_payload_with_no_label_leaves_both_keys_alone() {

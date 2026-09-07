@@ -263,7 +263,7 @@ class KarMCP_Layout_Abilities {
 	public static function partial_dimensions_schema(): array {
 		return array(
 			'type'        => 'array',
-			'description' => __( 'Present only when a dimension value (padding, margin, border_width, border_radius and their responsive variants) was written with some sides filled and others blank. Elementor drops the whole CSS rule for that control when any side is empty, so the value saves, reads back exactly as sent, and nothing is applied — not even the sides that were filled. Send 0 for the sides you do not want. A value inside a repeater row is reported as `list[0].key`.', 'karmcp' ),
+			'description' => __( 'Present only when a dimension value (padding, margin, border_width, border_radius and their responsive variants) was written with some sides filled and others blank. Elementor drops the whole CSS rule for that control when any side is empty, so the value saves, reads back exactly as sent, and nothing is applied — not even the sides that were filled. Send 0 for the sides you do not want. A value inside a repeater row is reported as `list[0].key`. Advisory — a dimension is recognised by the shape of its value rather than from a control schema, so a third-party control whose selector uses only one side is flagged here without anything being wrong.', 'karmcp' ),
 			'items'       => array(
 				'type'       => 'object',
 				'properties' => array(
@@ -300,7 +300,26 @@ class KarMCP_Layout_Abilities {
 			$out['inherited_typography'] = $report['typography'];
 		}
 
+		if ( ! empty( $report['rejected'] ) ) {
+			$out['rejected_keys'] = $report['rejected'];
+		}
+
 		return $out;
+	}
+
+	/**
+	 * The `rejected_keys` output property.
+	 *
+	 * @since 1.39.0
+	 *
+	 * @return array
+	 */
+	public static function rejected_keys_schema(): array {
+		return array(
+			'type'                 => 'object',
+			'description'          => __( 'Present only when a setting was dropped because its value had the wrong shape: `styles` and `editor_settings` are always objects, and anything else sent for them used to replace the whole map. The rest of the write happened; only these keys were skipped. Maps the key to the type that arrived.', 'karmcp' ),
+			'additionalProperties' => array( 'type' => 'string' ),
+		);
 	}
 
 	/**
@@ -563,6 +582,7 @@ class KarMCP_Layout_Abilities {
 						'shadowed_globals' => self::shadowed_globals_schema(),
 						'shadowed_responsive' => self::shadowed_responsive_schema(),
 						'inherited_typography' => self::inherited_typography_schema(),
+						'rejected_keys' => self::rejected_keys_schema(),
 						'partial_dimensions' => self::partial_dimensions_schema(),
 					),
 				),
@@ -679,6 +699,7 @@ class KarMCP_Layout_Abilities {
 						'shadowed_globals' => self::shadowed_globals_schema(),
 						'shadowed_responsive' => self::shadowed_responsive_schema(),
 						'inherited_typography' => self::inherited_typography_schema(),
+						'rejected_keys' => self::rejected_keys_schema(),
 						'unknown_keys' => array(
 							'type'        => 'array',
 							'description' => __( 'Present only when some setting matched no known control. The write still happened: the keys are stored, they simply will not render. Advisory — dynamic tags and addons legitimately produce names we cannot see.', 'karmcp' ),
@@ -847,6 +868,11 @@ class KarMCP_Layout_Abilities {
 							'description'          => __( 'Per element id, the parts of a declared typography group that survived from what was already stored — a font family inherited from a copied design, typically. Re-send with reset_typography:true to make each declaration complete.', 'karmcp' ),
 							'additionalProperties' => array( 'type' => 'object' ),
 						),
+						'rejected_keys' => array(
+							'type'                 => 'object',
+							'description'          => __( 'Per element id, the settings dropped because their value had the wrong shape — `styles` and `editor_settings` are always objects. The rest of each write happened; only these keys were skipped.', 'karmcp' ),
+							'additionalProperties' => array( 'type' => 'object' ),
+						),
 					),
 				),
 				'meta'                => array(
@@ -882,6 +908,7 @@ class KarMCP_Layout_Abilities {
 		$shadowed      = array();
 		$responsive    = array();
 		$typography    = array();
+		$rejected      = array();
 		$clear         = self::clear_flags_from( $input );
 
 		foreach ( $operations as $op ) {
@@ -916,6 +943,10 @@ class KarMCP_Layout_Abilities {
 
 				if ( ! empty( $report['typography'] ) ) {
 					$typography[ $eid ] = $report['typography'];
+				}
+
+				if ( ! empty( $report['rejected'] ) ) {
+					$rejected[ $eid ] = $report['rejected'];
 				}
 
 				// Reported per element: a batch is exactly where an unknown key
@@ -991,6 +1022,10 @@ class KarMCP_Layout_Abilities {
 
 		if ( $typography ) {
 			$out['inherited_typography'] = $typography;
+		}
+
+		if ( $rejected ) {
+			$out['rejected_keys'] = $rejected;
 		}
 
 		return $out;

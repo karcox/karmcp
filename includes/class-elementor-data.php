@@ -755,6 +755,21 @@ class KarMCP_Data {
 	private const TYPOGRAPHY_ACTIVATOR = '_typography';
 
 	/**
+	 * The keys that live at the element ROOT, as siblings of `settings`, rather
+	 * than inside it — the local style map and the editor's own metadata.
+	 *
+	 * Declared once because three things have to agree on the pair: the shape
+	 * check, the hoisting that moves them out of the payload, and the merge
+	 * that lands them. A fourth member added to one list and not the others
+	 * would be written to a key nothing reads, which is the whole reason the
+	 * hoisting exists.
+	 *
+	 * @since 1.39.0
+	 * @var string[]
+	 */
+	private const SIBLING_ROOT_KEYS = array( 'styles', 'editor_settings' );
+
+	/**
 	 * Recursively removes the media settings above from an element tree.
 	 *
 	 * Removes rather than blanks: a blanked control is still a set control, and
@@ -1183,10 +1198,17 @@ class KarMCP_Data {
 				// would invent keys, not repair them.
 				$is_atomic = self::is_atomic_element( $item );
 
+				// Both sibling-root keys are maps, always. A caller that sends
+				// something else for one is dropped here, before anything reads
+				// it, so the rest of the write proceeds on values whose shape is
+				// known. See reject_malformed_root_keys() for why this is not a
+				// hard error.
+				$settings = self::reject_malformed_root_keys( $settings, $report );
+
 				// The Navigator label is spelled differently on either side of
 				// the v3/v4 line, so it has to be routed before the hoisting
 				// below decides where the payload lands.
-				$settings = self::route_navigator_label( $item, $settings, $is_atomic );
+				$settings = self::route_navigator_label( $item, $settings, $is_atomic, $report );
 
 				// Sibling-root keys: on v4 atomic elements the local `styles`
 				// map and `editor_settings` (Navigator label = editor_settings.
@@ -1195,7 +1217,7 @@ class KarMCP_Data {
 				// and deep-merge into the root so they actually persist instead
 				// of being written to a dead `settings.styles` key (#72, #73).
 				$touched_styles = false;
-				foreach ( array( 'styles', 'editor_settings' ) as $root_key ) {
+				foreach ( self::SIBLING_ROOT_KEYS as $root_key ) {
 					if ( ! array_key_exists( $root_key, $settings ) ) {
 						continue;
 					}
@@ -1204,15 +1226,14 @@ class KarMCP_Data {
 						$touched_styles = true;
 					}
 
-					$incoming = $settings[ $root_key ];
+					// An array by construction: reject_malformed_root_keys() above
+					// has already dropped anything else, and route_navigator_label()
+					// only ever writes a map here.
+					$incoming = (array) $settings[ $root_key ];
 					unset( $settings[ $root_key ] );
 
-					if ( is_array( $incoming ) ) {
-						$existing = isset( $item[ $root_key ] ) && is_array( $item[ $root_key ] ) ? $item[ $root_key ] : array();
-						$item[ $root_key ] = self::deep_merge( $existing, $incoming );
-					} else {
-						$item[ $root_key ] = $incoming;
-					}
+					$existing          = isset( $item[ $root_key ] ) && is_array( $item[ $root_key ] ) ? $item[ $root_key ] : array();
+					$item[ $root_key ] = self::deep_merge( $existing, $incoming );
 				}
 
 				if ( ! $is_atomic ) {
@@ -1350,6 +1371,53 @@ class KarMCP_Data {
 	}
 
 	/**
+	 * Drops a sibling-root key whose value is not a map, and says so in the
+	 * report.
+	 *
+	 * `styles` and `editor_settings` are always maps — the factory seeds both
+	 * as empty arrays and Elementor reads them as arrays — so a string, a
+	 * number or a null sent for either is never something it could store. It
+	 * was stored anyway: the hoisting assigned any non-array straight onto the
+	 * element root, replacing the entire map with the scalar and returning
+	 * true. One mistyped key in a payload therefore destroyed every local style
+	 * class on that element, or its Navigator label, and reported success.
+	 *
+	 * Dropped rather than refused outright, and reported rather than dropped in
+	 * silence. Refusing would abandon a payload whose other twenty keys are
+	 * fine — and in a batch, leave the page half written — while a drop nobody
+	 * is told about is the exact failure this file exists to prevent.
+	 *
+	 * This runs before the label routing on purpose. Routing used to treat a
+	 * malformed `editor_settings` as an absent one and quietly rewrite the key,
+	 * so the same bad value was discarded when the payload happened to carry a
+	 * label and destructive when it did not. Handling the shape in one place,
+	 * first, is what makes the two cases the same case.
+	 *
+	 * There is deliberately no way to clear one of these maps from here. `null`
+	 * would be the obvious spelling for it and no caller in this tree uses it;
+	 * giving it that meaning now would turn the one shape that today means
+	 * "mistake" into "delete all of it".
+	 *
+	 * @since 1.39.0
+	 *
+	 * @param array $settings The settings payload the caller sent.
+	 * @param array $report   Receives a `rejected` map of key => the type sent.
+	 * @return array The payload without the malformed keys.
+	 */
+	private static function reject_malformed_root_keys( array $settings, array &$report ): array {
+		foreach ( self::SIBLING_ROOT_KEYS as $root_key ) {
+			if ( ! array_key_exists( $root_key, $settings ) || is_array( $settings[ $root_key ] ) ) {
+				continue;
+			}
+
+			$report['rejected'][ $root_key ] = get_debug_type( $settings[ $root_key ] );
+			unset( $settings[ $root_key ] );
+		}
+
+		return $settings;
+	}
+
+	/**
 	 * Moves an incoming Navigator label to the key the target element actually
 	 * reads.
 	 *
@@ -1370,10 +1438,15 @@ class KarMCP_Data {
 	 * @param array $item      The element node, by reference — a deletion has to clear the stored key.
 	 * @param array $settings  The settings payload the caller sent.
 	 * @param bool  $is_atomic Whether the element is atomic.
+	 * @param array $report    Receives a `rejected` entry when the label is neither a string nor a deletion.
 	 * @return array The payload with the label spelled the way this element reads it.
 	 */
-	private static function route_navigator_label( array &$item, array $settings, bool $is_atomic ): array {
-		$editor       = ( isset( $settings['editor_settings'] ) && is_array( $settings['editor_settings'] ) ) ? $settings['editor_settings'] : array();
+	private static function route_navigator_label( array &$item, array $settings, bool $is_atomic, array &$report ): array {
+		// A map by construction: reject_malformed_root_keys() has already
+		// dropped anything else. Treating a malformed value as an absent one
+		// here is what used to make the same bad payload harmless with a label
+		// beside it and destructive without.
+		$editor       = isset( $settings['editor_settings'] ) ? (array) $settings['editor_settings'] : array();
 		$sent_atomic  = array_key_exists( 'title', $editor );
 		$sent_classic = array_key_exists( '_title', $settings );
 
@@ -1383,9 +1456,8 @@ class KarMCP_Data {
 
 		// When both spellings arrive, the one native to this element wins: that
 		// is the value the caller chose for it, not the one being translated.
-		$label = $is_atomic
-			? ( $sent_atomic ? $editor['title'] : $settings['_title'] )
-			: ( $sent_classic ? $settings['_title'] : $editor['title'] );
+		$took_atomic = $is_atomic ? $sent_atomic : ! $sent_classic;
+		$label       = $took_atomic ? $editor['title'] : $settings['_title'];
 
 		// Whichever way it arrived, only the key this element reads survives.
 		unset( $settings['_title'], $editor['title'] );
@@ -1396,6 +1468,16 @@ class KarMCP_Data {
 			unset( $settings['editor_settings'] );
 		} else {
 			$settings['editor_settings'] = $editor;
+		}
+
+		// A label is a string, or a null meaning delete. Anything else is not
+		// something Elementor can display, and storing it puts an array or a
+		// number in the one field a person reads to find their way around the
+		// page — where it looks like a label that simply will not render.
+		if ( null !== $label && ! is_string( $label ) ) {
+			$report['rejected'][ $took_atomic ? 'editor_settings.title' : '_title' ] = get_debug_type( $label );
+
+			return $settings;
 		}
 
 		if ( $is_atomic ) {

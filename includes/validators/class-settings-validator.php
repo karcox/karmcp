@@ -352,6 +352,13 @@ class KarMCP_Settings_Validator {
 	 * margin are actually written. Repeater rows are scanned too, and reported
 	 * as `list[0].key`.
 	 *
+	 * Advisory for the same reason it is shape-based: without a control schema
+	 * there is no way to know that a third-party control's selector uses only
+	 * one of the four sides, and such a control is flagged here with nothing
+	 * wrong with it. That trade is the right way round — the alternative misses
+	 * every container and every widget the introspection cannot reach, which is
+	 * where the defect actually happens.
+	 *
 	 * @since 1.38.0
 	 *
 	 * @param array $settings The settings being written.

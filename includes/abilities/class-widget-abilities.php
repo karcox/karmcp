@@ -498,6 +498,7 @@ class KarMCP_Widget_Abilities {
 						'shadowed_globals' => KarMCP_Layout_Abilities::shadowed_globals_schema(),
 						'shadowed_responsive' => KarMCP_Layout_Abilities::shadowed_responsive_schema(),
 						'inherited_typography' => KarMCP_Layout_Abilities::inherited_typography_schema(),
+						'rejected_keys' => KarMCP_Layout_Abilities::rejected_keys_schema(),
 						'partial_dimensions' => KarMCP_Layout_Abilities::partial_dimensions_schema(),
 					),
 				),

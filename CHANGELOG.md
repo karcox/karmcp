@@ -2,6 +2,26 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.39.0]
+
+Closes the write path that let one mistyped key destroy an element's styles and report success, and says out loud what the previous release's dimension advisory can get wrong.
+
+### Fixed
+
+- **A `styles` or `editor_settings` that was not an object replaced the whole map, and the call returned success.** Both are always objects — the factory seeds them as empty arrays and Elementor reads them as arrays — but the hoisting that moves them from the payload to the element root assigned any non-array straight onto it. So `{"styles": "oops"}` did not fail, and did not partially apply: it replaced every local style class on that element with the string `oops`, wrote it to the document, and answered `success: true`. The `settings` input is declared as a plain object with no sub-schema, which is correct — the keys are Elementor's, not ours — so nothing upstream could have caught the type either.
+
+  A malformed value is now dropped before anything reads it, the stored map is left exactly as it was, and the key comes back in a new `rejected_keys` field alongside the type that arrived. Dropped rather than refused outright, because refusing abandons a payload whose other twenty keys are fine and, in a batch, leaves the page half written; reported rather than dropped quietly, because a drop nobody is told about is the failure this whole family of advisories exists to prevent. `update-element`, `update-container` and `update-widget` carry the field; `batch-update` reports it per element.
+
+  There is deliberately no way to clear one of these maps this way. `null` would be the obvious spelling and no caller uses it, so it stays a mistake rather than becoming a deletion idiom that the one shape meaning "wrong type" would have to share.
+
+- **The same malformed value behaved differently depending on whether a Navigator label came with it.** 1.38.0's label routing read `editor_settings` only when it was an array and rewrote the key regardless, so an identical bad payload was harmless with a label beside it and destructive without one. The shape is now settled in one place, before the routing runs, which is what makes the two cases the same case. `KarMCP_Data::SIBLING_ROOT_KEYS` names the pair once, since the shape check, the hoisting and the merge all have to agree on it.
+
+- **A Navigator label that is not text is rejected instead of stored.** `{"_title": {"nested": 1}}` went into the settings as an array, where it looks like a label that merely refuses to render. A label is a string, or a `null` meaning delete; anything else is reported under the spelling it arrived in.
+
+### Changed
+
+- **`partial_dimensions` now admits what it can get wrong.** Its sibling `unknown_keys` has always said so — "Advisory — dynamic tags and addons legitimately produce names we cannot see" — and this one had no equivalent while having the same kind of blind spot: a dimension is recognised by the shape of its value rather than from a control schema, so a third-party control whose selector uses a single side is flagged with nothing wrong with it. The trade is still the right way round, since the alternative misses every container and every widget the introspection cannot reach, which is where the defect actually happens — but an advisory that does not say it is fallible is read as a verdict.
+
 ## [1.38.0]
 
 Three silent-write defects around Elementor layout: a Navigator label that went to the key half the elements do not read, a dimension value that quietly applies nothing, and a grid that lays itself out in two rows without saying so.

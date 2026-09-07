@@ -5084,7 +5084,7 @@ class KarMCP_Admin {
 					),
 					'karmcp/set-element-label'    => array(
 						'label'       => __( 'Set Element Label', 'karmcp' ),
-						'description' => __( 'Sets an element\'s Navigator label (editor_settings.title).', 'karmcp' ),
+						'description' => __( 'Sets an element\'s Navigator label, in the key the element type reads.', 'karmcp' ),
 						'badges'      => array(),
 					),
 					'karmcp/reorder-elements'     => array(

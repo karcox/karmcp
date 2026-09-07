@@ -1175,6 +1175,19 @@ class KarMCP_Data {
 					$item['settings'] = array();
 				}
 
+				$el_type = (string) ( $item['elType'] ?? '' );
+
+				// v4 atomic elements keep their classes in the typed `classes`
+				// prop and their background in the `styles` map, so none of the
+				// classic key rewriting below describes them. Running it there
+				// would invent keys, not repair them.
+				$is_atomic = self::is_atomic_element( $item );
+
+				// The Navigator label is spelled differently on either side of
+				// the v3/v4 line, so it has to be routed before the hoisting
+				// below decides where the payload lands.
+				$settings = self::route_navigator_label( $item, $settings, $is_atomic );
+
 				// Sibling-root keys: on v4 atomic elements the local `styles`
 				// map and `editor_settings` (Navigator label = editor_settings.
 				// title) live at the element ROOT, as siblings of `settings`.
@@ -1201,18 +1214,6 @@ class KarMCP_Data {
 						$item[ $root_key ] = $incoming;
 					}
 				}
-
-				$el_type     = (string) ( $item['elType'] ?? '' );
-				$widget_type = (string) ( $item['widgetType'] ?? '' );
-
-				// v4 atomic elements keep their classes in the typed `classes`
-				// prop and their background in the `styles` map, so none of the
-				// classic key rewriting below describes them. Running it there
-				// would invent keys, not repair them.
-				$is_atomic = ( 0 === strpos( $el_type, 'e-' ) )
-					|| ( '' !== $widget_type
-						&& class_exists( 'KarMCP_Atomic_Widget_Map' )
-						&& KarMCP_Atomic_Widget_Map::is_atomic( $widget_type ) );
 
 				if ( ! $is_atomic ) {
 					// Containers: rewrite MCP shorthand keys (`justify_content`,
@@ -1320,6 +1321,119 @@ class KarMCP_Data {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Whether an element node is a v4 atomic element.
+	 *
+	 * The line runs through both halves of the tree and each half spells it
+	 * differently: an atomic container carries its own `elType` (`e-flexbox`,
+	 * `e-div-block`), while an atomic widget keeps `elType` `widget` and is
+	 * named by its `widgetType`. A predicate that knew only one of the two
+	 * would answer confidently and wrongly for half the elements on a v4 page.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @param array $element The element node.
+	 * @return bool True when the element is atomic.
+	 */
+	public static function is_atomic_element( array $element ): bool {
+		if ( 0 === strpos( (string) ( $element['elType'] ?? '' ), 'e-' ) ) {
+			return true;
+		}
+
+		$widget_type = (string) ( $element['widgetType'] ?? '' );
+
+		return '' !== $widget_type
+			&& class_exists( 'KarMCP_Atomic_Widget_Map' )
+			&& KarMCP_Atomic_Widget_Map::is_atomic( $widget_type );
+	}
+
+	/**
+	 * Moves an incoming Navigator label to the key the target element actually
+	 * reads.
+	 *
+	 * Elementor keeps that label in two places and neither side falls back to
+	 * the other: a classic element reads `settings._title`, an atomic one reads
+	 * the root-level `editor_settings.title`. Sent to the wrong one the value
+	 * persists, the call reports success, and the Navigator goes on showing
+	 * "Container" — the same silent-write family this file already guards
+	 * against for globals, responsive overrides and CSS class keys, and the one
+	 * that costs a trip to the browser to discover nothing happened.
+	 *
+	 * If the caller sent both spellings the one native to this element wins:
+	 * that is the value it chose for this element, not the one being
+	 * translated into it.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @param array $item      The element node, by reference — a deletion has to clear the stored key.
+	 * @param array $settings  The settings payload the caller sent.
+	 * @param bool  $is_atomic Whether the element is atomic.
+	 * @return array The payload with the label spelled the way this element reads it.
+	 */
+	private static function route_navigator_label( array &$item, array $settings, bool $is_atomic ): array {
+		$editor       = ( isset( $settings['editor_settings'] ) && is_array( $settings['editor_settings'] ) ) ? $settings['editor_settings'] : array();
+		$sent_atomic  = array_key_exists( 'title', $editor );
+		$sent_classic = array_key_exists( '_title', $settings );
+
+		if ( ! $sent_atomic && ! $sent_classic ) {
+			return $settings;
+		}
+
+		// When both spellings arrive, the one native to this element wins: that
+		// is the value the caller chose for it, not the one being translated.
+		$label = $is_atomic
+			? ( $sent_atomic ? $editor['title'] : $settings['_title'] )
+			: ( $sent_classic ? $settings['_title'] : $editor['title'] );
+
+		// Whichever way it arrived, only the key this element reads survives.
+		unset( $settings['_title'], $editor['title'] );
+
+		// A classic element has no `editor_settings` of its own, so an emptied
+		// one would be a root key nothing ever reads.
+		if ( array() === $editor ) {
+			unset( $settings['editor_settings'] );
+		} else {
+			$settings['editor_settings'] = $editor;
+		}
+
+		if ( $is_atomic ) {
+			// A null is a deletion, and the hoisting merge below can only add or
+			// overwrite, so the stored key has to be cleared here — in either
+			// spelling. Handling only the translated one left a literal
+			// `"title": null` behind on the deletion an agent is most likely to
+			// write, which is a key that should not exist reporting success.
+			if ( null === $label ) {
+				if ( isset( $item['editor_settings'] ) && is_array( $item['editor_settings'] ) ) {
+					unset( $item['editor_settings']['title'] );
+				}
+
+				return $settings;
+			}
+
+			$editor['title']             = $label;
+			$settings['editor_settings'] = $editor;
+
+			return $settings;
+		}
+
+		// Classic: a null here reaches strip_null_deletions() with every other
+		// deletion, so it needs no special case. What does need one is the label
+		// an earlier version wrote to the key this element never reads — left
+		// alone, the element carries two labels with the invisible one on top,
+		// and every reader has to know which to believe.
+		if ( isset( $item['editor_settings'] ) && is_array( $item['editor_settings'] ) ) {
+			unset( $item['editor_settings']['title'] );
+
+			if ( array() === $item['editor_settings'] ) {
+				unset( $item['editor_settings'] );
+			}
+		}
+
+		$settings['_title'] = $label;
+
+		return $settings;
 	}
 
 	/**

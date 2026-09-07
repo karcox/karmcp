@@ -229,6 +229,55 @@ class KarMCP_Layout_Abilities {
 	}
 
 	/**
+	 * Folds the partial-dimension advisory into an ability response, omitting it
+	 * when there is nothing to say.
+	 *
+	 * Derived from the payload rather than from the save, so it reads the same
+	 * on an insert as on an update and needs no control schema.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @param array $out      The response so far.
+	 * @param array $settings The settings that were written.
+	 * @return array
+	 */
+	public static function with_dimension_report( array $out, array $settings ): array {
+		$partial = KarMCP_Settings_Validator::partial_dimensions( $settings );
+
+		if ( $partial ) {
+			$out['partial_dimensions'] = $partial;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The `partial_dimensions` output property. See
+	 * KarMCP_Settings_Validator::partial_dimensions() for why a blank side is
+	 * not a partial rule but no rule.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @return array
+	 */
+	public static function partial_dimensions_schema(): array {
+		return array(
+			'type'        => 'array',
+			'description' => __( 'Present only when a dimension value (padding, margin, border_width, border_radius and their responsive variants) was written with some sides filled and others blank. Elementor drops the whole CSS rule for that control when any side is empty, so the value saves, reads back exactly as sent, and nothing is applied — not even the sides that were filled. Send 0 for the sides you do not want. A value inside a repeater row is reported as `list[0].key`.', 'karmcp' ),
+			'items'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'key'   => array( 'type' => 'string' ),
+					'blank' => array(
+						'type'  => 'array',
+						'items' => array( 'type' => 'string' ),
+					),
+				),
+			),
+		);
+	}
+
+	/**
 	 * Folds a shadow report into an ability response, omitting what is empty so
 	 * the common case — nothing shadowed — stays a clean result.
 	 *
@@ -322,7 +371,7 @@ class KarMCP_Layout_Abilities {
 			'karmcp/add-container',
 			array(
 				'label'               => __( 'Add Container', 'karmcp' ),
-				'description'         => __( 'Adds a container to a page. Supports both flex (default) and grid layouts via container_type. Omit parent_id for top-level, or provide a parent container ID for nesting. Flex tips: Use flex_direction=row for side-by-side children, flex_wrap=wrap for wrapping, flex_justify_content for main-axis alignment (e.g. space-between, center), flex_align_items for cross-axis alignment. (The shorthand justify_content / align_items are also accepted and remapped to flex_justify_content / flex_align_items.) Grid tips: Set container_type=grid with grid_columns_grid, grid_rows_grid, grid_gaps. Background: set background_background=classic and background_color=#hex. Border: set border_border=solid, border_width, border_color. Also supports min_height, overflow, html_tag, padding, margin, position, z_index, animation.', 'karmcp' ),
+				'description'         => __( 'Adds a container to a page. Supports both flex (default) and grid layouts via container_type. Omit parent_id for top-level, or provide a parent container ID for nesting. Flex tips: Use flex_direction=row for side-by-side children, flex_wrap=wrap for wrapping, flex_justify_content for main-axis alignment (e.g. space-between, center), flex_align_items for cross-axis alignment. (The shorthand justify_content / align_items are also accepted and remapped to flex_justify_content / flex_align_items.) Grid tips: Set container_type=grid with grid_columns_grid, grid_rows_grid, grid_gaps — each a slider value, `{"unit":"fr","size":N}`. Elementor defaults a grid to 3 columns and **2 rows**, and both defaults surprise: four children land three-across plus one below rather than four across, and setting only the columns still leaves a second `1fr` row that splits the container height with an empty band under the content. Pass grid_rows_grid `{"unit":"fr","size":1}` when you mean one row, and grid_columns_grid the number of items per row. Columns default to 1 on mobile. Both also take `{"unit":"custom","size":"..."}` for a raw grid-template value. Background: set background_background=classic and background_color=#hex. Border: set border_border=solid, border_width, border_color. Also supports min_height, overflow, html_tag, padding, margin, position, z_index, animation.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_add_container' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
@@ -355,8 +404,9 @@ class KarMCP_Layout_Abilities {
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'element_id' => array( 'type' => 'string' ),
-						'post_id'    => array( 'type' => 'integer' ),
+						'element_id'         => array( 'type' => 'string' ),
+						'post_id'            => array( 'type' => 'integer' ),
+						'partial_dimensions' => self::partial_dimensions_schema(),
 					),
 				),
 				'meta'                => array(
@@ -442,9 +492,12 @@ class KarMCP_Layout_Abilities {
 			return $result;
 		}
 
-		return array(
-			'element_id' => $container['id'],
-			'post_id'    => $post_id,
+		return self::with_dimension_report(
+			array(
+				'element_id' => $container['id'],
+				'post_id'    => $post_id,
+			),
+			(array) $settings
 		);
 	}
 
@@ -510,6 +563,7 @@ class KarMCP_Layout_Abilities {
 						'shadowed_globals' => self::shadowed_globals_schema(),
 						'shadowed_responsive' => self::shadowed_responsive_schema(),
 						'inherited_typography' => self::inherited_typography_schema(),
+						'partial_dimensions' => self::partial_dimensions_schema(),
 					),
 				),
 				'meta'                => array(
@@ -576,7 +630,10 @@ class KarMCP_Layout_Abilities {
 			return $result;
 		}
 
-		return self::with_shadow_report( array( 'success' => true ), $report );
+		return self::with_shadow_report(
+			self::with_dimension_report( array( 'success' => true ), $settings ),
+			$report
+		);
 	}
 
 	// -------------------------------------------------------------------------
@@ -588,7 +645,7 @@ class KarMCP_Layout_Abilities {
 			'karmcp/update-element',
 			array(
 				'label'               => __( 'Update Element', 'karmcp' ),
-				'description'         => __( 'Updates settings on any element (container or widget). Settings are merged (partial update). Works for all element types, no need to know if the target is a container or widget. For v4 atomic elements you may also include a `styles` map (the element\'s local CSS classes) and/or `editor_settings` (e.g. `{ "title": "Hero" }` for the Navigator label) in the settings object, these are routed to the element root automatically. Use set-element-label for just the Navigator name.', 'karmcp' ),
+				'description'         => __( 'Updates settings on any element (container or widget). Settings are merged (partial update). Works for all element types, no need to know if the target is a container or widget. For v4 atomic elements you may also include a `styles` map (the element\'s local CSS classes) and/or `editor_settings` (e.g. `{ "title": "Hero" }` for the Navigator label) in the settings object, these are routed to the element root automatically. The Navigator label is routed by element type as well: send it either way — `editor_settings.title` or `_title` — and it lands in the one this element reads (`settings._title` on classic, `editor_settings.title` on atomic). Use set-element-label for just the Navigator name.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_element' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
@@ -636,6 +693,7 @@ class KarMCP_Layout_Abilities {
 								),
 							),
 						),
+						'partial_dimensions' => self::partial_dimensions_schema(),
 					),
 				),
 				'meta'                => array(
@@ -691,10 +749,13 @@ class KarMCP_Layout_Abilities {
 		}
 
 		$out = self::with_shadow_report(
-			array(
-				'success'      => true,
-				'element_id'   => $element_id,
-				'element_type' => $element['elType'] ?? 'unknown',
+			self::with_dimension_report(
+				array(
+					'success'      => true,
+					'element_id'   => $element_id,
+					'element_type' => $element['elType'] ?? 'unknown',
+				),
+				$settings
 			),
 			$report
 		);
@@ -716,7 +777,7 @@ class KarMCP_Layout_Abilities {
 			'karmcp/batch-update',
 			array(
 				'label'               => __( 'Batch Update Elements', 'karmcp' ),
-				'description'         => __( 'Updates multiple elements in a single save operation. Each operation specifies an element_id and settings to merge. Much more efficient than calling update-element multiple times. As with update-element, a per-operation settings object may include a `styles` map and/or `editor_settings` for v4 atomic elements, these are routed to the element root automatically.', 'karmcp' ),
+				'description'         => __( 'Updates multiple elements in a single save operation. Each operation specifies an element_id and settings to merge. Much more efficient than calling update-element multiple times. As with update-element, a per-operation settings object may include a `styles` map and/or `editor_settings` for v4 atomic elements, these are routed to the element root automatically, and a Navigator label is routed to the key its element type reads whichever way it is spelled.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_batch_update' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
@@ -759,6 +820,17 @@ class KarMCP_Layout_Abilities {
 							'type'        => 'array',
 							'description' => __( 'Per element, any setting that matched no known control. The writes still happened. Advisory only.', 'karmcp' ),
 							'items'       => array( 'type' => 'object' ),
+						),
+						'partial_dimensions' => array(
+							'type'        => 'array',
+							'description' => __( 'Per element, any dimension value written with some sides blank. Elementor drops the whole CSS rule for such a control, so those elements render unstyled on that property even though the write succeeded. Send 0 for the sides you do not want.', 'karmcp' ),
+							'items'       => array(
+								'type'       => 'object',
+								'properties' => array(
+									'element_id' => array( 'type' => 'string' ),
+									'keys'       => self::partial_dimensions_schema(),
+								),
+							),
 						),
 						'shadowed_globals' => array(
 							'type'                 => 'object',
@@ -806,6 +878,7 @@ class KarMCP_Layout_Abilities {
 		$updated_count = 0;
 		$failed        = array();
 		$unknown       = array();
+		$partial_dims  = array();
 		$shadowed      = array();
 		$responsive    = array();
 		$typography    = array();
@@ -855,6 +928,16 @@ class KarMCP_Layout_Abilities {
 						'keys'       => $report,
 					);
 				}
+
+				// Same argument, and a batch is where it bites hardest: twenty
+				// elements styled in one call, one of them silently unstyled.
+				$report = KarMCP_Settings_Validator::partial_dimensions( $settings );
+				if ( $report ) {
+					$partial_dims[] = array(
+						'element_id' => $eid,
+						'keys'       => $report,
+					);
+				}
 			} else {
 				$failed[] = array( 'element_id' => $eid, 'reason' => 'update failed' );
 			}
@@ -894,6 +977,10 @@ class KarMCP_Layout_Abilities {
 			$out['unknown_keys'] = $unknown;
 		}
 
+		if ( $partial_dims ) {
+			$out['partial_dimensions'] = $partial_dims;
+		}
+
 		if ( $shadowed ) {
 			$out['shadowed_globals'] = $shadowed;
 		}
@@ -910,7 +997,7 @@ class KarMCP_Layout_Abilities {
 	}
 
 	// -------------------------------------------------------------------------
-	// set-element-label (Navigator label — editor_settings.title)
+	// set-element-label (Navigator label — settings._title / editor_settings.title)
 	// -------------------------------------------------------------------------
 
 	private function register_set_element_label(): void {
@@ -918,7 +1005,7 @@ class KarMCP_Layout_Abilities {
 			'karmcp/set-element-label',
 			array(
 				'label'               => __( 'Set Element Label', 'karmcp' ),
-				'description'         => __( 'Sets an element\'s Navigator label (stored in editor_settings.title). Works for any element; especially useful on v4 atomic elements to keep the layout readable. A convenience wrapper, the same result can be had via update-element with editor_settings.', 'karmcp' ),
+				'description'         => __( 'Sets an element\'s Navigator label. Elementor keeps that label in two places and neither side falls back to the other: `settings._title` on a classic element, the root-level `editor_settings.title` on a v4 atomic one. This writes whichever the target actually reads, and reads it back off the saved page before reporting success; the response says in `stored_in` where it landed. A convenience wrapper, the same result can be had via update-element.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_set_element_label' ),
 				'permission_callback' => array( $this, 'check_edit_permission' ),
@@ -945,7 +1032,15 @@ class KarMCP_Layout_Abilities {
 					'properties' => array(
 						'success'    => array( 'type' => 'boolean' ),
 						'element_id' => array( 'type' => 'string' ),
-						'title'      => array( 'type' => 'string' ),
+						'title'      => array(
+							'type'        => 'string',
+							'description' => __( 'The label as it read back from the saved page, not as it was sent.', 'karmcp' ),
+						),
+						'stored_in'  => array(
+							'type'        => 'string',
+							'enum'        => array( 'settings._title', 'editor_settings.title' ),
+							'description' => __( 'Which of the two keys the label went to, decided by the element type.', 'karmcp' ),
+						),
 					),
 				),
 				'meta'                => array(
@@ -958,6 +1053,23 @@ class KarMCP_Layout_Abilities {
 				),
 			)
 		);
+	}
+
+	/**
+	 * The Navigator label stored on an element, read from the key its own type
+	 * uses.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @param array $element The element node.
+	 * @return string The stored label, or '' when there is none.
+	 */
+	private static function stored_label( array $element ): string {
+		$label = KarMCP_Data::is_atomic_element( $element )
+			? ( $element['editor_settings']['title'] ?? '' )
+			: ( $element['settings']['_title'] ?? '' );
+
+		return is_string( $label ) ? $label : '';
 	}
 
 	public function execute_set_element_label( $input ) {
@@ -979,8 +1091,9 @@ class KarMCP_Layout_Abilities {
 			return new \WP_Error( 'element_not_found', __( 'Element not found.', 'karmcp' ) );
 		}
 
-		// editor_settings is a sibling-root key; update_element_settings() hoists
-		// it out of the settings payload and deep-merges it into the element root.
+		// Always sent in the v4 spelling: update_element_settings() owns the
+		// classic/atomic routing and hoists the key to the element root, and a
+		// second copy of that rule here would be a second thing to keep in step.
 		$updated = $this->data->update_element_settings(
 			$page_data,
 			$element_id,
@@ -997,10 +1110,25 @@ class KarMCP_Layout_Abilities {
 			return $result;
 		}
 
+		// Read the label back off the saved page instead of echoing the input.
+		// This tool spent its whole life writing to the key half the elements do
+		// not read, and a success assembled from its own arguments said exactly
+		// the same thing while nothing appeared in the Navigator.
+		$stored  = $this->data->get_page_data( $post_id );
+		$element = is_wp_error( $stored ) ? null : $this->data->find_element_by_id( $stored, $element_id );
+
+		if ( null === $element || self::stored_label( $element ) !== $title ) {
+			return new \WP_Error(
+				'label_not_stored',
+				__( 'The write was accepted but the label did not read back from the saved page, so it was not stored.', 'karmcp' )
+			);
+		}
+
 		return array(
 			'success'    => true,
 			'element_id' => $element_id,
-			'title'      => $title,
+			'title'      => self::stored_label( $element ),
+			'stored_in'  => KarMCP_Data::is_atomic_element( $element ) ? 'editor_settings.title' : 'settings._title',
 		);
 	}
 

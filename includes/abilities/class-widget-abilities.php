@@ -277,8 +277,9 @@ class KarMCP_Widget_Abilities {
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'element_id'  => array( 'type' => 'string' ),
-						'widget_type' => array( 'type' => 'string' ),
+						'element_id'         => array( 'type' => 'string' ),
+						'widget_type'        => array( 'type' => 'string' ),
+						'partial_dimensions' => KarMCP_Layout_Abilities::partial_dimensions_schema(),
 					),
 				),
 				'meta'                => array(
@@ -308,8 +309,9 @@ class KarMCP_Widget_Abilities {
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'element_id'  => array( 'type' => 'string' ),
-						'widget_type' => array( 'type' => 'string' ),
+						'element_id'         => array( 'type' => 'string' ),
+						'widget_type'        => array( 'type' => 'string' ),
+						'partial_dimensions' => KarMCP_Layout_Abilities::partial_dimensions_schema(),
 					),
 				),
 				'meta'                => array(
@@ -443,9 +445,12 @@ class KarMCP_Widget_Abilities {
 			return $result;
 		}
 
-		return array(
-			'element_id'  => $widget['id'],
-			'widget_type' => $widget_type,
+		return KarMCP_Layout_Abilities::with_dimension_report(
+			array(
+				'element_id'  => $widget['id'],
+				'widget_type' => $widget_type,
+			),
+			(array) $settings
 		);
 	}
 
@@ -493,6 +498,7 @@ class KarMCP_Widget_Abilities {
 						'shadowed_globals' => KarMCP_Layout_Abilities::shadowed_globals_schema(),
 						'shadowed_responsive' => KarMCP_Layout_Abilities::shadowed_responsive_schema(),
 						'inherited_typography' => KarMCP_Layout_Abilities::inherited_typography_schema(),
+						'partial_dimensions' => KarMCP_Layout_Abilities::partial_dimensions_schema(),
 					),
 				),
 				'meta'                => array(
@@ -561,9 +567,12 @@ class KarMCP_Widget_Abilities {
 		}
 
 		return KarMCP_Layout_Abilities::with_shadow_report(
-			array(
-				'success'    => true,
-				'element_id' => $element_id,
+			KarMCP_Layout_Abilities::with_dimension_report(
+				array(
+					'success'    => true,
+					'element_id' => $element_id,
+				),
+				$settings
 			),
 			$report
 		);

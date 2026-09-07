@@ -354,10 +354,29 @@ class KarMCP_Page_Snapshot {
 	 * @return string Short label, or '' when none derivable.
 	 */
 	public static function element_label( array $el ): string {
+		// The Navigator label an author set wins over anything derived from the
+		// content — but only from the key this element type actually reads, the
+		// same rule the write side follows. Preferring whichever key is present
+		// would show, on a classic element, the stale root-level label that
+		// every pre-1.38.0 write left behind: a label the Elementor Navigator
+		// has never displayed, reported by the tool whose job is to say what the
+		// page looks like.
+		$named = KarMCP_Data::is_atomic_element( $el )
+			? ( $el['editor_settings']['title'] ?? '' )
+			: ( $el['settings']['_title'] ?? '' );
+
+		if ( is_string( $named ) && '' !== trim( $named ) ) {
+			return self::snippet( trim( $named ), 60 );
+		}
+
 		$s = ( isset( $el['settings'] ) && is_array( $el['settings'] ) ) ? $el['settings'] : array();
-		foreach ( array( '_title', 'title', 'text', 'editor', 'heading_title' ) as $k ) {
-			if ( ! empty( $s[ $k ] ) && is_string( $s[ $k ] ) ) {
-				$plain = trim( (string) preg_replace( '/<[^>]*>/', '', $s[ $k ] ) );
+		foreach ( array( 'title', 'text', 'editor', 'heading_title' ) as $k ) {
+			// Atomic props are `{$$type:…, value:…}`, not strings, so the plain
+			// string test alone derived nothing at all from an atomic widget.
+			$value = isset( $s[ $k ] ) ? self::atomic_scalar( $s[ $k ] ) : '';
+
+			if ( '' !== $value ) {
+				$plain = trim( (string) preg_replace( '/<[^>]*>/', '', $value ) );
 				if ( '' !== $plain ) {
 					return self::snippet( $plain, 60 );
 				}

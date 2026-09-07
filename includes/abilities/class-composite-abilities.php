@@ -193,7 +193,7 @@ class KarMCP_Composite_Abilities {
 						),
 						'warnings'         => array(
 							'type'        => 'array',
-							'description' => __( 'Non-fatal notes: nodes that were coerced from shorthand or skipped. If present, some elements did not land exactly as written, fix and rebuild or patch with the layout/widget tools.', 'karmcp' ),
+							'description' => __( 'Non-fatal notes: nodes that were coerced from shorthand or skipped, and dimension values written with some sides blank, which Elementor renders as no rule at all. If present, some elements did not land exactly as written, fix and rebuild or patch with the layout/widget tools.', 'karmcp' ),
 							'items'       => array( 'type' => 'string' ),
 						),
 					),
@@ -474,6 +474,31 @@ class KarMCP_Composite_Abilities {
 		return $item;
 	}
 
+	/**
+	 * Warns about dimension values written with some sides blank.
+	 *
+	 * Worth a warning here more than anywhere: a page is built in one call, so
+	 * the padding that never applied is discovered in the browser long after,
+	 * with nothing in the response having said so. See
+	 * KarMCP_Settings_Validator::partial_dimensions() for why a blank side
+	 * costs the whole rule rather than that one side.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @param array  $settings The node's settings.
+	 * @param string $what     How to name the node in the warning.
+	 */
+	private function warn_partial_dimensions( array $settings, string $what ): void {
+		foreach ( KarMCP_Settings_Validator::partial_dimensions( $settings ) as $entry ) {
+			$this->warnings[] = sprintf(
+				'Dimension "%1$s" on a %2$s leaves %3$s blank — Elementor drops the whole rule when any side is empty, so this applies no %1$s at all. Send 0 for the sides you do not want.',
+				$entry['key'],
+				$what,
+				implode( ', ', $entry['blank'] )
+			);
+		}
+	}
+
 	private function build_elements( array $items, bool $is_inner = false, string $parent_direction = '' ): array {
 		$elements  = array();
 		$is_in_row = ( 'row' === $parent_direction || 'row-reverse' === $parent_direction );
@@ -494,6 +519,8 @@ class KarMCP_Composite_Abilities {
 			if ( 'container' === $type ) {
 				$settings = $item['settings'] ?? array();
 				$children = $item['children'] ?? array();
+
+				$this->warn_partial_dimensions( (array) $settings, 'container' );
 
 				// Determine this container's direction for its children.
 				$direction = $settings['flex_direction'] ?? '';
@@ -528,6 +555,8 @@ class KarMCP_Composite_Abilities {
 			} elseif ( 'widget' === $type ) {
 				$widget_type = $item['widget_type'] ?? '';
 				$settings    = $item['settings'] ?? array();
+
+				$this->warn_partial_dimensions( (array) $settings, 'widget' );
 
 				if ( empty( $widget_type ) ) {
 					$this->warnings[] = 'Skipped a widget with no widget_type, give each widget a widget_type (e.g. "heading", "button", "image").';

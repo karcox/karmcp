@@ -309,6 +309,147 @@ class KarMCP_Settings_Validator {
 	private const STRUCTURAL_KEYS = array( '__globals__', '__dynamic__' );
 
 	/**
+	 * The four sides of a classic Elementor dimension value.
+	 *
+	 * @since 1.38.0
+	 * @var string[]
+	 */
+	private const DIMENSION_SIDES = array( 'top', 'right', 'bottom', 'left' );
+
+	/**
+	 * Every key a classic dimension value may carry, which is what identifies
+	 * one by shape.
+	 *
+	 * A v4 atomic dimension is a different animal — `{$$type:'dimensions',
+	 * value:{…}}`, keyed by logical side, and partial there is normal because
+	 * each side is its own CSS property. Its `$$type` key falls outside this
+	 * list, so it is excluded by construction rather than by a special case.
+	 *
+	 * @since 1.38.0
+	 * @var string[]
+	 */
+	private const DIMENSION_KEYS = array( 'top', 'right', 'bottom', 'left', 'unit', 'isLinked' );
+
+	/**
+	 * Dimension values written with some sides filled and others left blank.
+	 *
+	 * This one is worse than it looks, and the reason is in Elementor's CSS
+	 * generator. A dimension control renders through a selector template like
+	 * `padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} …`; when a placeholder resolves
+	 * to an empty string `Base::add_control_rules()` throws, and the catch around
+	 * it returns — abandoning **every** rule of that control, not just the side
+	 * that was blank. So `padding` with only `top` set does not apply padding to
+	 * the top: it applies no padding at all. An absent side is the same as a
+	 * blank one, because `Control_Base_Multiple::get_value()` fills what is
+	 * missing from the control default, and a dimension default is empty.
+	 *
+	 * Sending `0` for the sides you do not want is the fix, and it is invisible
+	 * from the response otherwise: the write succeeds, the value reads back
+	 * exactly as sent, and only the browser knows the rule was dropped.
+	 *
+	 * Pure and shape-based on purpose: it needs no control schema, so it also
+	 * covers containers and third-party widgets, which is where padding and
+	 * margin are actually written. Repeater rows are scanned too, and reported
+	 * as `list[0].key`.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @param array $settings The settings being written.
+	 * @return array<int,array<string,mixed>> One entry per offending key, with the blank sides.
+	 */
+	public static function partial_dimensions( array $settings ): array {
+		return self::scan_dimensions( $settings, '' );
+	}
+
+	/**
+	 * Whether a value is a repeater's rows: a list whose every entry is itself a
+	 * settings array.
+	 *
+	 * A dimension value never has sequential integer keys, so the two shapes
+	 * cannot be confused.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @param array $value The value to test.
+	 * @return bool
+	 */
+	private static function is_repeater_rows( array $value ): bool {
+		if ( array() === $value || array_keys( $value ) !== range( 0, count( $value ) - 1 ) ) {
+			return false;
+		}
+
+		foreach ( $value as $row ) {
+			if ( ! is_array( $row ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * The scan behind partial_dimensions(), one repeater level deep.
+	 *
+	 * A padding inside a repeater row (an icon-list item, a tab, a price-table
+	 * feature) breaks exactly like a top-level one, and a checker that stopped
+	 * at the top would have been silent about it while looking complete. One
+	 * level is the whole of it: Elementor repeaters do not nest.
+	 *
+	 * @since 1.38.0
+	 *
+	 * @param array  $settings The settings to scan.
+	 * @param string $prefix   Path prefix for reported keys; '' at the top level.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function scan_dimensions( array $settings, string $prefix ): array {
+		$report = array();
+
+		foreach ( $settings as $key => $value ) {
+			if ( ! is_array( $value ) ) {
+				continue;
+			}
+
+			$path = $prefix . (string) $key;
+
+			if ( '' === $prefix && self::is_repeater_rows( $value ) ) {
+				foreach ( $value as $index => $row ) {
+					$report = array_merge(
+						$report,
+						self::scan_dimensions( $row, $path . '[' . $index . '].' )
+					);
+				}
+				continue;
+			}
+
+			if ( array_diff( array_keys( $value ), self::DIMENSION_KEYS ) ) {
+				continue;
+			}
+
+			$filled = 0;
+			$blank  = array();
+
+			foreach ( self::DIMENSION_SIDES as $side ) {
+				// A side is filled only when it carries something that survives
+				// as CSS. `'0'` does; `''`, `null` and an absent key do not.
+				if ( isset( $value[ $side ] ) && '' !== (string) $value[ $side ] ) {
+					++$filled;
+				} else {
+					$blank[] = $side;
+				}
+			}
+
+			if ( $filled > 0 && $blank ) {
+				$report[] = array(
+					'key'   => $path,
+					'blank' => $blank,
+				);
+			}
+		}
+
+		return $report;
+	}
+
+	/**
 	 * Controls whose name is close to one that wasn't recognised.
 	 *
 	 * Both real cases this exists for were near-misses of a real control:

@@ -2,6 +2,38 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.38.0]
+
+Three silent-write defects around Elementor layout: a Navigator label that went to the key half the elements do not read, a dimension value that quietly applies nothing, and a grid that lays itself out in two rows without saying so.
+
+### Fixed
+
+- **The Navigator label never appeared on a classic element.** Elementor keeps that label in two places and neither side falls back to the other: `settings._title` on a classic section, column, container or widget, and the root-level `editor_settings.title` on a v4 atomic one. `set-element-label` — and the `editor_settings` route through `update-element` and `batch-update` — wrote the v4 spelling for every element type. On a classic element that stored a root key nothing reads: the call returned `success: true`, the value read back exactly as sent, and the Navigator went on showing "Container". Since classic elements are most of what exists on most sites (atomic elements need the V4 editor and only cover what was built after it), the tool did not work for the majority of its uses and reported that it did.
+
+  The label is now routed by element type in `KarMCP_Data::update_element_settings()`, in both directions: send `editor_settings.title` or `_title`, and it lands in the one this element reads. The reverse case mattered too — `_title` on an atomic element is not a prop of anything and would sit in its typed settings unread. If a payload carries both spellings the one native to the element wins, since that is the value the caller chose for it rather than the one being translated. A label an earlier version left in the wrong key is cleared when a new one is written, so an element does not end up carrying two with the invisible one on top.
+
+  A deletion works from either spelling too. Sending `null` clears the label, and on an atomic element the hoisting merge cannot delete — it can only add or overwrite — so the stored key is cleared explicitly. Handling only the translated spelling would have left a literal `"title": null` behind on the deletion an agent is most likely to write, which is a key that should not exist reporting success.
+
+  The predicate behind the routing is now a named one, `KarMCP_Data::is_atomic_element()`. The test it encodes has to cover both halves of the tree — an atomic container is named by its own `elType` (`e-flexbox`, `e-div-block`), an atomic widget by its `widgetType` — and it existed as a local variable in the middle of a 150-line method, which is why nothing else could ask the question.
+
+- **`set-element-label` now reads the label back off the saved page before reporting success**, and says in a new `stored_in` field which of the two keys it went to. A success assembled from the tool's own arguments is exactly what it returned throughout the life of the bug above.
+
+- **`get-page-snapshot` showed no label for atomic elements, and derived none from their content.** `element_label()` read only `settings`, so a Navigator label at the element root was invisible, and it tested candidates with `is_string()`, which every atomic prop fails — those are `{$$type:…, value:…}`. An atomic page came back as an unlabelled tree of `e-flexbox` and `e-heading`. It now prefers the author's label and unwraps atomic props for the derived fallback.
+
+  It reads that label from the key the element type uses, not from whichever key happens to be present, and the difference is not academic: every write before this release put the label at the root on classic elements too, and those elements do not repair themselves. Preferring whatever was found would have made the snapshot report, on exactly the population this release is about, a label the Elementor Navigator has never displayed — a fresh wrong answer from the tool whose job is to say what the page looks like.
+
+### Added
+
+- **Writes warn when a dimension is left with some sides blank, under `partial_dimensions`.** This is worse than it looks. Elementor renders a dimension control through a selector template — `padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} …` — and in `Base::add_control_rules()` a placeholder that resolves to an empty string throws; the catch around the selector loop returns, abandoning **every** rule of that control. So `padding` with only `top` set does not apply padding to the top: it applies no padding at all. An absent side is the same as a blank one, because `Control_Base_Multiple::get_value()` fills what is missing from the control default and a dimension default is empty on all four sides.
+
+  Nothing said so before. The write succeeded, the value read back exactly as sent, and only the browser knew the rule had been dropped — the same shape as the CSS class key and the shadowed global, and the reason those are reported too. `update-element`, `update-container`, `update-widget`, `add-container`, `add-free-widget` and `add-pro-widget` carry the advisory in their response; `batch-update` reports it per element, which is where it matters most, since one summary count of successes says nothing about which of twenty elements came out unstyled; and `build-page` folds it into its `warnings`, since a whole page is built in one call and the padding that never applied is otherwise found much later.
+
+  The check is pure and shape-based rather than schema-based: it identifies a dimension by its own vocabulary, so it covers containers and third-party widgets — which is where padding and margin are actually written — and works on sites Elementor cannot be introspected on. Repeater rows are scanned too, one level down, and reported as `icon_list[1].item_padding`; a per-row padding breaks exactly like a top-level one, and a checker that stopped at the top would have been silent about it while looking complete. A v4 atomic dimension is excluded by construction, since each of its sides is its own CSS property and a partial one is normal there.
+
+### Changed
+
+- **`add-container` now documents Elementor's grid defaults instead of only naming the controls.** A grid container defaults to 3 columns and **2 rows** (`includes/controls/groups/grid-container.php`), and both defaults surprise: four children land three-across plus one below rather than four across, and an agent that sets only the columns still gets a second `1fr` row splitting the container height under its content, with nothing saying why. The description now gives the slider shape, the single-row setting (`grid_rows_grid: {"unit":"fr","size":1}`), the mobile column default of 1, and the `custom` unit for a raw grid-template value.
+
 ## [1.37.2]
 
 Makes the token endpoint able to read a JSON request body, which is what several MCP clients send.

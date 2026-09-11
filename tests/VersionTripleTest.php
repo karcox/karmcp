@@ -56,4 +56,66 @@ class VersionTripleTest extends TestCase {
 			"karmcp.php declares $version but CHANGELOG.md has no `## [$version]` section."
 		);
 	}
+
+	/**
+	 * And readme.txt has to have one too.
+	 *
+	 * The release ritual writes the change up twice — in full in CHANGELOG.md,
+	 * summarised in readme.txt — and only the first half had a test behind it.
+	 * readme.txt is the half a person reads: it is what WordPress renders on the
+	 * plugin screen, so a missing entry means the site shows the previous
+	 * release's summary under the new version number, which is worse than
+	 * showing nothing.
+	 */
+	public function test_the_current_version_has_a_readme_changelog_entry(): void {
+		$readme = (string) file_get_contents( self::ROOT . '/readme.txt' );
+
+		preg_match( '/^Stable tag:\s*(\S+)\s*$/m', $readme, $s );
+		$version = $s[1] ?? '';
+
+		$this->assertNotSame( '', $version, 'No "Stable tag:" line in readme.txt.' );
+
+		$this->assertSame(
+			1,
+			preg_match( '/^==\s*Changelog\s*==\s*$/m', $readme ),
+			'readme.txt has no "== Changelog ==" section.'
+		);
+
+		// WordPress renders a release heading as `= 1.2.3 =`, and renders
+		// nothing at all for a heading it cannot parse — so the shape matters as
+		// much as the presence.
+		$this->assertSame(
+			1,
+			preg_match( '/^=\s*' . preg_quote( $version, '/' ) . '\s*=\s*$/m', $readme ),
+			"readme.txt Stable tag is $version but its Changelog section has no `= $version =` heading."
+		);
+	}
+
+	/**
+	 * Every readme.txt changelog heading is one WordPress can parse.
+	 *
+	 * A heading that is subtly off — `=1.2.3=`, `== 1.2.3 ==`, a stray trailing
+	 * character — is not rendered as a heading, so its release silently merges
+	 * into the one above it on the plugin screen while looking fine in the file.
+	 */
+	public function test_every_readme_changelog_heading_is_well_formed(): void {
+		$readme = (string) file_get_contents( self::ROOT . '/readme.txt' );
+		$body   = (string) preg_replace( '/^.*?^==\s*Changelog\s*==\s*$/ms', '', $readme, 1 );
+
+		preg_match_all( '/^.*\d+\.\d+\.\d+.*$/m', $body, $lines );
+
+		foreach ( $lines[0] as $line ) {
+			// Only judge lines that are trying to be a heading; prose inside an
+			// entry legitimately names versions.
+			if ( ! str_starts_with( ltrim( $line ), '=' ) ) {
+				continue;
+			}
+
+			$this->assertSame(
+				1,
+				preg_match( '/^=\s\d+\.\d+\.\d+\s=$/', $line ),
+				"Malformed changelog heading in readme.txt: \"$line\". WordPress renders it as body text, not a heading."
+			);
+		}
+	}
 }

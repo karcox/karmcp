@@ -172,7 +172,11 @@ class KarMCP_Admin {
 	/**
 	 * Determine which sub-screen is active from $_GET['page'].
 	 *
-	 * @return string One of 'tools', 'connection', 'context', 'changelog'.
+	 * The cases here are exactly the submenus get_submenus() registers, and
+	 * tab_icon() carries an icon for each. A slug with no submenu behind it is
+	 * a page nobody can reach, so it falls to the dashboard with the rest.
+	 *
+	 * @return string A tab id: 'dashboard' or one of the registered submenus.
 	 */
 	private function get_active_tab(): string {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -189,18 +193,12 @@ class KarMCP_Admin {
 				return 'history';
 			case self::PAGE_SLUG . '-redirects':
 				return 'redirects';
-			case self::PAGE_SLUG . '-migrate':
-				return 'migrate';
 			case self::PAGE_SLUG . '-modules':
 				return 'modules';
 			case self::PAGE_SLUG . '-connection':
 				return 'connection';
-			case self::PAGE_SLUG . '-ai-chat':
-				return 'ai-chat';
 			case self::PAGE_SLUG . '-context':
 				return 'context';
-			case self::PAGE_SLUG . '-skills':
-				return 'skills';
 			case self::PAGE_SLUG . '-widgets':
 				return 'widgets';
 			case self::PAGE_SLUG . '-mcp-log':

@@ -63,7 +63,7 @@ $karmcp_io_toggle = static function ( $name, $on, $title, $desc, $child = false 
 		$p . 'webp_serve',
 		$settings['webp_serve'],
 		__( 'Serve WebP on the frontend', 'karmcp' ),
-		__( 'Send WebP to browsers that support it. MCP & AI Chat always use WebP regardless of this.', 'karmcp' ),
+		__( 'Send WebP to browsers that support it. MCP always uses WebP regardless of this.', 'karmcp' ),
 		true
 	);
 	?>

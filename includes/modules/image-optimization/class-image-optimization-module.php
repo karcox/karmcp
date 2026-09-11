@@ -45,7 +45,7 @@ class KarMCP_Image_Optimization_Module extends KarMCP_Module {
 	}
 
 	public function description(): string {
-		return __( 'Automatically compress uploaded images and generate/serve WebP. Images added to pages via MCP or AI Chat use the optimized version.', 'karmcp' );
+		return __( 'Automatically compress uploaded images and generate/serve WebP. Images added to pages over MCP use the optimized version.', 'karmcp' );
 	}
 
 	public function tier(): string {

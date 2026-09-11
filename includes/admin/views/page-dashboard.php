@@ -53,7 +53,7 @@ $karmcp_features = array(
 	array(
 		'icon'  => 'dashicons-screenoptions',
 		'title' => __( 'Modules', 'karmcp' ),
-		'desc'  => __( 'Turn big features on and off: AI Chat, Themer, Image Optimization, Redirects and more.', 'karmcp' ),
+		'desc'  => __( 'Turn big features on and off: Themer, Image Optimization, Redirects, Login Guard, Known Vulnerabilities and more.', 'karmcp' ),
 		'href'  => admin_url( 'admin.php?page=' . $karmcp_page . '-modules' ),
 		'show'  => true,
 	),

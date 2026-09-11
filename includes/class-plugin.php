@@ -333,9 +333,9 @@ class KarMCP_Plugin {
 	/**
 	 * Returns the active (post-filter) ability names — the exact set exposed to
 	 * the MCP server, with user-disabled tools and Pro-disabled-by-default
-	 * already removed. Used by the AI Chat
-	 * /execute-ability and /abilities endpoints so the chat can never run a tool
-	 * the admin disabled. Triggers the lazy Abilities API init if it hasn't run.
+	 * already removed. Used by the dispatcher mode's `list-tools` and by the
+	 * admin bar, so neither can offer a tool the admin disabled. Triggers the
+	 * lazy Abilities API init if it hasn't run.
 	 *
 	 * @since 3.1.0
 	 *

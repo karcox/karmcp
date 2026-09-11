@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.39.0
+Stable tag: 1.39.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.39.1 =
+Fixed: the admin advertised an "AI Chat" feature this plugin does not have. The dashboard's Modules card named it first among the modules you can toggle, and the Image Optimization module and its WebP setting mentioned it too; the eight real modules are Themer, Redirects, Agent Skills, Image Optimization, SVG Support, Guardrails, Login Guard and Known Vulnerabilities. Three admin page slugs (-ai-chat, -migrate, -skills) also resolved to screens no menu registers, and a docblock pointed at endpoints that are not part of this plugin. Added: readme.txt now has to carry a changelog entry for the version it declares, and every heading in it has to be one WordPress can parse - a missing entry showed the previous release's summary under the new version number, and a malformed heading merged its release into the one above while looking correct in the file.
 
 = 1.39.0 =
 Fixed: a `styles` or `editor_settings` value that was not an object replaced the element's whole map and the call still reported success - `{"styles": "oops"}` wiped every local style class on that element and answered `success: true`. Both keys are always objects, so a malformed value is now dropped before anything reads it, the stored map is left untouched, and the key comes back in a new `rejected_keys` field with the type that arrived (per element in batch-update). The same bad value used to behave differently depending on whether a Navigator label came with it; the shape is now settled in one place, before the label routing. A label that is not text is rejected too, instead of being stored as an array that looks like a label refusing to render. Changed: the `partial_dimensions` advisory now says what it can get wrong - it recognises a dimension by the shape of its value, so a third-party control whose selector uses a single side is flagged with nothing wrong with it.

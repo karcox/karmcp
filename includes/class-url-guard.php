@@ -138,7 +138,7 @@ class KarMCP_Url_Guard {
 	}
 
 	/* ---------------------------------------------------------------------
-	 * Strict validation (added 3.2.0 for the AI Chat `web_fetch` tool).
+	 * Strict validation, for when a URL's *contents* come back to the caller.
 	 *
 	 * is_safe_remote_url() above leans on wp_http_validate_url() plus a single
 	 * gethostbyname() lookup. That is adequate for sideloading a media URL, but
@@ -146,9 +146,12 @@ class KarMCP_Url_Guard {
 	 * publishing one public and one internal address slips through. It also
 	 * permits port 8080 and URLs carrying credentials.
 	 *
-	 * validate() below is the stricter gate used when a URL's *contents* are
-	 * fed back to a language model. Its resolver is injectable so the whole
-	 * decision table is unit-testable with no network.
+	 * validate() below closes those three. Its resolver is injectable so the
+	 * whole decision table is unit-testable with no network.
+	 *
+	 * Every live caller of this class sideloads a media file and goes through
+	 * safe_download(). A tool that hands fetched content back to an agent calls
+	 * this instead, rather than growing a second decision table.
 	 * ------------------------------------------------------------------- */
 
 	/** Ports an ordinary web page is served on. Anything else is a service probe. */

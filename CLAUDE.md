@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.39.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir, y `VersionTripleTest` lo comprueba |
+| Versión actual | `1.39.1` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir, y `VersionTripleTest` lo comprueba |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -39,7 +39,7 @@ pwsh bin/check.ps1
 
 PHPUnit + comprobación de frescura del POT + PHPStan + PHPCS, las cuatro bloqueantes. Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
 
-Estado de referencia (medido el 2026-09-07): **1.406 tests, 9.577 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
+Estado de referencia (medido el 2026-09-11): **1.408 tests, 9.657 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
 
 > La cifra anterior que vivía aquí — 1.147 tests, 8.955 aserciones, fechada en la 1.27.0 — llevaba ocho releases sin revisarse. Es la misma clase de deriva que el "no hay CI": cierta cuando se escribió, y nadie volvió. Al cambiarla, mídela; no la estimes.
 
@@ -247,6 +247,7 @@ Esto ahorra horas: hay guards por todo el código que comprueban clases que **nu
 - **No hay auto-updater.** La cabecera lleva `Update URI: false`; se actualiza sustituyendo la carpeta.
 - **Clases ausentes** que sus guards siempre resuelven a falso: `KarMCP_Migrate_Abilities` y los grupos GeneratePress / Blocksy / EssentialAddons / PremiumAddons / UAE / System Kit / SEO / A11y / Memory. **Skills, Woo y los dos builders del sandbox ya no están en esta lista**: Skills vive en `includes/skills/`, `KarMCP_Woo_Integration` en `includes/abilities/woo/`, y el Widget/Block Builder se implementó en 1.12.0 (ver abajo).
 - **Cloud ya no existe.** El subsistema (cliente OAuth, sync, gateway credential, sus 5 herramientas MCP, el backup del Sandbox y las notificaciones que se alimentaban de él) se eliminó en 1.25.0: apuntaba a un servicio que nunca existió.
+- **No hay AI Chat, ni pantalla de Migrate, ni pantalla de Skills.** Los ocho módulos son Themer, Redirects, Agent Skills, Image Optimization, SVG Support, Guardrails, Login Guard y Known Vulnerabilities; las Skills se editan por el CPT `karmcp_skill`, no por una pantalla propia. Hasta la 1.39.1 el panel **decía** que sí había AI Chat —la tarjeta de Modules del dashboard lo nombraba el primero— y `get_active_tab()` mapeaba tres slugs sin submenú detrás. La diferencia con el resto de esta lista es la que costó la release: no eran guards resolviendo a falso en silencio, eran frases que una persona lee en wp-admin. Si vuelves a ver una, mira `get_submenus()` y `tab_icon()`, que son la lista real.
 
 ## Seguridad: el modelo
 

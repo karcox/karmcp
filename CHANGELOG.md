@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.39.1]
+
+Removes the last traces of a feature this plugin does not have, and puts a test behind the half of the release ritual that never had one.
+
+### Fixed
+
+- **The admin advertised an AI Chat that does not exist here.** The dashboard's Modules card read "Turn big features on and off: AI Chat, Themer, Image Optimization, Redirects and more" — AI Chat first, and there is no such module: the eight are Themer, Redirects, Agent Skills, Image Optimization, SVG Support, Guardrails, Login Guard and Known Vulnerabilities. The Image Optimization module and its WebP setting named it too. All three now describe what is actually there.
+
+  This is the same drift CLAUDE.md's "Lo que NO existe en este árbol" section exists to catch — leftovers of a tier separation that was removed — with one difference that made it worth a release of its own: these were not guards resolving quietly to false, they were sentences a person reads in wp-admin.
+
+- **Three admin page slugs resolved to screens that cannot be reached.** `get_active_tab()` mapped `-ai-chat`, `-migrate` and `-skills` to tab ids, and none of the three is registered as a submenu — `get_submenus()` is the complete list and only drops `-redirects` conditionally, while `tab_icon()` carries an icon for exactly the registered set. Unreachable rather than broken, but it is three lines claiming a screen exists. The docblock said the function returns "one of 'tools', 'connection', 'context', 'changelog'", which was never the full set either.
+
+- **A docblock sent the reader to endpoints that are not in this plugin.** `get_active_ability_names()` said it was used by "the AI Chat /execute-ability and /abilities endpoints". The method is very much alive — the dispatcher mode's `list-tools` and the admin bar both call it — so the code was right and only its explanation was wrong, which is the kind that costs a search before it costs anything else.
+
+### Added
+
+- **`readme.txt` now has to carry a changelog entry for the version it declares, and every heading in it has to be one WordPress can parse.** The release ritual writes each change up twice — in full in `CHANGELOG.md`, summarised in `readme.txt` — and only the first half had a test behind it. The second is the half a person reads, since WordPress renders it on the plugin screen, so a missing entry shows the previous release's summary under the new version number. A heading that is subtly off (`=1.2.3=`, `== 1.2.3 ==`, a stray trailing space) is not rendered as a heading at all, and its release silently merges into the one above while looking correct in the file. Both are now `VersionTripleTest`'s problem, alongside the version triple it already guarded.
+
 ## [1.39.0]
 
 Closes the write path that let one mistyped key destroy an element's styles and report success, and says out loud what the previous release's dimension advisory can get wrong.

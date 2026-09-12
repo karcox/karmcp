@@ -223,8 +223,144 @@ class KarMCP_Content_Extractor {
 		}
 
 		if ( ! empty( $args['include_html'] ) ) {
-			$digest['html'] = self::truncate_bytes( $rendered['html'], self::MAX_ECHO_BYTES );
+			$digest = self::attach_html( $digest, $rendered['html'], (int) ( $args['html_offset'] ?? 0 ) );
 		}
+
+		return $digest;
+	}
+
+	/**
+	 * Renders a URL on this site and returns the same digest as extract().
+	 *
+	 * The post-id path cannot reach two things a person looking at their own
+	 * site cares about: the front page, which is a query rather than a post on
+	 * most sites, and any URL that is not one post — an archive, a search
+	 * result, a paginated page. This takes the URL instead and runs the same
+	 * analysis over what the server sends back.
+	 *
+	 * Same-origin, always. The loopback fetcher exists to look at this site; a
+	 * tool that will fetch any URL an agent names and hand back the body is a
+	 * server-side request forgery with a nice description, and the one guard
+	 * that cannot be argued around is refusing to leave the site at all.
+	 *
+	 * @since 1.40.0
+	 *
+	 * @param string $url  Absolute URL on this site, or '' for the front page.
+	 * @param array  $args scope is implicit (always the full page); accepts
+	 *                     excerpt_chars, include_html and html_offset.
+	 * @return array|WP_Error The digest, or an error.
+	 */
+	public static function extract_url( string $url, array $args = array() ) {
+		$url = '' === trim( $url ) ? home_url( '/' ) : trim( $url );
+
+		if ( ! self::is_same_origin( $url ) ) {
+			return new WP_Error(
+				'foreign_url',
+				__( 'This renders pages of this site only. Pass a URL on this site, or omit it for the front page.', 'karmcp' )
+			);
+		}
+
+		if ( ! class_exists( 'KarMCP_Performance_Page_Audit' ) ) {
+			return new WP_Error( 'fetcher_unavailable', __( 'The loopback fetcher is not available on this install.', 'karmcp' ) );
+		}
+
+		$audit = new KarMCP_Performance_Page_Audit();
+		$res   = $audit->fetch( $url );
+
+		if ( empty( $res['ok'] ) ) {
+			return new WP_Error(
+				'fetch_failed',
+				sprintf(
+					/* translators: %s: fetch error description. */
+					__( 'Could not fetch the page over a loopback request: %s', 'karmcp' ),
+					(string) ( $res['error'] ?? 'unknown' )
+				)
+			);
+		}
+
+		$html = (string) ( $res['body'] ?? '' );
+
+		$digest = self::analyze(
+			$html,
+			array(
+				'scope'         => 'full',
+				'excerpt_chars' => isset( $args['excerpt_chars'] ) ? (int) $args['excerpt_chars'] : 600,
+			)
+		);
+
+		$digest['url']    = $url;
+		$digest['render'] = array(
+			'scope'       => 'full',
+			'source'      => 'loopback',
+			'bytes'       => strlen( $html ),
+			'status_code' => (int) ( $res['status_code'] ?? 0 ),
+		);
+
+		if ( ! empty( $args['include_html'] ) ) {
+			$digest = self::attach_html( $digest, $html, (int) ( $args['html_offset'] ?? 0 ) );
+		}
+
+		return $digest;
+	}
+
+	/**
+	 * Whether a URL belongs to this site.
+	 *
+	 * Host comparison only, case-insensitively and without a leading `www.`,
+	 * because that is the part an attacker controls. The scheme is not part of
+	 * the test: a site reachable over both is still the same site.
+	 *
+	 * @since 1.40.0
+	 *
+	 * @param string $url The URL to test.
+	 * @return bool
+	 */
+	private static function is_same_origin( string $url ): bool {
+		$host = wp_parse_url( $url, PHP_URL_HOST );
+		$home = wp_parse_url( home_url( '/' ), PHP_URL_HOST );
+
+		if ( ! is_string( $host ) || ! is_string( $home ) ) {
+			return false;
+		}
+
+		$strip = static function ( string $h ): string {
+			return preg_replace( '/^www\./i', '', strtolower( $h ) ) ?? '';
+		};
+
+		return '' !== $host && $strip( $host ) === $strip( $home );
+	}
+
+	/**
+	 * Attaches a bounded slice of the HTML, plus what it takes to ask for the
+	 * rest.
+	 *
+	 * A themed page routinely exceeds the cap, and before this the response
+	 * simply stopped at 200 KB with nothing saying so — the agent read a page
+	 * whose closing markup it had never seen and drew conclusions from the
+	 * absence. The slice now says where it ends and where to resume, and
+	 * carries a checksum of the whole document so a continuation against a page
+	 * that changed in between is detectable rather than silently spliced.
+	 *
+	 * @since 1.40.0
+	 *
+	 * @param array  $digest The digest so far.
+	 * @param string $html   The full rendered HTML.
+	 * @param int    $offset Byte offset to start at.
+	 * @return array
+	 */
+	public static function attach_html( array $digest, string $html, int $offset ): array {
+		$total  = strlen( $html );
+		$offset = max( 0, min( $offset, $total ) );
+		$slice  = self::utf8_cut( substr( $html, $offset ), self::MAX_ECHO_BYTES );
+		$next   = $offset + strlen( $slice );
+
+		$digest['html']       = $slice;
+		$digest['html_chunk'] = array(
+			'offset'      => $offset,
+			'next_offset' => ( $next < $total ) ? $next : null,
+			'total_bytes' => $total,
+			'checksum'    => hash( 'crc32b', $html ),
+		);
 
 		return $digest;
 	}
@@ -1365,15 +1501,45 @@ class KarMCP_Content_Extractor {
 	 * @param int    $limit Bytes.
 	 * @return string
 	 */
-	private static function truncate_bytes( string $text, int $limit ): string {
+	public static function utf8_cut( string $text, int $limit ): string {
+		if ( $limit <= 0 ) {
+			return '';
+		}
+
 		if ( strlen( $text ) <= $limit ) {
 			return $text;
 		}
+
 		$cut = substr( $text, 0, $limit );
-		// Drop a trailing partial UTF-8 sequence.
-		while ( '' !== $cut && ( ord( $cut[ strlen( $cut ) - 1 ] ) & 0xC0 ) === 0x80 ) {
-			$cut = substr( $cut, 0, -1 );
+
+		// Walk back over the continuation bytes at the end, then decide whether
+		// the character they belong to survived the cut whole.
+		$keep = strlen( $cut );
+		while ( $keep > 0 && ( ord( $cut[ $keep - 1 ] ) & 0xC0 ) === 0x80 ) {
+			--$keep;
 		}
-		return substr( $cut, 0, -1 );
+
+		if ( 0 === $keep ) {
+			return '';
+		}
+
+		$lead     = ord( $cut[ $keep - 1 ] );
+		$expected = 1;
+		if ( $lead >= 0xF0 ) {
+			$expected = 4;
+		} elseif ( $lead >= 0xE0 ) {
+			$expected = 3;
+		} elseif ( $lead >= 0xC0 ) {
+			$expected = 2;
+		}
+
+		// Bytes of that character actually present: its lead plus whatever
+		// continuation bytes followed before the cut.
+		$present = strlen( $cut ) - ( $keep - 1 );
+
+		// Complete: everything stays, including the last character. The version
+		// this replaced dropped one good byte unconditionally, which truncated a
+		// cut that had landed on a clean boundary.
+		return ( $present >= $expected ) ? $cut : substr( $cut, 0, $keep - 1 );
 	}
 }

@@ -57,6 +57,7 @@ class KarMCP_Page_Abilities {
 			'karmcp/delete-page-content',
 			'karmcp/import-template',
 			'karmcp/export-page',
+			'karmcp/regenerate-css',
 		);
 	}
 
@@ -71,6 +72,7 @@ class KarMCP_Page_Abilities {
 		$this->register_delete_page_content();
 		$this->register_import_template();
 		$this->register_export_page();
+		$this->register_regenerate_css();
 	}
 
 	/**
@@ -529,6 +531,167 @@ class KarMCP_Page_Abilities {
 		}
 
 		return array( 'json' => $data );
+	}
+
+	// -------------------------------------------------------------------------
+	// regenerate-css
+	// -------------------------------------------------------------------------
+
+	private function register_regenerate_css(): void {
+		karmcp_register_ability(
+			'karmcp/regenerate-css',
+			array(
+				'label'               => __( 'Regenerate CSS', 'karmcp' ),
+				'description'         => __( 'Throws away Elementor\'s generated CSS so it is rebuilt from the current data on the next front-end request. Use it when a page reads back correctly and still renders with the old styling — after writing global classes or global typography, after an edit made outside this plugin, or when a cached stylesheet outlived the data it described. scope "page" (default) needs a post_id and clears that page\'s stylesheet, its rendered-element cache and its CSS file. scope "site" clears them for every page and needs confirm:true. Nothing is deleted that cannot be rebuilt, and no CDN or third-party page cache is touched, so purge those separately if you run one.', 'karmcp' ),
+				'category'            => 'karmcp',
+				'execute_callback'    => array( $this, 'execute_regenerate_css' ),
+				'permission_callback' => array( $this, 'check_edit_permission' ),
+				'input_schema'        => array(
+					'type'       => 'object',
+					'properties' => array(
+						'post_id' => array(
+							'type'        => 'integer',
+							'description' => __( 'The page whose CSS to drop. Required for scope "page".', 'karmcp' ),
+						),
+						'scope'   => array(
+							'type'        => 'string',
+							'enum'        => array( 'page', 'site' ),
+							'description' => __( 'page: one post (default). site: every post, which needs administrator rights and confirm:true.', 'karmcp' ),
+						),
+						'confirm' => array(
+							'type'        => 'boolean',
+							'description' => __( 'Required for scope "site". The rebuild is lazy, so the first visitor to each page pays for it.', 'karmcp' ),
+						),
+					),
+				),
+				'output_schema'       => array(
+					'type'       => 'object',
+					'properties' => array(
+						'success' => array( 'type' => 'boolean' ),
+						'scope'   => array( 'type' => 'string' ),
+						'post_id' => array( 'type' => 'integer' ),
+						'notes'   => array(
+							'type'        => 'array',
+							'items'       => array( 'type' => 'string' ),
+							'description' => __( 'What was cleared, and anything this cannot reach.', 'karmcp' ),
+						),
+					),
+				),
+				'meta'                => array(
+					'annotations'  => array(
+						'readonly'    => false,
+						// It removes only derived files: every one of them is
+						// rebuilt from data this does not touch.
+						'destructive' => false,
+						'idempotent'  => true,
+					),
+					'show_in_rest' => true,
+				),
+			)
+		);
+	}
+
+	public function execute_regenerate_css( $input ) {
+		$scope = isset( $input['scope'] ) ? sanitize_key( (string) $input['scope'] ) : 'page';
+
+		if ( ! in_array( $scope, array( 'page', 'site' ), true ) ) {
+			return new \WP_Error( 'invalid_scope', __( 'scope must be "page" or "site".', 'karmcp' ) );
+		}
+
+		$notes = array();
+
+		if ( 'site' === $scope ) {
+			// Site scope touches every page on the site, so it takes the
+			// capability that owns the whole site rather than the one that owns
+			// a post, and it takes it here rather than at registration: the
+			// registration gate gets editors in, which is right for scope page.
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return new \WP_Error( 'forbidden', __( 'Site-wide regeneration is for administrators.', 'karmcp' ) );
+			}
+
+			if ( empty( $input['confirm'] ) ) {
+				return new \WP_Error(
+					'confirm_required',
+					__( 'Pass confirm:true. Every page loses its stylesheet at once, and each is rebuilt on its first visit afterwards.', 'karmcp' )
+				);
+			}
+
+			// Deleting for object id 0 with $delete_all deletes the key for
+			// every post in one query, rather than walking the posts table.
+			delete_metadata( 'post', 0, '_elementor_css', '', true );
+			delete_metadata( 'post', 0, KarMCP_Data::ELEMENT_CACHE_META, '', true );
+			$notes[] = __( 'Dropped the cached stylesheet and rendered-element cache of every post.', 'karmcp' );
+
+			if ( class_exists( '\\Elementor\\Plugin' ) && isset( \Elementor\Plugin::$instance->files_manager ) ) {
+				\Elementor\Plugin::$instance->files_manager->clear_cache();
+				$notes[] = __( 'Cleared Elementor\'s generated files.', 'karmcp' );
+			}
+
+			return $this->with_third_party_css_notes(
+				array(
+					'success' => true,
+					'scope'   => 'site',
+				),
+				$notes
+			);
+		}
+
+		$post_id = absint( $input['post_id'] ?? 0 );
+
+		if ( ! $post_id ) {
+			return new \WP_Error( 'missing_post_id', __( 'post_id is required for scope "page".', 'karmcp' ) );
+		}
+
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return new \WP_Error( 'forbidden', __( 'You are not allowed to edit this post.', 'karmcp' ) );
+		}
+
+		delete_post_meta( $post_id, '_elementor_css' );
+		delete_post_meta( $post_id, KarMCP_Data::ELEMENT_CACHE_META );
+		$notes[] = __( 'Dropped the cached stylesheet and rendered-element cache of this post.', 'karmcp' );
+
+		$upload_dir = wp_get_upload_dir();
+		$css_path   = $upload_dir['basedir'] . '/elementor/css/post-' . $post_id . '.css';
+
+		if ( file_exists( $css_path ) ) {
+			wp_delete_file( $css_path );
+			$notes[] = __( 'Deleted the generated CSS file for this post.', 'karmcp' );
+		}
+
+		return $this->with_third_party_css_notes(
+			array(
+				'success' => true,
+				'scope'   => 'page',
+				'post_id' => $post_id,
+			),
+			$notes
+		);
+	}
+
+	/**
+	 * Adds notes for the stylesheets this tool cannot reach.
+	 *
+	 * Saying what was cleared without saying what was not is how a tool gets
+	 * believed past its own edges: the page still renders stale, and the
+	 * response said success. Spectra is the one that bites here, because in its
+	 * separate-file mode it writes its own CSS files on a schedule of its own —
+	 * the admin already warns about that combination, and this is the same
+	 * warning at the moment it matters.
+	 *
+	 * @since 1.40.0
+	 *
+	 * @param array $out   The response so far.
+	 * @param array $notes The notes collected by the caller.
+	 * @return array
+	 */
+	private function with_third_party_css_notes( array $out, array $notes ): array {
+		if ( class_exists( 'KarMCP_Admin' ) && KarMCP_Admin::spectra_file_generation_on() ) {
+			$notes[] = __( 'Spectra is set to generate separate CSS files; those are its own and were not touched. Switch it to inline CSS while building, or regenerate its assets from its own settings.', 'karmcp' );
+		}
+
+		$out['notes'] = $notes;
+
+		return $out;
 	}
 
 }

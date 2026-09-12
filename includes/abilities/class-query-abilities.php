@@ -651,7 +651,7 @@ class KarMCP_Query_Abilities {
 			'karmcp/get-element-settings',
 			array(
 				'label'               => __( 'Get Element Settings', 'karmcp' ),
-				'description'         => __( 'Returns the current settings for a specific element on a page. Provide the post ID and element ID to retrieve all control values for that element.', 'karmcp' ),
+				'description'         => __( 'Returns the current state of a specific element on a page: all its control values, plus — on v4 atomic elements — the `styles` map of its local CSS classes and `editor_settings` (the Navigator label). Those two live at the element root rather than inside settings, so this is how you read back what update-element wrote there. Both are omitted for a classic element, which has neither.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_get_element_settings' ),
 				'permission_callback' => array( $this, 'check_read_permission' ),
@@ -672,10 +672,18 @@ class KarMCP_Query_Abilities {
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'element_id' => array( 'type' => 'string' ),
-						'elType'     => array( 'type' => 'string' ),
-						'widgetType' => array( 'type' => 'string' ),
-						'settings'   => array( 'type' => 'object' ),
+						'element_id'      => array( 'type' => 'string' ),
+						'elType'          => array( 'type' => 'string' ),
+						'widgetType'      => array( 'type' => 'string' ),
+						'settings'        => array( 'type' => 'object' ),
+						'styles'          => array(
+							'type'        => 'object',
+							'description' => __( 'The element\'s local CSS classes, keyed by class id. Present only on v4 atomic elements that have one.', 'karmcp' ),
+						),
+						'editor_settings' => array(
+							'type'        => 'object',
+							'description' => __( 'The editor\'s own metadata for this element, `title` being the Navigator label. Present only on v4 atomic elements that have one; a classic element keeps its label in settings._title.', 'karmcp' ),
+						),
 					),
 				),
 				'meta'                => array(
@@ -729,12 +737,48 @@ class KarMCP_Query_Abilities {
 			);
 		}
 
-		return array(
-			'element_id' => $element['id'],
+		return self::element_readback( $element );
+	}
+
+	/**
+	 * Shapes one element node into the get-element-settings response.
+	 *
+	 * On a v4 atomic element half the state lives outside `settings`: the local
+	 * style classes and the editor's metadata are siblings of it at the element
+	 * root. Returning only `settings` left the write tools able to route both —
+	 * which they have done since 1.38.0 — and no read tool able to show either,
+	 * so the only way to confirm an atomic write was `export-page` and its raw
+	 * tree. A write that reports success and a read that cannot show the result
+	 * is the same blind spot from the other end.
+	 *
+	 * Empty is omitted rather than returned, because the factory seeds both as
+	 * empty arrays on every atomic element: returning them regardless would put
+	 * two always-present empty objects in every response and make "has none"
+	 * indistinguishable from "has an empty one".
+	 *
+	 * Separate from the execute callback so it can be tested for what it is —
+	 * array shaping — without Elementor, a post, or a permission check.
+	 *
+	 * @since 1.40.0
+	 *
+	 * @param array $element The element node.
+	 * @return array The response body.
+	 */
+	public static function element_readback( array $element ): array {
+		$out = array(
+			'element_id' => $element['id'] ?? '',
 			'elType'     => $element['elType'] ?? '',
 			'widgetType' => $element['widgetType'] ?? '',
 			'settings'   => $element['settings'] ?? array(),
 		);
+
+		foreach ( array( 'styles', 'editor_settings' ) as $root_key ) {
+			if ( ! empty( $element[ $root_key ] ) && is_array( $element[ $root_key ] ) ) {
+				$out[ $root_key ] = $element[ $root_key ];
+			}
+		}
+
+		return $out;
 	}
 
 	// -------------------------------------------------------------------------

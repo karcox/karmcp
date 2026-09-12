@@ -2,6 +2,26 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.40.0]
+
+Three gaps on the reading side, all of the same shape: the agent could write something and then had no way to look at the result.
+
+### Added
+
+- **`get-element-settings` returns `styles` and `editor_settings`.** On a v4 atomic element half the state lives outside `settings` — the local style classes and the editor's metadata are siblings of it at the element root — and the write tools have routed both since 1.38.0 while no read tool showed either. The only way to confirm an atomic write was `export-page` and its raw tree. A write that reports success and a read that cannot show the result is the same blind spot from the other end. Both keys are omitted when empty, because the factory seeds them as empty arrays on every atomic element and returning them regardless would make "has none" indistinguishable from "has an empty one".
+
+- **`regenerate-css` throws away Elementor's generated CSS so it rebuilds from current data.** For the case where a page reads back correctly and still renders with the old styling: after writing global classes or global typography, after an edit made outside this plugin, or when a cached stylesheet outlived the data it described. `scope: "page"` clears one post's stylesheet, its rendered-element cache and its CSS file; `scope: "site"` does it for every post, and takes administrator rights and `confirm: true` because the rebuild is lazy and the next visitor to each page pays for it. Nothing it removes is anything but derived, so it is annotated non-destructive, and it ships disabled.
+
+  It also says what it cannot reach. Spectra in separate-file mode writes its own CSS on its own schedule — the admin has warned about that combination for a while, and the response now repeats the warning at the moment it matters, rather than reporting a clean success over a page that will still render stale.
+
+- **`render-page` can render a URL, and the front page.** It took a `post_id` and nothing else, so the front page — a query rather than a post on most sites — was unreachable, and so was every archive, search result and paginated page. Pass `url` instead, or omit both for the front page. Same-origin only: a tool that fetches any URL an agent names and returns the body is a server-side request forgery with a good description, and refusing to leave the site is the one guard that cannot be argued around. The post-id path keeps its `edit_post` check, since it can render a draft; the URL path needs none, because the loopback carries no session and sees what an anonymous visitor sees.
+
+- **`include_html` can be resumed past its 200 KB cap.** A themed page routinely runs past it, and the response used to stop there with nothing saying so — the agent read a document whose closing markup it had never seen and reasoned from the absence. The slice now comes with `html_chunk`: where it stopped, where to resume, the document's full size, and a checksum of the whole thing so a continuation against a page that changed in between is detectable rather than silently spliced.
+
+### Fixed
+
+- **The HTML truncation ate one good byte on every clean cut.** Walking back off a partial UTF-8 sequence is right; doing it unconditionally is not. The old code stripped trailing continuation bytes and then dropped one more byte regardless, so a cut that had landed on a character boundary — which on ASCII markup is every cut — lost its last character. Now the lead byte is read and the character is kept when all of it made the cut.
+
 ## [1.39.1]
 
 Removes the last traces of a feature this plugin does not have, and puts a test behind the half of the release ritual that never had one.

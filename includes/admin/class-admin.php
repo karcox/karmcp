@@ -569,7 +569,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 42;
+	const DEFAULTS_VERSION = 43;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1210,6 +1210,14 @@ class KarMCP_Admin {
 		if ( $applied < 42 ) {
 			$existing = array_values( array_diff( $existing, self::retired_seo_tool_slugs() ) );
 			$add[]    = 'karmcp/karseo-write';
+		}
+
+		// v43 - regenerate-css throws away derived files only, so nothing it
+		// does is unrecoverable; what it does do at site scope is make the next
+		// visitor to every page pay for a rebuild. That is a cost the site owner
+		// should opt into rather than discover.
+		if ( $applied < 43 ) {
+			$add[] = 'karmcp/regenerate-css';
 		}
 
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
@@ -5028,6 +5036,11 @@ class KarMCP_Admin {
 						'label'       => __( 'Export Page', 'karmcp' ),
 						'description' => __( 'Exports a page\'s Elementor data as JSON.', 'karmcp' ),
 						'badges'      => array( 'read-only' ),
+					),
+					'karmcp/regenerate-css'       => array(
+						'label'       => __( 'Regenerate CSS', 'karmcp' ),
+						'description' => __( 'Drops Elementor\'s generated CSS for one page, or for the whole site, so it rebuilds from current data. Site scope needs confirmation.', 'karmcp' ),
+						'badges'      => array(),
 					),
 				),
 			),

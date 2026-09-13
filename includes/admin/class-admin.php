@@ -1267,10 +1267,14 @@ class KarMCP_Admin {
 	 * The brand mark is a "K" whose arms end in two nodes — the initial and the
 	 * connection topology MCP describes, in one shape that still reads at 20px.
 	 *
-	 * Deliberately monochrome: WordPress recolours a data-URI menu icon to match
-	 * the admin colour scheme, so any colour baked in here is overridden, and a
-	 * filled background (see assets/img/karmcp-tile.svg) would recolour into an
-	 * illegible solid block. Use the tile only where colour is preserved.
+	 * Deliberately monochrome, and deliberately not coloured here. WordPress's
+	 * svg-painter.js rewrites the `fill` of a data-URI menu icon to the scheme
+	 * colour but never touches `stroke`, and this K is stroked — so whatever
+	 * colour the SVG carries, WordPress would paint the nodes and leave the
+	 * strokes as drawn. The colour comes from print_menu_icon_style() instead.
+	 * A filled background (see assets/img/karmcp-tile.svg) would be worse still:
+	 * the painter recolours it into an illegible solid block. Use the tile only
+	 * where colour is preserved.
 	 *
 	 * @since 1.0.0
 	 *
@@ -1419,28 +1423,33 @@ class KarMCP_Admin {
 	}
 
 	/**
-	 * Print a tiny inline style on every admin page that constrains our menu
-	 * icon to native-dashicon dimensions.
+	 * Print a tiny inline style on every admin page for our sidebar entry.
 	 *
-	 * WordPress renders a PNG menu icon at its natural size, which makes our
-	 * 64×64 brand icon overflow the 34px-tall sidebar row. The native dashicon
-	 * box is 20×20 with a small vertical inset — replicating that here keeps
-	 * the icon visually aligned with Posts/Pages/etc. We inject globally
-	 * (not via the KarMCP page enqueue) because the WP sidebar shows on every
-	 * admin screen, not just ours.
+	 * Injected globally, not through the KarMCP page enqueue, because the
+	 * WordPress sidebar shows on every admin screen and not just ours.
 	 *
 	 * @since 1.7.2
 	 */
 	public function print_menu_icon_style(): void {
+		$item = '#toplevel_page_' . esc_attr( self::PAGE_SLUG );
+
+		// The mark is painted white here, in CSS, rather than coloured in the
+		// SVG, because WordPress cannot colour it. svg-painter.js recolours a
+		// data-URI menu icon by rewriting `fill` — and only `fill`: the K is a
+		// stroked shape, so its strokes kept the black they were drawn in while
+		// the two nodes turned the scheme's grey. On the default dark sidebar
+		// that is a near-invisible K beside two dots. brightness(0) invert(1)
+		// turns every painted pixel white whatever colour it arrived as, and in
+		// every state, so it does not depend on what the painter does or skips.
+		//
+		// Not on the Light scheme, whose sidebar is pale grey: a white mark there
+		// disappears entirely. Left alone, it is dark on light, which reads.
+		$icon_rule = ( 'light' === get_user_option( 'admin_color' ) )
+			? ''
+			: $item . ' .wp-menu-image{filter:brightness(0) invert(1);}';
+
 		echo '<style>'
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ' .wp-menu-image img{'
-			. 'width:20px;height:20px;padding:7px 0 0;object-fit:contain;opacity:.95;'
-			. '}'
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . ':hover .wp-menu-image img,'
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . '.current .wp-menu-image img,'
-			. '#toplevel_page_' . esc_attr( self::PAGE_SLUG ) . '.wp-has-current-submenu .wp-menu-image img{'
-			. 'opacity:1;'
-			. '}'
+			. $icon_rule // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a CSS rule built from the escaped slug above and literals.
 			// The panel's own sections now live in its rail, so their sidebar rows
 			// go — they were listed twice, in two different orders.
 			//

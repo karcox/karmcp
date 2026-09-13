@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.40.1]
+
+The sidebar mark is white now, and the reason it was not is worth writing down.
+
+### Fixed
+
+- **The KarMCP icon in the WordPress sidebar showed as a near-invisible black K beside two grey dots.** WordPress colours a data-URI menu icon with `svg-painter.js`, which rewrites the SVG's `fill` to the admin colour scheme — and only its `fill` (`wp-admin/js/svg-painter.js`, the three `replace()` calls: `fill="…"`, `style="…"` and `fill:…;`). The KarMCP mark is a stroked shape. So the painter turned the two filled nodes grey and left the strokes of the K in the black they were drawn in, which on the default dark sidebar is a letter you can barely see. It had been that way since the mark shipped, and the docblock beside it said the opposite — that WordPress recolours the icon, so baking in a colour would be pointless — which is exactly why nobody went looking.
+
+  The icon is now painted white by a CSS filter in the style block the admin already prints on every screen: `brightness(0) invert(1)` turns every painted pixel white whatever colour it arrived as, at rest and when active, so it no longer depends on what the painter does or skips. The one exception is the Light colour scheme, whose sidebar is pale grey and would swallow a white mark whole; there the icon is left dark, which reads. A test pins that exception, because it is a single conditional that looks like it could be simplified away and the only people it breaks for chose a light sidebar.
+
+  The style block also carried two rules sizing a `.wp-menu-image img` that has not existed since the icon became a data URI — WordPress renders those as a background on a `div`, never an `<img>`. They are gone.
+
 ## [1.40.0]
 
 Three gaps on the reading side, all of the same shape: the agent could write something and then had no way to look at the result.

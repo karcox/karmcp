@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.40.0
+Stable tag: 1.40.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.40.1 =
+Fixed: the KarMCP icon in the WordPress sidebar showed as a near-invisible black K beside two grey dots. WordPress recolours a menu icon by rewriting its fill, never its stroke, and the KarMCP mark is stroked - so the dots turned grey and the K stayed black on the dark sidebar. The icon is now painted white in every state, except on the Light colour scheme, whose pale sidebar would hide a white mark entirely.
 
 = 1.40.0 =
 Added: three things the agent could write but not read back. `get-element-settings` now returns `styles` and `editor_settings`, the two keys a v4 atomic element keeps outside `settings` - the write tools have routed both since 1.38.0 and no read tool showed either, so confirming an atomic write meant exporting the raw tree. New `regenerate-css` throws away Elementor's generated CSS so it rebuilds from current data, for when a page reads back right and still renders with the old styling; page scope clears one post, site scope needs administrator rights and confirm:true, and the response says when Spectra's separate CSS files were left untouched. It ships disabled. `render-page` can now render a URL on this site, or the front page when you pass neither - archives, search results and paginated pages were unreachable before - and `include_html` can be resumed past its 200 KB cap, reporting where it stopped and a checksum of the whole document. Fixed: that truncation dropped one good byte whenever the cut landed on a character boundary, which on ASCII markup is every cut.

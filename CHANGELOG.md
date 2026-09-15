@@ -2,6 +2,30 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.41.0]
+
+A plugin or theme that is not on wordpress.org can now be installed over MCP, and the site's own URL stops carrying an `index.php` on sites without pretty permalinks.
+
+### Added
+
+- **`install-uploaded-zip` installs or updates a plugin or theme from a ZIP in the Media Library.** Until now the only installs came from wordpress.org, so a premium plugin had to be uploaded by hand in wp-admin. The flow is three steps: upload the ZIP with `upload-media`, pass its `attachment_id` together with the SHA-256 of the file you meant to upload, and `confirm: true`. It ships disabled, and it checks `install_plugins` or `install_themes`, plus `update_*` when it overwrites and `activate_plugins` when it activates — all before the file is touched.
+
+  Nothing is extracted until the archive has been read entry by entry. It is refused when an entry would land outside the package folder, is a symbolic link, or has attributes that cannot be read to rule that out; when it holds more than one top-level folder or a file at the root; when it declares more than 20,000 entries or 200 MB uncompressed, or an entry expands more than 200 times its compressed size; and when the folder holds no plugin header or no `style.css` with a theme header. A ZIP made on a Mac carries a `__MACOSX/` folder beside the package, and that one is accepted — WordPress skips it on extraction — after it has passed the same path, link and size checks as everything else.
+
+  The file is copied to a private temporary file first, and the hash, the inspection and the install all run on that copy, so nothing that replaces the upload after it has been checked can be what gets installed. The copy is deleted whether the install succeeds or is refused, and the ZIP leaves the Media Library after a successful install unless `keep_upload` is set.
+
+  An existing package is replaced only with `overwrite: true`, and only by a package declaring the same name. That rule is a guard against replacing the wrong package by mistake; it is **not** a defence against a ZIP that lies about its name, which anyone building the file can do — the SHA-256 you supply is what vouches for the file. **KarMCP, Elementor and Elementor Pro cannot be replaced this way at all**, whatever name the ZIP declares, which is the rule `update-plugin` already follows: replacing the plugin that is serving the request, or the builder every page depends on, is not something a single MCP call should be able to do. Update those from wp-admin.
+
+  When WordPress installs a plugin but does not report its main file, the response says it was not activated instead of reporting a clean install with `activate` silently ignored.
+
+  This reverses a deliberate earlier decision not to accept archives over MCP, and it does so knowingly: the tool is off by default, and turning it on is the site owner's call.
+
+### Fixed
+
+- **On a site with plain or PATHINFO permalinks, the site's base URL kept `index.php`.** WordPress builds the REST root as `https://host/index.php?rest_route=/` when there is no permalink structure, and `https://host/index.php/wp-json/` under PATHINFO. The base was derived from that root and inherited the `index.php`, and everything built on the base inherited it too: the OAuth issuer, the advertised authorize URL, the Connection tab's default and the `WP_URL` baked into the downloadable bundle — so a client was sent to `https://host/index.php/karmcp-oauth/authorize`, which nothing serves. Only a trailing `index.php` segment is dropped now; a subdirectory install keeps its subdirectory.
+
+  The test that covered this passed the whole time, because it fed `https://plain.test/?rest_route=`, a shape WordPress never emits. The new cases use the three shapes `get_rest_url()` really produces, with a subdirectory and a port, and five of them fail against the old code.
+
 ## [1.40.1]
 
 The sidebar mark is white now, and the reason it was not is worth writing down.

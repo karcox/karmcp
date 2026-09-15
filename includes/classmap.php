@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// 253 symbols.
+// 254 symbols.
 return array(
 	'karmcp_a11y_audit'                     => 'includes/audits/class-a11y-audit.php',
 	'karmcp_a11y_audit_abilities'           => 'includes/abilities/class-a11y-audit-abilities.php',
@@ -272,4 +272,5 @@ return array(
 	'karmcp_wpcli_runner'                   => 'includes/wpcli/class-wpcli-runner.php',
 	'karmcp_wpcli_validator'                => 'includes/wpcli/class-wpcli-validator.php',
 	'karmcp_wpml_integration'               => 'includes/abilities/i18n/class-wpml-integration.php',
+	'karmcp_zip_package_inspector'          => 'includes/class-zip-package-inspector.php',
 );

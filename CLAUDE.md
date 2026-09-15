@@ -23,7 +23,7 @@ Es un **producto independiente con marca propia**. No se presenta como derivado 
 | Namespace de abilities | `karmcp/<tool>` |
 | Servidor MCP | `/wp-json/mcp/karmcp-server` |
 | Nombre de herramienta MCP | `karmcp-<tool>` (el adapter sustituye `/` por `-`) |
-| Versión actual | `1.40.1` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir, y `VersionTripleTest` lo comprueba |
+| Versión actual | `1.41.0` — en `karmcp.php` (cabecera + `KARMCP_VERSION`) y `readme.txt` (`Stable tag`); los tres tienen que coincidir, y `VersionTripleTest` lo comprueba |
 
 **Los `@since` de 2.x y 3.x del código no son releases de KarMCP.** Vienen del árbol del que deriva y se dejaron como están: reescribirlos en masa falsearía más de lo que aclara. La numeración de KarMCP empieza en 1.0.0, así que **cualquier `@since` nuevo se escribe con la versión actual**.
 
@@ -39,7 +39,7 @@ pwsh bin/check.ps1
 
 PHPUnit + comprobación de frescura del POT + PHPStan + PHPCS, las cuatro bloqueantes. Si falta la cadena de análisis, la instala. `-Quick` se salta PHPCS, que es el lento (~45 s).
 
-Estado de referencia (medido el 2026-09-13): **1.433 tests, 9.706 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
+Estado de referencia (medido el 2026-09-15): **1.501 tests, 9.901 aserciones**; **PHPStan sin errores**; **PHPCS sin errores ni avisos**. Las tres bloquean. Cualquier hallazgo que veas lo ha introducido lo que estés cambiando.
 
 > La cifra anterior que vivía aquí — 1.147 tests, 8.955 aserciones, fechada en la 1.27.0 — llevaba ocho releases sin revisarse. Es la misma clase de deriva que el "no hay CI": cierta cuando se escribió, y nadie volvió. Al cambiarla, mídela; no la estimes.
 

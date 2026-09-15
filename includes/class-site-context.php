@@ -116,16 +116,55 @@ class KarMCP_Site_Context {
 	 * @return string Base URL, no trailing slash.
 	 */
 	public static function detected_base_url(): string {
-		$rest = function_exists( 'rest_url' ) ? (string) rest_url() : '';
+		return self::base_from_rest_url(
+			function_exists( 'rest_url' ) ? (string) rest_url() : '',
+			(string) home_url()
+		);
+	}
+
+	/**
+	 * Reduces a REST API root URL to the site base it lives under.
+	 *
+	 * Three shapes reach here, and two of them carry an `index.php` that is not
+	 * part of the base:
+	 *
+	 * - pretty permalinks:   `https://host/sub/wp-json/`
+	 * - PATHINFO permalinks: `https://host/sub/index.php/wp-json/`
+	 * - plain permalinks:    `https://host/sub/index.php?rest_route=/`
+	 *
+	 * The last one is WordPress's own doing: get_rest_url() appends `index.php`
+	 * on a site without a permalink structure, to dodge an nginx redirect that
+	 * would drop the request method. Keeping it made the base
+	 * `https://host/index.php`, and everything built on the base inherited it —
+	 * the OAuth issuer, the advertised authorize URL, the Connection tab's
+	 * default and the WP_URL baked into the .mcpb bundle — so a client was sent
+	 * to `https://host/index.php/karmcp-oauth/authorize`, which nothing serves.
+	 * The subdirectory is kept; only a trailing `index.php` segment goes.
+	 *
+	 * Pure, so each shape is testable without WordPress.
+	 *
+	 * @since 1.41.0
+	 *
+	 * @param string $rest The REST API root, as rest_url() returns it.
+	 * @param string $home The site home URL, the fallback when $rest is unusable.
+	 * @return string Base URL, no trailing slash.
+	 */
+	public static function base_from_rest_url( string $rest, string $home ): string {
+		$drop_index = static function ( string $base ): string {
+			return (string) preg_replace( '#/index\.php$#', '', rtrim( $base, '/' ) );
+		};
+
 		if ( '' === $rest ) {
-			return rtrim( (string) home_url(), '/' );
+			return rtrim( $home, '/' );
 		}
-		// Pretty permalinks: https://host/subdir/wp-json/ → strip the REST prefix.
+
+		// Pretty or PATHINFO: strip the REST prefix, then any index.php before it.
 		$stripped = preg_replace( '#/wp-json/?$#', '', $rest );
 		if ( is_string( $stripped ) && $stripped !== $rest ) {
-			return rtrim( $stripped, '/' );
+			return rtrim( $drop_index( $stripped ), '/' );
 		}
-		// Plain permalinks: https://host/?rest_route=/ → keep scheme+host(+port+path).
+
+		// Plain: keep scheme + host (+ port + path), minus the query and index.php.
 		$parts = wp_parse_url( $rest );
 		if ( is_array( $parts ) && ! empty( $parts['scheme'] ) && ! empty( $parts['host'] ) ) {
 			$base = $parts['scheme'] . '://' . $parts['host'];
@@ -133,11 +172,12 @@ class KarMCP_Site_Context {
 				$base .= ':' . $parts['port'];
 			}
 			if ( ! empty( $parts['path'] ) ) {
-				$base .= rtrim( (string) $parts['path'], '/' );
+				$base .= $drop_index( (string) $parts['path'] );
 			}
 			return rtrim( $base, '/' );
 		}
-		return rtrim( (string) home_url(), '/' );
+
+		return rtrim( $home, '/' );
 	}
 
 	/**

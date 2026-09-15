@@ -569,7 +569,7 @@ class KarMCP_Admin {
 	 *
 	 * @since 1.8.0
 	 */
-	const DEFAULTS_VERSION = 43;
+	const DEFAULTS_VERSION = 44;
 
 	/**
 	 * SEO/A11y Pro MCP tool slugs that ship disabled-by-default (v2 defaults).
@@ -1218,6 +1218,14 @@ class KarMCP_Admin {
 		// should opt into rather than discover.
 		if ( $applied < 43 ) {
 			$add[] = 'karmcp/regenerate-css';
+		}
+
+		// v44 - install-uploaded-zip installs code that never went through
+		// wordpress.org review. Every guard in it holds, and it still ships off:
+		// turning on "the agent may put new PHP on this site" is a decision the
+		// site owner makes, not a default they discover.
+		if ( $applied < 44 ) {
+			$add[] = 'karmcp/install-uploaded-zip';
 		}
 
 		$merged = array_values( array_unique( array_merge( $existing, $add ) ) );
@@ -4143,6 +4151,11 @@ class KarMCP_Admin {
 						'label'       => __( 'Install Plugin', 'karmcp' ),
 						'description' => __( 'Installs a plugin from wordpress.org by slug.', 'karmcp' ),
 						'badges'      => array(),
+					),
+					'karmcp/install-uploaded-zip' => array(
+						'label'       => __( 'Install Uploaded ZIP', 'karmcp' ),
+						'description' => __( 'Installs or updates a plugin or theme from a ZIP in the Media Library, after checking its SHA-256 and inspecting the archive. Replaces an installed package only with one of the same name.', 'karmcp' ),
+						'badges'      => array( 'destructive' ),
 					),
 					'karmcp/activate-plugin'   => array(
 						'label'       => __( 'Activate Plugin', 'karmcp' ),

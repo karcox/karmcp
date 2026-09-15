@@ -74,4 +74,45 @@ class PublicBaseUrlTest extends \PHPUnit\Framework\TestCase {
 		// so it falls back to scheme+host from wp_parse_url.
 		$this->assertSame( 'https://plain.test', KarMCP_Site_Context::detected_base_url() );
 	}
+
+	/*
+	 * The shapes get_rest_url() really emits (wp-includes/rest-api.php). The
+	 * test above feeds `https://plain.test/?rest_route=`, a URL WordPress never
+	 * produces: on a site without a permalink structure core appends `index.php`
+	 * before the query, to avoid an nginx redirect that drops the request
+	 * method. The suite passed on the gentle shape while the real one put
+	 * `index.php` into the OAuth issuer and the bundle's WP_URL.
+	 */
+
+	/**
+	 * @dataProvider real_rest_url_shapes
+	 */
+	public function test_base_from_every_real_rest_url_shape( string $rest, string $expected ) {
+		$this->assertSame( $expected, KarMCP_Site_Context::base_from_rest_url( $rest, 'https://fallback.test' ) );
+	}
+
+	public static function real_rest_url_shapes(): array {
+		return array(
+			'pretty'                   => array( 'https://host.test/wp-json/', 'https://host.test' ),
+			'pretty in a subdirectory' => array( 'https://host.test/blog/wp-json/', 'https://host.test/blog' ),
+			'PATHINFO'                 => array( 'https://host.test/index.php/wp-json/', 'https://host.test' ),
+			'PATHINFO in a subdir'     => array( 'https://host.test/blog/index.php/wp-json/', 'https://host.test/blog' ),
+			'plain'                    => array( 'https://host.test/index.php?rest_route=/', 'https://host.test' ),
+			'plain in a subdirectory'  => array( 'https://host.test/blog/index.php?rest_route=/', 'https://host.test/blog' ),
+			'plain with a port'        => array( 'http://host.test:8080/index.php?rest_route=/', 'http://host.test:8080' ),
+		);
+	}
+
+	public function test_a_directory_merely_named_like_index_php_is_not_stripped() {
+		// Only a trailing `index.php` segment is WordPress's; a path that happens
+		// to contain the string elsewhere is the site's own.
+		$this->assertSame(
+			'https://host.test/index.php-archive',
+			KarMCP_Site_Context::base_from_rest_url( 'https://host.test/index.php-archive/wp-json/', 'https://fallback.test' )
+		);
+	}
+
+	public function test_an_empty_rest_url_falls_back_to_home() {
+		$this->assertSame( 'https://fallback.test', KarMCP_Site_Context::base_from_rest_url( '', 'https://fallback.test/' ) );
+	}
 }

@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.40.1
+Stable tag: 1.41.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -34,7 +34,7 @@ There is no telemetry and no auto-updater: the plugin makes no outbound calls un
 
 * **Content**: posts, pages and any custom post type â€” content, status, taxonomy terms, custom fields and featured images. Never touches Elementor data; every post carries an `is_elementor` flag so agents switch tools correctly.
 * **Settings**: read and batch-update core settings over a curated allowlist. No arbitrary option access; `admin_email` stays read-only.
-* **Plugins & themes**: discover, install (wordpress.org only), update, activate and delete. KarMCP and Elementor are protected from deactivation.
+* **Plugins & themes**: discover, install, update, activate and delete. Installs come from wordpress.org, or — once you enable the tool — from a ZIP uploaded to the Media Library, checked against its SHA-256 and inspected before extraction. KarMCP and Elementor are protected from deactivation.
 * **Media**: full attachment detail, metadata editing, and deletion behind an explicit confirmation.
 * **Users**: list and read users; create and edit non-admin profiles. No delete, no role changes, administrators off-limits, passwords auto-generated and emailed rather than returned.
 * **Nav menus, redirects, filesystem and database**, each behind its own capability and default-off switches for anything that writes.
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.41.0 =
+Added: `install-uploaded-zip` installs or updates a plugin or theme from a ZIP uploaded to the Media Library, for packages that are not on wordpress.org. You pass the attachment, the SHA-256 of the file you meant to upload, and confirm:true; it ships disabled. The archive is inspected before anything is extracted and refused for paths that leave the package folder, symbolic links, more than one top-level folder, oversized or suspiciously compressible contents, or a missing plugin or theme header. The hash, the inspection and the install all run on a private copy, so the upload cannot be swapped after it is checked. An installed package is replaced only with overwrite:true and only by one declaring the same name - a guard against mistakes, not against a ZIP that lies about its name. KarMCP, Elementor and Elementor Pro cannot be replaced this way at all. Fixed: on sites with plain or PATHINFO permalinks the site's base URL kept `index.php`, which leaked into the OAuth issuer and authorize URL, the Connection tab and the downloadable bundle, sending clients to an address nothing serves.
 
 = 1.40.1 =
 Fixed: the KarMCP icon in the WordPress sidebar showed as a near-invisible black K beside two grey dots. WordPress recolours a menu icon by rewriting its fill, never its stroke, and the KarMCP mark is stroked - so the dots turned grey and the K stayed black on the dark sidebar. The icon is now painted white in every state, except on the Light colour scheme, whose pale sidebar would hide a white mark entirely.

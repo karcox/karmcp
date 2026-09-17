@@ -18,9 +18,9 @@ La rama local `main`, que seguía a `upstream/main`, se borró a propósito: era
 
 | | |
 |---|---|
-| Baseline tag | `baseline-3.14.0` |
-| Upstream commit | `24d1986` |
-| Reviewed up to | 3.14.0 (fetched and read, 2026-08-24) |
+| Baseline tag | `baseline-3.16.1` |
+| Upstream commit | `51eb780` |
+| Reviewed up to | 3.16.1 (fetched and read, 2026-09-17) — **in sync on everything useful** |
 
 `baseline-<version>` marks the last upstream commit that has been **reviewed** — not merged. Everything after it is unread.
 
@@ -107,6 +107,11 @@ See [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) for the g
 | 3.13.1 | 2026-08-24 | Nothing to do. | Both fixes were **already in this tree**: the search-index re-entrancy guard (`class-search-index.php:29`) and the per-source class shape. |
 | 3.13.2 | 2026-08-24 | **The atomic rich-text fix (KarMCP 1.34.0)**, plus an mbstring guard upstream does not have. | The three-level PHP snippet validator (notes vs warnings vs blockers) is **still open** and worth doing — a good snippet currently arrives covered in warnings, which teaches a reviewer to skim. |
 | 3.14.0 | 2026-08-24 | Nothing. The stream-filter decode and the executable-extension refusal are **this tree's 1.33.0**, arrived at independently and shipped two days earlier. | BeTheme / BeBuilder is Pro and its source is not in the public repository. The "why a tool cannot be switched on" badges and the saved-notice toast are admin polish worth revisiting. |
+| 3.15.0 | 2026-09-12 | Navigator labels, the `partial_dimensions` advisory and the grid note (KarMCP 1.38.0); non-object `styles` / `editor_settings` rejected (1.39.0); element readback of `styles` and `editor_settings`, `regenerate-css`, and `render-page` by URL with a resumable HTML slice (1.40.0). All reimplemented. | WooCommerce Brands and anything tied to AI Chat or the Cloud. |
+| 3.15.1 | 2026-09-15 | Nothing. | AI Chat on the Responses API and Cloud settings sync — neither subsystem exists here. |
+| 3.15.2 | 2026-09-15 | Nothing. | Changelog formatting only. Our equivalent guard (readme.txt headings) shipped in 1.39.1. |
+| 3.16.0 | 2026-09-15 | **Install from an uploaded ZIP (KarMCP 1.41.0)**, with the same guard set plus a private temp copy against swaps; KarMCP, Elementor and Elementor Pro stay unreplaceable. | The Hello Elementor 3.x Themer fix was **already in this tree** (`class-themer-hello-adapter.php`). GSAP, FunnelKit reads and paginated change history are Pro. Structured ACF / WooCommerce imports and wider ACF coverage were judged not worth it for now — the WooCommerce import by SKU is the one to revisit if the need appears. |
+| 3.16.1 | 2026-09-15 | **Plain-permalink base URL (KarMCP 1.41.0)**, also covering PATHINFO permalinks, which upstream's fix does not mention. | Nothing else in the release. |
 
 ### 3.12.1 — notes
 

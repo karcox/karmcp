@@ -530,6 +530,10 @@ class KarMCP_Media_Library_Abilities {
 						'width'         => array( 'type' => 'integer' ),
 						'height'        => array( 'type' => 'integer' ),
 						'post_parent'   => array( 'type' => 'integer' ),
+						'change_id'     => array(
+							'type'        => 'string',
+							'description' => 'Id of this creation in the change history — pass it to rollback-change to undo it. Absent only when the creation ran inside another operation that records it as a whole.',
+						),
 					),
 				),
 				'meta'                => array(
@@ -669,8 +673,9 @@ class KarMCP_Media_Library_Abilities {
 		$attachment_id = (int) $attachment_id;
 		$this->apply_attachment_fields( $attachment_id, $input );
 
+		$change_id = '';
 		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
-			KarMCP_Change_Recorder::record_post_create(
+			$change_id = KarMCP_Change_Recorder::record_post_create(
 				$attachment_id,
 				sprintf(
 					/* translators: 1: filename, 2: attachment ID. */
@@ -678,7 +683,9 @@ class KarMCP_Media_Library_Abilities {
 					$filename,
 					$attachment_id
 				),
-				$filename . ' (#' . $attachment_id . ')'
+				$filename . ' (#' . $attachment_id . ')',
+				'upload-media',
+				'media'
 			);
 		}
 
@@ -694,7 +701,7 @@ class KarMCP_Media_Library_Abilities {
 			}
 		}
 
-		return array(
+		$out = array(
 			'attachment_id' => $attachment_id,
 			'url'           => (string) wp_get_attachment_url( $attachment_id ),
 			// Not necessarily what was passed: WordPress dedupes a colliding name
@@ -707,6 +714,10 @@ class KarMCP_Media_Library_Abilities {
 			'height'        => isset( $meta['height'] ) ? (int) $meta['height'] : 0,
 			'post_parent'   => (int) ( $post->post_parent ?? 0 ),
 		);
+		if ( '' !== $change_id ) {
+			$out['change_id'] = $change_id;
+		}
+		return $out;
 	}
 
 	/**

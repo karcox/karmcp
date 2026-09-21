@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.41.0
+Stable tag: 1.42.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.42.0 =
+Fixed: the change history could report an undo that had not happened. Undoing create-page (and build-page) left an empty page behind instead of removing it; the creation is now recorded once, with its content, and create-page, create-post, upload-media, build-page and build-site return its change_id. Undoing a creation now refuses when the post was edited since, unless forced; creations recorded by earlier versions need force. Page settings and custom CSS are recorded and can be undone. An empty prior meta value is written back instead of deleted, and custom CSS keeps its backslashes. Every undo checks its own result: a delete WordPress declined, a value that did not take or a row that is gone is reported instead of marked done. Undoing an upload removes the files WordPress leaves behind on Windows. A deleted post or attachment is never restored under a different id. list-changes can filter by every domain it records.
 
 = 1.41.0 =
 Added: `install-uploaded-zip` installs or updates a plugin or theme from a ZIP uploaded to the Media Library, for packages that are not on wordpress.org. You pass the attachment, the SHA-256 of the file you meant to upload, and confirm:true; it ships disabled. The archive is inspected before anything is extracted and refused for paths that leave the package folder, symbolic links, more than one top-level folder, oversized or suspiciously compressible contents, or a missing plugin or theme header. The hash, the inspection and the install all run on a private copy, so the upload cannot be swapped after it is checked. An installed package is replaced only with overwrite:true and only by one declaring the same name - a guard against mistakes, not against a ZIP that lies about its name. KarMCP, Elementor and Elementor Pro cannot be replaced this way at all. Fixed: on sites with plain or PATHINFO permalinks the site's base URL kept `index.php`, which leaked into the OAuth issuer and authorize URL, the Connection tab and the downloadable bundle, sending clients to an address nothing serves.

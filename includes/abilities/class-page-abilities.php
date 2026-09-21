@@ -182,6 +182,10 @@ class KarMCP_Page_Abilities {
 						'title'       => array( 'type' => 'string' ),
 						'edit_url'    => array( 'type' => 'string' ),
 						'preview_url' => array( 'type' => 'string' ),
+						'change_id'   => array(
+							'type'        => 'string',
+							'description' => 'Id of this creation in the change history — pass it to rollback-change to undo it. Absent only when the creation ran inside another operation that records it as a whole.',
+						),
 					),
 				),
 				'meta'                => array(
@@ -235,27 +239,52 @@ class KarMCP_Page_Abilities {
 			update_post_meta( $post_id, '_wp_page_template', sanitize_text_field( $input['template'] ) );
 		}
 
-		// Save initial content if provided.
-		if ( ! empty( $input['content'] ) && is_array( $input['content'] ) ) {
-			$save_result = $this->data->save_page_data( $post_id, $input['content'] );
-		} else {
-			// Save empty Elementor data to initialize.
-			$save_result = $this->data->save_page_data( $post_id, array() );
-		}
+		/*
+		 * The initial content is part of the creation, not an edit of it. Left
+		 * to record itself, this save produced a lone "edited Elementor page"
+		 * entry whose undo restored the empty tree — so undoing a create-page
+		 * left an empty page behind instead of removing it. Recording is
+		 * suppressed for the save and the creation is recorded once, after it,
+		 * with the content already in place.
+		 */
+		$content = ( ! empty( $input['content'] ) && is_array( $input['content'] ) ) ? $input['content'] : array();
+		$save    = function () use ( $post_id, $content ) {
+			return $this->data->save_page_data( $post_id, $content );
+		};
+
+		$save_result = class_exists( 'KarMCP_Change_Log' ) ? KarMCP_Change_Log::without_recording( $save ) : $save();
 
 		if ( is_wp_error( $save_result ) ) {
+			// Nothing recorded it, so nothing could undo it: do not leave the
+			// half-made page behind.
+			wp_delete_post( $post_id, true );
 			return $save_result;
+		}
+
+		$change_id = '';
+		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+			$change_id = KarMCP_Change_Recorder::record_post_create(
+				$post_id,
+				sprintf( 'Created %s #%d', $post_type, $post_id ),
+				trim( $title . ' (#' . $post_id . ')' ),
+				'create-page',
+				'elementor'
+			);
 		}
 
 		$edit_url    = admin_url( 'post.php?post=' . $post_id . '&action=elementor' );
 		$preview_url = get_permalink( $post_id );
 
-		return array(
+		$out = array(
 			'post_id'     => $post_id,
 			'title'       => $title,
 			'edit_url'    => $edit_url,
 			'preview_url' => $preview_url ? $preview_url : '',
 		);
+		if ( '' !== $change_id ) {
+			$out['change_id'] = $change_id;
+		}
+		return $out;
 	}
 
 	// -------------------------------------------------------------------------

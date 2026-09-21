@@ -35,6 +35,28 @@ class KarMCP_Change_Log {
 	public static $suppress = false;
 
 	/**
+	 * Run a callback with recording switched off, restoring the caller's state
+	 * afterwards — including when the callback throws.
+	 *
+	 * For writes that are part of a larger operation recorded as one entry, such
+	 * as the initial content of a page that is being created.
+	 *
+	 * @since 1.42.0
+	 *
+	 * @param callable $fn Callback.
+	 * @return mixed What the callback returns.
+	 */
+	public static function without_recording( callable $fn ) {
+		$outer          = self::$suppress;
+		self::$suppress = true;
+		try {
+			return $fn();
+		} finally {
+			self::$suppress = $outer;
+		}
+	}
+
+	/**
 	 * Append an entry. Returns its id, or '' when suppressed.
 	 *
 	 * @param array $entry { domain, action, target?, summary?, rollback? }.
@@ -95,16 +117,24 @@ class KarMCP_Change_Log {
 	 * Flag an entry as rolled back.
 	 *
 	 * @param string $id Entry id.
+	 * @return bool False when the ledger could not be written.
 	 */
-	public static function mark_rolled_back( string $id ): void {
-		$log = self::all();
+	public static function mark_rolled_back( string $id ): bool {
+		$log   = self::all();
+		$found = false;
 		foreach ( $log as &$e ) {
 			if ( isset( $e['id'] ) && $e['id'] === $id ) {
 				$e['rolled_back'] = true;
+				$found            = true;
 			}
 		}
 		unset( $e );
+		if ( ! $found ) {
+			return false;
+		}
 		update_option( self::OPTION, $log, false );
+		$check = self::get( $id );
+		return null !== $check && ! empty( $check['rolled_back'] );
 	}
 
 	/**
@@ -215,25 +245,38 @@ class KarMCP_Change_Log {
 		// Conflict guard: refuse if the target changed after we recorded it,
 		// unless the caller forces it. Undoing then would clobber newer edits.
 		if ( ! $force ) {
+			$unguarded = self::unguarded_creation( $rb );
+			if ( is_wp_error( $unguarded ) ) {
+				return $unguarded;
+			}
 			$conflict = self::detect_conflict( $rb );
 			if ( is_wp_error( $conflict ) ) {
 				return $conflict;
 			}
 		}
 
+		// Restore the caller's suppression state rather than switching it off:
+		// a rollback run from inside another suppressed operation must not
+		// start recording that operation's writes halfway through.
+		$outer          = self::$suppress;
 		self::$suppress = true;
 		try {
 			$result = self::apply_rollback( $rb );
 		} catch ( \Throwable $e ) {
 			$result = new WP_Error( 'rollback_failed', $e->getMessage() );
 		} finally {
-			self::$suppress = false;
+			self::$suppress = $outer;
 		}
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
-		self::mark_rolled_back( $id );
+		if ( ! self::mark_rolled_back( $id ) ) {
+			return new WP_Error(
+				'history_not_updated',
+				__( 'The change was undone, but the history could not be updated to say so. Do not undo it again: check the target first.', 'karmcp' )
+			);
+		}
 		$comp = self::record( array(
 			'domain'   => $entry['domain'] ?? '',
 			'action'   => 'rollback',
@@ -252,6 +295,27 @@ class KarMCP_Change_Log {
 			$out['warning']  = __( 'Only part of this change was reversible: the before-image was capped, so some rows were not restored.', 'karmcp' );
 		}
 		return $out;
+	}
+
+	/**
+	 * Refuse to undo a creation recorded before creations carried a guard.
+	 *
+	 * Undoing a creation deletes the post, and an entry without an `after_hash`
+	 * cannot say whether anyone has built on it since. That is the one rollback
+	 * where "cannot tell" has to mean "ask first" instead of "go ahead", so it
+	 * takes `force`.
+	 *
+	 * @param array $rb Rollback ref.
+	 * @return true|WP_Error
+	 */
+	private static function unguarded_creation( array $rb ) {
+		if ( 'post-create' !== ( $rb['type'] ?? '' ) || '' !== (string) ( $rb['after_hash'] ?? '' ) ) {
+			return true;
+		}
+		return new WP_Error(
+			'unguarded_creation',
+			__( 'This creation was recorded before KarMCP could tell whether a post was edited after it was created, so undoing it could delete later work. Check the post, then roll back with force if it should go.', 'karmcp' )
+		);
 	}
 
 	/**
@@ -298,6 +362,8 @@ class KarMCP_Change_Log {
 				return KarMCP_Change_Recorder::hash_option( (string) ( $rb['option'] ?? '' ) );
 			case 'post-fields':
 				return KarMCP_Change_Recorder::hash_post( (int) ( $rb['post_id'] ?? 0 ) );
+			case 'post-create':
+				return KarMCP_Change_Recorder::hash_created( (int) ( $rb['post_id'] ?? 0 ) );
 			case 'meta-before-image':
 				return KarMCP_Change_Recorder::hash_meta( (string) ( $rb['object'] ?? 'post' ), (int) ( $rb['id'] ?? 0 ), (array) ( $rb['meta_keys'] ?? array() ) );
 			default:
@@ -443,16 +509,32 @@ class KarMCP_Change_Log {
 					if ( empty( $where ) ) {
 						continue; // Never update with an empty WHERE.
 					}
-					$wpdb->update( $table, $row, $where );
+					$affected = $wpdb->update( $table, $row, $where );
+					if ( false === $affected ) {
+						return self::db_failure();
+					}
+					// Zero rows is either "already as it was" or "the row is
+					// gone"; only the first is a restore.
+					if ( 0 === $affected && ! self::row_exists( $table, $where ) ) {
+						return new WP_Error( 'rollback_failed', __( 'A row this change updated no longer exists, so its prior values could not be restored. Rows restored before it stay restored.', 'karmcp' ) );
+					}
 				}
 				return true;
 			case 'delete':
 				foreach ( (array) ( $rb['before_rows'] ?? array() ) as $row ) {
-					$wpdb->insert( $table, $row );
+					if ( false === $wpdb->insert( $table, $row ) ) {
+						return self::db_failure();
+					}
 				}
 				return true;
 			case 'insert':
-				$wpdb->delete( $table, (array) ( $rb['inserted_key'] ?? array() ) );
+				$key = (array) ( $rb['inserted_key'] ?? array() );
+				if ( empty( $key ) ) {
+					return new WP_Error( 'rollback_failed', __( 'Cannot roll back this insert: the key of the inserted row was not recorded.', 'karmcp' ) );
+				}
+				if ( false === $wpdb->delete( $table, $key ) ) {
+					return self::db_failure();
+				}
 				return true;
 			default:
 				return new WP_Error( 'rollback_failed', __( 'Unknown DB operation.', 'karmcp' ) );
@@ -460,8 +542,59 @@ class KarMCP_Change_Log {
 	}
 
 	/**
-	 * Re-create a deleted attachment from its snapshot — re-insert the post,
-	 * restore all meta, and copy the trashed files back to their original paths.
+	 * Whether a row matching every column of `$where` exists.
+	 *
+	 * @param string $table Table name.
+	 * @param array  $where Column => value.
+	 * @return bool
+	 */
+	private static function row_exists( string $table, array $where ): bool {
+		global $wpdb;
+		$clauses = array();
+		$args    = array( $table );
+		foreach ( $where as $col => $value ) {
+			if ( null === $value ) {
+				$clauses[] = '%i IS NULL';
+				$args[]    = (string) $col;
+			} else {
+				$clauses[] = '%i = %s';
+				$args[]    = (string) $col;
+				$args[]    = (string) $value;
+			}
+		}
+		if ( empty( $clauses ) ) {
+			return false;
+		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- the clause list is built from %i/%s placeholders only; every value goes through prepare().
+		$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE ' . implode( ' AND ', $clauses ), $args ) );
+		return (int) $count > 0;
+	}
+
+	/**
+	 * The error for a database write that failed during a rollback.
+	 *
+	 * @return WP_Error
+	 */
+	private static function db_failure(): WP_Error {
+		global $wpdb;
+		$detail = ( isset( $wpdb->last_error ) && '' !== (string) $wpdb->last_error ) ? (string) $wpdb->last_error : __( 'no error reported', 'karmcp' );
+		return new WP_Error(
+			'rollback_failed',
+			/* translators: %s: the database error. */
+			sprintf( __( 'The database refused part of the rollback (%s). Rows restored before it stay restored.', 'karmcp' ), $detail )
+		);
+	}
+
+	/**
+	 * Re-create a deleted attachment from its snapshot — copy the trashed files
+	 * back to their original paths, re-insert the post under its old id, and
+	 * restore all meta.
+	 *
+	 * Refused, before anything is written, when the old id is taken (content
+	 * points at an attachment by id, so a restore under a new id would leave
+	 * every reference aimed at the wrong thing) and when the snapshot cannot
+	 * bring the file back — a restored attachment with no file behind it is a
+	 * broken image reported as a successful undo.
 	 *
 	 * @param array $rb Rollback ref: { snapshot:{ post, meta, files } }.
 	 * @return true|WP_Error
@@ -472,33 +605,85 @@ class KarMCP_Change_Log {
 		if ( empty( $post ) ) {
 			return new WP_Error( 'rollback_failed', __( 'No attachment snapshot to restore.', 'karmcp' ) );
 		}
+		$files = array_values( array_filter( (array) ( $snap['files'] ?? array() ), 'is_array' ) );
+		$meta  = (array) ( $snap['meta'] ?? array() );
+		if ( empty( $files ) && ! empty( $meta['_wp_attached_file'] ) ) {
+			return new WP_Error( 'rollback_refused', __( 'This deletion was recorded without a copy of the file, so undoing it would restore an attachment with nothing behind it.', 'karmcp' ) );
+		}
+		foreach ( $files as $file ) {
+			if ( ! is_file( (string) ( $file['trashed'] ?? '' ) ) ) {
+				return new WP_Error( 'rollback_refused', __( 'The saved copy of this attachment\'s file is gone, so it cannot be restored.', 'karmcp' ) );
+			}
+		}
 		$old_id = (int) ( $post['ID'] ?? 0 );
+		$taken  = self::id_taken( $old_id );
+		if ( is_wp_error( $taken ) ) {
+			return $taken;
+		}
+
+		$copied = array();
+		foreach ( $files as $file ) {
+			$orig   = (string) ( $file['orig'] ?? '' );
+			$parent = dirname( $orig );
+			if ( ! is_dir( $parent ) && function_exists( 'wp_mkdir_p' ) ) {
+				wp_mkdir_p( $parent );
+			}
+			if ( '' === $orig || ! @copy( (string) $file['trashed'], $orig ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+				self::remove_files( $copied );
+				return new WP_Error( 'rollback_failed', __( 'Could not copy the attachment\'s file back into place.', 'karmcp' ) );
+			}
+			$copied[] = $orig;
+		}
+
 		unset( $post['ID'] );
-		if ( $old_id > 0 && ! get_post( $old_id ) ) {
+		if ( $old_id > 0 ) {
 			$post['import_id'] = $old_id;
 		}
 		$new_id = wp_insert_post( wp_slash( $post ), true );
-		if ( is_wp_error( $new_id ) ) {
-			return $new_id;
+		if ( is_wp_error( $new_id ) || ( $old_id > 0 && (int) $new_id !== $old_id ) ) {
+			if ( ! is_wp_error( $new_id ) && (int) $new_id > 0 ) {
+				wp_delete_post( (int) $new_id, true );
+			}
+			self::remove_files( $copied );
+			return is_wp_error( $new_id ) ? $new_id : new WP_Error( 'rollback_failed', __( 'WordPress did not restore the attachment under its original id.', 'karmcp' ) );
 		}
 		$new_id = (int) $new_id;
-		foreach ( (array) ( $snap['meta'] ?? array() ) as $key => $values ) {
+		foreach ( $meta as $key => $values ) {
 			foreach ( (array) $values as $value ) {
-				add_post_meta( $new_id, (string) $key, maybe_unserialize( $value ) );
-			}
-		}
-		foreach ( (array) ( $snap['files'] ?? array() ) as $file ) {
-			$orig    = (string) ( $file['orig'] ?? '' );
-			$trashed = (string) ( $file['trashed'] ?? '' );
-			if ( '' !== $orig && is_file( $trashed ) ) {
-				$parent = dirname( $orig );
-				if ( ! is_dir( $parent ) && function_exists( 'wp_mkdir_p' ) ) {
-					wp_mkdir_p( $parent );
-				}
-				@copy( $trashed, $orig ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+				add_post_meta( $new_id, (string) $key, wp_slash( maybe_unserialize( $value ) ) );
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Refuse a restore when the id it has to reuse belongs to something else.
+	 *
+	 * @param int $old_id The id the restored object must have.
+	 * @return true|WP_Error
+	 */
+	private static function id_taken( int $old_id ) {
+		if ( $old_id > 0 && get_post( $old_id ) ) {
+			return new WP_Error(
+				'rollback_refused',
+				/* translators: %d: post id. */
+				sprintf( __( 'Id #%d is already in use by another item, and restoring under a new id would leave everything that points to the old one aimed at the wrong thing.', 'karmcp' ), $old_id )
+			);
+		}
+		return true;
+	}
+
+	/**
+	 * Remove files a failed restore had already put back.
+	 *
+	 * @param string[] $paths Absolute paths.
+	 */
+	private static function remove_files( array $paths ): void {
+		foreach ( $paths as $path ) {
+			if ( is_file( $path ) ) {
+				wp_delete_file( $path );
+			}
+		}
 	}
 
 	/**
@@ -522,7 +707,9 @@ class KarMCP_Change_Log {
 		if ( ! function_exists( 'wp_delete_user' ) ) {
 			return new WP_Error( 'rollback_failed', __( 'User deletion is unavailable.', 'karmcp' ) );
 		}
-		wp_delete_user( $user_id );
+		if ( ! wp_delete_user( $user_id ) || ( function_exists( 'get_userdata' ) && get_userdata( $user_id ) ) ) {
+			return new WP_Error( 'rollback_failed', __( 'WordPress did not delete the user.', 'karmcp' ) );
+		}
 		return true;
 	}
 
@@ -576,43 +763,126 @@ class KarMCP_Change_Log {
 		if ( empty( $values ) ) {
 			return new WP_Error( 'rollback_failed', __( 'No option values to restore.', 'karmcp' ) );
 		}
+		$failed = array();
 		foreach ( $values as $name => $value ) {
 			$name = (string) $name;
 			if ( '__ABSENT__' === $value ) {
 				delete_option( $name );
+				$ok = null === get_option( $name, null );
 			} else {
 				update_option( $name, $value );
+				$ok = self::same_value( get_option( $name, null ), $value );
+			}
+			if ( ! $ok ) {
+				$failed[] = $name;
 			}
 		}
-		return true;
+		return self::unrestored( $failed );
 	}
 
 	/**
 	 * Restore post/term meta from a before-image.
 	 *
-	 * `before` maps meta_key => prior value (as returned by get_*_meta(single);
-	 * an empty string/array means the key was unset, so it is deleted on undo).
+	 * Entries marked `exact` (1.42.0 onwards) hold each prior value as it was
+	 * and the marker '__ABSENT__' for a key that did not exist, so an empty
+	 * prior value is written back instead of deleted. Older entries used an
+	 * empty value to mean "unset", and are read that way still.
 	 *
-	 * @param array $rb Rollback ref: { object:'post'|'term', id:int, before:array }.
+	 * Rolling back page settings also drops the page's generated CSS: the
+	 * settings are what the stylesheet was built from, and a restore that left
+	 * it in place would read back right and render wrong.
+	 *
+	 * @param array $rb Rollback ref: { object:'post'|'term', id:int, before:array, exact?:bool }.
 	 * @return true|WP_Error
 	 */
 	private static function rollback_meta( array $rb ) {
 		$object = 'term' === ( $rb['object'] ?? '' ) ? 'term' : 'post';
 		$id     = (int) ( $rb['id'] ?? 0 );
 		$before = ( isset( $rb['before'] ) && is_array( $rb['before'] ) ) ? $rb['before'] : array();
+		$exact  = ! empty( $rb['exact'] );
 		if ( $id <= 0 ) {
 			return new WP_Error( 'rollback_failed', __( 'Missing object id.', 'karmcp' ) );
 		}
+		$failed = array();
 		foreach ( $before as $key => $value ) {
-			$key   = (string) $key;
-			$empty = '' === $value || array() === $value || null === $value;
+			$key    = (string) $key;
+			$delete = $exact ? ( '__ABSENT__' === $value ) : ( '' === $value || array() === $value || null === $value );
 			if ( 'term' === $object ) {
-				$empty ? delete_term_meta( $id, $key ) : update_term_meta( $id, $key, $value );
+				$delete ? delete_term_meta( $id, $key ) : update_term_meta( $id, $key, wp_slash( $value ) );
+				$now = get_term_meta( $id, $key, true );
 			} else {
-				$empty ? delete_post_meta( $id, $key ) : update_post_meta( $id, $key, $value );
+				$delete ? delete_post_meta( $id, $key ) : update_post_meta( $id, $key, wp_slash( $value ) );
+				$now = get_post_meta( $id, $key, true );
+			}
+			$ok = $delete ? ( '' === $now || array() === $now ) : self::same_value( $now, $value );
+			if ( ! $ok ) {
+				$failed[] = $key;
 			}
 		}
-		return true;
+		if ( 'post' === $object && array_key_exists( '_elementor_page_settings', $before ) ) {
+			self::drop_generated_css( $id );
+		}
+		return self::unrestored( $failed );
+	}
+
+	/**
+	 * Throw away a post's generated Elementor CSS so it rebuilds from the
+	 * restored data.
+	 *
+	 * @param int $post_id Post id.
+	 */
+	private static function drop_generated_css( int $post_id ): void {
+		delete_post_meta( $post_id, '_elementor_css' );
+		if ( class_exists( 'KarMCP_Data' ) ) {
+			delete_post_meta( $post_id, KarMCP_Data::ELEMENT_CACHE_META );
+		}
+		if ( function_exists( 'wp_get_upload_dir' ) ) {
+			$upload = wp_get_upload_dir();
+			$css    = rtrim( (string) ( $upload['basedir'] ?? '' ), '/\\' ) . '/elementor/css/post-' . $post_id . '.css';
+			if ( is_file( $css ) ) {
+				wp_delete_file( $css );
+			}
+		}
+	}
+
+	/**
+	 * Whether a value read back matches the one written.
+	 *
+	 * The database hands scalars back as strings, so 5 and "5" are the same
+	 * value here; anything structured has to match exactly.
+	 *
+	 * @param mixed $actual   Value read back.
+	 * @param mixed $expected Value written.
+	 * @return bool
+	 */
+	public static function same_value( $actual, $expected ): bool {
+		if ( is_bool( $expected ) ) {
+			$expected = $expected ? '1' : '';
+		}
+		if ( is_bool( $actual ) ) {
+			$actual = $actual ? '1' : '';
+		}
+		if ( ( is_scalar( $actual ) || null === $actual ) && ( is_scalar( $expected ) || null === $expected ) ) {
+			return (string) $actual === (string) $expected;
+		}
+		return maybe_serialize( $actual ) === maybe_serialize( $expected );
+	}
+
+	/**
+	 * Turn a list of keys that did not take into the rollback's result.
+	 *
+	 * @param string[] $failed Keys whose restored value did not read back.
+	 * @return true|WP_Error
+	 */
+	private static function unrestored( array $failed ) {
+		if ( empty( $failed ) ) {
+			return true;
+		}
+		return new WP_Error(
+			'rollback_failed',
+			/* translators: %s: comma-separated list of option or meta keys. */
+			sprintf( __( 'These values did not read back as restored: %s. The rest were restored.', 'karmcp' ), implode( ', ', $failed ) )
+		);
 	}
 
 	/**
@@ -630,26 +900,49 @@ class KarMCP_Change_Log {
 		$fields = ( isset( $before['fields'] ) && is_array( $before['fields'] ) ) ? $before['fields'] : array();
 		if ( ! empty( $fields ) ) {
 			$fields['ID'] = $post_id;
-			wp_update_post( wp_slash( $fields ) );
+			$res          = wp_update_post( wp_slash( $fields ), true );
+			if ( is_wp_error( $res ) ) {
+				return $res;
+			}
+			if ( ! $res ) {
+				return new WP_Error( 'rollback_failed', __( 'WordPress did not restore the post fields.', 'karmcp' ) );
+			}
 		}
+		$failed = array();
 		foreach ( (array) ( $before['meta'] ?? array() ) as $key => $value ) {
 			$key = (string) $key;
 			if ( '__DELETE__' === $value ) {
 				delete_post_meta( $post_id, $key );
+				$now = get_post_meta( $post_id, $key, true );
+				$ok  = '' === $now || array() === $now;
 			} else {
-				update_post_meta( $post_id, $key, $value );
+				update_post_meta( $post_id, $key, wp_slash( $value ) );
+				$ok = self::same_value( get_post_meta( $post_id, $key, true ), $value );
+			}
+			if ( ! $ok ) {
+				$failed[] = $key;
 			}
 		}
 		foreach ( (array) ( $before['terms'] ?? array() ) as $tax => $ids ) {
-			wp_set_object_terms( $post_id, array_map( 'intval', (array) $ids ), (string) $tax, false );
+			$res = wp_set_object_terms( $post_id, array_map( 'intval', (array) $ids ), (string) $tax, false );
+			if ( is_wp_error( $res ) ) {
+				$failed[] = (string) $tax;
+			}
 		}
-		return true;
+		return self::unrestored( $failed );
 	}
 
 	/**
 	 * Undo a post creation by deleting the created post.
 	 *
-	 * @param array $rb Rollback ref: { post_id }.
+	 * An attachment goes through wp_delete_attachment(), which removes its
+	 * files as well, and the files recorded at creation are then checked: any
+	 * still on disk inside the uploads folder is removed here, and any that
+	 * cannot be is reported. WordPress compares paths as strings before
+	 * deleting a generated size, and on Windows a mix of separators is enough
+	 * for it to leave the sizes behind while reporting success.
+	 *
+	 * @param array $rb Rollback ref: { post_id, files? }.
 	 * @return true|WP_Error
 	 */
 	private static function rollback_post_create( array $rb ) {
@@ -657,11 +950,65 @@ class KarMCP_Change_Log {
 		if ( $post_id <= 0 ) {
 			return new WP_Error( 'rollback_failed', __( 'Missing post id.', 'karmcp' ) );
 		}
-		if ( ! get_post( $post_id ) ) {
+		$post = get_post( $post_id );
+		if ( ! $post ) {
 			return true; // Already gone.
 		}
-		wp_delete_post( $post_id, true );
+		if ( 'attachment' === ( $post->post_type ?? '' ) && function_exists( 'wp_delete_attachment' ) ) {
+			wp_delete_attachment( $post_id, true );
+		} else {
+			wp_delete_post( $post_id, true );
+		}
+		if ( get_post( $post_id ) ) {
+			return new WP_Error(
+				'rollback_failed',
+				/* translators: %d: post id. */
+				sprintf( __( 'WordPress did not delete #%d.', 'karmcp' ), $post_id )
+			);
+		}
+
+		$left = array();
+		foreach ( (array) ( $rb['files'] ?? array() ) as $file ) {
+			$file = (string) $file;
+			if ( '' === $file || ! is_file( $file ) ) {
+				continue;
+			}
+			if ( self::inside_uploads( $file ) ) {
+				wp_delete_file( $file );
+			}
+			if ( is_file( $file ) ) {
+				$left[] = basename( $file );
+			}
+		}
+		if ( $left ) {
+			return new WP_Error(
+				'rollback_incomplete',
+				/* translators: %s: comma-separated file names. */
+				sprintf( __( 'The attachment was deleted but these files are still on disk: %s.', 'karmcp' ), implode( ', ', $left ) )
+			);
+		}
 		return true;
+	}
+
+	/**
+	 * Whether a path lies inside the uploads folder, compared on normalised
+	 * real paths so Windows separators and symlinked roots agree.
+	 *
+	 * @param string $path Absolute path.
+	 * @return bool
+	 */
+	private static function inside_uploads( string $path ): bool {
+		if ( ! function_exists( 'wp_get_upload_dir' ) || ! function_exists( 'wp_normalize_path' ) ) {
+			return false;
+		}
+		$upload = wp_get_upload_dir();
+		$base   = realpath( (string) ( $upload['basedir'] ?? '' ) );
+		$real   = realpath( $path );
+		if ( false === $base || false === $real ) {
+			return false;
+		}
+		$base = rtrim( wp_normalize_path( $base ), '/' ) . '/';
+		return 0 === strpos( wp_normalize_path( $real ), $base );
 	}
 
 	/**
@@ -677,7 +1024,9 @@ class KarMCP_Change_Log {
 			if ( $post_id <= 0 ) {
 				return new WP_Error( 'rollback_failed', __( 'Missing post id.', 'karmcp' ) );
 			}
-			wp_untrash_post( $post_id );
+			if ( ! wp_untrash_post( $post_id ) ) {
+				return new WP_Error( 'rollback_failed', __( 'WordPress did not restore the post from the trash.', 'karmcp' ) );
+			}
 			return true;
 		}
 		$snap = ( isset( $rb['snapshot'] ) && is_array( $rb['snapshot'] ) ) ? $rb['snapshot'] : array();
@@ -686,18 +1035,26 @@ class KarMCP_Change_Log {
 			return new WP_Error( 'rollback_failed', __( 'No snapshot to restore.', 'karmcp' ) );
 		}
 		$old_id = (int) ( $post['ID'] ?? 0 );
+		$taken  = self::id_taken( $old_id );
+		if ( is_wp_error( $taken ) ) {
+			return $taken;
+		}
 		unset( $post['ID'] );
-		if ( $old_id > 0 && ! get_post( $old_id ) ) {
-			$post['import_id'] = $old_id; // Reuse the original id when it is free.
+		if ( $old_id > 0 ) {
+			$post['import_id'] = $old_id;
 		}
 		$new_id = wp_insert_post( wp_slash( $post ), true );
 		if ( is_wp_error( $new_id ) ) {
 			return $new_id;
 		}
+		if ( $old_id > 0 && (int) $new_id !== $old_id ) {
+			wp_delete_post( (int) $new_id, true );
+			return new WP_Error( 'rollback_failed', __( 'WordPress did not restore the post under its original id.', 'karmcp' ) );
+		}
 		$new_id = (int) $new_id;
 		foreach ( (array) ( $snap['meta'] ?? array() ) as $key => $values ) {
 			foreach ( (array) $values as $value ) {
-				add_post_meta( $new_id, (string) $key, maybe_unserialize( $value ) );
+				add_post_meta( $new_id, (string) $key, wp_slash( maybe_unserialize( $value ) ) );
 			}
 		}
 		foreach ( (array) ( $snap['terms'] ?? array() ) as $tax => $ids ) {

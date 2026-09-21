@@ -18,9 +18,9 @@ La rama local `main`, que seguía a `upstream/main`, se borró a propósito: era
 
 | | |
 |---|---|
-| Baseline tag | `baseline-3.16.1` |
-| Upstream commit | `51eb780` |
-| Reviewed up to | 3.16.1 (fetched and read, 2026-09-17) — **in sync on everything useful** |
+| Baseline tag | `baseline-3.17.0` |
+| Upstream commit | `3c6b78d` |
+| Reviewed up to | 3.17.0 (fetched and read, 2026-09-21) — **in sync on everything useful** |
 
 `baseline-<version>` marks the last upstream commit that has been **reviewed** — not merged. Everything after it is unread.
 
@@ -112,6 +112,7 @@ See [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) for the g
 | 3.15.2 | 2026-09-15 | Nothing. | Changelog formatting only. Our equivalent guard (readme.txt headings) shipped in 1.39.1. |
 | 3.16.0 | 2026-09-15 | **Install from an uploaded ZIP (KarMCP 1.41.0)**, with the same guard set plus a private temp copy against swaps; KarMCP, Elementor and Elementor Pro stay unreplaceable. | The Hello Elementor 3.x Themer fix was **already in this tree** (`class-themer-hello-adapter.php`). GSAP, FunnelKit reads and paginated change history are Pro. Structured ACF / WooCommerce imports and wider ACF coverage were judged not worth it for now — the WooCommerce import by SKU is the one to revisit if the need appears. |
 | 3.16.1 | 2026-09-15 | **Plain-permalink base URL (KarMCP 1.41.0)**, also covering PATHINFO permalinks, which upstream's fix does not mention. | Nothing else in the release. |
+| 3.17.0 | 2026-09-21 | **The History / rollback hardening (KarMCP 1.42.0)**, reimplemented against our ledger: create-page (and build-page, and build-site, which recorded nothing) record one creation and return its `change_id`; page settings and custom CSS are recorded; creation guards; exact meta restore with an absent marker; every undo verifies its write; no restore under an occupied id; outer suppression preserved. Found here too, not in upstream's notes: `list-changes` rejected ten of its own thirteen domains, and `build-page` swallowed a page-settings failure. | Ten page-builder integrations, the Page Builders screen, Gutenberg block packs, Otter, Oxygen and Widget Builder data controls — not our stack. **Open, small:** their reserved-control-name check for the Widget Builder (a control named like an Elementor setting can hide the widget via entrance animation) — worth checking against `KarMCP_Widget_Spec`. |
 
 ### 3.12.1 — notes
 

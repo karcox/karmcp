@@ -27,6 +27,15 @@ class KarMCP_Change_Recorder {
 	const BLOB_THRESHOLD = 4096;
 
 	/**
+	 * Marks a value that did not exist before the write, so undo deletes it.
+	 *
+	 * An empty string is a value a meta key can really hold, so it cannot double
+	 * as "absent" — that is how an undo used to delete a meta row whose prior
+	 * value happened to be empty.
+	 */
+	const ABSENT = '__ABSENT__';
+
+	/**
 	 * Record an Elementor page edit.
 	 *
 	 * @param int    $post_id     Page id.
@@ -121,21 +130,39 @@ class KarMCP_Change_Recorder {
 	/**
 	 * Record a post creation (undo = delete the created post).
 	 *
+	 * Call it once the creation is complete — after the initial content, meta
+	 * and attachment processing — because the entry is stamped with a hash of
+	 * the post as it stands now. Undo compares against that stamp and refuses
+	 * when the post has been edited since: deleting a page someone went on to
+	 * build would take their work with it. For an attachment the stamp covers
+	 * the file's bytes and metadata, and the files WordPress manages for it are
+	 * listed so undo can check they are really gone.
+	 *
 	 * @param int    $post_id Post id.
 	 * @param string $summary Human summary.
 	 * @param string $target  Human target label.
+	 * @param string $action  Ledger action (default 'create-post').
+	 * @param string $domain  Ledger domain (default 'content').
 	 * @return string
 	 */
-	public static function record_post_create( int $post_id, string $summary, string $target = '' ): string {
+	public static function record_post_create( int $post_id, string $summary, string $target = '', string $action = 'create-post', string $domain = 'content' ): string {
 		if ( KarMCP_Change_Log::$suppress ) {
 			return '';
 		}
+		$rb = array(
+			'type'       => 'post-create',
+			'post_id'    => $post_id,
+			'after_hash' => self::hash_created( $post_id ),
+		);
+		if ( 'attachment' === self::post_type_of( $post_id ) ) {
+			$rb['files'] = self::attachment_paths( $post_id );
+		}
 		return KarMCP_Change_Log::record( array(
-			'domain'   => 'content',
-			'action'   => 'create-post',
+			'domain'   => $domain,
+			'action'   => $action,
 			'target'   => $target,
 			'summary'  => $summary,
-			'rollback' => array( 'type' => 'post-create', 'post_id' => $post_id ),
+			'rollback' => $rb,
 		) );
 	}
 
@@ -221,8 +248,11 @@ class KarMCP_Change_Recorder {
 	}
 
 	/**
-	 * Record a post/term meta write (globals, ACF). `$before_map` maps each meta
-	 * key to its prior value ('' / array() means it was unset → deleted on undo).
+	 * Record a post/term meta write (globals, page settings). `$before_map` maps
+	 * each meta key to its prior value, or to self::ABSENT when the key did not
+	 * exist — read it with meta_before(), which tells the two apart. The entry is
+	 * marked `exact`, so undo writes each value back as it was, empty ones
+	 * included, and deletes only the keys marked absent.
 	 *
 	 * @param string $object     'post' | 'term'.
 	 * @param int    $id         Object id.
@@ -238,7 +268,7 @@ class KarMCP_Change_Recorder {
 			return '';
 		}
 		$keys              = array_keys( $before_map );
-		$rb                = self::attach_before( array( 'type' => 'meta-before-image', 'object' => $object, 'id' => $id, 'meta_keys' => $keys ), array( 'before' => $before_map ) );
+		$rb                = self::attach_before( array( 'type' => 'meta-before-image', 'object' => $object, 'id' => $id, 'meta_keys' => $keys, 'exact' => true ), array( 'before' => $before_map ) );
 		$rb['after_hash']  = self::hash_meta( $object, $id, $keys );
 		return KarMCP_Change_Log::record( array(
 			'domain'   => $domain,
@@ -247,6 +277,21 @@ class KarMCP_Change_Recorder {
 			'summary'  => $summary,
 			'rollback' => $rb,
 		) );
+	}
+
+	/**
+	 * A meta key's current value, or self::ABSENT when the key does not exist.
+	 *
+	 * @param string $object 'post' | 'term'.
+	 * @param int    $id     Object id.
+	 * @param string $key    Meta key.
+	 * @return mixed
+	 */
+	public static function meta_before( string $object, int $id, string $key ) {
+		if ( function_exists( 'metadata_exists' ) && ! metadata_exists( $object, $id, $key ) ) {
+			return self::ABSENT;
+		}
+		return 'term' === $object ? get_term_meta( $id, $key, true ) : get_post_meta( $id, $key, true );
 	}
 
 	/**
@@ -384,13 +429,41 @@ class KarMCP_Change_Recorder {
 	 * @return array
 	 */
 	private static function trash_attachment_files( int $att_id ): array {
-		$out = array();
-		if ( ! function_exists( 'get_attached_file' ) ) {
+		$out   = array();
+		$paths = self::attachment_paths( $att_id );
+		if ( empty( $paths ) ) {
 			return $out;
+		}
+		$up    = function_exists( 'wp_get_upload_dir' ) ? wp_get_upload_dir() : array( 'basedir' => sys_get_temp_dir() );
+		$trash = rtrim( (string) ( $up['basedir'] ?? sys_get_temp_dir() ), '/\\' ) . '/karmcp-originals/trash/' . $att_id;
+		if ( ! is_dir( $trash ) && function_exists( 'wp_mkdir_p' ) ) {
+			wp_mkdir_p( $trash );
+		}
+		foreach ( $paths as $orig ) {
+			if ( is_file( $orig ) && is_dir( $trash ) ) {
+				$dest = $trash . '/' . basename( $orig );
+				if ( @copy( $orig, $dest ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+					$out[] = array( 'orig' => $orig, 'trashed' => $dest );
+				}
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * The files WordPress manages for an attachment — the main file, every
+	 * generated size, and the pre-scaling original — as absolute paths.
+	 *
+	 * @param int $att_id Attachment id.
+	 * @return string[]
+	 */
+	public static function attachment_paths( int $att_id ): array {
+		if ( ! function_exists( 'get_attached_file' ) ) {
+			return array();
 		}
 		$main = (string) get_attached_file( $att_id );
 		if ( '' === $main ) {
-			return $out;
+			return array();
 		}
 		$dir   = dirname( $main );
 		$paths = array( $main );
@@ -402,20 +475,10 @@ class KarMCP_Change_Recorder {
 				}
 			}
 		}
-		$up    = function_exists( 'wp_get_upload_dir' ) ? wp_get_upload_dir() : array( 'basedir' => sys_get_temp_dir() );
-		$trash = rtrim( (string) ( $up['basedir'] ?? sys_get_temp_dir() ), '/\\' ) . '/karmcp-originals/trash/' . $att_id;
-		if ( ! is_dir( $trash ) && function_exists( 'wp_mkdir_p' ) ) {
-			wp_mkdir_p( $trash );
+		if ( is_array( $amd ) && ! empty( $amd['original_image'] ) ) {
+			$paths[] = $dir . '/' . $amd['original_image'];
 		}
-		foreach ( array_unique( $paths ) as $orig ) {
-			if ( is_file( $orig ) && is_dir( $trash ) ) {
-				$dest = $trash . '/' . basename( $orig );
-				if ( @copy( $orig, $dest ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-					$out[] = array( 'orig' => $orig, 'trashed' => $dest );
-				}
-			}
-		}
-		return $out;
+		return array_values( array_unique( $paths ) );
 	}
 
 	/**
@@ -505,6 +568,49 @@ class KarMCP_Change_Recorder {
 			(int) ( $p->post_parent ?? 0 ),
 			(int) ( $p->menu_order ?? 0 ),
 		) ) );
+	}
+
+	/**
+	 * Hash of a created post as it stands: its core fields, its Elementor data
+	 * and page settings, and for an attachment its alt text, metadata and the
+	 * bytes of its file. The creation guard compares against this.
+	 *
+	 * Dates are left out on purpose: WordPress keeps moving the date of an
+	 * undated draft, and a guard that counted that as an edit would refuse every
+	 * undo of a draft.
+	 *
+	 * @param int $post_id Post id.
+	 * @return string '' when the post does not exist.
+	 */
+	public static function hash_created( int $post_id ): string {
+		$core = self::hash_post( $post_id );
+		if ( '' === $core ) {
+			return '';
+		}
+		$parts = array(
+			$core,
+			self::hash_elementor( $post_id ),
+			maybe_serialize( get_post_meta( $post_id, '_elementor_page_settings', true ) ),
+		);
+		if ( 'attachment' === self::post_type_of( $post_id ) ) {
+			$file    = function_exists( 'get_attached_file' ) ? (string) get_attached_file( $post_id ) : '';
+			$parts[] = maybe_serialize( get_post_meta( $post_id, '_wp_attachment_image_alt', true ) );
+			$parts[] = maybe_serialize( get_post_meta( $post_id, '_wp_attachment_metadata', true ) );
+			$parts[] = $file;
+			$parts[] = self::hash_file( $file );
+		}
+		return sha1( implode( '|', $parts ) );
+	}
+
+	/**
+	 * The post type of a post, '' when it does not exist.
+	 *
+	 * @param int $post_id Post id.
+	 * @return string
+	 */
+	private static function post_type_of( int $post_id ): string {
+		$p = get_post( $post_id );
+		return ( $p && isset( $p->post_type ) ) ? (string) $p->post_type : '';
 	}
 
 	/**

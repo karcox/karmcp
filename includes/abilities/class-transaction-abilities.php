@@ -62,7 +62,7 @@ class KarMCP_Transaction_Abilities {
 			'karmcp/list-changes',
 			array(
 				'label'               => __( 'List Changes', 'karmcp' ),
-				'description'         => __( 'Lists recent AI-made changes (Elementor edits, filesystem writes, database writes) recorded in the change ledger, newest first, each with a summary, whether it is reversible, and whether it has already been rolled back. Filter by domain (elementor/filesystem/database), rolled_back, or reversible. Use get-change for full detail and rollback-change to undo one. Read-only.', 'karmcp' ),
+				'description'         => __( 'Lists recent AI-made changes recorded in the change ledger — Elementor edits and page settings, created and edited posts, uploaded and deleted media, global colours and fonts, site settings, users, ACF fields, redirects, file and database writes — newest first, each with a summary, whether it is reversible, and whether it has already been rolled back. Filter by domain, rolled_back, or reversible. Use get-change for full detail and rollback-change to undo one. Read-only.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_list' ),
 				'permission_callback' => array( $this, 'check_manage' ),
@@ -77,7 +77,7 @@ class KarMCP_Transaction_Abilities {
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
-						'domain'      => array( 'type' => 'string', 'enum' => array( 'elementor', 'filesystem', 'database' ), 'description' => __( 'Filter by domain.', 'karmcp' ) ),
+						'domain'      => array( 'type' => 'string', 'enum' => array( 'elementor', 'content', 'gutenberg', 'media', 'globals', 'settings', 'users', 'acf', 'seo', 'redirect', 'filesystem', 'database', 'wpcli' ), 'description' => __( 'Filter by domain.', 'karmcp' ) ),
 						'rolled_back' => array( 'type' => 'boolean', 'description' => __( 'Only entries with this rolled-back state.', 'karmcp' ) ),
 						'reversible'  => array( 'type' => 'boolean', 'description' => __( 'Only entries that are (or are not) reversible.', 'karmcp' ) ),
 						'limit'       => array( 'type' => 'integer', 'description' => __( 'Max entries (default 50).', 'karmcp' ) ),
@@ -116,7 +116,7 @@ class KarMCP_Transaction_Abilities {
 			'karmcp/rollback-change',
 			array(
 				'label'               => __( 'Roll Back Change', 'karmcp' ),
-				'description'         => __( 'Undoes one recorded change by id, restores a page\'s prior Elementor data, restores/removes a file from its backup, or inverses a database write from its before-image. Refuses with a "conflict" error if the target changed since the change was recorded (pass force:true to override and overwrite the newer state). Marks the entry rolled back (no double-rollback) and records a compensating entry. Only reverts changes KarMCP itself recorded.', 'karmcp' ),
+				'description'         => __( 'Undoes one recorded change by id: restores prior Elementor data, page settings, post fields, options or meta; deletes a post, page or attachment that was created (with its files); restores a deleted one under its original id; restores or removes a file from its backup; or inverses a database write from its before-image. Options, meta and post meta are read back after the restore, and a value that did not take is reported as a failure instead of being marked undone; a deletion is checked to have happened, and a restore to have landed under its original id. Elementor data, ACF fields, user profile fields, files and database rows are trusted once the write itself reports no error. Refuses with a "conflict" error if the target changed since the change was recorded (pass force:true to override and overwrite the newer state) — for a creation that means the post was edited after it was made, and undoing it would delete that work; a creation recorded before 1.42.0 has no such check and needs force too. Refuses even with force to restore under an id another item now uses, or an attachment whose saved file copy is gone. Marks the entry rolled back (no double-rollback) and records a compensating entry. Only reverts changes KarMCP itself recorded.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_rollback' ),
 				'permission_callback' => array( $this, 'check_manage' ),

@@ -574,6 +574,10 @@ class KarMCP_Content_Abilities {
 						'permalink' => array( 'type' => 'string' ),
 						'edit_link' => array( 'type' => 'string' ),
 						'warnings'  => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ),
+						'change_id' => array(
+							'type'        => 'string',
+							'description' => 'Id of this creation in the change history — pass it to rollback-change to undo it. Absent only when the creation ran inside another operation that records it as a whole.',
+						),
 					),
 				),
 				'meta'                => array(
@@ -659,9 +663,10 @@ class KarMCP_Content_Abilities {
 		$warnings = array();
 		$this->apply_write_extras( $post_id, $input, $warnings, false );
 
+		$change_id = '';
 		if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
 			$karmcp_title = sanitize_text_field( (string) ( $input['title'] ?? '' ) );
-			KarMCP_Change_Recorder::record_post_create(
+			$change_id    = KarMCP_Change_Recorder::record_post_create(
 				$post_id,
 				sprintf( 'Created %s #%d', (string) ( $postarr['post_type'] ?? 'post' ), $post_id ),
 				trim( $karmcp_title . ' (#' . $post_id . ')' )
@@ -676,6 +681,9 @@ class KarMCP_Content_Abilities {
 		);
 		if ( $warnings ) {
 			$result['warnings'] = $warnings;
+		}
+		if ( '' !== $change_id ) {
+			$result['change_id'] = $change_id;
 		}
 		return $result;
 	}

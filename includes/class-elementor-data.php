@@ -554,6 +554,9 @@ class KarMCP_Data {
 			return $document;
 		}
 
+		$before   = class_exists( 'KarMCP_Change_Recorder' )
+			? KarMCP_Change_Recorder::meta_before( 'post', $post_id, '_elementor_page_settings' )
+			: null;
 		$existing = get_post_meta( $post_id, '_elementor_page_settings', true );
 		if ( ! is_array( $existing ) ) {
 			$existing = array();
@@ -604,7 +607,44 @@ class KarMCP_Data {
 			}
 		}
 
+		$this->record_page_settings( $post_id, $before );
+
 		return true;
+	}
+
+	/**
+	 * Record a page-settings save in the change history.
+	 *
+	 * Page settings — custom CSS included — had no history entry at all, so the
+	 * one write an agent makes to restyle a whole page was the one it could not
+	 * undo. A save that left the settings exactly as they were records nothing:
+	 * an entry for it would undo to the same state and crowd out the ones that
+	 * matter.
+	 *
+	 * @since 1.42.0
+	 *
+	 * @param int   $post_id The post ID.
+	 * @param mixed $before  The prior value from meta_before(), or null when
+	 *                       history is unavailable.
+	 */
+	private function record_page_settings( int $post_id, $before ): void {
+		if ( null === $before || ! class_exists( 'KarMCP_Change_Log' ) || KarMCP_Change_Log::$suppress ) {
+			return;
+		}
+		$after = KarMCP_Change_Recorder::meta_before( 'post', $post_id, '_elementor_page_settings' );
+		if ( maybe_serialize( $before ) === maybe_serialize( $after ) ) {
+			return;
+		}
+		$title = function_exists( 'get_the_title' ) ? (string) get_the_title( $post_id ) : '';
+		KarMCP_Change_Recorder::record_meta(
+			'post',
+			$post_id,
+			array( '_elementor_page_settings' => $before ),
+			sprintf( 'Updated page settings of #%d', $post_id ),
+			trim( $title . ' (#' . $post_id . ')' ),
+			'elementor',
+			'update-page-settings'
+		);
 	}
 
 	/**

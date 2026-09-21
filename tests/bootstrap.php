@@ -111,6 +111,9 @@ if ( ! class_exists( 'WP_Error' ) ) {
 }
 
 if ( ! class_exists( 'WP_Post' ) ) {
+	// wp_insert_post() below copies every postarr key onto the object, and
+	// postarr carries keys WP_Post does not declare (meta_input, import_id).
+	#[\AllowDynamicProperties]
 	class WP_Post {
 		public $ID           = 0;
 		public $post_title   = '';
@@ -519,9 +522,12 @@ if ( ! function_exists( 'get_post_type' ) ) {
 }
 
 if ( ! function_exists( 'delete_post_meta' ) ) {
-	// Records deletions in $GLOBALS['karmcp_test']['deleted_meta'] as [post_id, key].
+	// Records deletions in $GLOBALS['karmcp_test']['deleted_meta'] as [post_id, key],
+	// and removes the key from the ['post_meta'] fixture so a read afterwards sees
+	// it gone — a rollback that verifies its delete has to be able to.
 	function delete_post_meta( $post_id, $key, $value = '' ) {
 		$GLOBALS['karmcp_test']['deleted_meta'][] = array( (int) $post_id, (string) $key );
+		unset( $GLOBALS['karmcp_test']['post_meta'][ (int) $post_id ][ (string) $key ] );
 		return true;
 	}
 }

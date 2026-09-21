@@ -253,8 +253,21 @@ class KarMCP_Site_Builder_Abilities {
 				continue;
 			}
 
+			$row = array( 'slug' => $page['slug'], 'post_id' => (int) $post_id, 'title' => $page['title'] );
+			if ( class_exists( 'KarMCP_Change_Recorder' ) ) {
+				$change_id = KarMCP_Change_Recorder::record_post_create(
+					(int) $post_id,
+					sprintf( 'Created page #%d', (int) $post_id ),
+					trim( $page['title'] . ' (#' . (int) $post_id . ')' ),
+					'build-site'
+				);
+				if ( '' !== $change_id ) {
+					$row['change_id'] = $change_id;
+				}
+			}
+
 			$ids[ $page['slug'] ] = (int) $post_id;
-			$created[]            = array( 'slug' => $page['slug'], 'post_id' => (int) $post_id, 'title' => $page['title'] );
+			$created[]            = $row;
 		}
 
 		// 2. The menu, pointing at the pages that now exist.

@@ -191,7 +191,10 @@ class KarMCP_Global_Abilities {
 	 */
 	private function snapshot_kit_settings( $kit ): array {
 		$kit_id = (int) $kit->get_id();
-		return array( 'id' => $kit_id, 'before' => get_post_meta( $kit_id, '_elementor_page_settings', true ) );
+		$before = class_exists( 'KarMCP_Change_Recorder' )
+			? KarMCP_Change_Recorder::meta_before( 'post', $kit_id, '_elementor_page_settings' )
+			: get_post_meta( $kit_id, '_elementor_page_settings', true );
+		return array( 'id' => $kit_id, 'before' => $before );
 	}
 
 	/**

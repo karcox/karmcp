@@ -191,6 +191,10 @@ class KarMCP_Composite_Abilities {
 							'type'        => 'string',
 							'description' => __( 'Present only when writing into an existing post: which mode ran.', 'karmcp' ),
 						),
+						'change_id'        => array(
+							'type'        => 'string',
+							'description' => __( 'Present only when a new post was created: the id of that creation in the change history — pass it to rollback-change to undo it, which deletes the post.', 'karmcp' ),
+						),
 						'warnings'         => array(
 							'type'        => 'array',
 							'description' => __( 'Non-fatal notes: nodes that were coerced from shorthand or skipped, and dimension values written with some sides blank, which Elementor renders as no rule at all. If present, some elements did not land exactly as written, fix and rebuild or patch with the layout/widget tools.', 'karmcp' ),
@@ -317,16 +321,40 @@ class KarMCP_Composite_Abilities {
 			}
 		}
 
-		// 3. Save the element data.
-		$result = $this->data->save_page_data( $post_id, $elements );
+		// 3. Save the element data, then the page settings if provided.
+		$settings_error = null;
+		$save           = function () use ( $post_id, $elements, $page_settings, &$settings_error ) {
+			$saved = $this->data->save_page_data( $post_id, $elements );
+			if ( ! is_wp_error( $saved ) && ! empty( $page_settings ) ) {
+				$settings = $this->data->save_page_settings( $post_id, $page_settings );
+				if ( is_wp_error( $settings ) ) {
+					$settings_error = $settings;
+				}
+			}
+			return $saved;
+		};
+
+		// On a new page the saves are part of the creation, recorded once below;
+		// recorded on their own, undoing them left an empty page behind. On an
+		// existing page they are edits and keep their own history entries.
+		$result = ( ! $target_id && class_exists( 'KarMCP_Change_Log' ) ) ? KarMCP_Change_Log::without_recording( $save ) : $save();
 
 		if ( is_wp_error( $result ) ) {
+			if ( ! $target_id ) {
+				wp_delete_post( $post_id, true );
+			}
 			return $result;
 		}
 
-		// 4. Save page settings if provided.
-		if ( ! empty( $page_settings ) ) {
-			$this->data->save_page_settings( $post_id, $page_settings );
+		$change_id = '';
+		if ( ! $target_id && class_exists( 'KarMCP_Change_Recorder' ) ) {
+			$change_id = KarMCP_Change_Recorder::record_post_create(
+				$post_id,
+				sprintf( 'Created %s #%d', $post_type, $post_id ),
+				trim( $title . ' (#' . $post_id . ')' ),
+				'build-page',
+				'elementor'
+			);
 		}
 
 		$edit_url    = admin_url( 'post.php?post=' . $post_id . '&action=elementor' );
@@ -341,6 +369,16 @@ class KarMCP_Composite_Abilities {
 		);
 		if ( $target_id ) {
 			$out['mode'] = $mode;
+		}
+		if ( '' !== $change_id ) {
+			$out['change_id'] = $change_id;
+		}
+		if ( $settings_error ) {
+			$this->warnings[] = sprintf(
+				/* translators: %s: error message. */
+				__( 'The elements were saved but the page settings were not: %s', 'karmcp' ),
+				$settings_error->get_error_message()
+			);
 		}
 		// Surface coercions/skips so the caller learns a node didn't land as
 		// written, instead of a silent partial success (cf. the empty-column case).

@@ -2,6 +2,32 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.42.0]
+
+The change history could report an undo that had not happened. This release is about the gap between "rolled back" and "back where it started".
+
+### Fixed
+
+- **Undoing `create-page` left an empty page behind instead of removing it.** The page's initial content was saved through the same path as any later edit, so it recorded itself as "edited Elementor page" — and that was the only entry. Its undo restored the tree as it was before the save, which on a new page is empty. The initial save is now part of the creation: recording is paused for it, and the creation is recorded once, afterwards, with the content in place. `create-page` returns that entry's `change_id`, and so do `create-post`, `upload-media` and `build-page` when it creates a post. `build-page` had the same bug and the same fix. `build-site` recorded nothing at all for the pages it created; each one now has an entry, with its `change_id` in `pages.created`. If the initial save fails, the half-made page is deleted instead of being left unrecorded.
+
+- **Undoing a creation deleted the post even if someone had built on it since.** A creation entry is now stamped with the state of the post when it was recorded — core fields, Elementor data, page settings, and for an attachment its alt text, metadata and the bytes of its file — and undo refuses with a `conflict` when that has changed. `force` still overrides. Dates are left out on purpose: WordPress keeps moving the date of an undated draft, and counting that as an edit would block every undo of a draft. Creations recorded by earlier versions carry no stamp, so undoing one now needs `force`: the history cannot tell whether the post was edited, and here "cannot tell" has to mean "ask first".
+
+- **Page settings, custom CSS included, had no history.** `update-page-settings`, page-level `add-custom-css` and `build-page`'s settings wrote `_elementor_page_settings` without recording anything, so the one write an agent makes to restyle a whole page was the one it could not undo. They are recorded now; a save that changed nothing records nothing. Undoing them also drops the page's generated CSS, which was built from the settings being undone.
+
+- **An empty prior value was deleted on undo instead of written back.** Meta entries used an empty value to mean "the key did not exist", which is also a value a key can hold. New entries mark an absent key explicitly and restore everything else exactly. Entries written by earlier versions are read the old way, so their meaning does not change under them. Restored meta is also slashed now: the metadata API unslashes what it is given, and custom CSS lost its backslash escapes on the way back.
+
+- **Undo trusted every write it made.** A delete WordPress declined, a meta value or option that did not take, a trash that would not untrash, a user that was not deleted, a database row that no longer existed — each was marked rolled back. Options, post and term meta are now read back and compared; deletions are checked to have happened; database writes that fail or update a row that is gone are reported. A restore that did not take leaves the entry undoable instead of marking it done. What is still trusted once the write reports no error is said so in the `rollback-change` description: Elementor data, ACF fields, user profile fields, files, and database rows that matched.
+
+- **Undoing an upload could leave files on disk.** Attachments are now deleted with `wp_delete_attachment()`, the files recorded at upload are checked afterwards, and any still present inside the uploads folder are removed. WordPress compares paths as strings before deleting a generated size, and a mix of separators on Windows is enough for it to skip them while reporting success. A file that cannot be removed is reported by name.
+
+- **A deleted post or attachment could come back under a different id.** When its old id was taken, it was restored under a new one — and everything that pointed at it, an Elementor image widget for example, went on pointing at whatever now owned the old id. Restores now refuse when the id is in use, even with `force`, and one that WordPress lands under another id is removed again. An attachment whose deletion was recorded without a copy of its file, or whose saved copy is gone, is refused too, rather than restored as a broken image. Files are copied back before the post is inserted, and removed again if the insert fails.
+
+- **A rollback switched recording back on for whatever called it.** It cleared the pause flag on the way out instead of restoring it, so a rollback inside an operation that was running unrecorded started recording that operation's remaining writes. It restores the caller's state now.
+
+- **`list-changes` could not filter by most of what it lists.** Its `domain` filter accepted only `elementor`, `filesystem` and `database`, while the history also records content, Gutenberg, media, globals, settings, users, ACF, SEO, redirects and WP-CLI. All thirteen are accepted now.
+
+- **`build-page` reported success when its page settings failed to save.** The error was discarded; it now comes back as a warning.
+
 ## [1.41.0]
 
 A plugin or theme that is not on wordpress.org can now be installed over MCP, and the site's own URL stops carrying an `index.php` on sites without pretty permalinks.

@@ -3,9 +3,9 @@
 # This file is distributed under the GPL-2.0-or-later licence.
 msgid ""
 msgstr ""
-"Project-Id-Version: KarMCP 1.42.0\n"
+"Project-Id-Version: KarMCP 1.42.1\n"
 "Report-Msgid-Bugs-To: https://github.com/karcox/karmcp/issues\n"
-"POT-Creation-Date: 2026-09-21 11:41:54+0000\n"
+"POT-Creation-Date: 2026-09-21 16:17:34+0000\n"
 "PO-Revision-Date: 2026-08-19 19:00+0200\n"
 "Last-Translator: karcox <https://github.com/karcox>\n"
 "Language-Team: Español <https://github.com/karcox/karmcp>\n"
@@ -1027,7 +1027,7 @@ msgstr ""
 msgid "ACF did not save the taxonomy."
 msgstr ""
 
-#: includes/class-change-log.php:741
+#: includes/class-change-log.php:809
 msgid "ACF is not available to restore these fields."
 msgstr "ACF no está disponible para restaurar estos campos."
 
@@ -2556,11 +2556,11 @@ msgstr ""
 msgid "Cannot restore this page."
 msgstr "No se puede restaurar esta página."
 
-#: includes/class-change-log.php:726
+#: includes/class-change-log.php:794
 msgid "Cannot restore this user."
 msgstr "No se puede restaurar este usuario."
 
-#: includes/class-change-log.php:533
+#: includes/class-change-log.php:554
 msgid "Cannot roll back this insert: the key of the inserted row was not recorded."
 msgstr "No se puede deshacer esta inserción: no se registró la clave de la fila insertada."
 
@@ -3218,7 +3218,7 @@ msgstr "No se ha podido hacer copia de seguridad del gestor de errores fatales e
 msgid "Could not back up the file before writing."
 msgstr "No se ha podido hacer copia de seguridad del archivo antes de escribir."
 
-#: includes/class-change-log.php:633
+#: includes/class-change-log.php:667
 msgid "Could not copy the attachment's file back into place."
 msgstr "No se pudo volver a copiar el archivo del adjunto a su sitio."
 
@@ -5873,7 +5873,7 @@ msgid "Icon"
 msgstr "Icono"
 
 #. translators: %d: post id.
-#: includes/class-change-log.php:670
+#: includes/class-change-log.php:718
 msgid "Id #%d is already in use by another item, and restoring under a new id would leave everything that points to the old one aimed at the wrong thing."
 msgstr "El id #%d ya lo usa otro elemento, y restaurar con un id nuevo dejaría todo lo que apunta al antiguo apuntando al sitio equivocado."
 
@@ -7647,12 +7647,12 @@ msgstr "Migrar el sitio a producción"
 msgid "Minimum height (px by default)."
 msgstr ""
 
-#: includes/class-change-log.php:804
+#: includes/class-change-log.php:872
 msgid "Missing object id."
 msgstr "Falta el id del objeto."
 
-#: includes/class-change-log.php:951
-#: includes/class-change-log.php:1025
+#: includes/class-change-log.php:1019
+#: includes/class-change-log.php:1093
 msgid "Missing post id."
 msgstr "Falta el id de la entrada."
 
@@ -7723,7 +7723,7 @@ msgstr ""
 msgid "Missing table."
 msgstr "Falta la tabla."
 
-#: includes/class-change-log.php:699
+#: includes/class-change-log.php:767
 msgid "Missing user id."
 msgstr "Falta el id del usuario."
 
@@ -7920,7 +7920,7 @@ msgstr ""
 msgid "No %s API key is configured. Add one on KarMCP → Connection, or use a provider you have connected."
 msgstr "No hay configurada ninguna clave de API de %s. Añade una en KarMCP → Conexión, o usa un proveedor que ya tengas conectado."
 
-#: includes/class-change-log.php:746
+#: includes/class-change-log.php:814
 msgid "No ACF values to restore."
 msgstr "No hay valores de ACF que restaurar."
 
@@ -7998,7 +7998,7 @@ msgstr "No hay configurada ninguna clave de API de Wordfence Intelligence. Consi
 msgid "No activity yet"
 msgstr "Todavía no hay actividad"
 
-#: includes/class-change-log.php:606
+#: includes/class-change-log.php:637
 msgid "No attachment snapshot to restore."
 msgstr "No hay ninguna instantánea del adjunto que restaurar."
 
@@ -8067,7 +8067,7 @@ msgstr "No existe ningún archivo espejo para esta entrada."
 msgid "No nav menu matches the given id, slug, or name."
 msgstr ""
 
-#: includes/class-change-log.php:764
+#: includes/class-change-log.php:832
 msgid "No option values to restore."
 msgstr "No hay valores de opciones que restaurar."
 
@@ -8160,7 +8160,7 @@ msgstr "No hay skills en la papelera."
 msgid "No skills yet."
 msgstr "Todavía no hay skills."
 
-#: includes/class-change-log.php:1035
+#: includes/class-change-log.php:1119
 msgid "No snapshot to restore."
 msgstr "No hay ninguna instantánea que restaurar."
 
@@ -12316,7 +12316,7 @@ msgid "The attachment is not a ZIP archive."
 msgstr ""
 
 #. translators: %s: comma-separated file names.
-#: includes/class-change-log.php:987
+#: includes/class-change-log.php:1055
 msgid "The attachment was deleted but these files are still on disk: %s."
 msgstr "Se eliminó el adjunto, pero estos archivos siguen en el disco: %s."
 
@@ -12379,8 +12379,8 @@ msgid "The bundle must be a .json file."
 msgstr "El paquete tiene que ser un archivo .json."
 
 #: includes/class-change-log.php:277
-msgid "The change was undone, but the history could not be updated to say so. Do not undo it again: check the target first."
-msgstr "El cambio se deshizo, pero no se pudo actualizar el historial para reflejarlo. No lo deshagas otra vez: comprueba antes el elemento afectado."
+msgid "The change was undone, but the history could not be updated to say so. Retrying with force is safe: the target no longer matches the recorded state because it was already restored, and every rollback leaves an already-restored target as it is, so the retry only brings the history up to date."
+msgstr "El cambio se deshizo, pero no se pudo actualizar el historial para reflejarlo. Reintentarlo con force es seguro: el elemento ya no coincide con el estado registrado porque ya se restauró, y cada reversión deja como está lo que ya está restaurado, así que el reintento solo pone al día el historial."
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
 #: includes/abilities/class-global-abilities.php:232
@@ -12483,7 +12483,7 @@ msgid "The database cleaner is not available."
 msgstr "El limpiador de la base de datos no está disponible."
 
 #. translators: %s: the database error.
-#: includes/class-change-log.php:584
+#: includes/class-change-log.php:615
 msgid "The database refused part of the rollback (%s). Rows restored before it stay restored."
 msgstr "La base de datos rechazó parte de la reversión (%s). Las filas restauradas antes se quedan restauradas."
 
@@ -13050,7 +13050,12 @@ msgstr ""
 msgid "The post duplicator is not available on this install."
 msgstr ""
 
-#: includes/class-change-log.php:898
+#. translators: %s: post status.
+#: includes/class-change-log.php:1108
+msgid "The post is no longer in the trash, but it was not restored from it: its status was changed to \"%s\" some other way. Check it by hand."
+msgstr "La entrada ya no está en la papelera, pero no se restauró desde ella: su estado se cambió a \"%s\" por otra vía. Revísala a mano."
+
+#: includes/class-change-log.php:966
 msgid "The post no longer exists."
 msgstr "La entrada ya no existe."
 
@@ -13173,7 +13178,7 @@ msgstr "No se ha podido analizar el HTML renderizado. Puede que falte la extensi
 msgid "The return address this app asked for does not match the one it registered."
 msgstr "La dirección de retorno que pide esta aplicación no coincide con la que registró."
 
-#: includes/class-change-log.php:615
+#: includes/class-change-log.php:646
 msgid "The saved copy of this attachment's file is gone, so it cannot be restored."
 msgstr "La copia guardada del archivo de este adjunto ya no existe, así que no se puede restaurar."
 
@@ -13616,7 +13621,7 @@ msgid "These props are already declared by the active extension \"%2$s\": %1$s. 
 msgstr "Estas props ya las declara la extensión activa «%2$s»: %1$s. Los nombres de prop se comparten en todo el sitio, así que renómbralas o desactiva antes la otra extensión."
 
 #. translators: %s: comma-separated list of option or meta keys.
-#: includes/class-change-log.php:884
+#: includes/class-change-log.php:952
 msgid "These values did not read back as restored: %s. The rest were restored."
 msgstr "Estos valores no se leyeron como restaurados: %s. El resto sí se restauró."
 
@@ -13697,7 +13702,7 @@ msgstr "Este tipo de control no se puede renderizar directamente."
 msgid "This creation was recorded before KarMCP could tell whether a post was edited after it was created, so undoing it could delete later work. Check the post, then roll back with force if it should go."
 msgstr "Esta creación se registró antes de que KarMCP pudiera saber si una entrada se editó después de crearla, así que deshacerla podría borrar trabajo posterior. Revisa la entrada y, si debe desaparecer, deshazla con force."
 
-#: includes/class-change-log.php:611
+#: includes/class-change-log.php:642
 msgid "This deletion was recorded without a copy of the file, so undoing it would restore an attachment with nothing behind it."
 msgstr "Esta eliminación se registró sin copia del archivo, así que deshacerla restauraría un adjunto sin nada detrás."
 
@@ -13854,7 +13859,7 @@ msgstr "Este tipo de plantilla se aplica automáticamente; no hacen falta condic
 msgid "This user has administrator-level capabilities and cannot be edited via MCP."
 msgstr ""
 
-#: includes/class-change-log.php:705
+#: includes/class-change-log.php:773
 msgid "This user now has administrator capabilities and will not be deleted by a rollback."
 msgstr "Este usuario ahora tiene capacidades de administrador y una reversión no lo eliminará."
 
@@ -14138,7 +14143,7 @@ msgstr ""
 msgid "Unknown ACF field type \"%s\"."
 msgstr ""
 
-#: includes/class-change-log.php:540
+#: includes/class-change-log.php:561
 msgid "Unknown DB operation."
 msgstr "Operación de base de datos desconocida."
 
@@ -14765,7 +14770,7 @@ msgstr ""
 msgid "User ID. Default: current user."
 msgstr ""
 
-#: includes/class-change-log.php:708
+#: includes/class-change-log.php:776
 msgid "User deletion is unavailable."
 msgstr "La eliminación de usuarios no está disponible."
 
@@ -15236,27 +15241,27 @@ msgid "WordPress did not complete the install. The messages carry what it report
 msgstr ""
 
 #. translators: %d: post id.
-#: includes/class-change-log.php:966
+#: includes/class-change-log.php:1034
 msgid "WordPress did not delete #%d."
 msgstr "WordPress no eliminó #%d."
 
-#: includes/class-change-log.php:711
+#: includes/class-change-log.php:779
 msgid "WordPress did not delete the user."
 msgstr "WordPress no eliminó el usuario."
 
-#: includes/class-change-log.php:648
+#: includes/class-change-log.php:682
 msgid "WordPress did not restore the attachment under its original id."
 msgstr "WordPress no restauró el adjunto con su id original."
 
-#: includes/class-change-log.php:908
+#: includes/class-change-log.php:976
 msgid "WordPress did not restore the post fields."
 msgstr "WordPress no restauró los campos de la entrada."
 
-#: includes/class-change-log.php:1028
+#: includes/class-change-log.php:1112
 msgid "WordPress did not restore the post from the trash."
 msgstr "WordPress no sacó la entrada de la papelera."
 
-#: includes/class-change-log.php:1052
+#: includes/class-change-log.php:1139
 msgid "WordPress did not restore the post under its original id."
 msgstr "WordPress no restauró la entrada con su id original."
 
@@ -15912,7 +15917,7 @@ msgstr ""
 msgid "name cannot be empty."
 msgstr ""
 
-#: includes/class-change-log.php:580
+#: includes/class-change-log.php:611
 msgid "no error reported"
 msgstr "sin error indicado"
 

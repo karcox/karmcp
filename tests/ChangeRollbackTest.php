@@ -48,6 +48,9 @@ if ( ! function_exists( 'wp_normalize_path' ) ) {
 		return $path;
 	}
 }
+if ( ! defined( 'ARRAY_A' ) ) {
+	define( 'ARRAY_A', 'ARRAY_A' );
+}
 if ( ! function_exists( 'maybe_serialize' ) ) {
 	function maybe_serialize( $data ) {
 		return ( is_array( $data ) || is_object( $data ) ) ? serialize( $data ) : $data; // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
@@ -578,6 +581,212 @@ class ChangeRollbackTest extends TestCase {
 		$GLOBALS['wpdb'] = $saved;
 
 		$this->assertIsArray( $result );
+	}
+
+	// ---------------------------------------------------------------------
+	// Retrying an undo: nothing is restored twice
+	// ---------------------------------------------------------------------
+
+	/**
+	 * A table in memory: insert() appends, get_var() counts rows matching the
+	 * values handed to prepare(), get_row() finds one by id.
+	 */
+	private function table_wpdb( array $rows = array() ) {
+		return new class( $rows ) {
+			public $rows;
+			public $prefix     = 'wp_';
+			public $last_error = '';
+			public $insert_id  = 0;
+			private $pending   = array();
+			public function __construct( $rows ) {
+				$this->rows = $rows;
+			}
+			public function insert( $table, $row, $format = null ) {
+				$this->rows[] = $row;
+				return 1;
+			}
+			public function delete( $table, $where, $format = null ) {
+				$before     = count( $this->rows );
+				$this->rows = array_values( array_filter( $this->rows, function ( $r ) use ( $where ) {
+					return ! $this->matches( $r, $where );
+				} ) );
+				return $before - count( $this->rows );
+			}
+			public function update( $table, $data, $where, $format = null, $where_format = null ) {
+				$n = 0;
+				foreach ( $this->rows as &$r ) {
+					if ( $this->matches( $r, $where ) ) {
+						$changed = array_diff_assoc( array_map( 'strval', $data ), array_map( 'strval', array_intersect_key( $r, $data ) ) );
+						$r       = array_merge( $r, $data );
+						$n      += $changed ? 1 : 0;
+					}
+				}
+				unset( $r );
+				return $n;
+			}
+			public function prepare( $sql, ...$args ) {
+				$args          = ( 1 === count( $args ) && is_array( $args[0] ) ) ? $args[0] : $args;
+				$this->pending = $args;
+				return $sql;
+			}
+			public function get_var( $sql ) {
+				// Args are: table, then (col, value) pairs.
+				$where = array();
+				for ( $i = 1; $i + 1 < count( $this->pending ); $i += 2 ) {
+					$where[ $this->pending[ $i ] ] = $this->pending[ $i + 1 ];
+				}
+				return (string) count( array_filter( $this->rows, function ( $r ) use ( $where ) {
+					return $this->matches( $r, $where );
+				} ) );
+			}
+			public function get_row( $sql, $output = null ) {
+				$id = (int) ( $this->pending[0] ?? 0 );
+				foreach ( $this->rows as $r ) {
+					if ( (int) ( $r['id'] ?? 0 ) === $id ) {
+						return $r;
+					}
+				}
+				return null;
+			}
+			private function matches( $row, $where ) {
+				foreach ( $where as $k => $v ) {
+					if ( ! array_key_exists( $k, $row ) || (string) $row[ $k ] !== (string) $v ) {
+						return false;
+					}
+				}
+				return true;
+			}
+		};
+	}
+
+	private function with_wpdb( $wpdb, callable $fn ) {
+		$saved           = $GLOBALS['wpdb'] ?? null;
+		$GLOBALS['wpdb'] = $wpdb;
+		try {
+			return $fn();
+		} finally {
+			$GLOBALS['wpdb'] = $saved;
+		}
+	}
+
+	private function db_delete_rb( array $rows ): array {
+		return array( 'type' => 'db-before-image', 'table' => 'wp_things', 'op' => 'delete', 'key_cols' => array( 'status' ), 'before_rows' => $rows );
+	}
+
+	private function apply( array $rb ) {
+		$method = new ReflectionMethod( KarMCP_Change_Log::class, 'apply_rollback' );
+		$method->setAccessible( true );
+		return $method->invoke( null, $rb );
+	}
+
+	public function test_retrying_a_deleted_rows_restore_does_not_insert_them_twice() {
+		$db = $this->table_wpdb();
+		$rb = $this->db_delete_rb( array( array( 'id' => 1, 'status' => 'draft' ), array( 'id' => 2, 'status' => 'draft' ) ) );
+
+		$this->with_wpdb( $db, function () use ( $rb ) {
+			$this->assertTrue( $this->apply( $rb ) );
+			$this->assertTrue( $this->apply( $rb ), 'The retry after a failed history write.' );
+		} );
+
+		$this->assertCount( 2, $db->rows );
+	}
+
+	public function test_two_identical_deleted_rows_both_come_back() {
+		$db  = $this->table_wpdb();
+		$row = array( 'meta' => 'x', 'status' => 'draft' );
+
+		$this->with_wpdb( $db, function () use ( $row ) {
+			$this->apply( $this->db_delete_rb( array( $row, $row ) ) );
+		} );
+
+		$this->assertCount( 2, $db->rows, 'A table without a key that lost two equal rows gets two back, not one.' );
+	}
+
+	public function test_a_trashed_post_already_back_counts_as_restored() {
+		$this->add_post( 60, array( 'post_status' => 'publish' ) );
+		$GLOBALS['karmcp_test']['untrash_result'] = false; // WordPress refuses to untrash what is not in the trash.
+
+		$this->assertTrue( $this->apply( array( 'type' => 'post-restore', 'mode' => 'untrash', 'post_id' => 60 ) ) );
+	}
+
+	public function test_an_attachment_already_restored_under_its_id_is_left_alone() {
+		$trashed = $this->uploads . DIRECTORY_SEPARATOR . 'trashed.jpg';
+		file_put_contents( $trashed, 'x' );
+		$this->add_post( 905, array( 'post_type' => 'attachment', 'post_name' => 'photo', 'post_date' => '2026-09-01 10:00:00', 'guid' => 'https://example.test/wp-content/uploads/photo.jpg' ) );
+		$post = (array) get_post( 905 ); // The shape snapshot_attachment() stores.
+		$GLOBALS['karmcp_test']['next_post_id'] = 3000;
+
+		$result = $this->apply( array( 'type' => 'attachment-delete', 'snapshot' => array(
+			'post'  => $post,
+			'meta'  => array( '_wp_attached_file' => array( 'photo.jpg' ) ),
+			'files' => array( array( 'orig' => $this->uploads . DIRECTORY_SEPARATOR . 'photo.jpg', 'trashed' => $trashed ) ),
+		) ) );
+
+		$this->assertTrue( $result );
+		$this->assertNull( get_post( 3001 ), 'Nothing was inserted a second time.' );
+	}
+
+	public function test_a_different_item_at_the_id_is_not_mistaken_for_the_restore() {
+		$trashed = $this->uploads . DIRECTORY_SEPARATOR . 'trashed.jpg';
+		file_put_contents( $trashed, 'x' );
+		// Same type, no slug, same second — what a batch of drafts looks like.
+		$snapshot = array( 'ID' => 906, 'post_type' => 'attachment', 'post_name' => '', 'post_date' => '2026-09-01 10:00:00', 'post_title' => 'Photo A' );
+		$this->add_post( 906, array_merge( $snapshot, array( 'post_title' => 'Photo B' ) ) );
+
+		$result = $this->apply( array( 'type' => 'attachment-delete', 'snapshot' => array(
+			'post'  => $snapshot,
+			'meta'  => array( '_wp_attached_file' => array( 'a.jpg' ) ),
+			'files' => array( array( 'orig' => $this->uploads . DIRECTORY_SEPARATOR . 'a.jpg', 'trashed' => $trashed ) ),
+		) ) );
+
+		$this->assertSame( 'rollback_refused', $result->get_error_code(), 'A match on type, empty slug and date alone would have skipped the restore and reported success.' );
+	}
+
+	public function test_a_post_moved_out_of_the_trash_some_other_way_is_reported() {
+		$this->add_post( 61, array( 'post_status' => 'publish' ) );
+		update_post_meta( 61, '_wp_trash_meta_status', 'draft' ); // Still there: WordPress never untrashed it.
+
+		$result = $this->apply( array( 'type' => 'post-restore', 'mode' => 'untrash', 'post_id' => 61 ) );
+
+		$this->assertSame( 'rollback_failed', $result->get_error_code() );
+	}
+
+	public function test_deleted_binary_rows_that_differ_are_not_merged() {
+		$db = $this->table_wpdb();
+		// Invalid UTF-8: JSON cannot tell these apart.
+		$a = array( 'data' => "\xff\x01", 'status' => 'x' );
+		$b = array( 'data' => "\xff\x02", 'status' => 'x' );
+
+		$this->with_wpdb( $db, function () use ( $a, $b ) {
+			$this->apply( $this->db_delete_rb( array( $a, $b ) ) );
+		} );
+
+		$this->assertSame( array( $a, $b ), $db->rows );
+	}
+
+	public function test_redirect_rollbacks_can_be_retried() {
+		if ( ! class_exists( 'KarMCP_Redirect_Store' ) ) {
+			require_once __DIR__ . '/../includes/redirects/class-redirect-store.php';
+		}
+		$row = array( 'id' => 9, 'source_path' => '/old', 'target_url' => '/new', 'target_post_id' => 0, 'status_code' => 301, 'ignore_query' => 1, 'enabled' => 1, 'hits' => 0 );
+		$db  = $this->table_wpdb();
+
+		$this->with_wpdb( $db, function () use ( $row, $db ) {
+			$delete = array( 'type' => 'redirect-row', 'action' => 'delete', 'before' => array( 'row' => $row ) );
+			$this->assertTrue( $this->apply( $delete ) );
+			$this->assertTrue( $this->apply( $delete ) );
+			$this->assertCount( 1, $db->rows, 'A deleted redirect restored twice is still one redirect.' );
+
+			$update = array( 'type' => 'redirect-row', 'action' => 'update', 'before' => array( 'row' => $row ) );
+			$this->assertTrue( $this->apply( $update ), 'Zero rows changed on a row already at its prior values is a restore.' );
+
+			$create = array( 'type' => 'redirect-row', 'action' => 'create', 'before' => array( 'id' => 9 ) );
+			$this->assertTrue( $this->apply( $create ) );
+			$this->assertTrue( $this->apply( $create ) );
+			$this->assertCount( 0, $db->rows );
+
+			$this->assertInstanceOf( WP_Error::class, $this->apply( $update ), 'An update whose row is gone is not a restore.' );
+		} );
 	}
 
 	public function test_a_trash_wordpress_would_not_undo_is_reported() {

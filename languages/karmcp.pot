@@ -2,9 +2,9 @@
 # This file is distributed under the GPL-2.0-or-later licence.
 msgid ""
 msgstr ""
-"Project-Id-Version: KarMCP 1.42.0\n"
+"Project-Id-Version: KarMCP 1.42.1\n"
 "Report-Msgid-Bugs-To: https://github.com/karcox/karmcp/issues\n"
-"POT-Creation-Date: 2026-09-21 11:41:54+0000\n"
+"POT-Creation-Date: 2026-09-21 16:17:34+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1022,7 +1022,7 @@ msgstr ""
 msgid "ACF did not save the taxonomy."
 msgstr ""
 
-#: includes/class-change-log.php:741
+#: includes/class-change-log.php:809
 msgid "ACF is not available to restore these fields."
 msgstr ""
 
@@ -2551,11 +2551,11 @@ msgstr ""
 msgid "Cannot restore this page."
 msgstr ""
 
-#: includes/class-change-log.php:726
+#: includes/class-change-log.php:794
 msgid "Cannot restore this user."
 msgstr ""
 
-#: includes/class-change-log.php:533
+#: includes/class-change-log.php:554
 msgid "Cannot roll back this insert: the key of the inserted row was not recorded."
 msgstr ""
 
@@ -3213,7 +3213,7 @@ msgstr ""
 msgid "Could not back up the file before writing."
 msgstr ""
 
-#: includes/class-change-log.php:633
+#: includes/class-change-log.php:667
 msgid "Could not copy the attachment's file back into place."
 msgstr ""
 
@@ -5868,7 +5868,7 @@ msgid "Icon"
 msgstr ""
 
 #. translators: %d: post id.
-#: includes/class-change-log.php:670
+#: includes/class-change-log.php:718
 msgid "Id #%d is already in use by another item, and restoring under a new id would leave everything that points to the old one aimed at the wrong thing."
 msgstr ""
 
@@ -7642,12 +7642,12 @@ msgstr ""
 msgid "Minimum height (px by default)."
 msgstr ""
 
-#: includes/class-change-log.php:804
+#: includes/class-change-log.php:872
 msgid "Missing object id."
 msgstr ""
 
-#: includes/class-change-log.php:951
-#: includes/class-change-log.php:1025
+#: includes/class-change-log.php:1019
+#: includes/class-change-log.php:1093
 msgid "Missing post id."
 msgstr ""
 
@@ -7718,7 +7718,7 @@ msgstr ""
 msgid "Missing table."
 msgstr ""
 
-#: includes/class-change-log.php:699
+#: includes/class-change-log.php:767
 msgid "Missing user id."
 msgstr ""
 
@@ -7915,7 +7915,7 @@ msgstr ""
 msgid "No %s API key is configured. Add one on KarMCP → Connection, or use a provider you have connected."
 msgstr ""
 
-#: includes/class-change-log.php:746
+#: includes/class-change-log.php:814
 msgid "No ACF values to restore."
 msgstr ""
 
@@ -7993,7 +7993,7 @@ msgstr ""
 msgid "No activity yet"
 msgstr ""
 
-#: includes/class-change-log.php:606
+#: includes/class-change-log.php:637
 msgid "No attachment snapshot to restore."
 msgstr ""
 
@@ -8062,7 +8062,7 @@ msgstr ""
 msgid "No nav menu matches the given id, slug, or name."
 msgstr ""
 
-#: includes/class-change-log.php:764
+#: includes/class-change-log.php:832
 msgid "No option values to restore."
 msgstr ""
 
@@ -8155,7 +8155,7 @@ msgstr ""
 msgid "No skills yet."
 msgstr ""
 
-#: includes/class-change-log.php:1035
+#: includes/class-change-log.php:1119
 msgid "No snapshot to restore."
 msgstr ""
 
@@ -12311,7 +12311,7 @@ msgid "The attachment is not a ZIP archive."
 msgstr ""
 
 #. translators: %s: comma-separated file names.
-#: includes/class-change-log.php:987
+#: includes/class-change-log.php:1055
 msgid "The attachment was deleted but these files are still on disk: %s."
 msgstr ""
 
@@ -12374,7 +12374,7 @@ msgid "The bundle must be a .json file."
 msgstr ""
 
 #: includes/class-change-log.php:277
-msgid "The change was undone, but the history could not be updated to say so. Do not undo it again: check the target first."
+msgid "The change was undone, but the history could not be updated to say so. Retrying with force is safe: the target no longer matches the recorded state because it was already restored, and every rollback leaves an already-restored target as it is, so the retry only brings the history up to date."
 msgstr ""
 
 #. DO NOT TRANSLATE. Agent-facing: this is the label or description of an MCP tool, which is read by the AI agent in the tool schema, never by a person. These are operating instructions whose exact wording has been tested against real agent behaviour, and translating them changes what the agent is told without anyone re-testing the result. Leaving msgstr empty makes gettext return the English original, which is the intended behaviour.
@@ -12478,7 +12478,7 @@ msgid "The database cleaner is not available."
 msgstr ""
 
 #. translators: %s: the database error.
-#: includes/class-change-log.php:584
+#: includes/class-change-log.php:615
 msgid "The database refused part of the rollback (%s). Rows restored before it stay restored."
 msgstr ""
 
@@ -13045,7 +13045,12 @@ msgstr ""
 msgid "The post duplicator is not available on this install."
 msgstr ""
 
-#: includes/class-change-log.php:898
+#. translators: %s: post status.
+#: includes/class-change-log.php:1108
+msgid "The post is no longer in the trash, but it was not restored from it: its status was changed to \"%s\" some other way. Check it by hand."
+msgstr ""
+
+#: includes/class-change-log.php:966
 msgid "The post no longer exists."
 msgstr ""
 
@@ -13168,7 +13173,7 @@ msgstr ""
 msgid "The return address this app asked for does not match the one it registered."
 msgstr ""
 
-#: includes/class-change-log.php:615
+#: includes/class-change-log.php:646
 msgid "The saved copy of this attachment's file is gone, so it cannot be restored."
 msgstr ""
 
@@ -13611,7 +13616,7 @@ msgid "These props are already declared by the active extension \"%2$s\": %1$s. 
 msgstr ""
 
 #. translators: %s: comma-separated list of option or meta keys.
-#: includes/class-change-log.php:884
+#: includes/class-change-log.php:952
 msgid "These values did not read back as restored: %s. The rest were restored."
 msgstr ""
 
@@ -13692,7 +13697,7 @@ msgstr ""
 msgid "This creation was recorded before KarMCP could tell whether a post was edited after it was created, so undoing it could delete later work. Check the post, then roll back with force if it should go."
 msgstr ""
 
-#: includes/class-change-log.php:611
+#: includes/class-change-log.php:642
 msgid "This deletion was recorded without a copy of the file, so undoing it would restore an attachment with nothing behind it."
 msgstr ""
 
@@ -13849,7 +13854,7 @@ msgstr ""
 msgid "This user has administrator-level capabilities and cannot be edited via MCP."
 msgstr ""
 
-#: includes/class-change-log.php:705
+#: includes/class-change-log.php:773
 msgid "This user now has administrator capabilities and will not be deleted by a rollback."
 msgstr ""
 
@@ -14133,7 +14138,7 @@ msgstr ""
 msgid "Unknown ACF field type \"%s\"."
 msgstr ""
 
-#: includes/class-change-log.php:540
+#: includes/class-change-log.php:561
 msgid "Unknown DB operation."
 msgstr ""
 
@@ -14760,7 +14765,7 @@ msgstr ""
 msgid "User ID. Default: current user."
 msgstr ""
 
-#: includes/class-change-log.php:708
+#: includes/class-change-log.php:776
 msgid "User deletion is unavailable."
 msgstr ""
 
@@ -15231,27 +15236,27 @@ msgid "WordPress did not complete the install. The messages carry what it report
 msgstr ""
 
 #. translators: %d: post id.
-#: includes/class-change-log.php:966
+#: includes/class-change-log.php:1034
 msgid "WordPress did not delete #%d."
 msgstr ""
 
-#: includes/class-change-log.php:711
+#: includes/class-change-log.php:779
 msgid "WordPress did not delete the user."
 msgstr ""
 
-#: includes/class-change-log.php:648
+#: includes/class-change-log.php:682
 msgid "WordPress did not restore the attachment under its original id."
 msgstr ""
 
-#: includes/class-change-log.php:908
+#: includes/class-change-log.php:976
 msgid "WordPress did not restore the post fields."
 msgstr ""
 
-#: includes/class-change-log.php:1028
+#: includes/class-change-log.php:1112
 msgid "WordPress did not restore the post from the trash."
 msgstr ""
 
-#: includes/class-change-log.php:1052
+#: includes/class-change-log.php:1139
 msgid "WordPress did not restore the post under its original id."
 msgstr ""
 
@@ -15907,7 +15912,7 @@ msgstr ""
 msgid "name cannot be empty."
 msgstr ""
 
-#: includes/class-change-log.php:580
+#: includes/class-change-log.php:611
 msgid "no error reported"
 msgstr ""
 

@@ -2,6 +2,20 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.42.1]
+
+A retried undo could restore something twice.
+
+### Fixed
+
+- **Retrying an undo whose history write failed could duplicate rows.** 1.42.0 reports `history_not_updated` when an undo lands but the history cannot record it, and the obvious next step — undoing again — re-ran the restore. For deleted database rows that meant inserting every row a second time. Undoing deleted rows now re-inserts only the copies that are missing, counting identical rows so a table without a key that lost two equal rows gets two back. Rows are grouped byte for byte, so two different binary values are never mistaken for one.
+
+- **The other restores are safe to repeat too.** A post already out of the trash is left alone, as long as WordPress's own trash bookkeeping shows it came out through an untrash; if its status was changed some other way, the undo says so instead of calling it restored. A deleted post or attachment that an earlier attempt already put back under its id is recognised as restored instead of refused — and "already put back" means every identifying field matches, title, slug, date, author, parent, MIME type and GUID, because drafts and attachments often have no slug and a batch creates many items in the same second. A match on less would skip a real restore and report success.
+
+- **Undoing a redirect change checked nothing.** Restoring an updated redirect failed whenever the row already held its prior values, since zero rows changed; restoring a deleted one twice tried to insert it twice; undoing a creation twice failed. Each now checks the row afterwards and is safe to repeat, and an update whose row is gone is reported.
+
+- The `history_not_updated` message now says what to do: retry with `force`, which is needed because the target no longer matches the recorded state — it was already restored.
+
 ## [1.42.0]
 
 The change history could report an undo that had not happened. This release is about the gap between "rolled back" and "back where it started".

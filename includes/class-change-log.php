@@ -274,7 +274,7 @@ class KarMCP_Change_Log {
 		if ( ! self::mark_rolled_back( $id ) ) {
 			return new WP_Error(
 				'history_not_updated',
-				__( 'The change was undone, but the history could not be updated to say so. Do not undo it again: check the target first.', 'karmcp' )
+				__( 'The change was undone, but the history could not be updated to say so. Retrying with force is safe: the target no longer matches the recorded state because it was already restored, and every rollback leaves an already-restored target as it is, so the retry only brings the history up to date.', 'karmcp' )
 			);
 		}
 		$comp = self::record( array(
@@ -521,9 +521,30 @@ class KarMCP_Change_Log {
 				}
 				return true;
 			case 'delete':
+				// Re-insert only what is missing. A retry — after a rollback
+				// whose restore landed but whose history write did not — would
+				// otherwise insert every row a second time. Identical rows are
+				// grouped so a table without a primary key that lost two equal
+				// rows gets two back, not one.
+				$groups = array();
 				foreach ( (array) ( $rb['before_rows'] ?? array() ) as $row ) {
-					if ( false === $wpdb->insert( $table, $row ) ) {
-						return self::db_failure();
+					if ( ! is_array( $row ) || empty( $row ) ) {
+						continue;
+					}
+					// serialize(), not JSON: a binary column is not valid UTF-8,
+					// and JSON would fold two different rows into one group.
+					$sig = md5( serialize( $row ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- a grouping key over values that are already plain strings, never unserialized.
+					if ( ! isset( $groups[ $sig ] ) ) {
+						$groups[ $sig ] = array( 'row' => $row, 'n' => 0 );
+					}
+					++$groups[ $sig ]['n'];
+				}
+				foreach ( $groups as $group ) {
+					$missing = $group['n'] - self::count_rows( $table, $group['row'] );
+					for ( $i = 0; $i < $missing; $i++ ) {
+						if ( false === $wpdb->insert( $table, $group['row'] ) ) {
+							return self::db_failure();
+						}
 					}
 				}
 				return true;
@@ -549,6 +570,17 @@ class KarMCP_Change_Log {
 	 * @return bool
 	 */
 	private static function row_exists( string $table, array $where ): bool {
+		return self::count_rows( $table, $where ) > 0;
+	}
+
+	/**
+	 * How many rows match every column of `$where`.
+	 *
+	 * @param string $table Table name.
+	 * @param array  $where Column => value.
+	 * @return int
+	 */
+	private static function count_rows( string $table, array $where ): int {
 		global $wpdb;
 		$clauses = array();
 		$args    = array( $table );
@@ -563,11 +595,10 @@ class KarMCP_Change_Log {
 			}
 		}
 		if ( empty( $clauses ) ) {
-			return false;
+			return 0;
 		}
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- the clause list is built from %i/%s placeholders only; every value goes through prepare().
-		$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE ' . implode( ' AND ', $clauses ), $args ) );
-		return (int) $count > 0;
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE ' . implode( ' AND ', $clauses ), $args ) );
 	}
 
 	/**
@@ -616,9 +647,12 @@ class KarMCP_Change_Log {
 			}
 		}
 		$old_id = (int) ( $post['ID'] ?? 0 );
-		$taken  = self::id_taken( $old_id );
+		$taken  = self::id_taken( $old_id, $post );
 		if ( is_wp_error( $taken ) ) {
 			return $taken;
+		}
+		if ( 'restored' === $taken ) {
+			return true;
 		}
 
 		$copied = array();
@@ -659,16 +693,50 @@ class KarMCP_Change_Log {
 	/**
 	 * Refuse a restore when the id it has to reuse belongs to something else.
 	 *
-	 * @param int $old_id The id the restored object must have.
-	 * @return true|WP_Error
+	 * Returns 'restored' when the id is held by this same item — an earlier
+	 * attempt put it back and only the history write failed — so a retry is a
+	 * no-op instead of a refusal. "Same" has to be unambiguous, because a wrong
+	 * match skips a real restore and reports success: drafts and attachments
+	 * often have no slug, and a batch creates many items in the same second.
+	 * So every identifying field the snapshot carries must match — type, title,
+	 * slug, date, author, parent, MIME type — and the GUID too when the
+	 * snapshot has one, since WordPress makes it unique per item.
+	 *
+	 * @param int   $old_id The id the restored object must have.
+	 * @param array $post   The snapshot's post row.
+	 * @return true|string|WP_Error
 	 */
-	private static function id_taken( int $old_id ) {
-		if ( $old_id > 0 && get_post( $old_id ) ) {
+	private static function id_taken( int $old_id, array $post ) {
+		$current = $old_id > 0 ? get_post( $old_id ) : null;
+		if ( $current && self::is_same_item( $current, $post ) ) {
+			return 'restored';
+		}
+		if ( $current ) {
 			return new WP_Error(
 				'rollback_refused',
 				/* translators: %d: post id. */
 				sprintf( __( 'Id #%d is already in use by another item, and restoring under a new id would leave everything that points to the old one aimed at the wrong thing.', 'karmcp' ), $old_id )
 			);
+		}
+		return true;
+	}
+
+	/**
+	 * Whether a post is the item a snapshot describes.
+	 *
+	 * @param object $current The post now at the id.
+	 * @param array  $post    The snapshot's post row.
+	 * @return bool
+	 */
+	private static function is_same_item( $current, array $post ): bool {
+		$fields = array( 'post_type', 'post_title', 'post_name', 'post_date', 'post_author', 'post_parent', 'post_mime_type' );
+		if ( '' !== (string) ( $post['guid'] ?? '' ) ) {
+			$fields[] = 'guid';
+		}
+		foreach ( $fields as $field ) {
+			if ( (string) ( $current->$field ?? '' ) !== (string) ( $post[ $field ] ?? '' ) ) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -1024,6 +1092,22 @@ class KarMCP_Change_Log {
 			if ( $post_id <= 0 ) {
 				return new WP_Error( 'rollback_failed', __( 'Missing post id.', 'karmcp' ) );
 			}
+			$current = get_post( $post_id );
+			if ( $current && 'trash' !== ( $current->post_status ?? '' ) ) {
+				// WordPress deletes the trash bookkeeping when it untrashes a
+				// post. With it gone, the post came out the way an untrash
+				// brings it out — ours, on a retry, or anyone's. With it still
+				// there, the status was changed some other way, and this is
+				// not the restore the entry describes.
+				if ( '' === (string) get_post_meta( $post_id, '_wp_trash_meta_status', true ) ) {
+					return true;
+				}
+				return new WP_Error(
+					'rollback_failed',
+					/* translators: %s: post status. */
+					sprintf( __( 'The post is no longer in the trash, but it was not restored from it: its status was changed to "%s" some other way. Check it by hand.', 'karmcp' ), (string) $current->post_status )
+				);
+			}
 			if ( ! wp_untrash_post( $post_id ) ) {
 				return new WP_Error( 'rollback_failed', __( 'WordPress did not restore the post from the trash.', 'karmcp' ) );
 			}
@@ -1035,9 +1119,12 @@ class KarMCP_Change_Log {
 			return new WP_Error( 'rollback_failed', __( 'No snapshot to restore.', 'karmcp' ) );
 		}
 		$old_id = (int) ( $post['ID'] ?? 0 );
-		$taken  = self::id_taken( $old_id );
+		$taken  = self::id_taken( $old_id, $post );
 		if ( is_wp_error( $taken ) ) {
 			return $taken;
+		}
+		if ( 'restored' === $taken ) {
+			return true;
 		}
 		unset( $post['ID'] );
 		if ( $old_id > 0 ) {

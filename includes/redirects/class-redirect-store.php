@@ -393,9 +393,18 @@ class KarMCP_Redirect_Store {
 	public static function rollback( array $rb ): bool {
 		$action = (string) ( $rb['action'] ?? '' );
 		$before = isset( $rb['before'] ) && is_array( $rb['before'] ) ? $rb['before'] : array();
+		// Every branch is idempotent and checks its own result: a retry after
+		// a rollback whose history write failed must neither fail on a row
+		// that is already as it should be nor restore a row twice.
 		if ( 'create' === $action ) {
 			$id = (int) ( $before['id'] ?? 0 );
-			return $id > 0 ? self::delete( $id ) : false;
+			if ( $id <= 0 ) {
+				return false;
+			}
+			if ( null !== self::get( $id ) ) {
+				self::delete( $id );
+			}
+			return null === self::get( $id );
 		}
 		$row = isset( $before['row'] ) && is_array( $before['row'] ) ? $before['row'] : array();
 		if ( empty( $row['id'] ) ) {
@@ -403,12 +412,18 @@ class KarMCP_Redirect_Store {
 		}
 		global $wpdb;
 		if ( 'delete' === $action ) {
-			return (bool) $wpdb->insert( self::table(), self::row_for_write( $row ), self::write_formats() );
+			if ( null === self::get( (int) $row['id'] ) ) {
+				$wpdb->insert( self::table(), self::row_for_write( $row ), self::write_formats() );
+			}
+			return null !== self::get( (int) $row['id'] );
 		}
 		if ( 'update' === $action ) {
 			$write = self::row_for_write( $row );
 			unset( $write['id'] );
-			return (bool) $wpdb->update( self::table(), $write, array( 'id' => (int) $row['id'] ), self::write_formats_no_id(), array( '%d' ) );
+			// Zero rows changed means the row already holds these values, or
+			// that it is gone; only the first is a restore.
+			$res = $wpdb->update( self::table(), $write, array( 'id' => (int) $row['id'] ), self::write_formats_no_id(), array( '%d' ) );
+			return false !== $res && null !== self::get( (int) $row['id'] );
 		}
 		return false;
 	}

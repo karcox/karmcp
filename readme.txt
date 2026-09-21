@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.42.0
+Stable tag: 1.42.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.42.1 =
+Fixed: retrying an undo after its history write failed could restore something twice - deleted database rows were inserted again. Every undo is now safe to repeat: missing rows are re-inserted and present ones left alone, a post already out of the trash or an item already restored under its id is recognised, and redirect undos check their own result. An item is only treated as already restored when every identifying field matches, so a different item that happens to hold the id is never mistaken for it.
 
 = 1.42.0 =
 Fixed: the change history could report an undo that had not happened. Undoing create-page (and build-page) left an empty page behind instead of removing it; the creation is now recorded once, with its content, and create-page, create-post, upload-media, build-page and build-site return its change_id. Undoing a creation now refuses when the post was edited since, unless forced; creations recorded by earlier versions need force. Page settings and custom CSS are recorded and can be undone. An empty prior meta value is written back instead of deleted, and custom CSS keeps its backslashes. Every undo checks its own result: a delete WordPress declined, a value that did not take or a row that is gone is reported instead of marked done. Undoing an upload removes the files WordPress leaves behind on Windows. A deleted post or attachment is never restored under a different id. list-changes can filter by every domain it records.

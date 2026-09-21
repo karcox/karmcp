@@ -591,6 +591,8 @@ class KarMCP_Change_Recorder {
 			$core,
 			self::hash_elementor( $post_id ),
 			maybe_serialize( get_post_meta( $post_id, '_elementor_page_settings', true ) ),
+			(string) get_post_meta( $post_id, '_thumbnail_id', true ),
+			self::hash_terms( $post_id ),
 		);
 		if ( 'attachment' === self::post_type_of( $post_id ) ) {
 			$file    = function_exists( 'get_attached_file' ) ? (string) get_attached_file( $post_id ) : '';
@@ -600,6 +602,33 @@ class KarMCP_Change_Recorder {
 			$parts[] = self::hash_file( $file );
 		}
 		return sha1( implode( '|', $parts ) );
+	}
+
+	/**
+	 * Hash of the terms a post is assigned, across every taxonomy of its type.
+	 *
+	 * Free-form post meta is deliberately not part of the creation guard: view
+	 * counters and similar plugins write public meta on every visit, and a guard
+	 * that counted those as edits would refuse every undo on a live site.
+	 *
+	 * @param int $post_id Post id.
+	 * @return string
+	 */
+	private static function hash_terms( int $post_id ): string {
+		if ( ! function_exists( 'get_object_taxonomies' ) || ! function_exists( 'wp_get_object_terms' ) ) {
+			return '';
+		}
+		$terms = array();
+		foreach ( (array) get_object_taxonomies( self::post_type_of( $post_id ) ) as $tax ) {
+			$ids = wp_get_object_terms( $post_id, $tax, array( 'fields' => 'ids' ) );
+			if ( is_array( $ids ) && $ids ) {
+				$ids = array_map( 'intval', $ids );
+				sort( $ids );
+				$terms[ (string) $tax ] = $ids;
+			}
+		}
+		ksort( $terms );
+		return sha1( (string) wp_json_encode( $terms ) );
 	}
 
 	/**

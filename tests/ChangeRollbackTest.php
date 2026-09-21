@@ -249,6 +249,28 @@ class ChangeRollbackTest extends TestCase {
 		$this->assertSame( 'conflict', KarMCP_Change_Log::rollback( $out['change_id'] )->get_error_code() );
 	}
 
+	public function test_a_category_changed_after_creation_counts_as_an_edit() {
+		$GLOBALS['karmcp_test']['taxonomies_for_type']['page'] = array( 'category' );
+		$out = $this->create_page();
+		$GLOBALS['karmcp_test']['object_terms'][ $out['post_id'] ]['category'] = array( 12 );
+
+		$this->assertSame( 'conflict', KarMCP_Change_Log::rollback( $out['change_id'] )->get_error_code() );
+	}
+
+	public function test_a_featured_image_set_after_creation_counts_as_an_edit() {
+		$out = $this->create_page();
+		update_post_meta( $out['post_id'], '_thumbnail_id', 77 );
+
+		$this->assertSame( 'conflict', KarMCP_Change_Log::rollback( $out['change_id'] )->get_error_code() );
+	}
+
+	public function test_a_view_counter_writing_public_meta_does_not_block_undo() {
+		$out = $this->create_page();
+		update_post_meta( $out['post_id'], 'post_views_count', 431 );
+
+		$this->assertIsArray( KarMCP_Change_Log::rollback( $out['change_id'] ) );
+	}
+
 	public function test_force_deletes_an_edited_creation() {
 		$out = $this->create_page();
 		$GLOBALS['karmcp_test']['posts'][ $out['post_id'] ]->post_title = 'Renamed';

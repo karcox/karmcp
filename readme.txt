@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.43.0
+Stable tag: 1.43.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.43.1 =
+Fixed, from a review of 1.43.0's update check: "View version details" on the Plugins screen asked wordpress.org about a plugin that was never published there and errored - the details screen, with the release notes as its changelog, is answered by the plugin now. The WordPress and PHP requirements the update quotes come from the plugin header instead of being typed a second time. A tag like 1.44.0-beta no longer counts as a newer version, whether or not the pre-release box was ticked. And a check that could not reach GitHub is no longer reported as being up to date: the dashboard says the check failed.
 
 = 1.43.0 =
 Added: KarMCP updates itself. WordPress now checks this plugin's own GitHub releases, so a new version shows up on the Plugins screen and installs with the usual button instead of being uploaded by hand. The check is narrow on purpose, since what it returns is unpacked over the running plugin: the release must be published, its tag must read as a version newer than the installed one, and the download must be a .zip served over HTTPS by GitHub - anything else counts as no update. Answers are cached for six hours, failures for thirty minutes, and the whole check can be switched off with the KARMCP_NO_UPDATE_CHECK constant or the karmcp_update_check_enabled filter. Fixed: the dashboard always said you were on the latest version; it now reports what WordPress knows.

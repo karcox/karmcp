@@ -3,9 +3,9 @@
 # This file is distributed under the GPL-2.0-or-later licence.
 msgid ""
 msgstr ""
-"Project-Id-Version: KarMCP 1.43.0\n"
+"Project-Id-Version: KarMCP 1.43.1\n"
 "Report-Msgid-Bugs-To: https://github.com/karcox/karmcp/issues\n"
-"POT-Creation-Date: 2026-09-23 07:57:46+0000\n"
+"POT-Creation-Date: 2026-09-23 08:13:10+0000\n"
 "PO-Revision-Date: 2026-08-19 19:00+0200\n"
 "Last-Translator: karcox <https://github.com/karcox>\n"
 "Language-Team: Español <https://github.com/karcox/karmcp>\n"
@@ -2660,7 +2660,7 @@ msgstr "Cambio revertido."
 #: includes/admin/class-admin.php:2835
 #: includes/admin/class-admin.php:2837
 #: includes/admin/views/page-changelog.php:160
-#: includes/admin/views/page-dashboard.php:382
+#: includes/admin/views/page-dashboard.php:390
 msgid "Changelog"
 msgstr "Registro de cambios"
 
@@ -4272,7 +4272,7 @@ msgstr "Lanzar trabajo de WP-CLI"
 msgid "Display conditions, same format as set-elementor-template-conditions."
 msgstr ""
 
-#: includes/admin/views/page-dashboard.php:368
+#: includes/admin/views/page-dashboard.php:376
 msgid "Documentation"
 msgstr "Documentación"
 
@@ -4825,6 +4825,10 @@ msgstr "Expone 3 herramientas despachadoras (list-tools, get-tool-schema, call-t
 #: includes/class-site-context.php:43
 msgid "Exposes Elementor data and design tools as MCP tools for AI agents."
 msgstr "Expone los datos y las herramientas de diseño de Elementor como herramientas MCP para agentes de IA."
+
+#: includes/class-updater.php:109
+msgid "Exposes this WordPress site as MCP tools, so an AI agent can build Elementor pages, manage content and audit the site."
+msgstr "Expone este sitio de WordPress como herramientas MCP, para que un agente de IA pueda construir páginas de Elementor, gestionar contenido y auditar el sitio."
 
 #. Description of the plugin
 #: karmcp.php
@@ -5675,7 +5679,7 @@ msgstr "Guardarraíles"
 msgid "Guides and reference"
 msgstr "Guías y referencia"
 
-#: includes/admin/views/page-dashboard.php:369
+#: includes/admin/views/page-dashboard.php:377
 msgid "Guides and reference for every feature."
 msgstr "Guías y referencia de cada función."
 
@@ -6591,12 +6595,12 @@ msgid "KarMCP is active. Install and activate Elementor to enable the Elementor 
 msgstr "KarMCP está activo. Instala y activa Elementor para habilitar las herramientas de construcción de páginas de Elementor (widgets, maquetación, plantillas, kits de marca). Todas las demás herramientas —contenido de WordPress, plugins y temas, usuarios, medios, rendimiento, seguridad, sistema de archivos y base de datos— funcionan sin él."
 
 #. translators: %s: current PHP version
-#: includes/class-bootstrap.php:433
+#: includes/class-bootstrap.php:436
 msgid "KarMCP requires PHP 8.1 or higher. Your server is running PHP %s, please upgrade PHP to avoid silent Elementor write failures."
 msgstr "KarMCP requiere PHP 8.1 o superior. Tu servidor ejecuta PHP %s; actualiza PHP para evitar fallos silenciosos al escribir en Elementor."
 
 #. translators: %s: comma-separated list of missing dependencies
-#: includes/class-bootstrap.php:466
+#: includes/class-bootstrap.php:469
 msgid "KarMCP requires the following to be installed and active: %s"
 msgstr "KarMCP necesita que lo siguiente esté instalado y activo: %s"
 
@@ -6605,9 +6609,14 @@ msgid "KarMCP sections"
 msgstr "Secciones de KarMCP"
 
 #. translators: %s: installed version number
-#: includes/admin/views/page-dashboard.php:356
+#: includes/admin/views/page-dashboard.php:363
 msgid "KarMCP v%s"
 msgstr "KarMCP v%s"
+
+#. translators: %s: installed version number
+#: includes/admin/views/page-dashboard.php:357
+msgid "KarMCP v%s — the last update check could not reach GitHub, so there may be a newer version."
+msgstr "KarMCP v%s — la última comprobación de actualizaciones no pudo conectar con GitHub, así que puede haber una versión más nueva."
 
 #: includes/class-admin-bar.php:152
 msgid "KarMCP, MCP status"
@@ -11059,7 +11068,7 @@ msgstr "La comprobación de seguridad ha fallado. Vuelve a iniciar la conexión.
 msgid "Security note:"
 msgstr "Nota de seguridad:"
 
-#: includes/admin/views/page-dashboard.php:383
+#: includes/admin/views/page-dashboard.php:391
 msgid "See what's new in the latest releases."
 msgstr "Mira las novedades de las últimas versiones."
 
@@ -11662,7 +11671,7 @@ msgstr "Streamable HTTP"
 msgid "Structured Data"
 msgstr "Datos estructurados"
 
-#: includes/admin/views/page-dashboard.php:376
+#: includes/admin/views/page-dashboard.php:384
 msgid "Stuck? Report a problem or ask a question."
 msgstr "¿Atascado? Informa de un problema o pregunta."
 
@@ -11715,7 +11724,7 @@ msgstr "Redirecciones sugeridas"
 msgid "Sun"
 msgstr "Dom"
 
-#: includes/admin/views/page-dashboard.php:375
+#: includes/admin/views/page-dashboard.php:383
 msgid "Support"
 msgstr "Soporte"
 

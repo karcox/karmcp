@@ -2,6 +2,22 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.43.1]
+
+What a review of 1.43.0's updater found, before anyone met it.
+
+### Fixed
+
+- **"View version details" on the Plugins screen went to wordpress.org and errored.** The update response carries a slug, which is what makes WordPress build that link, and wordpress.org has never heard of a plugin that was never published there. The details screen is answered here now, with the release notes as its changelog. Installing always worked; it was the link beside it that did not.
+
+- **The update quoted requirements that were typed twice.** The WordPress and PHP versions it reported were copies of the plugin header, with nothing keeping the two in step: raise the header's PHP requirement in a later release and the updater would keep telling WordPress the old one, which is what WordPress's own compatibility check reads. They come from the header now, and a requirement the header does not state is not invented.
+
+- **A tag like `1.44.0-beta` counted as a newer version.** `version_compare()` reads it as newer than the release it follows, so the only thing standing between a beta and every site was remembering to tick GitHub's pre-release box. A version is digits and dots now; anything else is not an update, whatever the box says.
+
+- **A failed check looked exactly like being up to date.** A site that cannot reach GitHub — no network, a rate-limited API — cached that as "nothing new" and the dashboard said "you're on the latest version" with the same confidence as a successful check. It now says the last check could not reach GitHub, so the sentence is about what is known rather than what is hoped.
+
+- README said there is no in-dashboard update check. There is, since 1.43.0.
+
 ## [1.43.0]
 
 WordPress can update this plugin now.

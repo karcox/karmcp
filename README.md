@@ -56,7 +56,7 @@ Elementor is **optional**. Every WordPress domain works without it; installing E
 2. In WordPress: **Plugins → Add New → Upload Plugin**, then activate.
 3. Open the **KarMCP** menu in the admin sidebar.
 
-There is no in-dashboard update check — replace the plugin folder to upgrade.
+From 1.43.0 onwards WordPress checks this repository's releases, so later versions appear on the Plugins screen and install from there. Define `KARMCP_NO_UPDATE_CHECK` to switch that off.
 
 **Requires** WordPress 6.9+ and PHP 8.1+. Elementor 3.20+ is optional (4.0+ for atomic elements). The MCP Adapter and Abilities API need no separate install.
 

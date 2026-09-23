@@ -21,6 +21,36 @@ if ( ! defined( 'KARMCP_VERSION' ) ) {
 	define( 'KARMCP_VERSION', '1.43.0' );
 }
 
+// Site transients and the two formatting helpers the details screen uses.
+// Guarded and fixture-backed, like the rest of the harness.
+if ( ! function_exists( 'get_site_transient' ) ) {
+	function get_site_transient( $key ) {
+		return $GLOBALS['karmcp_test']['site_transients'][ $key ] ?? false;
+	}
+}
+if ( ! function_exists( 'set_site_transient' ) ) {
+	function set_site_transient( $key, $value, $ttl = 0 ) {
+		$GLOBALS['karmcp_test']['site_transients'][ $key ] = $value;
+		return true;
+	}
+}
+if ( ! function_exists( 'delete_site_transient' ) ) {
+	function delete_site_transient( $key ) {
+		unset( $GLOBALS['karmcp_test']['site_transients'][ $key ] );
+		return true;
+	}
+}
+if ( ! function_exists( 'esc_html__' ) ) {
+	function esc_html__( $text, $domain = 'default' ) {
+		return htmlspecialchars( (string) $text, ENT_QUOTES );
+	}
+}
+if ( ! function_exists( 'wpautop' ) ) {
+	function wpautop( $text, $br = true ) {
+		return '<p>' . (string) $text . '</p>';
+	}
+}
+
 require_once __DIR__ . '/../includes/class-updater.php';
 
 class UpdaterTest extends TestCase {
@@ -50,8 +80,8 @@ class UpdaterTest extends TestCase {
 		);
 	}
 
-	private function response( array $overrides = array(), string $current = '1.42.1' ): ?array {
-		return KarMCP_Updater::response_from_release( $this->release( $overrides ), $current, self::FILE );
+	private function response( array $overrides = array(), string $current = '1.42.1', array $plugin_data = array() ): ?array {
+		return KarMCP_Updater::response_from_release( $this->release( $overrides ), $current, self::FILE, $plugin_data );
 	}
 
 	// ---------------------------------------------------------------------
@@ -113,7 +143,26 @@ class UpdaterTest extends TestCase {
 			'a date'       => array( 'release-2026-09-23' ),
 			'one number'   => array( '2' ),
 			'with spaces'  => array( '1.43.0 final' ),
+			// version_compare() reads these as newer than the release they
+			// follow, so a tag that says "not for everyone" would go to
+			// everyone if the pre-release box was left unticked.
+			'a beta'       => array( '1.44.0-beta' ),
+			'a candidate'  => array( '1.44.0-rc.1' ),
 		);
+	}
+
+	public function test_the_requirements_come_from_the_plugins_own_headers() {
+		$out = $this->response( array(), '1.42.1', array( 'RequiresWP' => '6.9', 'RequiresPHP' => '8.1' ) );
+
+		$this->assertSame( '6.9', $out['requires'] );
+		$this->assertSame( '8.1', $out['requires_php'], 'Retyping these here would give WordPress a second copy to disagree with the header.' );
+	}
+
+	public function test_requirements_the_headers_do_not_state_are_not_invented() {
+		$out = $this->response();
+
+		$this->assertArrayNotHasKey( 'requires', $out );
+		$this->assertArrayNotHasKey( 'requires_php', $out );
 	}
 
 	public function test_a_release_without_a_zip_is_not_an_update() {
@@ -161,6 +210,28 @@ class UpdaterTest extends TestCase {
 
 		add_filter( 'karmcp_update_check_enabled', '__return_false' );
 		$this->assertFalse( KarMCP_Updater::enabled() );
+	}
+
+	public function test_the_details_screen_is_answered_here_not_by_wordpress_org() {
+		$GLOBALS['karmcp_test']['site_transients'][ KarMCP_Updater::TRANSIENT ] = $this->release();
+
+		$info = KarMCP_Updater::plugin_information( false, 'plugin_information', (object) array( 'slug' => 'karmcp' ) );
+
+		$this->assertIsObject( $info, 'Without this the Plugins screen asks wordpress.org about a plugin that was never published there.' );
+		$this->assertSame( '1.43.0', $info->version );
+		$this->assertStringContainsString( 'github.com/karcox/karmcp', $info->homepage );
+	}
+
+	public function test_another_plugins_details_are_left_alone() {
+		$this->assertFalse( KarMCP_Updater::plugin_information( false, 'plugin_information', (object) array( 'slug' => 'akismet' ) ) );
+		$this->assertFalse( KarMCP_Updater::plugin_information( false, 'query_plugins', (object) array( 'slug' => 'karmcp' ) ) );
+	}
+
+	public function test_a_failed_check_is_not_reported_as_being_up_to_date() {
+		$this->assertFalse( KarMCP_Updater::last_check_failed() );
+
+		$GLOBALS['karmcp_test']['site_transients'][ KarMCP_Updater::TRANSIENT ] = 'none';
+		$this->assertTrue( KarMCP_Updater::last_check_failed(), 'A site that cannot reach GitHub looks identical to one with no update; the dashboard says which.' );
 	}
 
 	public function test_another_plugins_update_is_left_alone() {

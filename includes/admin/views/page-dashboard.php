@@ -351,11 +351,19 @@ $karmcp_videos = array();
 					<span class="karmcp-dash-version-title"><?php esc_html_e( 'You\'re on the latest version', 'karmcp' ); ?></span>
 					<span class="karmcp-dash-version-sub">
 						<?php
-						printf(
-							/* translators: %s: installed version number */
-							esc_html__( 'KarMCP v%s', 'karmcp' ),
-							esc_html( $karmcp_ver['current'] )
-						);
+						if ( class_exists( 'KarMCP_Updater' ) && KarMCP_Updater::last_check_failed() ) {
+							printf(
+								/* translators: %s: installed version number */
+								esc_html__( 'KarMCP v%s — the last update check could not reach GitHub, so there may be a newer version.', 'karmcp' ),
+								esc_html( $karmcp_ver['current'] )
+							);
+						} else {
+							printf(
+								/* translators: %s: installed version number */
+								esc_html__( 'KarMCP v%s', 'karmcp' ),
+								esc_html( $karmcp_ver['current'] )
+							);
+						}
 						?>
 					</span>
 				</span>

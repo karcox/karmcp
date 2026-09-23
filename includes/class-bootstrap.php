@@ -279,6 +279,9 @@ class KarMCP_Bootstrap {
 		// and the class loads through the autoloader when it does — a site that
 		// never opens an update screen never parses it.
 		add_filter( 'update_plugins_github.com', array( 'KarMCP_Updater', 'check' ), 10, 3 );
+		// And the details screen that the update row links to, which would
+		// otherwise ask wordpress.org about a plugin it has never heard of.
+		add_filter( 'plugins_api', array( 'KarMCP_Updater', 'plugin_information' ), 10, 3 );
 
 		// Invalidate Elementor's rendered-element cache on any _elementor_data
 		// write, so MCP-created/edited pages never serve a stale empty render (#111).

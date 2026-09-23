@@ -67,8 +67,49 @@ class KarMCP_Updater {
 		if ( null === $release ) {
 			return $update;
 		}
-		$response = self::response_from_release( $release, (string) ( $plugin_data['Version'] ?? KARMCP_VERSION ), $plugin_file );
+		$response = self::response_from_release( $release, (string) ( $plugin_data['Version'] ?? KARMCP_VERSION ), $plugin_file, $plugin_data );
 		return null === $response ? $update : $response;
+	}
+
+	/**
+	 * Answer the "View details" screen for this plugin.
+	 *
+	 * Without this, the details link on the Plugins screen goes to
+	 * wordpress.org and errors: the slug in the update response is what makes
+	 * WordPress build that link, and wordpress.org has never heard of a plugin
+	 * that was never published there. The release notes become the changelog.
+	 *
+	 * @param false|object|array $result The result another handler decided.
+	 * @param string             $action The plugins_api action.
+	 * @param object             $args   Its arguments.
+	 * @return false|object|array
+	 */
+	public static function plugin_information( $result, string $action, $args ) {
+		$slug = dirname( KARMCP_BASENAME );
+		if ( 'plugin_information' !== $action || $slug !== (string) ( $args->slug ?? '' ) ) {
+			return $result;
+		}
+		$release = self::enabled() ? self::latest_release() : null;
+		$version = '';
+		if ( is_array( $release ) ) {
+			$version = ltrim( trim( (string) ( $release['tag_name'] ?? '' ) ), 'vV' );
+		}
+
+		return (object) array(
+			'name'          => 'KarMCP',
+			'slug'          => $slug,
+			'version'       => '' !== $version ? $version : KARMCP_VERSION,
+			'author'        => '<a href="https://github.com/karcox">karcox</a>',
+			'homepage'      => 'https://github.com/' . self::REPO,
+			'requires'      => '6.9',
+			'requires_php'  => '8.1',
+			'last_updated'  => (string) ( $release['published_at'] ?? '' ),
+			'download_link' => is_array( $release ) ? self::package_url( (array) ( $release['assets'] ?? array() ) ) : '',
+			'sections'      => array(
+				'description' => esc_html__( 'Exposes this WordPress site as MCP tools, so an AI agent can build Elementor pages, manage content and audit the site.', 'karmcp' ),
+				'changelog'   => is_array( $release ) ? wp_kses_post( wpautop( (string) ( $release['body'] ?? '' ) ) ) : '',
+			),
+		);
 	}
 
 	/**
@@ -132,6 +173,18 @@ class KarMCP_Updater {
 	}
 
 	/**
+	 * Whether the last lookup failed rather than finding nothing.
+	 *
+	 * The two look identical from outside — no update either way — so the
+	 * dashboard can say which it was instead of implying the site is current.
+	 *
+	 * @return bool
+	 */
+	public static function last_check_failed(): bool {
+		return 'none' === get_site_transient( self::TRANSIENT );
+	}
+
+	/**
 	 * Forget the cached release, so the next check asks GitHub again.
 	 */
 	public static function flush(): void {
@@ -148,16 +201,23 @@ class KarMCP_Updater {
 	 * @param array  $release     The release, as the GitHub API describes it.
 	 * @param string $current     The installed version.
 	 * @param string $plugin_file The plugin's basename.
+	 * @param array  $plugin_data The plugin's headers, for the requirements to
+	 *                            quote. Retyping them here would give WordPress
+	 *                            a second copy to disagree with the first.
 	 * @return array|null
 	 */
-	public static function response_from_release( array $release, string $current, string $plugin_file ): ?array {
+	public static function response_from_release( array $release, string $current, string $plugin_file, array $plugin_data = array() ): ?array {
 		if ( ! empty( $release['draft'] ) || ! empty( $release['prerelease'] ) ) {
 			return null;
 		}
 		$version = ltrim( trim( (string) ( $release['tag_name'] ?? '' ) ), 'vV' );
-		// A tag that is not a version at all would compare as 0 and look like an
-		// update to every site; require the shape before comparing.
-		if ( ! preg_match( '/^\d+(\.\d+){1,3}(-[A-Za-z0-9.]+)?$/', $version ) ) {
+		// Digits and dots only. A tag that is not a version at all would compare
+		// as 0 and look like an update to every site, and a suffix like
+		// `-beta` compares as newer than the release it follows — so a tag that
+		// means "not for everyone" would ship to everyone if the pre-release
+		// box was left unticked. Two ways to say the same thing, and only one
+		// of them is a checkbox someone has to remember.
+		if ( ! preg_match( '/^\d+(\.\d+){1,3}$/', $version ) ) {
 			return null;
 		}
 		if ( '' === $current || version_compare( $version, $current, '<=' ) ) {
@@ -167,17 +227,20 @@ class KarMCP_Updater {
 		if ( '' === $package ) {
 			return null;
 		}
-		return array(
-			'id'           => 'github.com/' . self::REPO,
-			'slug'         => dirname( $plugin_file ),
-			'plugin'       => $plugin_file,
-			'version'      => $version,
-			'url'          => (string) ( $release['html_url'] ?? 'https://github.com/' . self::REPO . '/releases' ),
-			'package'      => $package,
-			'requires'     => '6.9',
-			'requires_php' => '8.1',
-			'tested'       => '7.0',
+		$out = array(
+			'id'      => 'github.com/' . self::REPO,
+			'slug'    => dirname( $plugin_file ),
+			'plugin'  => $plugin_file,
+			'version' => $version,
+			'url'     => (string) ( $release['html_url'] ?? 'https://github.com/' . self::REPO . '/releases' ),
+			'package' => $package,
 		);
+		foreach ( array( 'requires' => 'RequiresWP', 'requires_php' => 'RequiresPHP' ) as $key => $header ) {
+			if ( '' !== (string) ( $plugin_data[ $header ] ?? '' ) ) {
+				$out[ $key ] = (string) $plugin_data[ $header ];
+			}
+		}
+		return $out;
 	}
 
 	/**

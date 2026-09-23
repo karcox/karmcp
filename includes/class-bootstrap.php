@@ -282,6 +282,16 @@ class KarMCP_Bootstrap {
 		// And the details screen that the update row links to, which would
 		// otherwise ask wordpress.org about a plugin it has never heard of.
 		add_filter( 'plugins_api', array( 'KarMCP_Updater', 'plugin_information' ), 10, 3 );
+		// A "Check for updates" link on the plugin's row, for the moment the
+		// six-hour cache is the wrong answer: right after a release, or when a
+		// site is suspected of not checking at all.
+		add_filter( 'plugin_action_links_' . KARMCP_BASENAME, array( 'KarMCP_Updater', 'action_links' ) );
+		// The action name is written out rather than read from the class
+		// constant: naming the constant here would autoload the updater on
+		// every request, including the front-end ones that never check.
+		// KarMCP_Updater::CHECK_ACTION is the same string, and a test pins it.
+		add_action( 'admin_post_karmcp_check_updates', array( 'KarMCP_Updater', 'handle_check' ) );
+		add_action( 'admin_notices', array( 'KarMCP_Updater', 'checked_notice' ) );
 
 		// Invalidate Elementor's rendered-element cache on any _elementor_data
 		// write, so MCP-created/edited pages never serve a stale empty render (#111).

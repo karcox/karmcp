@@ -112,6 +112,69 @@ class KarMCP_Updater {
 		);
 	}
 
+	/** The admin-post action behind the "Check for updates" row link. */
+	const CHECK_ACTION = 'karmcp_check_updates';
+
+	/**
+	 * Add a "Check for updates" link to this plugin's row on the Plugins screen.
+	 *
+	 * The answer is cached for six hours, which is right for a site and wrong
+	 * for the moment someone wants to know now — after publishing a release, or
+	 * when a site is suspected of not checking at all.
+	 *
+	 * @param string[] $links The row's links.
+	 * @return string[]
+	 */
+	public static function action_links( array $links ): array {
+		if ( ! self::enabled() || ! current_user_can( 'update_plugins' ) ) {
+			return $links;
+		}
+		$url = wp_nonce_url( admin_url( 'admin-post.php?action=' . self::CHECK_ACTION ), self::CHECK_ACTION );
+
+		return array_merge(
+			array( 'karmcp-check' => '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Check for updates', 'karmcp' ) . '</a>' ),
+			$links
+		);
+	}
+
+	/**
+	 * Throw away both caches and send the browser back to the Plugins screen,
+	 * where WordPress will have asked again by the time it renders.
+	 */
+	public static function handle_check(): void {
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			wp_die( esc_html__( 'You are not allowed to check for updates.', 'karmcp' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( self::CHECK_ACTION );
+
+		self::flush();
+		// WordPress caches its own answer too, and would serve that one back
+		// without asking anybody.
+		delete_site_transient( 'update_plugins' );
+
+		wp_safe_redirect( admin_url( 'plugins.php?karmcp-checked=1' ) );
+		exit;
+	}
+
+	/**
+	 * Say what the check found, once, after that redirect.
+	 */
+	public static function checked_notice(): void {
+		if ( empty( $_GET['karmcp-checked'] ) || ! current_user_can( 'update_plugins' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- reading a flag to print a message; nothing is written.
+			return;
+		}
+		$failed  = self::last_check_failed();
+		$message = $failed
+			? __( 'KarMCP could not reach GitHub to check for updates. It will try again shortly.', 'karmcp' )
+			: __( 'KarMCP checked for updates. Any newer version appears in the list below.', 'karmcp' );
+
+		printf(
+			'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+			$failed ? 'warning' : 'success',
+			esc_html( $message )
+		);
+	}
+
 	/**
 	 * Whether update checking is on.
 	 *

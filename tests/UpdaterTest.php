@@ -40,6 +40,11 @@ if ( ! function_exists( 'delete_site_transient' ) ) {
 		return true;
 	}
 }
+if ( ! function_exists( 'wp_nonce_url' ) ) {
+	function wp_nonce_url( $url, $action = -1, $name = '_wpnonce' ) {
+		return $url . '&' . $name . '=' . substr( md5( (string) $action ), 0, 10 );
+	}
+}
 if ( ! function_exists( 'esc_html__' ) ) {
 	function esc_html__( $text, $domain = 'default' ) {
 		return htmlspecialchars( (string) $text, ENT_QUOTES );
@@ -225,6 +230,30 @@ class UpdaterTest extends TestCase {
 	public function test_another_plugins_details_are_left_alone() {
 		$this->assertFalse( KarMCP_Updater::plugin_information( false, 'plugin_information', (object) array( 'slug' => 'akismet' ) ) );
 		$this->assertFalse( KarMCP_Updater::plugin_information( false, 'query_plugins', (object) array( 'slug' => 'karmcp' ) ) );
+	}
+
+	public function test_the_row_link_offers_a_check_and_keeps_what_was_there() {
+		$GLOBALS['karmcp_test']['caps'][] = 'update_plugins';
+		$links = KarMCP_Updater::action_links( array( 'deactivate' => '<a href="#">Deactivate</a>' ) );
+
+		$this->assertStringContainsString( 'action=' . KarMCP_Updater::CHECK_ACTION, $links['karmcp-check'] );
+		$this->assertStringContainsString( '_wpnonce', $links['karmcp-check'], 'The link performs an action, so it carries a nonce.' );
+		$this->assertArrayHasKey( 'deactivate', $links );
+	}
+
+	public function test_a_user_who_cannot_update_plugins_is_not_offered_the_check() {
+		$GLOBALS['karmcp_test']['caps'] = array( 'edit_posts' );
+
+		$this->assertSame( array( 'x' => 'y' ), KarMCP_Updater::action_links( array( 'x' => 'y' ) ) );
+	}
+
+	public function test_the_hooked_action_name_matches_the_constant() {
+		// The bootstrap writes the string out so that naming the constant does
+		// not autoload this class on every request; that only stays correct
+		// while the two agree.
+		$bootstrap = (string) file_get_contents( __DIR__ . '/../includes/class-bootstrap.php' );
+
+		$this->assertStringContainsString( "admin_post_" . KarMCP_Updater::CHECK_ACTION, $bootstrap );
 	}
 
 	public function test_a_failed_check_is_not_reported_as_being_up_to_date() {

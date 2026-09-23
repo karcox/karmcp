@@ -2,6 +2,12 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.43.2]
+
+### Added
+
+- **A "Check for updates" link on the plugin's row in Plugins.** The update answer is cached for six hours, which is right for a site running on its own and wrong for the two moments someone actually wants to know: just after a release, and when a site is suspected of not checking at all. The link throws away both that cache and WordPress's own — which would otherwise serve its previous answer without asking anybody — and says on the way back whether GitHub answered. It takes the `update_plugins` capability and a nonce, and it is not shown when update checks are switched off.
+
 ## [1.43.1]
 
 What a review of 1.43.0's updater found, before anyone met it.

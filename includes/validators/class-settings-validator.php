@@ -331,6 +331,51 @@ class KarMCP_Settings_Validator {
 	private const DIMENSION_KEYS = array( 'top', 'right', 'bottom', 'left', 'unit', 'isLinked' );
 
 	/**
+	 * Rewrite every numeric side of a dimension value as the string the editor
+	 * writes, throughout a settings array and one repeater level down.
+	 *
+	 * Elementor's editor serialises a dimension as strings — `"20"`, not `20` —
+	 * and its controls read the stored value back as one. A number written by
+	 * an API caller renders on the front end and shows as **0** in the panel,
+	 * so the next person to open the page sees a padding that is not there and
+	 * saves it away without meaning to. The front end is right and the editor
+	 * is wrong, which is the worst way round: nothing looks broken until the
+	 * page is edited.
+	 *
+	 * Only dimension-shaped values are touched — every key in the value is one
+	 * of `top/right/bottom/left/unit/isLinked` — so slider sizes, atomic props
+	 * and anything else keep the type they were given.
+	 *
+	 * @since 1.44.0
+	 *
+	 * @param array $settings The settings being written.
+	 * @return array The same settings, with dimension sides as strings.
+	 */
+	public static function stringify_dimensions( array $settings ): array {
+		foreach ( $settings as $key => $value ) {
+			if ( ! is_array( $value ) ) {
+				continue;
+			}
+			if ( self::is_repeater_rows( $value ) ) {
+				foreach ( $value as $index => $row ) {
+					$settings[ $key ][ $index ] = self::stringify_dimensions( $row );
+				}
+				continue;
+			}
+			if ( array_diff( array_keys( $value ), self::DIMENSION_KEYS ) ) {
+				continue;
+			}
+			foreach ( self::DIMENSION_SIDES as $side ) {
+				if ( isset( $value[ $side ] ) && is_numeric( $value[ $side ] ) && ! is_string( $value[ $side ] ) ) {
+					$settings[ $key ][ $side ] = (string) $value[ $side ];
+				}
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
 	 * Dimension values written with some sides filled and others left blank.
 	 *
 	 * This one is worse than it looks, and the reason is in Elementor's CSS

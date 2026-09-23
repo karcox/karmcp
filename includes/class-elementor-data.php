@@ -354,6 +354,10 @@ class KarMCP_Data {
 		// values into valid ones, so it is a no-op for healthy pages.
 		$data = KarMCP_Atomic_Props::coerce_tree( $data );
 
+		// And write every dimension side as the string the editor expects, so a
+		// padding sent as a number does not read back as 0 in the panel.
+		$data = self::stringify_tree_dimensions( $data );
+
 		// Capture the prior Elementor data so the change ledger can offer a rollback.
 		$karmcp_before_raw = get_post_meta( $post_id, '_elementor_data', true );
 
@@ -413,6 +417,7 @@ class KarMCP_Data {
 		// below rather than reporting a phantom success. A validation throw (#112)
 		// also routes straight to the fallback.
 		$needs_fallback = $validation_throw || ! $result;
+		$dropped        = array();
 		if ( ! $needs_fallback && ! empty( $data ) ) {
 			$persisted_raw = get_post_meta( $post_id, '_elementor_data', true );
 			$persisted     = ( is_string( $persisted_raw ) && '' !== $persisted_raw )
@@ -420,6 +425,19 @@ class KarMCP_Data {
 				: null;
 			if ( empty( $persisted ) || ! is_array( $persisted ) ) {
 				$needs_fallback = true;
+			} else {
+				// Elementor drops an element whose widget type is not registered
+				// in THIS context, and says nothing. Several popular widgets
+				// register conditionally — a checkout form that only exists on
+				// its own funnel step, for instance — so editing an unrelated
+				// element over REST or WP-CLI could delete one and report
+				// success. Compare what we sent with what survived; anything
+				// missing sends the whole tree through the direct write, which
+				// stores exactly what was given.
+				$dropped = array_values( array_diff( self::element_ids( $data ), self::element_ids( $persisted ) ) );
+				if ( $dropped ) {
+					$needs_fallback = true;
+				}
 			}
 		}
 
@@ -645,6 +663,55 @@ class KarMCP_Data {
 			'elementor',
 			'update-page-settings'
 		);
+	}
+
+	/**
+	 * Every element id in a tree, at any depth.
+	 *
+	 * @since 1.44.0
+	 *
+	 * @param array $elements The element tree.
+	 * @return string[]
+	 */
+	public static function element_ids( array $elements ): array {
+		$ids = array();
+		foreach ( $elements as $element ) {
+			if ( ! is_array( $element ) ) {
+				continue;
+			}
+			if ( isset( $element['id'] ) && '' !== (string) $element['id'] ) {
+				$ids[] = (string) $element['id'];
+			}
+			if ( ! empty( $element['elements'] ) && is_array( $element['elements'] ) ) {
+				$ids = array_merge( $ids, self::element_ids( $element['elements'] ) );
+			}
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * Apply stringify_dimensions() to every element's settings in a tree.
+	 *
+	 * @since 1.44.0
+	 *
+	 * @param array $elements The element tree.
+	 * @return array
+	 */
+	private static function stringify_tree_dimensions( array $elements ): array {
+		foreach ( $elements as $index => $element ) {
+			if ( ! is_array( $element ) ) {
+				continue;
+			}
+			if ( ! empty( $element['settings'] ) && is_array( $element['settings'] ) && class_exists( 'KarMCP_Settings_Validator' ) ) {
+				$elements[ $index ]['settings'] = KarMCP_Settings_Validator::stringify_dimensions( $element['settings'] );
+			}
+			if ( ! empty( $element['elements'] ) && is_array( $element['elements'] ) ) {
+				$elements[ $index ]['elements'] = self::stringify_tree_dimensions( $element['elements'] );
+			}
+		}
+
+		return $elements;
 	}
 
 	/**

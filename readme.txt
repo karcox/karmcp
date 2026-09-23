@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.43.2
+Stable tag: 1.44.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.44.0 =
+Fixed: three Elementor writes that reported success and lost something. A widget Elementor cannot build in the current request - a checkout form that registers only on its own funnel step, add-ons that load per template - was silently dropped when an unrelated element was edited over REST or WP-CLI; the save now checks that every element it sent survived, and writes the tree directly when any did not. A padding or margin sent as a number rendered on the front end and showed as 0 in the editor, where the next save wrote the zeros in for real; dimension sides are now stored as the strings the editor uses. And update-global-colors accepted Elementor's four system colours (primary, secondary, text, accent), stored them where nothing reads them and answered success; they are refused now, before anything is written, with a message saying to change them in Elementor > Site Settings > Global Colors.
 
 = 1.43.2 =
 Added: a "Check for updates" link on the plugin's row in Plugins. The update answer is cached for six hours, so this is for the moments that cache is the wrong answer - right after a release, or when a site is suspected of not checking at all. It clears that cache and WordPress's own, then says whether GitHub answered.

@@ -18,9 +18,9 @@ La rama local `main`, que seguía a `upstream/main`, se borró a propósito: era
 
 | | |
 |---|---|
-| Baseline tag | `baseline-3.17.0` |
-| Upstream commit | `3c6b78d` |
-| Reviewed up to | 3.17.0 (fetched and read, 2026-09-21) — **in sync on everything useful** |
+| Baseline tag | `baseline-3.17.1` |
+| Upstream commit | `37d2c49` |
+| Reviewed up to | 3.17.1 (fetched and read, 2026-09-23) — **in sync on everything useful** |
 
 `baseline-<version>` marks the last upstream commit that has been **reviewed** — not merged. Everything after it is unread.
 
@@ -113,6 +113,7 @@ See [docs/ROADMAP-SEO-A11Y-THEMER.md](docs/ROADMAP-SEO-A11Y-THEMER.md) for the g
 | 3.16.0 | 2026-09-15 | **Install from an uploaded ZIP (KarMCP 1.41.0)**, with the same guard set plus a private temp copy against swaps; KarMCP, Elementor and Elementor Pro stay unreplaceable. | The Hello Elementor 3.x Themer fix was **already in this tree** (`class-themer-hello-adapter.php`). GSAP, FunnelKit reads and paginated change history are Pro. Structured ACF / WooCommerce imports and wider ACF coverage were judged not worth it for now — the WooCommerce import by SKU is the one to revisit if the need appears. |
 | 3.16.1 | 2026-09-15 | **Plain-permalink base URL (KarMCP 1.41.0)**, also covering PATHINFO permalinks, which upstream's fix does not mention. | Nothing else in the release. |
 | 3.17.0 | 2026-09-21 | **The History / rollback hardening (KarMCP 1.42.0)**, reimplemented against our ledger: create-page (and build-page, and build-site, which recorded nothing) record one creation and return its `change_id`; page settings and custom CSS are recorded; creation guards; exact meta restore with an absent marker; every undo verifies its write; no restore under an occupied id; outer suppression preserved. Found here too, not in upstream's notes: `list-changes` rejected ten of its own thirteen domains, and `build-page` swallowed a page-settings failure. | Ten page-builder integrations, the Page Builders screen, Gutenberg block packs, Otter, Oxygen and Widget Builder data controls — not our stack. **Open, small:** their reserved-control-name check for the Widget Builder (a control named like an Elementor setting can hide the widget via entrance animation) — worth checking against `KarMCP_Widget_Spec`. |
+| 3.17.1 | 2026-09-23 | **Three data-safety fixes (KarMCP 1.44.0)**, all reimplemented and all present here too: elements Elementor drops when their widget type is not registered in this request (we now compare sent ids with persisted ones and fall back to the direct write), numeric dimension sides that read back as 0 in the editor, and `update-global-colors` accepting the four system colour ids. | The page-settings full-replace fix was **already here** (merge since 1.x, recorded in History since 1.42.0). EMCP Cloud reconnect and their OAuth well-known scoping touch subsystems this tree does not have — our OAuth already serves only its own paths. Visibility (native-aeo-pack) SEO integration: not installed on any site we run; the seam is `karmcp_seo_meta` if that changes. |
 
 ### 3.12.1 — notes
 

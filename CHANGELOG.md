@@ -2,6 +2,18 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.44.0]
+
+Three writes that reported success and lost something.
+
+### Fixed
+
+- **A widget Elementor cannot build in this context was deleted by an edit to a different element.** `Document::save()` skips an element whose widget type is not registered in the request that is running, and returns as though nothing happened. Several widgets register conditionally — a checkout form that only exists on its own funnel step, add-ons that load per template — so over REST or WP-CLI they are not registered, and editing a heading could silently take the checkout form with it. The save now compares the element ids it sent with the ids that survived, and when any are missing it writes the tree directly instead, which stores exactly what it was given. The page keeps every element either way.
+
+- **A padding or margin sent as a number showed as 0 in the editor.** Elementor's editor serialises a dimension side as a string, and its controls read it back as one; a number renders correctly on the front end and reads as nothing in the panel. That is the worst way round — the page looks right until someone opens it, sees zeros, and saves them away. Every dimension side is now written as the string the editor writes, on every element write, one repeater level deep. Slider sizes and atomic props keep the type they were given: only a value whose keys are all dimension keys is treated as a dimension.
+
+- **`update-global-colors` accepted Elementor's four system colours and changed nothing.** `primary`, `secondary`, `text` and `accent` are kit settings of their own, not entries in the custom palette, so writing one stored an entry that nothing reads — and the call answered success while every page kept the old colour. They are refused now with `reserved_color_id`, before anything is written, and the message says where they actually live (Elementor → Site Settings → Global Colors). A call that also carries real custom colours writes those and reports both the ids written and the ids skipped.
+
 ## [1.43.2]
 
 ### Added

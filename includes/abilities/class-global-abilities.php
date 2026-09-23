@@ -21,6 +21,55 @@ if ( ! defined( 'ABSPATH' ) ) {
 class KarMCP_Global_Abilities {
 
 	/**
+	 * Elementor's four system colours. They are kit settings of their own, not
+	 * entries in `custom_colors`, so writing one here stores something nothing
+	 * reads.
+	 *
+	 * @since 1.44.0
+	 */
+	public const SYSTEM_COLOR_IDS = array( 'primary', 'secondary', 'text', 'accent' );
+
+	/**
+	 * Refuse a call that asks only for system colours, and say where they live.
+	 *
+	 * Pure, and checked before anything is written: a caller who sends
+	 * `primary` alone used to get success and no change at all.
+	 *
+	 * @since 1.44.0
+	 *
+	 * @param array $colors The colours as the caller sent them.
+	 * @return \WP_Error|null Null when at least one colour is writable here.
+	 */
+	public static function system_color_refusal( array $colors ): ?\WP_Error {
+		$reserved = array();
+		$writable = 0;
+		foreach ( $colors as $color ) {
+			$id = is_array( $color ) ? (string) ( $color['_id'] ?? '' ) : '';
+			if ( '' === $id ) {
+				continue;
+			}
+			if ( in_array( $id, self::SYSTEM_COLOR_IDS, true ) ) {
+				$reserved[] = $id;
+				continue;
+			}
+			++$writable;
+		}
+		if ( $writable > 0 || ! $reserved ) {
+			return null;
+		}
+
+		return new \WP_Error(
+			'reserved_color_id',
+			sprintf(
+				/* translators: %s: comma-separated colour ids. */
+				__( 'This tool writes the kit\'s custom colours, and these are Elementor\'s system colours, which are stored separately: %s. Change them in Elementor > Site Settings > Global Colors. Nothing was written.', 'karmcp' ),
+				implode( ', ', $reserved )
+			),
+			array( 'reserved' => $reserved )
+		);
+	}
+
+	/**
 	 * @var KarMCP_Data
 	 */
 	private $data;
@@ -80,7 +129,7 @@ class KarMCP_Global_Abilities {
 			'karmcp/update-global-colors',
 			array(
 				'label'               => __( 'Update Global Colors', 'karmcp' ),
-				'description'         => __( 'Updates the site-wide color palette in the Elementor kit. Provide an array of color objects with id, title, and color (hex).', 'karmcp' ),
+				'description'         => __( 'Updates the kit\'s CUSTOM colors — the palette you add to, not Elementor\'s four system colors (primary, secondary, text, accent), which are separate kit settings and are refused here with reserved_color_id: change those in Elementor > Site Settings > Global Colors. Provide an array of color objects with _id, title, and color (hex); the response lists the ids actually written.', 'karmcp' ),
 				'category'            => 'karmcp',
 				'execute_callback'    => array( $this, 'execute_update_global_colors' ),
 				'permission_callback' => array( $this, 'check_manage_permission' ),
@@ -232,6 +281,13 @@ class KarMCP_Global_Abilities {
 			return new \WP_Error( 'missing_colors', __( 'The colors parameter is required and must be an array.', 'karmcp' ) );
 		}
 
+		// Decided before the kit is touched, so a call that asks only for system
+		// colours is refused without writing anything anywhere.
+		$refusal = self::system_color_refusal( $colors );
+		if ( is_wp_error( $refusal ) ) {
+			return $refusal;
+		}
+
 		$kit = $this->resolve_writable_kit();
 		if ( is_wp_error( $kit ) ) {
 			return $kit;
@@ -250,9 +306,20 @@ class KarMCP_Global_Abilities {
 			}
 		}
 
+		$written  = array();
+		$reserved = array();
 		foreach ( $colors as $color ) {
 			$color_id = sanitize_text_field( $color['_id'] ?? '' );
 			if ( empty( $color_id ) ) {
+				continue;
+			}
+			// Elementor's four system colours do not live in `custom_colors`;
+			// they are their own kit settings. Upserting one here created an
+			// entry with the same id that nothing reads, and answered success —
+			// so a site's primary colour "changed" and every page kept the old
+			// one.
+			if ( in_array( $color_id, self::SYSTEM_COLOR_IDS, true ) ) {
+				$reserved[] = $color_id;
 				continue;
 			}
 
@@ -267,13 +334,19 @@ class KarMCP_Global_Abilities {
 			} else {
 				$existing_colors[] = $color_entry;
 			}
+			$written[] = $color_id;
 		}
 
 		$karmcp_kit_snap = $this->snapshot_kit_settings( $kit );
 		$kit->update_settings( array( 'custom_colors' => $existing_colors ) );
 		$this->record_kit_change( $karmcp_kit_snap, 'Updated global colors' );
 
-		return array( 'success' => true );
+		$out = array( 'success' => true, 'written' => $written );
+		if ( $reserved ) {
+			$out['skipped_system_colors'] = $reserved;
+			$out['note']                  = __( 'Elementor\'s system colours are not custom colours and were not written. Change them in Elementor > Site Settings > Global Colors.', 'karmcp' );
+		}
+		return $out;
 	}
 
 	// -------------------------------------------------------------------------

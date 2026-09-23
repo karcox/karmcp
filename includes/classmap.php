@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// 254 symbols.
+// 255 symbols.
 return array(
 	'karmcp_a11y_audit'                     => 'includes/audits/class-a11y-audit.php',
 	'karmcp_a11y_audit_abilities'           => 'includes/abilities/class-a11y-audit-abilities.php',
@@ -246,6 +246,7 @@ return array(
 	'karmcp_translation_integration'        => 'includes/abilities/i18n/class-translation-integration.php',
 	'karmcp_uninstaller'                    => 'includes/class-uninstaller.php',
 	'karmcp_unsplash_client'                => 'includes/class-unsplash-client.php',
+	'karmcp_updater'                        => 'includes/class-updater.php',
 	'karmcp_url_guard'                      => 'includes/class-url-guard.php',
 	'karmcp_user_abilities'                 => 'includes/abilities/class-user-abilities.php',
 	'karmcp_vuln_audit'                     => 'includes/modules/vulnerabilities/class-vuln-audit.php',

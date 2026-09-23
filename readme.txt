@@ -3,7 +3,7 @@ Contributors: karmcp
 Tags: elementor, mcp, ai, page-builder, automation
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.42.1
+Stable tag: 1.43.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -16,7 +16,7 @@ KarMCP exposes your WordPress site as **MCP (Model Context Protocol) tools**, so
 
 It builds on the official WordPress MCP Adapter, which ships bundled. The MCP endpoint is `/wp-json/mcp/karmcp-server` and tool names are prefixed `karmcp-`.
 
-There is no telemetry and no auto-updater: the plugin makes no outbound calls unless you configure one. Third-party copyright notices are in the bundled NOTICE file.
+There is no telemetry. The only outbound call it makes on its own is the update check against its own GitHub releases, which you can switch off; everything else happens only if you configure it. Third-party copyright notices are in the bundled NOTICE file.
 
 **Available in English and Spanish.** Set your site's language and the whole interface follows it. The descriptions of the MCP tools stay in English on purpose: the AI agent reads them, not you.
 
@@ -153,6 +153,9 @@ On shared LiteSpeed hosting this is usually the host caching or timing out the r
 2. Connection configuration page with copy-paste configs.
 
 == Changelog ==
+
+= 1.43.0 =
+Added: KarMCP updates itself. WordPress now checks this plugin's own GitHub releases, so a new version shows up on the Plugins screen and installs with the usual button instead of being uploaded by hand. The check is narrow on purpose, since what it returns is unpacked over the running plugin: the release must be published, its tag must read as a version newer than the installed one, and the download must be a .zip served over HTTPS by GitHub - anything else counts as no update. Answers are cached for six hours, failures for thirty minutes, and the whole check can be switched off with the KARMCP_NO_UPDATE_CHECK constant or the karmcp_update_check_enabled filter. Fixed: the dashboard always said you were on the latest version; it now reports what WordPress knows.
 
 = 1.42.1 =
 Fixed: retrying an undo after its history write failed could restore something twice - deleted database rows were inserted again. Every undo is now safe to repeat: missing rows are re-inserted and present ones left alone, a post already out of the trash or an item already restored under its id is recognised, and redirect undos check their own result. An item is only treated as already restored when every identifying field matches, so a different item that happens to hold the id is never mistaken for it.

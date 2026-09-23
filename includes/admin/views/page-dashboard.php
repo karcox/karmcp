@@ -310,12 +310,19 @@ $karmcp_videos = array();
 			<p class="karmcp-dash-section-sub"><?php esc_html_e( 'Quick links to the free and premium support channels.', 'karmcp' ); ?></p>
 		</div>
 		<?php
-		// This build updates manually (no auto-updater), so the installed
-		// version is always "latest" as far as the dashboard knows.
-		$karmcp_ver = array(
+		// Read what WordPress already knows, rather than asking GitHub here: the
+		// update check runs on WordPress's own schedule and leaves its answer in
+		// this transient, so the dashboard costs nothing and never disagrees with
+		// the Plugins screen. Before 1.43.0 this block hard-coded "latest", which
+		// was true only because nothing could ever find an update.
+		$karmcp_updates = get_site_transient( 'update_plugins' );
+		$karmcp_offer   = ( is_object( $karmcp_updates ) && isset( $karmcp_updates->response[ KARMCP_BASENAME ]->new_version ) )
+			? (string) $karmcp_updates->response[ KARMCP_BASENAME ]->new_version
+			: '';
+		$karmcp_ver     = array(
 			'current'          => KARMCP_VERSION,
-			'latest'           => KARMCP_VERSION,
-			'update_available' => false,
+			'latest'           => '' !== $karmcp_offer ? $karmcp_offer : KARMCP_VERSION,
+			'update_available' => '' !== $karmcp_offer,
 			'update_url'       => admin_url( 'plugins.php' ),
 		);
 		?>

@@ -64,7 +64,7 @@ git tag -f baseline-<version> <upstream-commit>
 
 These are deliberate. Do **not** re-import them from upstream:
 
-- `includes/class-github-updater.php` — deleted. Updates are manual; the header carries `Update URI: false`.
+- `includes/class-github-updater.php` — deleted, and **not** what 1.43.0 brought back. `KarMCP_Updater` was written here against the `update_plugins_{$hostname}` filter WordPress has had since 5.8, which upstream's class predates: no transient is hijacked, and the answer is refused unless the tag parses as a newer version and the download is a `.zip` on a GitHub host.
 - Freemius SDK — never loaded, and no stand-in remains: `KarMCP_License` / `karmcp_fs()` are gone entirely (see the two-tier bullet below).
 - `KarMCP_Upgrade_Notice`, `KarMCP_Community_Notice` — deleted (storefront and community marketing). `KarMCP_Elementor_Notice` is **kept** — it reports a real missing dependency.
 - Upsell views — rewritten as neutral "not available in this build" notices.

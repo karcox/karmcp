@@ -69,7 +69,7 @@ class KarMCP_Bootstrap {
 	 *
 	 * Required, not optional: the automatic loading WordPress added in 4.6 only
 	 * covers translations it downloads for plugins hosted on wordpress.org. This
-	 * one ships with `Update URI: false` and is installed by hand, so without
+	 * one updates from its own GitHub releases, so without
 	 * this call the ~3,000 translatable strings could never resolve to anything
 	 * but English, whatever was placed in `languages/`.
 	 *
@@ -273,6 +273,12 @@ class KarMCP_Bootstrap {
 			array( 'KarMCP_Schema_Compat', 'normalize_result' ),
 			99
 		);
+
+		// Update checks against this plugin's own GitHub releases. WordPress
+		// fires this filter only for plugins whose Update URI names github.com,
+		// and the class loads through the autoloader when it does — a site that
+		// never opens an update screen never parses it.
+		add_filter( 'update_plugins_github.com', array( 'KarMCP_Updater', 'check' ), 10, 3 );
 
 		// Invalidate Elementor's rendered-element cache on any _elementor_data
 		// write, so MCP-created/edited pages never serve a stale empty render (#111).

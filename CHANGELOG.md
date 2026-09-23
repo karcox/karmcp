@@ -2,6 +2,24 @@
 
 All notable changes to KarMCP are documented in this file.
 
+## [1.43.0]
+
+WordPress can update this plugin now.
+
+### Added
+
+- **KarMCP updates itself from its own GitHub releases.** Until now every site was updated by hand, by uploading the ZIP, and nothing ever said a new version existed. The `Update URI` header names github.com, which is what makes WordPress ask the `update_plugins_github.com` filter instead of looking a slug up in a directory this plugin was never published to. `KarMCP_Updater` answers it from the repository's latest published release, and the update then appears on the Plugins screen and installs with the button already there.
+
+  What it answers with is deliberately narrow, because the value it returns is the URL WordPress downloads and unpacks over the running plugin. The release has to be published rather than a draft or a pre-release, its tag has to read as a version number and be newer than the installed one, and the download has to be a `.zip` asset served over HTTPS by github.com or GitHub's asset host. Anything else — a tag that is a word, a release with no ZIP, a link that merely mentions github.com — is "no update", never a guess.
+
+  The check runs on WordPress's own update schedule, and the answer is cached for six hours (and a failure for thirty minutes, so a site that cannot reach GitHub does not try again on every page load). Nothing is sent: the request carries the site URL as a user agent string and asks for a public release. Set the `KARMCP_NO_UPDATE_CHECK` constant, or return false from the `karmcp_update_check_enabled` filter, and no request is made at all.
+
+  This needs the repository to be public, which is what makes a token unnecessary. A token shared across sites would sit in a readable file on every one of them, and revoking it would silently stop the updates everywhere.
+
+### Fixed
+
+- **The dashboard always claimed you were on the latest version.** It hard-coded the installed version as the latest one, which was true only in the sense that nothing could ever find a newer one. It now reads what WordPress already knows, so it says an update is available exactly when the Plugins screen does — without a request of its own.
+
 ## [1.42.1]
 
 A retried undo could restore something twice.
